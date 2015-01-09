@@ -2,6 +2,7 @@ bin
 include
 lib
 .Python
+.noseids
 *.pyc
 *.pyo
 *.DS_Store
@@ -14,3 +15,4 @@ lib
 # pip-related files
 *.egg-info
 dist
+
