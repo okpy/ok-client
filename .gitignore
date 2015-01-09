@@ -1,0 +1,16 @@
+bin
+include
+lib
+.Python
+*.pyc
+*.pyo
+*.DS_Store
+*.swp
+*.idea
+*.project
+*.pydevproject
+*.kpf
+
+# pip-related files
+*.egg-info
+dist
