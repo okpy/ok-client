@@ -5,7 +5,7 @@ from client.protocols import grading
 from client.protocols import scoring
 from client.utils import output
 from collections import OrderedDict
-from unittest import mock
+import mock
 import unittest
 
 class DisplayBreakdownTest(unittest.TestCase):

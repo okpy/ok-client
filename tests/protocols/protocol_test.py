@@ -2,7 +2,7 @@
 
 from client import exceptions
 from client.protocols import protocol
-from unittest import mock
+import mock
 import unittest
 
 class GetProtocolTest(unittest.TestCase):

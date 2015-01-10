@@ -1,5 +1,5 @@
 from client.utils import output
-from unittest import mock
+import mock
 import sys
 import unittest
 

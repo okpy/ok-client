@@ -1,7 +1,7 @@
 from client import exceptions
 from client.models import core
 from client.utils import loading
-from unittest import mock
+import mock
 import os
 import shutil
 import unittest

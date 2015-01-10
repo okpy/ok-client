@@ -1,6 +1,6 @@
 from client import exceptions
 from client.models import serialize
-from unittest import mock
+import mock
 import unittest
 
 class MockSerializable(serialize.Serializable):

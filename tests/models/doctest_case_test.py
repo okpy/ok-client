@@ -6,7 +6,7 @@ from client.models import doctest_case
 from client.protocols import unlock
 from client.utils import formatting
 from client.utils import output
-from unittest import mock
+import mock
 import sys
 import unittest
 

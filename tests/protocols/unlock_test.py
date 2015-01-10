@@ -3,7 +3,7 @@
 from client.models import core
 from client.protocols import unlock
 from client.utils import output
-from unittest import mock
+import mock
 import unittest
 
 class InteractTest(unittest.TestCase):
