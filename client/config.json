@@ -1,0 +1,20 @@
+{
+    "name": "Assignment Name",
+    "endpoint": "https://okpy.org/path/to/endpoint",
+    "src": [
+        "assignment.py"
+    ],
+    "tests": {
+        "tests/*": "ok_tests",
+        "*.py": "doctests",
+        "*.scm": "stk"
+    },
+    "protocols": [
+        "file_contents",
+        "unlock",
+        "lock",
+        "grading",
+        "scoring",
+        "analytics"
+    ]
+}
