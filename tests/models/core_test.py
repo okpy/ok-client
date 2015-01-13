@@ -1,196 +1,214 @@
-"""Tests the PythonTestCase model."""
-
-from client import exceptions
 from client.models import core
-from client.models import serialize
 import mock
-import sys
 import unittest
 
-class MockCase(core.TestCase):
-    type = 'mock'
-    MAGIC_NUMBER = 42
+###############
+# Field Tests #
+###############
 
-    REQUIRED = {
-        'type': serialize.STR,
-        'foo': serialize.INT,
-    }
+class MockField(core.Field):
+    VALID_INT = 42
+    INVALID_INT = 2
 
-    @classmethod
-    def process_params(cls, obj):
-        return cls.MAGIC_NUMBER
+    def is_valid(self, value):
+        return value == self.VALID_INT
 
-class SerializationTest(unittest.TestCase):
-    ASSIGN_NAME = 'dummy'
-    TEST_NAME = 'q1'
-    MAGIC_NUMBER = 42
+    def to_json(self, value):
+        value = super().to_json(value)
+        return self.VALID_INT
 
-    GOOD_JSON = {
-        'type': MockCase.type,
-        'foo': MAGIC_NUMBER,
-    }
+class FieldTest(unittest.TestCase):
+    def testNoArguments(self):
+        field = MockField()
+        self.assertEqual(field.optional, False)
+        self.assertEqual(field.default, core.NoValue)
 
-    BAD_JSON = {
-        'type': 'bar',  # Incorrect type for MockCase.
-        'foo': MAGIC_NUMBER,
-    }
+    def testDefaultArgument_validDefault(self):
+        field = MockField(default=MockField.VALID_INT)
+        self.assertEqual(field.optional, True)
+        self.assertEqual(field.default, MockField.VALID_INT)
 
-    MALFORMED_JSON = {
-        'foo': MAGIC_NUMBER     # Missing type.
-    }
+    def testDefaultArgument_invalidDefault(self):
+        self.assertRaises(TypeError, MockField, default=MockField.INVALID_INT)
 
-    def setUp(self):
-        self.assignment = mock.Mock(spec=core.Assignment)
-        self.case_map = {MockCase.type: MockCase}
+    def testDefaultArgument_optionalFalse(self):
+        field = MockField(optional=False, default=MockField.VALID_INT)
+        # Setting a default always sets optional to True
+        self.assertEqual(field.optional, True)
+        self.assertEqual(field.default, MockField.VALID_INT)
 
-    def testNoCases(self):
-        test_json = {'names': [self.TEST_NAME], 'points': 2}
-        test = core.Test.deserialize(test_json, self.assignment,
-                                     self.case_map)
+    def testOptional(self):
+        field = MockField(optional=True)
+        self.assertEqual(field.optional, True)
+        self.assertEqual(field.default, core.NoValue)
 
-        self.assertEqual(self.TEST_NAME, test.name)
-        self.assertEqual(0, test.num_cases)
-        self.assertEqual(2, test['points'])
+    def testToJson_validValue(self):
+        field = MockField()
+        self.assertEqual(MockField.VALID_INT, field.to_json(MockField.VALID_INT))
 
-        self.assertEqual(test_json, test.serialize())
+    def testToJson_invalidValue(self):
+        field = MockField()
+        self.assertRaises(TypeError, field.to_json, MockField.INVALID_INT)
 
-    def testMultipleNames(self):
-        test_names = ['a', 'b', 'c']
-        test_json = {'names': test_names, 'points': 1}
-        test = core.Test.deserialize(test_json, self.assignment,
-                                     self.case_map)
-        self.assertEqual(test_names, test['names'])
 
-        self.assertEqual(test_json, test.serialize())
+class ListFieldTest(unittest.TestCase):
+    TEST_INT = 42
 
-    def testSingleSuite(self):
-        test_json = {
-            'names': [self.TEST_NAME],
-            'points': 1,
-            'suites': [
-                [self.GOOD_JSON, self.GOOD_JSON],
-            ]
-        }
-        test = core.Test.deserialize(test_json, self.assignment,
-                                     self.case_map)
+    def testConstructor_heterogeneous(self):
+        field = core.List()
+        self.assertTrue(field.is_valid([1, 'hi', 6]))
 
-        self.assertEqual(2, test.num_cases)
-        self.assertEqual(1, len(test['suites']))
-        self.assertEqual(2, len(test['suites'][0]))
+    def testConstructor_homogeneous(self):
+        field = core.List(type=int)
+        self.assertFalse(field.is_valid([1, 'hi', 6]))
+        self.assertTrue(field.is_valid([1, 2, 3, 4]))
 
-        case1, case2 = test['suites'][0]
-        self.assertEqual(self.MAGIC_NUMBER, case1['foo'])
-        self.assertEqual(self.MAGIC_NUMBER, case2['foo'])
+    def testConstructor_homogeneousSubclass(self):
+        class IntSubclass(int):
+            def __init__(self):
+                pass
+        field = core.List(type=int)
+        self.assertTrue(field.is_valid([1, IntSubclass()]))
 
-        self.assertEqual(test_json, test.serialize())
+    def testConstructor_heterogeneousEmptyList(self):
+        field = core.List()
+        self.assertTrue(field.is_valid([]))
 
-    def testMultipleSuites(self):
-        test_json = {
-            'names': [self.TEST_NAME],
-            'points': 2,
-            'suites': [
-                [self.GOOD_JSON],
-                [self.GOOD_JSON],
-            ]
-        }
-        test = core.Test.deserialize(test_json, self.assignment,
-                                     self.case_map)
+    def testConstructor_homogeneousEmptyList(self):
+        field = core.List(type=str)
+        self.assertTrue(field.is_valid([]))
 
-        self.assertEqual(2, test.num_cases)
-        self.assertEqual(2, len(test['suites']))
-        self.assertEqual(1, len(test['suites'][0]))
-        self.assertEqual(1, len(test['suites'][1]))
+    def testToJson_shallow(self):
+        field = core.List()
+        expect = [1, 'hi', True]
+        self.assertEqual(expect, field.to_json(expect))
 
-        case1 = test['suites'][0][0]
-        self.assertEqual(self.MAGIC_NUMBER, case1['foo'])
-        case2 = test['suites'][1][0]
-        self.assertEqual(self.MAGIC_NUMBER, case2['foo'])
+    def testToJson_recursive(self):
+        field = core.List()
+        class Recursive(object):
+            def to_json(self):
+                return ListFieldTest.TEST_INT
+        expect = [1, self.TEST_INT, True]
+        arg = [1, Recursive(), True]
 
-        self.assertEqual(test_json, test.serialize())
+        self.assertEqual(expect, field.to_json(arg))
 
-    def testUnknownType(self):
-        test_json = {
-            'names': [self.TEST_NAME],
-            'points': 2,
-            'suites': [
-                [self.GOOD_JSON],
-                [self.BAD_JSON],
-            ]
-        }
-        self.assertRaises(exceptions.DeserializeError, core.Test.deserialize,
-                          test_json, self.assignment, self.case_map)
 
-    def testMissingType(self):
-        test_json = {
-            'names': [self.TEST_NAME],
-            'points': 2,
-            'suites': [
-                [self.MALFORMED_JSON],
-            ]
-        }
-        self.assertRaises(exceptions.DeserializeError, core.Test.deserialize,
-                          test_json, self.assignment, self.case_map)
+class DictFieldTest(unittest.TestCase):
+    TEST_INT = 42
 
-    def testParams(self):
-        test_json = {
-            'names': [self.TEST_NAME],
-            'points': 2,
-            'params': {
-                'foo': 5,
-            }
-        }
-        test = core.Test.deserialize(test_json, self.assignment,
-                                     self.case_map)
+    def testConstructor_heterogeneous(self):
+        field = core.Dict()
+        self.assertTrue(field.is_valid({'hi': 4, True: 'boo'}))
 
-        self.assertEqual({'foo': 5}, test['params'])
-        self.assertEqual(test_json, test.serialize())
+    def testConstructor_homogeneousKey(self):
+        field = core.Dict(keys=int)
+        self.assertFalse(field.is_valid({'hi': 4}))
+        self.assertTrue(field.is_valid({4: 'hi', 2: 1}))
 
-    def testHiddenParams(self):
-        test_json = {
-            'names': [self.TEST_NAME],
-            'points': 2,
-            'hidden_params': {
-                'mock': 5,
-            },
-            'params': {
-                'mock': 2,
-            }
-        }
-        test = core.Test.deserialize(test_json, self.assignment,
-                                     self.case_map)
+    def testConstructor_homogeneousValue(self):
+        field = core.Dict(values=str)
+        self.assertFalse(field.is_valid({'hi': 4, 'f': 'bye'}))
+        self.assertTrue(field.is_valid({4: 'hi', 'f': 'bye'}))
 
-        self.assertEqual({'mock': 5}, test['hidden_params'])
-        self.assertEqual({'mock': 2}, test['params'])
-        self.assertEqual(MockCase.MAGIC_NUMBER, test.processed_params['mock'])
-        self.assertEqual(test_json, test.serialize())
+    def testConstructor_homogeneousSubclass(self):
+        class IntSubclass(int):
+            def __init__(self):
+                pass
+        field = core.Dict(keys=int, values=int)
+        self.assertTrue(field.is_valid({IntSubclass(): IntSubclass()}))
 
-class GetTestCasesTest(unittest.TestCase):
-    def calls_get_cases(self, types, expected_classes):
-        classes = core.get_testcases(types)
-        self.assertEqual(expected_classes, classes)
+    def testConstructor_heterogeneousEmptyDict(self):
+        field = core.Dict()
+        self.assertTrue(field.is_valid({}))
 
-    def testNoTypes(self):
-        self.calls_get_cases([], [])
+    def testConstructor_homogeneousEmptyDict(self):
+        field = core.Dict(keys=str, values=int)
+        self.assertTrue(field.is_valid({}))
 
-    def testSingleType(self):
-        self.calls_get_cases([CaseA.type], [CaseA])
+    def testToJson_shallow(self):
+        field = core.Dict()
+        expect = {'hi': 4, True: 3}
+        self.assertEqual(expect, field.to_json(expect))
 
-    def testMultipleTypes(self):
-        cases = [CaseA, CaseC, CaseB]
-        self.calls_get_cases([p.type for p in cases], cases)
+    def testToJson_recursiveKey(self):
+        field = core.Dict()
+        class Recursive(object):
+            def to_json(self):
+                return DictFieldTest.TEST_INT
+        expect = {self.TEST_INT: 4, True: 3}
+        arg = {Recursive(): 4, True: 3}
 
-    def testNonexistentType(self):
-        self.assertRaises(exceptions.OkException, core.get_testcases,
-                ['bogus'])
+        self.assertEqual(expect, field.to_json(arg))
 
-    def testDuplicateType(self):
-        self.calls_get_cases([CaseA.type, CaseA.type], [CaseA, CaseA])
+    def testToJson_recursiveValue(self):
+        field = core.Dict()
+        class Recursive(object):
+            def to_json(self):
+                return DictFieldTest.TEST_INT
+        expect = {4: self.TEST_INT, True: 3}
+        arg = {4: Recursive(), True: 3}
 
-class CaseA(core.TestCase):
-    type = 'A'
+        self.assertEqual(expect, field.to_json(arg))
 
-class CaseB(core.TestCase):
-    type = 'B'
+######################
+# Serializable Tests #
+######################
 
-class CaseC(core.TestCase):
-    type = 'C'
+class MockSerializable(core.Serializable):
+    TEST_INT = 2
+
+    var1 = core.Boolean()
+    var2 = core.Int(default=TEST_INT)
+    var3 = core.String(optional=True)
+
+class SerializableTest(unittest.TestCase):
+    TEST_INT = 42
+    TEST_BOOL = True
+    TEST_STR = 'hi'
+
+    def testConstructor_missingRequiredFields(self):
+        self.assertRaises(TypeError, MockSerializable)
+
+    def testConstructor_incorrectRequiredFields(self):
+        self.assertRaises(TypeError, MockSerializable, var1=self.TEST_INT)
+
+    def testConstructor_incorrectOptionalFields(self):
+        self.assertRaises(TypeError, MockSerializable, var1=self.TEST_BOOL,
+                          var2=self.TEST_BOOL)
+
+    def testConstructor_unexpectedFields(self):
+        self.assertRaises(TypeError, MockSerializable, var1=self.TEST_BOOL,
+                          var2=self.TEST_INT, foo=self.TEST_INT)
+
+    def testConstructor_validArguments(self):
+        try:
+            MockSerializable(var1=self.TEST_BOOL, var3=self.TEST_STR)
+        except TypeError:
+            self.fail("Should not have failed")
+
+    def testSetAttr_validType(self):
+        obj = MockSerializable(var1=self.TEST_BOOL, var3=self.TEST_STR)
+        obj.var1 = not self.TEST_BOOL
+        self.assertEqual(not self.TEST_BOOL, obj.var1)
+
+    def testSetAttr_invalidType(self):
+        obj = MockSerializable(var1=self.TEST_BOOL, var3=self.TEST_STR)
+        try:
+            obj.var1 = self.TEST_INT
+        except TypeError:
+            pass
+        else:
+            self.fail("Should have raised a TypeError")
+
+    def testToJson_noOptional(self):
+        obj = MockSerializable(var1=self.TEST_BOOL)
+        expect = {'var1': self.TEST_BOOL, 'var2': MockSerializable.TEST_INT}
+        self.assertEqual(expect, obj.to_json())
+
+    def testToJson_withOptional(self):
+        obj = MockSerializable(var1=self.TEST_BOOL, var3=self.TEST_STR)
+        expect = {'var1': self.TEST_BOOL, 'var2': MockSerializable.TEST_INT,
+                  'var3': self.TEST_STR}
+        self.assertEqual(expect, obj.to_json())
+

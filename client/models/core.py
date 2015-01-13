@@ -1,216 +1,172 @@
-"""Core test models.
+###############
+# Field types #
+###############
 
-Ok.py assignments are organized in the following hierarchy:
+class NoValue(object):
+    pass
 
-    * assignments: consist of a list of Test objects
-    * Test: consist of a list of suites
-    * suite: a list of TestCase objects
-    * TestCase (and its subclasses)
+NoValue = NoValue()
 
-The core models (Assignment, Test, TestCase) are implemented here.
+class Field(object):
+    _default = NoValue
 
-Developers can extend the TestCase class to create different types of
-TestCases (both interfaces and concrete subclasses of TestCase are
-encouraged). TestCase interfaces should be located with their
-respective Protocols (in the client/protocols/ directory), while
-concrete subclasses of TestCase should be located in client/models/.
-"""
-
-from client.models import serialize
-from client import exceptions
-
-class Assignment(serialize.Serializable):
-    """A representation of an assignment."""
-
-    REQUIRED = {
-        'name': serialize.STR,
-        'version': serialize.STR,
-    }
-    OPTIONAL = {
-        'src_files': serialize.LIST,
-        'params': serialize.DICT,
-        'hidden_params': serialize.DICT,    # Hidden from students.
-    }
-
-    def __init__(self, **fields):
-        super().__init__(**fields)
-        self._tests = []
-        self.processed_params = {}
-
-    def add_test(self, test):
-        assert isinstance(test, Test), '{} must be a Test'.format(test)
-        self._tests.append(test)
+    def __init__(self, optional=False, **kargs):
+        self._optional = optional
+        if 'default' in kargs:
+            value = kargs['default']
+            if not self.is_valid(value):
+                raise TypeError('Invalid default: {}'.format(value))
+            self._optional = True
+            self._default = value
 
     @property
-    def tests(self):
-        """Returns the tests for this assignment. The returned list
-        is a copy, so that the original list can remain immutable.
-        """
-        return self._tests[:]
+    def optional(self):
+        return self._optional
 
     @property
-    def num_tests(self):
-        return len(self._tests)
+    def default(self):
+        return self._default
 
-    @classmethod
-    def deserialize(cls, json, case_map):
-        assignment = cls(**json)
-        for case_type, case_obj in case_map.items():
-            assignment.processed_params[case_type] = case_obj.process_params(
-                assignment)
-        return assignment
+    def is_valid(self, value):
+        """Subclasses should override this method for field validation."""
+        return True
 
+    def to_json(self, value):
+        """Subclasses should override this method for JSON encoding."""
+        if not self.is_valid(value):
+            raise TypeError('Invalid value: {}'.format(value))
+        return value
 
-class Test(serialize.Serializable):
-    """Represents all suites for a single test in an assignment."""
+class Boolean(Field):
+    def is_valid(self, value):
+        return value in (True, False)
 
-    DEFAULT_PARTNER = ''
+class Int(Field):
+    def is_valid(self, value):
+        return type(value) == int
 
-    REQUIRED = {
-        'names': serialize.SerializeArray(serialize.STR),
-        'points': serialize.FLOAT,
-    }
-    OPTIONAL = {
-        'suites': serialize.SerializeArray(serialize.LIST),
-        'params': serialize.DICT,
-        'hidden_params': serialize.DICT,    # Hidden from students.
-        'note': serialize.STR,
-        'extra': serialize.BOOL_FALSE,
-        'partner': serialize.SerializePrimitive(DEFAULT_PARTNER, str),
-    }
+class Float(Field):
+    def is_valid(self, value):
+        return type(value) in (int, float)
 
-    def __init__(self, **fields):
-        super().__init__(**fields)
-        self.processed_params = {}
+class String(Field):
+    def is_valid(self, value):
+        return type(value) == str
 
-    @property
-    def name(self):
-        """Gets the canonical name of this test.
-
-        RETURNS:
-        str; the name of the test
-        """
-        if not self['names']:
-            return repr(self)
-        return self['names'][0]
-
-    @property
-    def num_cases(self):
-        """Returns the number of test cases in this test."""
-        return sum(len(suite) for suite in self['suites'])
-
-    @property
-    def num_locked(self):
-        """Returns the number of locked test cases in this test."""
-        return [case['locked'] for suite in self['suites']
-                               for case in suite].count(True)
-
-    @property
-    def num_graded(self):
-        return [case.should_grade() for suite in self['suites']
-                                    for case in suite].count(True)
-
-    def add_suite(self, suite):
-        """Adds the given suite to this test's list of suites. If
-        suite is empty, do nothing."""
-        if suite:
-            self['suites'].append(suite)
-
-    @classmethod
-    def deserialize(cls, test_json, assignment, case_map):
-        """Deserializes a JSON object into a Test object, given a
-        particular set of assignment_info.
+class List(Field):
+    def __init__(self, type=None, **kargs):
+        """Constructor for a List field.
 
         PARAMETERS:
-        test_json  -- JSON; the JSON representation of the test.
-        assignment -- Assignment; information about the assignment,
-                      may be used by TestCases.
-        case_map   -- dict; maps case tags (strings) to TestCase
-                      classes.
-
-        RETURNS:
-        Test
+        type -- type; if type is None, the List can be heterogeneous.
+                Otherwise, the List must be homogeneous with elements
+                of the specified type.
         """
-        test = cls(**test_json)
-        for case_type, case_obj in case_map.items():
-            test.processed_params[case_type] = case_obj.process_params(test)
+        super().__init__(**kargs)
+        self._type = type
 
-        new_suites = []
-        for suite in test['suites']:
-            if not suite:
-                continue
-            new_suite = []
-            for case_json in suite:
-                if 'type' not in case_json:
-                    raise exceptions.DeserializeError.missing_fields(('type'))
-                case_type = case_json['type']
-                if case_type not in case_map:
-                    raise exceptions.DeserializeError.unknown_type(
-                        case_type, case_map)
-                test_case = case_map[case_type].deserialize(
-                    case_json, assignment, test)
-                new_suite.append(test_case)
-            new_suites.append(new_suite)
-        test['suites'] = new_suites
-        return test
+    def is_valid(self, value):
+        valid = type(value) == list
+        if self._type is not None:
+            valid &= all(isinstance(e, self._type) for e in value)
+        return valid
 
-    def serialize(self):
-        """Serializes this Test object into JSON format.
+    def to_json(self, value):
+        value = super().to_json(value)
+        return [elem.to_json() if hasattr(elem, 'to_json') else elem
+                             for elem in value]
 
-        RETURNS:
-        JSON as a plain-old-Python-object.
-        """
-        json = super().serialize()
-        suites = [[case.serialize() for case in suite]
-                                    for suite in self['suites']]
-        if suites:
-            json['suites'] = suites
-        return json
+class Dict(Field):
+    def __init__(self, keys=None, values=None, **kargs):
+        super().__init__(**kargs)
+        self._keys = keys
+        self._values = values
 
-class TestCase(serialize.Serializable):
-    """Represents a single test case."""
+    def is_valid(self, value):
+        valid = type(value) == dict
+        if self._keys is not None:
+            valid &= all(isinstance(k, self._keys) for k in value)
+        if self._values is not None:
+            valid &= all(isinstance(v, self._values) for v in value.values())
+        return valid
 
-    type = 'default'
-
-    REQUIRED = {
-        'type': serialize.STR,
-    }
-
-    @classmethod
-    def deserialize(cls, json, assignment, test):
-        result = super().deserialize(json)
-        result._assertType()
+    def to_json(self, value):
+        value = super().to_json(value)
+        result = {}
+        for k, v in value.items():
+            if hasattr(k, 'to_json'):
+                k = k.to_json()
+            if hasattr(v, 'to_json'):
+                v = v.to_json()
+            result[k] = v
         return result
 
-    @classmethod
-    def process_params(cls, obj):
-        """Subclasses can override this to process assignment and
-        test params.
+########################
+# Serializable Objects #
+########################
 
-        RETURN:
-        object; the TestCase can choose how to represent its processed
-        params.
+class _SerializeMeta(type):
+    def __init__(cls, name, bases, attrs):
+        type.__init__(cls, name, bases, attrs)
+        cls._fields = {attr: value for attr, value in attrs.items()
+                                   if isinstance(value, Field)}
+        for base in bases:
+            if hasattr(base, '_fields'):
+                cls._fields.update(base._fields)
+
+    def __call__(cls, *args, **kargs):
+        obj = type.__call__(cls, *args, **kargs)
+        # Validate existing arguments
+        for attr, value in kargs.items():
+            if attr not in cls._fields:
+                raise TypeError('__init__() got an unexpected '
+                                'keyword argument: {}'.format(attr))
+            elif not cls._fields[attr].is_valid(value):
+                raise TypeError('__init__() got an invalid argument '
+                                '{} for parameter '
+                                '{}'.format(value, attr))
+            else:
+                setattr(obj, attr, value)
+        # Check for missing/default fields
+        for attr, value in cls._fields.items():
+            if attr in kargs:
+                continue
+            elif value.optional:
+                setattr(obj, attr, value.default)
+            else:
+                raise TypeError('__init__() missing expected '
+                                'argument {}'.format(attr))
+        obj.post_validate()
+        return obj
+
+class Serializable(metaclass=_SerializeMeta):
+    def __init__(self, *args, **kargs):
+        pass
+
+    def __setattr__(self, attr, value):
+        cls = type(self)
+        if hasattr(cls, attr):
+            field = getattr(cls, attr)
+            if value != NoValue and not field.is_valid(value):
+                raise TypeError('{}.{} assigned invalid value: '
+                                '{}'.format(cls.__name__, attr, value))
+        super().__setattr__(attr, value)
+
+    def post_validate(self):
+        """Subclasses can override this method to perform post-instantiation
+        validation.
+
+        RAISES:
+        TypeError; if this instantiation is invalid.
         """
-        return None
+        pass
 
-    def _assertType(self):
-        if self['type'] != self.type:
-            raise exceptions.DeserializeError.unexpected_value(
-                'type', self.type, self['type'])
-
-def get_testcases(types):
-    mapping = {}
-    subclasses = TestCase.__subclasses__()
-    while subclasses:
-        case = subclasses.pop()
-        if case.type != TestCase.type:
-            mapping[case.type] = case
-        subclasses.extend(case.__subclasses__())
-
-    # TODO(albert): cleanup error handling
-    try:
-        return [mapping[type] for type in types]
-    except KeyError as e:
-        raise exceptions.OkException(str(e) + ' is not a test case')
-
+    def to_json(self):
+        cls = type(self)
+        json = {}
+        for attr, field in cls._fields.items():
+            value = getattr(self, attr)
+            if not field.optional or value != NoValue:
+                json[attr] = field.to_json(value)
+        return json
 
