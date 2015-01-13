@@ -1,18 +1,18 @@
 import glob
 
-def load_tests(sources):
-    """Loads all tests specified by sources.
+def load_tests(test_map):
+    """Loads all tests specified by test_map.
 
     PARAMETERS:
-    sources -- dict; file pattern -> serialize module. Every file that
-               that matches the UNIX style file pattern will be loaded
-               by the module.load method.
+    test_map -- dict; file pattern -> serialize module. Every file that
+                that matches the UNIX style file pattern will be loaded
+                by the module.load method.
 
     RETURNS:
     dict; file -> Test
     """
     tests = {}
-    for file_pattern, module in sources.items():
+    for file_pattern, module in test_map.items():
         for file in glob.glob(file_pattern):
             # TODO(albert): add error handling
             tests[file] = eval(module + '.load(file)')
