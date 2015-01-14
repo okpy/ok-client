@@ -1,13 +1,6 @@
 """Tests the DoctestCase model."""
 
-# from client import exceptions
-# from client.models import core
-# from client.models import doctest_case
-# from client.protocols import unlock
-# from client.utils import formatting
-# from client.utils import output
-
-from client.models import core
+from client.sources.common import core
 from client.sources.common import doctest_case
 from client.utils import output
 import mock

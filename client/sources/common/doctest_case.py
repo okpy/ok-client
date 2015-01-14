@@ -1,17 +1,8 @@
 """Case for doctest-style Python tests."""
 
-# from client import exceptions
-# from client.models import serialize
-# from client.protocols import grading
-# from client.protocols import unlock
-# from client.utils import formatting
-# from client.utils import timer
-# import code
-# import re
-
 from client import exceptions
-from client.models import core
-from client.sources.common import case
+from client.sources.common import core
+from client.sources.common import models
 from client.sources.common import interpreter
 from client.utils import timer
 import code
@@ -19,7 +10,7 @@ import re
 import textwrap
 import traceback
 
-class DoctestCase(interpreter.InterpreterCase, case.LockableCase):
+class DoctestCase(interpreter.InterpreterCase, models.LockableCase):
     """TestCase for doctest-style Python tests."""
 
     code = core.String()

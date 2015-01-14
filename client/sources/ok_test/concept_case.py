@@ -5,10 +5,10 @@ students understand high-level understanding. As such, these test cases
 focus mainly on unlocking.
 """
 
-from client.models import core
-from client.sources.common import case
+from client.sources.common import core
+from client.sources.common import models
 
-class ConceptCase(case.LockableCase):
+class ConceptCase(models.LockableCase):
     question = core.String()
     answer = core.String()
     choices = core.List(type=str, optional=True)

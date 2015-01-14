@@ -1,6 +1,6 @@
 """Case for generic interpreter-style tests."""
 
-from client.sources.common import case
+from client.sources.common import models
 
 # TODO(albert): come up with a better cross-platform readline solution.
 try:
@@ -9,7 +9,7 @@ try:
 except ImportError:
     HAS_READLINE = False
 
-class InterpreterCase(case.Case):
+class InterpreterCase(models.Case):
     """TestCase for doctest-style Python tests."""
 
     def __init__(self, console, **fields):
