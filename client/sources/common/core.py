@@ -136,7 +136,7 @@ class _SerializeMeta(type):
             else:
                 raise TypeError('__init__() missing expected '
                                 'argument {}'.format(attr))
-        obj.post_validate()
+        obj.post_instantiation()
         return obj
 
 class Serializable(metaclass=_SerializeMeta):
@@ -152,12 +152,9 @@ class Serializable(metaclass=_SerializeMeta):
                                 '{}'.format(cls.__name__, attr, value))
         super().__setattr__(attr, value)
 
-    def post_validate(self):
+    def post_instantiation(self):
         """Subclasses can override this method to perform post-instantiation
-        validation.
-
-        RAISES:
-        TypeError; if this instantiation is invalid.
+        work.
         """
         pass
 

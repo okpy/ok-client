@@ -1,4 +1,4 @@
-from client.models import core
+from client.sources.common import core
 import mock
 import unittest
 
