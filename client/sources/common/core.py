@@ -136,11 +136,12 @@ class Dict(Field):
 class _SerializeMeta(type):
     def __init__(cls, name, bases, attrs):
         type.__init__(cls, name, bases, attrs)
-        cls._fields = {attr: value for attr, value in attrs.items()
-                                   if isinstance(value, Field)}
+        cls._fields = {}
         for base in bases:
             if hasattr(base, '_fields'):
                 cls._fields.update(base._fields)
+        cls._fields.update({attr: value for attr, value in attrs.items()
+                                        if isinstance(value, Field)})
 
     def __call__(cls, *args, **kargs):
         obj = type.__call__(cls, *args, **kargs)

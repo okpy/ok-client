@@ -252,6 +252,12 @@ class MockSerializable(core.Serializable):
     var3 = core.String(optional=True)
     var4 = core.List(optional=True)
 
+class MockSerializable2(MockSerializable):
+    TEST_INT = 1
+
+    var2 = core.Int(default=TEST_INT)
+    var5 = core.String(optional=True)
+
 class SerializableTest(unittest.TestCase):
     TEST_INT = 42
     TEST_BOOL = True
@@ -276,6 +282,14 @@ class SerializableTest(unittest.TestCase):
             MockSerializable(var1=self.TEST_BOOL, var3=self.TEST_STR)
         except TypeError:
             self.fail("Should not have failed")
+
+    def testConstructor_overrideSuperclassFields(self):
+        try:
+            obj = MockSerializable2(var1=self.TEST_BOOL)
+        except TypeError:
+            self.fail("Should not have failed")
+
+        self.assertEqual(MockSerializable2.TEST_INT, obj.var2)
 
     def testSetAttr_validType(self):
         obj = MockSerializable(var1=self.TEST_BOOL)
