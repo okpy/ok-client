@@ -47,9 +47,19 @@ class OkTest(models.Test):
         # print()
 
     def score(self):
-        # TODO(albert): call self.run and assign score based on returned
-        # analytics
-        pass
+        passed, total = 0, 0
+        for suite in self.suites:
+            if not suite.scored:
+                continue
+            total += 1
+            success = suite.run()
+            if success:
+                passed += 1
+        if total > 0:
+            score = passed * test.points / total
+        else:
+            score = 0
+        return score
 
     def unlock(self, interact):
         # formatting.underline('Unlocking tests for {}'.format(test.name))

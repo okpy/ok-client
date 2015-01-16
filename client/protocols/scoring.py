@@ -2,8 +2,8 @@
 associated with an assignment.
 """
 
-from client.models import core
-from client.protocols import grading
+from client.sources.common import core
+from client.protocols.common import models
 from client.utils import formatting
 from collections import OrderedDict
 
@@ -11,7 +11,7 @@ from collections import OrderedDict
 # Testing Mechanism #
 #####################
 
-class ScoringProtocol(grading.GradingProtocol):
+class ScoringProtocol(models.Protocol):
     """A Protocol that runs tests, formats results, and reports a
     student's score.
     """
@@ -21,22 +21,19 @@ class ScoringProtocol(grading.GradingProtocol):
         """Run gradeable tests and print results."""
         if not self.args.score:
             return
-        formatting.print_title('Scoring tests for {}'.format(
-            self.assignment['name']))
+        # formatting.print_title('Scoring tests for {}'.format(
+        #     self.assignment['name']))
         self.scores = OrderedDict()
-        if self._grade_all():
-            # If testing is successful, print out the point breakdown.
-            display_breakdown(self.scores)
+        for test in self._get_tests():
+            # formatting.underline('Scoring tests for ' + test.name)
+            # print()
+            partner = test.partner if test.partner != core.NoValue else None
+            self.scores[test.name, test.partner] = (test.score(), test.points)
+        display_breakdown(self.scores)
 
-    def _handle_test(self, test):
-        """Grades a single Test."""
-        formatting.underline('Scoring tests for ' + test.name)
-        print()
-        points, passed, total = score(test, self.logger, self.args.interactive,
-            self.args.verbose, self.args.timeout)
-
-        self.scores[(test.name, test['partner'])] = (points, test['points'])
-        return passed, total
+    def _get_tests():
+        # TODO(albert): implement a fuzzy matching for tests
+        pass
 
 def display_breakdown(scores):
     """Prints the point breakdown given a dictionary of scores.
@@ -46,59 +43,25 @@ def display_breakdown(scores):
     """
     partner_totals = {}
 
-    formatting.underline('Point breakdown')
+    # formatting.underline('Point breakdown')
     for (name, partner), (score, total) in scores.items():
-        print(name + ': ' + '{}/{}'.format(score, total))
+        # print(name + ': ' + '{}/{}'.format(score, total))
         partner_totals[partner] = partner_totals.get(partner, 0) + score
-    print()
-    if len(partner_totals) == 1:
+    # print()
+    shared_points = partner_totals.get(None, 0)
+    if None in partner_totals:
+        del partner_totals[None]
+
+    if len(partner_totals) == 0:
         # If only one partner.
-        print('Total score:')
-        print(partner_totals[core.Test.DEFAULT_PARTNER])
+        # print('Total score:')
+        # print(shared_points)
+        pass
     else:
-        for partner, total in sorted(partner_totals.items()):
-            if partner == core.Test.DEFAULT_PARTNER:
-                continue
-            print('Partner {} score:'.format(partner))
-            # Add partner-specific score with partner-agnostic score.
-            print(total + partner_totals.get(core.Test.DEFAULT_PARTNER, 0))
+        for partner, score in sorted(partner_totals.items()):
+            # print('Partner {} score:'.format(partner))
+            # print(score + shared_points)
 
     return partner_totals
-
-def score(test, logger, interactive=False, verbose=False, timeout=10):
-    """Grades all suites for the specified test.
-
-    PARAMETERS:
-    test        -- Test.
-    logger      -- OutputLogger.
-    interactive -- bool; if True, an interactive session will be
-                   started upon test failure.
-    verbose     -- bool; if True, print all test output, even if the
-                   test case passes.
-
-    RETURNS:
-    (score, passed, total); where
-    score  -- float; score for the Test.
-    passed -- int; number of suites that passed.
-    total  -- int; total number of suites
-    """
-    cases_tested = grading.Counter()
-    passed, total = 0, 0
-    for suite in test['suites']:
-        correct, error = grading.run_suite(suite, logger, cases_tested,
-                                           verbose, interactive, timeout,
-                                           stop_fast=False)
-        if error:
-            total += 1
-        elif not error and correct > 0:
-            # If no error but correct == 0, then the suite has no
-            # graded test cases.
-            total += 1
-            passed += 1
-    if total > 0:
-        score = passed * test['points'] / total
-    else:
-        score = 0
-    return score, passed, total
 
 protocol = ScoringProtocolm
