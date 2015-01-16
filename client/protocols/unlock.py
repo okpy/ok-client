@@ -5,9 +5,7 @@ The UnlockTestCase interface can be implemented by TestCases that are
 compatible with the UnlockProtocol.
 """
 
-from client.models import core
-from client.models import serialize
-from client.protocols import protocol
+from client.protocols.common import models
 from client.utils import formatting
 import hmac
 import random
@@ -24,94 +22,7 @@ def normalize(text):
     """Normalizes whitespace in a specified string of text."""
     return " ".join(text.split())
 
-class UnlockTestCase(core.TestCase):
-    """Interface for tests that can be unlocked by the unlock protocol.
-    Subclasses must implement the on_unlock method.
-    """
-
-    OPTIONAL = {
-        'locked': serialize.BOOL_FALSE,
-        'never_lock': serialize.BOOL_FALSE,
-        'hidden': serialize.BOOL_FALSE,
-    }
-
-    def on_unlock(self, logger, interact_fn):
-        """Subclasses that are used by the unlocking protocol must
-        implement this method.
-
-        PARAMETERS:
-        logger      -- OutputLogger.
-        interact_fn -- function; a function that handles interactive
-                       input from students.
-        """
-        raise NotImplementedError
-
-    def on_lock(self, hash_fn):
-        """Subclasses that are used by the unlocking protocol must
-        implement this method.
-        """
-        raise NotImplementedError
-
-####################
-# Locking Protocol #
-####################
-
-class LockProtocol(protocol.Protocol):
-    """Locking protocol that wraps that mechanism."""
-
-    name = 'lock'
-
-    def on_start(self):
-        """Responsible for locking each test."""
-        if self.args.lock:
-            formatting.print_title('Locking tests for {}'.format(
-                self.assignment['name']))
-
-            if self.assignment['hidden_params']:
-                self.assignment['hidden_params'] = {}
-                print('* Removed hidden params for assignment')
-
-            for test in self.assignment.tests:
-                lock(test, self._hash_fn)
-            print('Completed locking {}.'.format(self.assignment['name']))
-            print()
-
-    @property
-    def _alphabet(self):
-        return string.ascii_lowercase + string.digits
-
-    def _hash_fn(self, text):
-        text = normalize(text)
-        return hmac.new(self.assignment['name'].encode('utf-8'),
-                        text.encode('utf-8')).hexdigest()
-
-def lock(test, hash_fn):
-    formatting.underline('Locking Test ' + test.name, line='-')
-
-    if test['hidden_params']:
-        test['hidden_params'] = {}
-        print('* Removed hidden params')
-
-    num_cases = 0
-    for suite in test['suites']:
-        for case in list(suite):
-            num_cases += 1  # 1-indexed
-            if case['hidden']:
-                suite.remove(case)
-                print('* Case {}: removed hidden test'.format(num_cases))
-            elif not case['never_lock'] and not case['locked']:
-                case.on_lock(hash_fn)
-                print('* Case {}: locked test'.format(num_cases))
-            elif case['never_lock']:
-                print('* Case {}: never lock'.format(num_cases))
-            elif case['locked']:
-                print('* Case {}: already locked'.format(num_cases))
-
-######################
-# UNLOCKING PROTOCOL #
-######################
-
-class UnlockProtocol(protocol.Protocol):
+class UnlockProtocol(models.Protocol):
     """Unlocking protocol that wraps that mechanism."""
 
     name = 'unlock'
@@ -336,3 +247,5 @@ class UnlockConsole(object):
         """
         if line and HAS_READLINE:
             readline.add_history(line)
+
+protocol = UnlockProtocol

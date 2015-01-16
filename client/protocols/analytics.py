@@ -2,10 +2,10 @@
 for the ok grading session.
 """
 
-from client.protocols import protocol
+from client.protocols.common import models
 from datetime import datetime
 
-class AnalyticsProtocol(protocol.Protocol):
+class AnalyticsProtocol(models.Protocol):
     """A Protocol that analyzes how much students are using the autograder.
     """
     name = 'analytics'
@@ -23,3 +23,5 @@ class AnalyticsProtocol(protocol.Protocol):
             statistics['question'] = self.args.question
 
         return statistics
+
+protocol = AnalyticsProtocol

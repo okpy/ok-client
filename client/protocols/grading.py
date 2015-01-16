@@ -5,42 +5,14 @@ The GradedTestCase interface should be implemented by TestCases that
 are compatible with the GradingProtocol.
 """
 
-from client.models import core
-from client.protocols import protocol
+from client.protocols.common import models
 from client.utils import formatting
 
 #####################
 # Testing Mechanism #
 #####################
 
-class GradedTestCase(core.TestCase):
-    """Interface for tests that can be graded by the grading protocol.
-    Subclasses must implement the on_grade method.
-    """
-
-    def on_grade(self, logger, verbose, interact, timeout):
-        """Subclasses that are used by the grading protocol must
-        implement this method.
-
-        PARAMETERS:
-        logger   -- OutputLogger.
-        frame    -- dict; the environment in which the case will be
-                    evaluated.
-        verbose  -- bool; True if verbose mode is on.
-        interact -- bool; True if interact mode is on.
-
-        RETURNS:
-        bool; True if the graded test case results in an error.
-        """
-        raise NotImplementedError
-
-    def should_grade(self):
-        """Returns True if this GradedTestCase instance should be
-        graded, False otherwise.
-        """
-        raise NotImplementedError
-
-class GradingProtocol(protocol.Protocol):
+class GradingProtocol(models.Protocol):
     """A Protocol that runs tests, formats results, and sends results
     to the server.
     """
@@ -177,3 +149,5 @@ class Counter(object):
 
     def __repr__(self):
         return str(self._count)
+
+protocol = GradingProtocol

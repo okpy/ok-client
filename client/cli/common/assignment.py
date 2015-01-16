@@ -61,6 +61,6 @@ class Assignment(core.Serializable):
             # TODO(albert): add error handling
             module = importlib.import_module(proto, self._PROTOCOL_PACKAGE)
             # TODO(albert): determine all arguments to a protocol
-            self.protocol_map[proto] = module.Protocol(self.cmd_args, self)
+            self.protocol_map[proto] = module.protocol(self.cmd_args, self)
 
 

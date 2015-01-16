@@ -101,3 +101,4 @@ def score(test, logger, interactive=False, verbose=False, timeout=10):
         score = 0
     return score, passed, total
 
+protocol = ScoringProtocolm

@@ -1,8 +1,8 @@
-from client.protocols import protocol
+from client.protocols.common import models
 import os
 
 
-class FileContents(protocol.Protocol):
+class FileContents(models.Protocol):
     """The contents of changed source files are sent to the server."""
     name = 'file_contents'
 
@@ -18,3 +18,4 @@ class FileContents(protocol.Protocol):
             contents[key] = value
         return contents
 
+protocol = FileContents
