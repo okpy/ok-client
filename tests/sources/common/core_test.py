@@ -8,6 +8,7 @@ import unittest
 
 class MockField(core.Field):
     VALID_INT = 42
+    OK_INT = 3
     INVALID_INT = 2
 
     def is_valid(self, value):
@@ -78,6 +79,50 @@ class ListFieldTest(unittest.TestCase):
         field = core.List(type=str)
         self.assertTrue(field.is_valid([]))
 
+    def assertCoerce_pass(self, expect, value, **fields):
+        field = core.List(**fields)
+        self.assertEqual(expect, field.coerce(value))
+
+    def assertCoerce_errors(self, value, **fields):
+        field = core.List(**fields)
+        self.assertRaises((TypeError, ValueError), field.coerce, value)
+
+    def testCoerce_heterogeneousList(self):
+        lst = [1, 'hi', 3, True]
+        self.assertCoerce_pass(lst, lst)
+
+    def testCoerce_heterogeneousValidNonList(self):
+        value = (1, 'hi', 3, True)
+        expect = list(value)
+        self.assertCoerce_pass(expect, value)
+
+    def testCoerce_heterogeneousInvalidNonList(self):
+        self.assertCoerce_errors(4)
+
+    def testCoerce_homogeneousValidList(self):
+        value = [1, 2, 3, 4]
+        self.assertCoerce_pass(value, value, type=int)
+
+    def testCoerce_homogeneousInvalidList(self):
+        # TODO(albert): should make primitive list elements perform
+        # strict coercion, to avoid unintended conversions.
+        value = [1, 2, 3, 4]
+        self.assertCoerce_errors(value, type=str)
+
+    def testCoerce_homogeneousValidNonList(self):
+        value = (1, 2, 3, 4)
+        expect = list(value)
+        self.assertCoerce_pass(expect, value, type=int)
+
+    def testCoerce_homogeneousInvalidNonList_notIterable(self):
+        self.assertCoerce_errors(4, type=int)
+
+    def testCoerce_homogeneousInvalidNonList_wrongType(self):
+        # TODO(albert): should make primitive list elements perform
+        # strict coercion, to avoid unintended conversions.
+        value = [1, 2, 3]
+        self.assertCoerce_errors(value, type=str)
+
     def testToJson_shallow(self):
         field = core.List()
         expect = [1, 'hi', True]
@@ -126,6 +171,50 @@ class DictFieldTest(unittest.TestCase):
         field = core.Dict(keys=str, values=int)
         self.assertTrue(field.is_valid({}))
 
+    def assertCoerce_pass(self, expect, value, **fields):
+        field = core.Dict(**fields)
+        self.assertEqual(expect, field.coerce(value))
+
+    def assertCoerce_errors(self, value, **fields):
+        field = core.Dict(**fields)
+        self.assertRaises((TypeError, ValueError), field.coerce, value)
+
+    def testCoerce_heterogeneousDict(self):
+        d = {'a': 1, 2: False}
+        self.assertCoerce_pass(d, d)
+
+    def testCoerce_heterogeneousValidNonDict(self):
+        value = (('a', 1), (2, False))
+        expect = dict(value)
+        self.assertCoerce_pass(expect, value)
+
+    def testCoerce_heterogeneousInvalidNonDict(self):
+        self.assertCoerce_errors([1, 2, 3])
+
+    def testCoerce_homogeneousValidDict(self):
+        value = {'a': 1, 'b': 2}
+        self.assertCoerce_pass(value, value, keys=str, values=int)
+
+    def testCoerce_homogeneousInvalidDict(self):
+        # TODO(albert): should make primitive dict elements perform
+        # strict coercion, to avoid unintended conversions.
+        value = {'a': True, 'b': False}
+        self.assertCoerce_errors(value, keys=str, values=int)
+
+    def testCoerce_homogeneousValidNonDict(self):
+        value = (('a', 1), ('b', 2))
+        expect = dict(value)
+        self.assertCoerce_pass(expect, value, keys=str, values=int)
+
+    def testCoerce_homogeneousInvalidNonDict_notDictLike(self):
+        self.assertCoerce_errors([1, 2, 3], keys=int)
+
+    def testCoerce_homogeneousInvalidNonDict_wrongType(self):
+        # TODO(albert): should make primitive dict elements perform
+        # strict coercion, to avoid unintended conversions.
+        value = (('a', True), ('b', False))
+        self.assertCoerce_errors(value, keys=str, values=int)
+
     def testToJson_shallow(self):
         field = core.Dict()
         expect = {'hi': 4, True: 3}
@@ -161,6 +250,7 @@ class MockSerializable(core.Serializable):
     var1 = core.Boolean()
     var2 = core.Int(default=TEST_INT)
     var3 = core.String(optional=True)
+    var4 = core.List(optional=True)
 
 class SerializableTest(unittest.TestCase):
     TEST_INT = 42
@@ -188,6 +278,12 @@ class SerializableTest(unittest.TestCase):
             self.fail("Should not have failed")
 
     def testSetAttr_validType(self):
+        obj = MockSerializable(var1=self.TEST_BOOL)
+        value = (1, 2, 3)
+        obj.var4 = value
+        self.assertEqual(list(value), obj.var4)
+
+    def testSetAttr_coercibleType(self):
         obj = MockSerializable(var1=self.TEST_BOOL, var3=self.TEST_STR)
         obj.var1 = not self.TEST_BOOL
         self.assertEqual(not self.TEST_BOOL, obj.var1)

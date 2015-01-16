@@ -31,6 +31,18 @@ class Field(object):
         """Subclasses should override this method for field validation."""
         return True
 
+    def coerce(self, value):
+        """Subclasses should override this method for type coercion.
+
+        Default version will simply return the argument. If the argument
+        is not valid, a TypeError is raised.
+
+        For primitives like booleans, ints, floats, and strings, use
+        this default version to avoid unintended type conversions."""
+        if not self.is_valid(value):
+            raise TypeError
+        return value
+
     def to_json(self, value):
         """Subclasses should override this method for JSON encoding."""
         if not self.is_valid(value):
@@ -71,6 +83,12 @@ class List(Field):
             valid &= all(isinstance(e, self._type) for e in value)
         return valid
 
+    def coerce(self, value):
+        if self._type is None:
+            return list(value)
+        else:
+            return [self._type(elem) for elem in value]
+
     def to_json(self, value):
         value = super().to_json(value)
         return [elem.to_json() if hasattr(elem, 'to_json') else elem
@@ -89,6 +107,16 @@ class Dict(Field):
         if self._values is not None:
             valid &= all(isinstance(v, self._values) for v in value.values())
         return valid
+
+    def coerce(self, value):
+        result = {}
+        for k, v in dict(value).items():
+            if self._keys is not None:
+                k = self._keys(k)
+            elif self._values is not None:
+                v = self._values(k)
+            result[k] = v
+        return result
 
     def to_json(self, value):
         value = super().to_json(value)
@@ -121,10 +149,6 @@ class _SerializeMeta(type):
             if attr not in cls._fields:
                 raise TypeError('__init__() got an unexpected '
                                 'keyword argument: {}'.format(attr))
-            elif not cls._fields[attr].is_valid(value):
-                raise TypeError('__init__() got an invalid argument '
-                                '{} for parameter '
-                                '{}'.format(value, attr))
             else:
                 setattr(obj, attr, value)
         # Check for missing/default fields
@@ -145,11 +169,14 @@ class Serializable(metaclass=_SerializeMeta):
 
     def __setattr__(self, attr, value):
         cls = type(self)
-        if hasattr(cls, attr):
-            field = getattr(cls, attr)
+        if attr in cls._fields:
+            field = cls._fields[attr]
             if value != NoValue and not field.is_valid(value):
-                raise TypeError('{}.{} assigned invalid value: '
-                                '{}'.format(cls.__name__, attr, value))
+                try:
+                    value = field.coerce(value)
+                except (TypeError, ValueError):
+                    raise TypeError('{}.{} assigned invalid value: '
+                                    '{}'.format(cls.__name__, attr, value))
         super().__setattr__(attr, value)
 
     def post_instantiation(self):
