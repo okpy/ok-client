@@ -14,13 +14,11 @@ class DoctestCase(interpreter.InterpreterCase, models.LockableCase):
     """TestCase for doctest-style Python tests."""
 
     code = core.String()
-    setup = core.String(default='')
-    teardown = core.String(default='')
 
     PS1 = '>>> '
     PS2 = '... '
 
-    def __init__(self, console, **fields):
+    def __init__(self, console, setup='', teardown='', **fields):
         """Constructor.
 
         PARAMETERS:
@@ -37,6 +35,8 @@ class DoctestCase(interpreter.InterpreterCase, models.LockableCase):
         """
         assert isinstance(console, PythonConsole), 'Improper console: {}'.format(console)
         super().__init__(console, **fields)
+        self.setup = setup
+        self.teardown = teardown
 
     def post_instantiation(self):
         self.code = textwrap.dedent(self.code)
