@@ -10,11 +10,15 @@ class Test(core.Serializable):
 
     def run(self):
         """Subclasses should override this method to run tests."""
-        raise NotImplementedError
 
     def score(self):
         """Subclasses should override this method to score the test."""
-        raise NotImplementedError
+
+    def unlock(self, console):
+        """Subclasses should override this method to lock the test."""
+
+    def lock(self, hash_fn):
+        """Subclasses should override this method to lock the test."""
 
     def dump(self, file):
         """Subclasses should override this method for serialization."""
@@ -24,6 +28,7 @@ class Case(core.Serializable):
     """Abstract case class."""
 
     hidden = core.Boolean(default=False)
+    locked = core.Boolean(optional=True)
 
     def run(self):
         """Subclasses should override this method for running a test case.
@@ -32,16 +37,6 @@ class Case(core.Serializable):
         bool; True if the test case passes, False otherwise.
         """
         raise NotImplementedError
-
-class LockableCase(Case):
-    """Abstract case class that is locakble.
-
-    It is up to subclasses to determine how locked tests should behave
-    during an invocation of the run method. However, it is convention
-    for run to immediately return False on locked tests, to prevent
-    students from moving on past locked questions."""
-
-    locked = core.Boolean(optional=True)
 
     def lock(self, hash_fn):
         """Subclasses should override this method for locking a test case.
@@ -55,6 +50,9 @@ class LockableCase(Case):
 
     def unlock(self, interact):
         """Subclasses should override this method for unlocking a test case.
+
+        It is the responsibility of the the subclass to make any changes to the
+        test case, including setting its locked field to False.
 
         PARAMETERS:
         interact -- function; handles user interaction during the unlocking

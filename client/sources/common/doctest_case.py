@@ -11,7 +11,7 @@ import re
 import textwrap
 import traceback
 
-class DoctestCase(interpreter.InterpreterCase, models.LockableCase):
+class DoctestCase(interpreter.InterpreterCase):
     """TestCase for doctest-style Python tests."""
 
     code = core.String()

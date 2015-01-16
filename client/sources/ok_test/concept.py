@@ -19,7 +19,7 @@ class ConceptSuite(ok_test.models.Suite):
             case.run()
         return True
 
-class ConceptCase(common.models.LockableCase):
+class ConceptCase(common.models.Case):
     question = core.String()
     answer = core.String()
     choices = core.List(type=str, optional=True)

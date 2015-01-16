@@ -51,6 +51,41 @@ class OkTest(models.Test):
         # analytics
         pass
 
+    def unlock(self, interact):
+        # formatting.underline('Unlocking tests for {}'.format(test.name))
+        # print()
+
+        for suite in self.suites:
+            for case in suite.cases:
+                if case.locked != True:
+                    continue
+
+                # formatting.underline('Case {}'.format(cases), line='-')
+
+                case.unlock(interact)
+        # print("You are done unlocking tests for this question!")
+        # print()
+
+    def lock(self, hash_fn):
+        # formatting.underline('Locking Test ' + test.name, line='-')
+
+        num_cases = 0
+        for suite in self.suites:
+            for case in list(suite.cases):
+                num_cases += 1  # 1-indexed
+                if case.hidden:
+                    suite.cases.remove(case)
+                    # print('* Case {}: removed hidden test'.format(num_cases))
+                elif not case.locked == core.NoValue:
+                    case.lock(hash_fn)
+                    # print('* Case {}: locked test'.format(num_cases))
+                elif case.locked == False:
+                    pass
+                    # print('* Case {}: never lock'.format(num_cases))
+                elif case.locked == True:
+                    pass
+                    # print('* Case {}: already locked'.format(num_cases))
+
     def dump(self, file):
         # TODO(albert): add log messages
         # TODO(albert): writing causes an error halfway, the tests
