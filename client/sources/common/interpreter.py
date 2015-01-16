@@ -30,7 +30,7 @@ class InterpreterCase(models.Case):
         super().__init__(**fields)
         self.console = console
 
-    def run(self, logger):
+    def run(self):
         """Implements the GradedTestCase interface."""
         self.preprocess()
         success = console.interpret()
@@ -44,8 +44,7 @@ class InterpreterCase(models.Case):
         pass
 
 class Console(object):
-    def __init__(self, logger, verbose, interactive, timeout=None):
-        self.logger = logger
+    def __init__(self, verbose, interactive, timeout=None):
         self.verbose = verbose
         self.interactive = interactive
         self.timeout = timeout

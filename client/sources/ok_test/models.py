@@ -10,16 +10,20 @@ class OkTest(models.Test):
     suites = core.List()
     description = core.String(optional=True)
 
-    def __init__(self, suite_map, **fields):
+    def __init__(self, suite_map, verbose, interactive, timeout=None, **fields):
         super().__init__(**fields)
         self.suite_map = suite_map
+        self.verbose = verbose
+        self.interactive = interactive
+        self.timeout = timeout
 
     def post_instantiation(self):
         for i, suite in enumerate(self.suites):
             if not isinstance(suite, dict) or 'type' not in suite:
                 # TODO(albert): raise an appropriate error
                 raise TypeError
-            self.suites[i] = self.suite_map[suite['type']](**suite)
+            self.suites[i] = self.suite_map[suite['type']](
+                    self.verbose, self.interactive, self.timeout, **suite)
 
     def run(self):
         """Runs the suites associated with this OK test."""
@@ -60,6 +64,12 @@ class OkTest(models.Test):
 class Suite(core.Serializable):
     type = core.String()
     scored = core.Boolean(default=True)
+
+    def __init__(self, verbose, interactive, timeout=None, **fields):
+        super().__init__(**fields)
+        self.verbose = verbose
+        self.interactive = interactive
+        self.timeout = timeout
 
     def run(self):
         """Subclasses should override this method to run tests.

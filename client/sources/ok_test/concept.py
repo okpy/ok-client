@@ -16,7 +16,6 @@ class ConceptSuite(ok_test.models.Suite):
     def run(self):
         for case in self.cases:
             # TODO(albert): print some informative output
-            # TODO(albert): pass appropriate arguments to run
             case.run()
         return True
 
@@ -25,7 +24,7 @@ class ConceptCase(common.models.LockableCase):
     answer = core.String()
     choices = core.List(type=str, optional=True)
 
-    def run(self, logger):
+    def run(self):
         """Runs the test conceptual test case.
 
         RETURNS:

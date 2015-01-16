@@ -8,10 +8,9 @@ class DoctestSuite(models.Suite):
     setup = core.String(default='')
     teardown = core.String(default='')
 
-    def __init__(self, **fields):
-        super().__init__(**fields)
-        # TODO(albert): pass appropriate arguments to python console
-        self.console = doctest_case.PythonConsole()
+    def __init__(self, verbose, interactive, timeout=None, **fields):
+        super().__init__(verbose, interactive, timeout, **fields)
+        self.console = doctest_case.PythonConsole(verbose, interactive, timeout)
 
     def post_instantiation(self):
         for i, case in enumerate(self.cases):
@@ -32,7 +31,6 @@ class DoctestSuite(models.Suite):
                 return False  # students must unlock first
 
             # formatting.underline('Case {}'.format(i + 1), line='-')
-            # TODO(albert): pass appropriate arguments to run
             success = case.run()
             if not success:
                 return False

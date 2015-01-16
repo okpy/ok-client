@@ -2,8 +2,9 @@
 
 from client import exceptions
 from client.sources.common import core
-from client.sources.common import models
 from client.sources.common import interpreter
+from client.sources.common import models
+from client.utils import output
 from client.utils import timer
 import code
 import re
@@ -123,8 +124,8 @@ class PythonConsole(interpreter.Console):
     PS1 = DoctestCase.PS1
     PS2 = DoctestCase.PS2
 
-    def __init__(self, logger, verbose, interactive, timeout=None):
-        super().__init__(logger, verbose, interactive, timeout)
+    def __init__(self, verbose, interactive, timeout=None):
+        super().__init__(verbose, interactive, timeout)
         self.load('')   # Initialize empty code.
 
     def load(self, code, setup='', teardown=''):

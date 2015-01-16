@@ -25,7 +25,7 @@ class Case(core.Serializable):
 
     hidden = core.Boolean(default=False)
 
-    def run(self, logger):
+    def run(self):
         """Subclasses should override this method for running a test case.
 
         RETURNS:

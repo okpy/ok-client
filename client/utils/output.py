@@ -3,14 +3,15 @@
 import os
 import sys
 
-class OutputLogger(object):
+class _OutputLogger(object):
     """Custom logger for capturing and suppressing standard output."""
     # TODO(albert): logger should fully implement output stream.
 
     def __init__(self):
         self._current_stream = self._stdout = sys.stdout
         self._devnull = open(os.devnull, 'w')
-        self._log = None
+        self._logs = {}
+        self._num_logs = 0
 
     def on(self):
         """Allows print statements to emit to standard output."""
@@ -20,22 +21,27 @@ class OutputLogger(object):
         """Prevents print statements from emitting to standard out."""
         self._current_stream = self._devnull
 
-    def register_log(self, log):
-        """Registers the given log so that all calls to write will
-        append to the log.
+    def new_log(self):
+        """Registers a new log so that calls to write will append to the log.
 
-        PARAMETERS:
-        log -- list or None; if list, write will append all output to
-               log. If None, output is not logged.
+        RETURN:
+        int; a unique ID to reference the log.
         """
-        self._log = log
+        log_id = self._num_logs
+        self._logs[log_id] = []
+        self._num_logs += 1
+        return log_id
+
+    def get_log(self, log_id):
+        assert log_id in self._logs
+        return self._logs[log_id]
+
+    def remove_log(self, log_id):
+        assert log_id in self._logs, 'Log id {} not found'.format(log_id)
+        del self._logs[log_id]
 
     def is_on(self):
         return self._current_stream == self._stdout
-
-    @property
-    def log(self):
-        return self._log
 
     def write(self, msg):
         """Writes msg to the current output stream (either standard
@@ -46,8 +52,8 @@ class OutputLogger(object):
         msg -- str
         """
         self._current_stream.write(msg)
-        if type(self._log) == list:
-            self._log.append(msg)
+        for log in self._logs.values():
+            log.append(msg)
 
     def flush(self):
         self._current_stream.flush()
@@ -56,25 +62,20 @@ class OutputLogger(object):
     def __getattr__(self, attr):
         return getattr(self._current_stream, attr)
 
-class LogInterceptor(object):
-    """A serializable interceptor object that relays output to a logger object"""
-    def __init__(self):
-        self._msgs = []
+_logger = sys.stdout = _OutputLogger()
 
-    def info(self, *args):
-        self._msgs.append(('info', args))
+def on():
+    _logger.on()
 
-    def warning(self, *args):
-        self._msgs.append(('warning', args))
+def off():
+    _logger.off()
 
-    def error(self, *args):
-        self._msgs.append(('error', args))
+def get_log(log_id):
+    return _logger.get_log(log_id)
 
-    def dump_to_logger(self, log):
-        for msg_type, msg in self._msgs:
-            if msg_type == 'info':
-                log.info(*msg)
-            elif msg_type == 'warning':
-                log.warning(*msg)
-            elif msg_type == 'error':
-                log.error(*msg)
+def new_log():
+    return _logger.new_log()
+
+def remove_log(log_id):
+    _logger.remove_log(log_id)
+
