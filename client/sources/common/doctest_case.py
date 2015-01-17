@@ -56,6 +56,7 @@ class DoctestCase(interpreter.InterpreterCase):
                 line.output = [hash_fn(output) for output in line.output]
                 line.locked = True
         self.locked = True
+        self._sync_code()
 
     def unlock(self, interact):
         """Unlocks the DoctestCase.
@@ -76,14 +77,16 @@ class DoctestCase(interpreter.InterpreterCase):
                     line.locked = False
             self.locked = False
         finally:
-            # Sync self.code with new set of lines
-            new_code = []
-            for line in self.lines:
-                if isinstance(line, _Answer):
-                    new_code.append(line.dump())
-                else:
-                    new_code.append(line)
-            self.code = '\n'.join(new_code)
+            self._sync_code()
+
+    def _sync_code(self):
+        new_code = []
+        for line in self.lines:
+            if isinstance(line, _Answer):
+                new_code.append(line.dump())
+            else:
+                new_code.append(line)
+        self.code = '\n'.join(new_code)
 
 class _Answer(object):
     status_re = re.compile(r'^#\s*(.+?):\s*(.*)\s*$')

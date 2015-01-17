@@ -33,7 +33,7 @@ class InterpreterCase(models.Case):
     def run(self):
         """Implements the GradedTestCase interface."""
         self.preprocess()
-        success = console.interpret()
+        success = self.console.interpret()
         self.postprocess()
         return success
 

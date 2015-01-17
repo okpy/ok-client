@@ -56,7 +56,7 @@ class OkTest(models.Test):
             if success:
                 passed += 1
         if total > 0:
-            score = passed * test.points / total
+            score = passed * self.points / total
         else:
             score = 0
         return score
@@ -82,19 +82,19 @@ class OkTest(models.Test):
         num_cases = 0
         for suite in self.suites:
             for case in list(suite.cases):
-                num_cases += 1  # 1-indexed
                 if case.hidden:
                     suite.cases.remove(case)
-                    # print('* Case {}: removed hidden test'.format(num_cases))
-                elif not case.locked == core.NoValue:
+                    print('* Case {}: removed hidden test'.format(num_cases))
+                elif case.locked == core.NoValue:
                     case.lock(hash_fn)
-                    # print('* Case {}: locked test'.format(num_cases))
+                    print('* Case {}: locked test'.format(num_cases))
                 elif case.locked == False:
                     pass
-                    # print('* Case {}: never lock'.format(num_cases))
+                    print('* Case {}: never lock'.format(num_cases))
                 elif case.locked == True:
                     pass
-                    # print('* Case {}: already locked'.format(num_cases))
+                    print('* Case {}: already locked'.format(num_cases))
+                num_cases += 1  # 1-indexed
 
     def dump(self, file):
         # TODO(albert): add log messages
@@ -102,7 +102,7 @@ class OkTest(models.Test):
         # directory may be left in a corrupted state.
         # TODO(albert): might need to delete obsolete test files too.
         # TODO(albert): verify that test_json is serializable into json.
-        json = formatting.json_triple_quotes(self.to_json())
+        json = formatting.prettyjson(self.to_json())
         with open(file, 'w') as f:
             f.write('test = ' + json)
 

@@ -5,7 +5,7 @@
         "assignment.py"
     ],
     "tests": {
-        "tests/*": "ok_tests",
+        "tests/[!_]*.py": "ok_tests",
         "*.py": "doctests",
         "*.scm": "stk"
     },

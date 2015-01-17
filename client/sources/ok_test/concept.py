@@ -5,13 +5,20 @@ students understand high-level understanding. As such, these test cases
 focus mainly on unlocking.
 """
 
-from client.sources import common.models
-from client.sources import ok_test.models
+from client.sources.common import models as common_models
+from client.sources.ok_test import models as ok_models
 from client.sources.common import core
 
-class ConceptSuite(ok_test.models.Suite):
+class ConceptSuite(ok_models.Suite):
     scored = core.Boolean(default=False)
-    cases = core.List(type=ConceptCase)
+    cases = core.List()
+
+    def post_instantiation(self):
+        for i, case in enumerate(self.cases):
+            if not isinstance(case, dict):
+                # TODO(albert): raise an appropriate error
+                raise TypeError
+            self.cases[i] = ConceptCase(**case)
 
     def run(self):
         for case in self.cases:
@@ -19,7 +26,7 @@ class ConceptSuite(ok_test.models.Suite):
             case.run()
         return True
 
-class ConceptCase(common.models.Case):
+class ConceptCase(common_models.Case):
     question = core.String()
     answer = core.String()
     choices = core.List(type=str, optional=True)
@@ -59,3 +66,4 @@ class ConceptCase(common.models.Case):
                 # Answer was presumably unlocked
                 self.locked = False
                 self.answer = answer
+

@@ -89,6 +89,8 @@ class List(Field):
         if self._type is None:
             return list(value)
         else:
+            # TODO(albert): find a way to do better element-wise type coercion
+            # so that constructors can take additional arguments
             return [self._type(elem) for elem in value]
 
     def to_json(self, value):
@@ -181,11 +183,7 @@ class Serializable(metaclass=_SerializeMeta):
         if attr in cls._fields:
             field = cls._fields[attr]
             if value != NoValue and not field.is_valid(value):
-                try:
-                    value = field.coerce(value)
-                except (TypeError, ValueError):
-                    raise TypeError('{}.{} assigned invalid value: '
-                                    '{}'.format(cls.__name__, attr, value))
+                value = field.coerce(value)
         super().__setattr__(attr, value)
 
     def post_instantiation(self):
