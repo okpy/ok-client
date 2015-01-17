@@ -1,6 +1,7 @@
 from client.sources.common import core
 from client.sources.common import models
-from client.utils import formatting
+from client.utils import format
+from client.utils import output
 
 ##########
 # Models #
@@ -27,24 +28,39 @@ class OkTest(models.Test):
 
     def run(self):
         """Runs the suites associated with this OK test."""
-        # formatting.underline('Running tests for ' + test.name)
-        # print()
-        # if test.description:
-        #     print(test.description)
+        passed, failed, locked = 0, 0, 0
+        for i, suite in enumerate(self.suites):
+            results = suite.run(self.name, i + 1)
 
-        # cases_tested = Counter()
-        for suite in self.suites:
-            success = suite.run()
-            if not success:
-                break
+            passed += results['passed']
+            failed += results['failed']
+            locked += results['locked']
 
-        # TODO(albert): Print results to stdout
-        # if test.num_locked > 0:
-        #     print('-- There are still {} locked test cases.'.format(
-        #         test.num_locked) + ' Use the -u flag to unlock them. --')
-        # print('-- {} cases passed ({}%) for {} --'.format(
-        #     passed, round(100 * passed / total, 2), test.name))
-        # print()
+        self._print_breakdown(passed, failed, locked)
+        if type(self.description) == str and self.description:
+            print()
+            print(self.description)
+        print()
+
+    def _print_breakdown(self, passed, failed, locked):
+        format.print_line('-')
+        print(self.name)
+        print('    Passed: {}'.format(passed))
+        print('    Failed: {}'.format(failed))
+        print('    Locked: {}'.format(locked))
+
+        # Print [oook.....] progress bar
+        total = passed + failed + locked
+        percent = round(100 * passed / total, 1) if total != 0 else 0.0
+        print('[{}k{}] {}% of cases passed'.format(
+            'o' * int(percent // 10),
+            '.' * int(10 - (percent // 10)),
+            percent))
+
+        if locked > 0:
+            print()
+            print('There are still unlocked tests! '
+                  'Use the -u option to unlock them')
 
     def score(self):
         passed, total = 0, 0
@@ -77,24 +93,23 @@ class OkTest(models.Test):
         # print()
 
     def lock(self, hash_fn):
-        # formatting.underline('Locking Test ' + test.name, line='-')
+        format.print_line('-')
+        print(self.name)
 
-        num_cases = 0
-        for suite in self.suites:
-            for case in list(suite.cases):
+        for suite_num, suite in enumerate(list(self.suites)):
+            for case_num, case in enumerate(list(suite.cases)):
+                message = '* Suite {} > Case {}: '.format(suite_num, case_num)
                 if case.hidden:
                     suite.cases.remove(case)
-                    print('* Case {}: removed hidden test'.format(num_cases))
+                    print(message + 'removing hidden case')
                 elif case.locked == core.NoValue:
                     case.lock(hash_fn)
-                    print('* Case {}: locked test'.format(num_cases))
+                    print(message + 'locking')
                 elif case.locked == False:
-                    pass
-                    print('* Case {}: never lock'.format(num_cases))
+                    print(message + 'leaving unlocked')
                 elif case.locked == True:
-                    pass
-                    print('* Case {}: already locked'.format(num_cases))
-                num_cases += 1  # 1-indexed
+                    print(message + 'already unlocked')
+        print()
 
     def dump(self, file):
         # TODO(albert): add log messages
@@ -102,7 +117,7 @@ class OkTest(models.Test):
         # directory may be left in a corrupted state.
         # TODO(albert): might need to delete obsolete test files too.
         # TODO(albert): verify that test_json is serializable into json.
-        json = formatting.prettyjson(self.to_json())
+        json = format.prettyjson(self.to_json())
         with open(file, 'w') as f:
             f.write('test = ' + json)
 
@@ -110,16 +125,48 @@ class Suite(core.Serializable):
     type = core.String()
     scored = core.Boolean(default=True)
 
-    def __init__(self, verbose, interactive, timeout=None, **fields):
+    def __init__(self, verbose, interactive, timeout=None,
+                 **fields):
         super().__init__(**fields)
         self.verbose = verbose
         self.interactive = interactive
         self.timeout = timeout
 
-    def run(self):
+    def run(self, test_name, suite_number):
         """Subclasses should override this method to run tests.
 
         RETURNS:
-        bool; True if all cases pass successfully, False otherwise.
+        dict; results of the following form:
+        {
+            'passed': int,
+            'failed': int,
+            'locked': int,
+        }
         """
         raise NotImplementedError
+
+    def _run_case(self, test_name, suite_number, case, case_number):
+        """A wrapper for case.run().
+
+        Prints informative output and also captures output of the test case
+        and returns it as a log. The output is suppressed -- it is up to the
+        calling function to decide whether or not to print the log.
+        """
+        output.off()    # Delay printing until case status is determined.
+        log_id = output.new_log()
+
+        format.print_line('-')
+        print('{} > Suite {} > Case {}'.format(test_name, suite_number,
+                                               case_number))
+        print()
+
+        success = case.run()
+        if success:
+            print('-- OK! --')
+
+        output.on()
+        output_log = output.get_log(log_id)
+        output.remove_log(log_id)
+
+        return success, output_log
+

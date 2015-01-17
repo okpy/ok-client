@@ -1,5 +1,6 @@
 from client.sources.common import core
-import client.protocols
+from client.utils import format
+import client
 import collections
 import glob
 import importlib
@@ -34,6 +35,7 @@ class Assignment(core.Serializable):
         self.specified_tests = []
 
     def post_instantiation(self):
+        self._print_header()
         self._load_tests()
         self._load_protocols()
         self._resolve_specified_tests()
@@ -50,7 +52,7 @@ class Assignment(core.Serializable):
         for file_pattern, source in self.tests.items():
             for file in glob.glob(file_pattern):
                 # TODO(albert): add error handling
-                module = importlib.import_module('.' + source, self._TESTS_PACKAGE)
+                module = importlib.import_module(self._TESTS_PACKAGE + '.' + source)
                 self.test_map[file] = module.load(file, self.cmd_args)
                 log.info('Loaded {}'.format(file))
 
@@ -96,10 +98,17 @@ class Assignment(core.Serializable):
         log.info('Loading protocols')
         for proto in self.protocols:
             # TODO(albert): add error handling
-            module = importlib.import_module('.' + proto, self._PROTOCOL_PACKAGE)
+            module = importlib.import_module(self._PROTOCOL_PACKAGE + '.' + proto)
             # TODO(albert): determine all arguments to a protocol
             self.protocol_map[proto] = module.protocol(self.cmd_args, self)
             log.info('Loaded protocol "{}"'.format(proto))
+
+    def _print_header(self):
+        format.print_line('=')
+        print('Assignment: {}'.format(self.name))
+        print('OK, version {}'.format(client.__version__))
+        format.print_line('=')
+        print()
 
 def _edit_distance(s1, s2):
     """Calculates the minimum edit distance between two strings.

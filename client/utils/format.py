@@ -33,29 +33,16 @@ def indent(text, indentation):
 # Printing #
 ############
 
-def underline(text, line='='):
+def print_line(style, length=69):
     """Prints an underlined version of the given line with the
     specified underline style.
 
     PARAMETERS:
-    line  -- str
-    under -- str; a one-character string that specifies the underline
-             style
+    style  -- str; a one-character string that denotes the line style.
+    length -- int; the width of the line. The default is 69, which is the width
+              for doctest lines.
     """
-    print(text + '\n' + line * len(text))
-
-def print_title(text):
-    """Prints the given text as a "title" to standard output, in the
-    following format:
-
-    ###########
-    Sample Text
-    ###########
-    """
-    print('#'* len(text))
-    print(text)
-    print('#'* len(text))
-    print()
+    print(style * length)
 
 #################
 # Serialization #

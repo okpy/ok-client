@@ -4,7 +4,7 @@ associated with an assignment.
 
 from client.sources.common import core
 from client.protocols.common import models
-from client.utils import formatting
+from client.utils import format
 from collections import OrderedDict
 import logging
 

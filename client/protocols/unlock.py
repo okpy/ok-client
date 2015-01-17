@@ -6,7 +6,7 @@ compatible with the UnlockProtocol.
 """
 
 from client.protocols.common import models
-from client.utils import formatting
+from client.utils import format
 import hmac
 import logging
 import random

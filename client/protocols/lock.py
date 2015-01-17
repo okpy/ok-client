@@ -1,4 +1,5 @@
 from client.protocols.common import models
+from client.utils import format
 import hmac
 import logging
 
@@ -18,8 +19,10 @@ class LockProtocol(models.Protocol):
         """Responsible for locking each test."""
         if not self.args.lock:
             return
-        # formatting.print_title('Locking tests for {}'.format(
-        #     self.assignment['name']))
+
+        format.print_line('~')
+        print('Locking tests')
+        print()
 
         for test in self.assignment.test_map.values():
             log.info('Locking {}'.format(test.name))
