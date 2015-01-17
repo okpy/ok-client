@@ -8,8 +8,11 @@ compatible with the UnlockProtocol.
 from client.protocols.common import models
 from client.utils import formatting
 import hmac
+import logging
 import random
 import string
+
+log = logging.getLogger(__name__)
 
 try:
     import readline
@@ -51,6 +54,7 @@ class UnlockProtocol(models.Protocol):
         # print('Type {} to quit'.format(UnlockConsole.EXIT_INPUTS[0]))
 
         for test in self.assignment.specified_tests:
+            log.info('Unlocking test {}'.format(test.name))
             try:
                 # TODO(albert): pass appropriate arguments to unlock
                 test.unlock(self._interact)
@@ -142,7 +146,7 @@ class UnlockProtocol(models.Protocol):
 
 
     def _verify(self, guess, locked):
-        return hmac.new(self._hash_key.encode('utf-8'),
+        return hmac.new(self.hash_key.encode('utf-8'),
                         guess.encode('utf-8')).hexdigest() == locked
 
     def _input(self, prompt):

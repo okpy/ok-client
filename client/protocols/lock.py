@@ -1,4 +1,8 @@
 from client.protocols.common import models
+import hmac
+import logging
+
+log = logging.getLogger(__name__)
 
 def normalize(text):
     """Normalizes whitespace in a specified string of text."""
@@ -18,6 +22,7 @@ class LockProtocol(models.Protocol):
         #     self.assignment['name']))
 
         for test in self.assignment.test_map.values():
+            log.info('Locking {}'.format(test.name))
             test.lock(self._hash_fn)
 
         # print('Completed locking {}.'.format(self.assignment.name))

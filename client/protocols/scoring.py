@@ -6,6 +6,9 @@ from client.sources.common import core
 from client.protocols.common import models
 from client.utils import formatting
 from collections import OrderedDict
+import logging
+
+log = logging.getLogger(__name__)
 
 #####################
 # Testing Mechanism #
@@ -25,6 +28,7 @@ class ScoringProtocol(models.Protocol):
         #     self.assignment['name']))
         self.scores = OrderedDict()
         for test in self.assignment.specified_tests:
+            log.info('Scoring test {}'.format(test.name))
             # formatting.underline('Scoring tests for ' + test.name)
             # print()
             partner = test.partner if test.partner != core.NoValue else None

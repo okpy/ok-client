@@ -7,6 +7,9 @@ are compatible with the GradingProtocol.
 
 from client.protocols.common import models
 from client.utils import formatting
+import logging
+
+log = logging.getLogger(__name__)
 
 #####################
 # Testing Mechanism #
@@ -30,6 +33,7 @@ class GradingProtocol(models.Protocol):
         # formatting.print_title('Running tests for {}'.format(
         #     self.assignment['name']))
         for test in self.assignment.specified_tests:
+            log.info('Running tests for {}'.format(test.name))
             # formatting.underline('Running tests for ' + test.name)
             # print()
             test.run()
@@ -38,16 +42,15 @@ class GradingProtocol(models.Protocol):
             #     print('-- There are still {} locked test cases.'.format(
             #         test.num_locked) + ' Use the -u flag to unlock them. --')
 
-            self.analytics[test.name] = passed
+            # self.analytics[test.name] = passed
             # if total > 0:
             #     print('-- {} cases passed ({}%) for {} --'.format(
             #         passed, round(100 * passed / total, 2), test.name))
             # print()
-        if not any_graded and self.args.question:
-            # print('Test {} does not exist. Try one of the following:'.format(
-            #     self.args.question))
-            # print(' '.join(sorted(test.name for test in self.assignment.tests)))
-            pass
+        # if not any_graded and self.args.question:
+        #     print('Test {} does not exist. Try one of the following:'.format(
+        #         self.args.question))
+        #     print(' '.join(sorted(test.name for test in self.assignment.tests)))
         return self.analytics
 
 protocol = GradingProtocol

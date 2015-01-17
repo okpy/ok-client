@@ -1,12 +1,17 @@
 from client.sources.common import core
+import client.protocols
+import collections
 import glob
 import importlib
 import json
-import collections
+import logging
+
+log = logging.getLogger(__name__)
 
 def load_config(filepath, args):
     with open(filepath, 'r') as f:
         config = json.load(f, object_pairs_hook=collections.OrderedDict)
+    log.info('Loaded config from {}'.format(filepath))
     if not isinstance(config, dict):
         # TODO(albert): raise an error
         pass
@@ -41,11 +46,13 @@ class Assignment(core.Serializable):
                     that matches the UNIX style file pattern will be loaded
                     by the module.load method.
         """
+        log.info('Loading tests')
         for file_pattern, source in self.tests.items():
             for file in glob.glob(file_pattern):
                 # TODO(albert): add error handling
-                module = importlib.import_module(self._TESTS_PACKAGE + '.' + source)
-                self.test_map[file] = module.load(file)
+                module = importlib.import_module('.' + source, self._TESTS_PACKAGE)
+                self.test_map[file] = module.load(file, self.cmd_args)
+                log.info('Loaded {}'.format(file))
 
     def dump_tests(self):
         """Dumps all tests, as determined by their .dump() method.
@@ -54,9 +61,11 @@ class Assignment(core.Serializable):
         tests -- dict; file -> Test. Each Test object has a .dump method
                  that takes a filename and serializes the test object.
         """
+        log.info('Dumping tests')
         for file, test in self.test_map.items():
             # TODO(albert): add error handling
             test.dump(file)
+            log.info('Dumped {} to {}'.format(test.name, file))
 
     def _resolve_specified_tests(self):
         """For each of the questions specified on the command line,
@@ -70,20 +79,27 @@ class Assignment(core.Serializable):
         tests.
         """
         if not self.cmd_args.question:
-            self.specified_tests = list(self.test_map)
+            log.info('Using all tests (no questions specified)')
+            self.specified_tests = list(self.test_map.values())
+            return
+        elif not self.test_map:
+            log.info('No tests loaded')
             return
         for question in self.cmd_args.question:
             best_match = min(self.test_map,
-                             key=lambda t: _edit_distance(t, question))
+                             key=lambda t: _edit_distance(t.lower(), question.lower()))
+            log.info('Matched {} to {}'.format(question, best_match))
             if best_match not in self.specified_tests:
-                self.specified_tests.append(best_match)
+                self.specified_tests.append(self.test_map[best_match])
 
     def _load_protocols(self):
+        log.info('Loading protocols')
         for proto in self.protocols:
             # TODO(albert): add error handling
-            module = importlib.import_module(self._PROTOCOL_PACKAGE + '.' + proto)
+            module = importlib.import_module('.' + proto, self._PROTOCOL_PACKAGE)
             # TODO(albert): determine all arguments to a protocol
             self.protocol_map[proto] = module.protocol(self.cmd_args, self)
+            log.info('Loaded protocol "{}"'.format(proto))
 
 def _edit_distance(s1, s2):
     """Calculates the minimum edit distance between two strings.

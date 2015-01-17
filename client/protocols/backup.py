@@ -1,6 +1,8 @@
 from client.protocols.common import models
+import logging
 import os
 
+log = logging.getLogger(__name__)
 
 class BackupProtocol(models.Protocol):
     """The contents of changed source files are sent to the server."""
@@ -15,10 +17,13 @@ class BackupProtocol(models.Protocol):
             files['submit'] = True
         for file in self.assignment.src:
             if not os.path.isfile(file):
-                # TODO(albert): raise an appropriate error
-                pass
-            with open(file, 'r', encoding='utf-8') as lines:
-                contents = lines.read()
+                # TODO(albert): add an error message
+                contents = ''
+                log.warning('File {} does not exist'.format(file))
+            else:
+                with open(file, 'r', encoding='utf-8') as lines:
+                    contents = lines.read()
+                log.warning('Loaded contents of {} to send to server'.format(file))
             files[file] = contents
         return files
 
