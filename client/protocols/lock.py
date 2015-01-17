@@ -1,5 +1,4 @@
 from client.protocols.common import models
-from client.protocols.common import core
 
 def normalize(text):
     """Normalizes whitespace in a specified string of text."""

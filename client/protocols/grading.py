@@ -29,7 +29,7 @@ class GradingProtocol(models.Protocol):
             return
         # formatting.print_title('Running tests for {}'.format(
         #     self.assignment['name']))
-        for test in self._get_tests():
+        for test in self.assignment.specified_tests:
             # formatting.underline('Running tests for ' + test.name)
             # print()
             test.run()
@@ -49,10 +49,5 @@ class GradingProtocol(models.Protocol):
             # print(' '.join(sorted(test.name for test in self.assignment.tests)))
             pass
         return self.analytics
-
-    def _get_tests():
-        # TODO(albert): implement a fuzzy matching for tests
-        pass
-
 
 protocol = GradingProtocol

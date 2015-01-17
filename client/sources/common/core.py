@@ -1,3 +1,5 @@
+import collections
+
 ###############
 # Field types #
 ###############
@@ -95,13 +97,19 @@ class List(Field):
                              for elem in value]
 
 class Dict(Field):
-    def __init__(self, keys=None, values=None, **kargs):
+    def __init__(self, keys=None, values=None, ordered=False, **kargs):
         super().__init__(**kargs)
         self._keys = keys
         self._values = values
+        self._constructor = collections.OrderedDict if ordered else dict
+        self._ordered = ordered
+
+    @property
+    def ordered(self):
+        return self._ordered
 
     def is_valid(self, value):
-        valid = type(value) == dict
+        valid = isinstance(value, dict)
         if self._keys is not None:
             valid &= all(isinstance(k, self._keys) for k in value)
         if self._values is not None:
@@ -109,8 +117,8 @@ class Dict(Field):
         return valid
 
     def coerce(self, value):
-        result = {}
-        for k, v in dict(value).items():
+        result = self._constructor()
+        for k, v in self._constructor(value).items():
             if self._keys is not None:
                 k = self._keys(k)
             elif self._values is not None:
@@ -120,7 +128,7 @@ class Dict(Field):
 
     def to_json(self, value):
         value = super().to_json(value)
-        result = {}
+        result = self._constructor()
         for k, v in value.items():
             if hasattr(k, 'to_json'):
                 k = k.to_json()

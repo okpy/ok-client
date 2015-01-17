@@ -24,16 +24,12 @@ class ScoringProtocol(models.Protocol):
         # formatting.print_title('Scoring tests for {}'.format(
         #     self.assignment['name']))
         self.scores = OrderedDict()
-        for test in self._get_tests():
+        for test in self.assignment.specified_tests:
             # formatting.underline('Scoring tests for ' + test.name)
             # print()
             partner = test.partner if test.partner != core.NoValue else None
             self.scores[test.name, test.partner] = (test.score(), test.points)
         display_breakdown(self.scores)
-
-    def _get_tests():
-        # TODO(albert): implement a fuzzy matching for tests
-        pass
 
 def display_breakdown(scores):
     """Prints the point breakdown given a dictionary of scores.
@@ -61,7 +57,8 @@ def display_breakdown(scores):
         for partner, score in sorted(partner_totals.items()):
             # print('Partner {} score:'.format(partner))
             # print(score + shared_points)
+            pass
 
     return partner_totals
 
-protocol = ScoringProtocolm
+protocol = ScoringProtocol

@@ -50,7 +50,7 @@ class UnlockProtocol(models.Protocol):
         #       + ' type in what you would expect the output to be.')
         # print('Type {} to quit'.format(UnlockConsole.EXIT_INPUTS[0]))
 
-        for test in self._filter_tests():
+        for test in self.assignment.specified_tests:
             try:
                 # TODO(albert): pass appropriate arguments to unlock
                 test.unlock(self._interact)
@@ -69,17 +69,6 @@ class UnlockProtocol(models.Protocol):
                 # print("-- Congratulations, you unlocked this case! --")
                 # print()
         return self.analytics
-
-    def _filter_tests(self):
-        """
-        Filter out tests based on command line options passed in by the
-        student.
-        """
-        # TODO(albert): have a way to do fuzzy matching for tests
-        if self.args.question:
-            return [test for test in self.assignment.tests
-                    if self.args.question in test['names']]
-        return self.assignment.tests
 
     ###################
     # Private Methods #
