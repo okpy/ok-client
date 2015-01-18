@@ -67,7 +67,7 @@ class DoctestCase(interpreter.InterpreterCase):
         """
         try:
             for line in self.lines:
-                if isinstance(line, str):
+                if isinstance(line, str) and line:
                     print(line)
                 elif isinstance(line, _Answer):
                     if not line.locked:
@@ -187,33 +187,37 @@ class PythonConsole(interpreter.Console):
         console.interact('# Interactive console. Type exit() to quit')
 
     def _compare(self, expected, code):
-        value, output = self._evaluate(code)
-        if output:
-            print(output)
-
-        if value is not None:
-            print(repr(value))
-            actual = (output + '\n' + repr(value)).strip()
+        try:
+            value, output = self._evaluate(code)
+        except PythonConsoleException as e:
+            actual = e.exception.__class__.__name__
         else:
-            actual = output.strip()
+            if value is not None:
+                print(repr(value))
+                actual = (output + '\n' + repr(value)).strip()
+            else:
+                actual = output.strip()
 
         expected = expected.strip()
         if expected != actual:
-            print('# Error: expected {} got {}'.format(expected, actual))
+            print('# Error: expected')
+            print('\n'.join('#     {}'.format(line)
+                            for line in expected.split('\n')))
+            print('# but got')
+            print('\n'.join('#     {}'.format(line)
+                            for line in actual.split('\n')))
             raise PythonConsoleException
 
     def _evaluate(self, code, frame=None):
         if frame is None:
             frame = self._frame
+        log_id = output.new_log()
         try:
             try:
                 result = timer.timed(self.timeout, eval, (code, frame))
-                output = '' # TODO(albert): capture output
-                return result, output
             except SyntaxError:
                 timer.timed(self.timeout, exec, (code, frame))
-                output = '' # TODO(albert): capture output
-                return None, output
+                result = None
         except RuntimeError as e:
             stacktrace_length = 9
             stacktrace = traceback.format_exc().split('\n')
@@ -233,6 +237,11 @@ class PythonConsole(interpreter.Console):
                 print('Traceback (most recent call last):')
             print(stacktrace)
             raise PythonConsoleException(e)
+        else:
+            printed_output = ''.join(output.get_log(log_id))
+            return result, printed_output
+        finally:
+            output.remove_log(log_id)
 
     def _strip_prompt(self, line):
         if line.startswith(self.PS1):
@@ -242,8 +251,8 @@ class PythonConsole(interpreter.Console):
         return line
 
 class PythonConsoleException(Exception):
-    # TODO(albert)
-    pass
+    def __init__(self, exception=None):
+        self.exception = exception
 
 
 def _split_code(code, PS1, PS2):
