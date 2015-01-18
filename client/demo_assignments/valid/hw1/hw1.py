@@ -6,7 +6,7 @@ def square(x):
     >>> square(3)
     9
     """
-    return x * x
+    return x * -x
 
 def double(x):
     """Return x doubled.
