@@ -117,9 +117,12 @@ def main():
             log.warning('Error importing ssl', stack_info=True)
             sys.exit("SSL Bindings are not installed. You can install python3 SSL bindings or \nrun ok locally with python3 ok --local")
 
-    # TODO(albert): allow config.json path to be a command line argument
-    # TODO(albert): fail fast if assignment cannot load.
-    assign = assignment.load_config(args.config, args)
+    # Load assignment from config.
+    try:
+        assign = assignment.load_config(args.config, args)
+    except TypeError:
+        # TODO(albert): catch a more appropriate error here
+        exit(1)
 
     # TODO(albert): what are these variables used for?
     server_thread, timer_thread = None, None

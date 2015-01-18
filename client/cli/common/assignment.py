@@ -88,8 +88,21 @@ class Assignment(core.Serializable):
             log.info('No tests loaded')
             return
         for question in self.cmd_args.question:
-            best_match = min(self.test_map,
-                             key=lambda t: _edit_distance(t.lower(), question.lower()))
+            matches = {}
+            for test in self.test_map:
+                score = _edit_distance(test.lower(), question.lower())
+                matches.setdefault(score, []).append(test)
+            best_score = min(matches)
+
+            if len(matches[best_score]) > 1:
+                print('Ambiguous question specified: {}'.format(question))
+                print('Did you mean one of the following?')
+                for test in matches[best_score]:
+                    print('    {}'.format(test))
+                # TODO(albert): raise an appropriate error
+                raise TypeError
+
+            best_match = matches[best_score][0]
             log.info('Matched {} to {}'.format(question, best_match))
             if best_match not in self.specified_tests:
                 self.specified_tests.append(self.test_map[best_match])
