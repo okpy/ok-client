@@ -24,15 +24,16 @@ class ScoringProtocol(models.Protocol):
         """Run gradeable tests and print results."""
         if not self.args.score:
             return
-        # formatting.print_title('Scoring tests for {}'.format(
-        #     self.assignment['name']))
+
+        format.print_line('~')
+        print('Scoring tests')
+        print()
+
         self.scores = OrderedDict()
         for test in self.assignment.specified_tests:
             log.info('Scoring test {}'.format(test.name))
-            # formatting.underline('Scoring tests for ' + test.name)
-            # print()
             partner = test.partner if test.partner != core.NoValue else None
-            self.scores[test.name, test.partner] = (test.score(), test.points)
+            self.scores[test.name, partner] = (test.score(), test.points)
         display_breakdown(self.scores)
 
 def display_breakdown(scores):
@@ -43,26 +44,24 @@ def display_breakdown(scores):
     """
     partner_totals = {}
 
-    # formatting.underline('Point breakdown')
+    format.print_line('-')
+
+    print('Point breakdown')
     for (name, partner), (score, total) in scores.items():
-        # print(name + ': ' + '{}/{}'.format(score, total))
+        print('    {}: {}/{}'.format(name, score, total))
         partner_totals[partner] = partner_totals.get(partner, 0) + score
-    # print()
+    print()
+
     shared_points = partner_totals.get(None, 0)
     if None in partner_totals:
         del partner_totals[None]
 
+    print('Score')
     if len(partner_totals) == 0:
         # If only one partner.
-        # print('Total score:')
-        # print(shared_points)
-        pass
+        print('    {}'.format(shared_points))
     else:
         for partner, score in sorted(partner_totals.items()):
-            # print('Partner {} score:'.format(partner))
-            # print(score + shared_points)
-            pass
-
-    return partner_totals
+            print('    Partner {}: {}'.format(partner, score + shared_points))
 
 protocol = ScoringProtocol

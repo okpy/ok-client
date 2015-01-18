@@ -36,45 +36,52 @@ class OkTest(models.Test):
             failed += results['failed']
             locked += results['locked']
 
-        self._print_breakdown(passed, failed, locked)
-        if type(self.description) == str and self.description:
-            print()
-            print(self.description)
-        print()
-
-    def _print_breakdown(self, passed, failed, locked):
-        format.print_line('-')
-        print(self.name)
-        print('    Passed: {}'.format(passed))
-        print('    Failed: {}'.format(failed))
-        print('    Locked: {}'.format(locked))
-
-        # Print [oook.....] progress bar
-        total = passed + failed + locked
-        percent = round(100 * passed / total, 1) if total != 0 else 0.0
-        print('[{}k{}] {}% of cases passed'.format(
-            'o' * int(percent // 10),
-            '.' * int(10 - (percent // 10)),
-            percent))
-
+        self._print_breakdown('cases', passed, failed, locked)
         if locked > 0:
             print()
             print('There are still unlocked tests! '
                   'Use the -u option to unlock them')
 
+        if type(self.description) == str and self.description:
+            print()
+            print(self.description)
+        print()
+
+    def _print_breakdown(self, type, passed, failed, locked=None):
+        format.print_line('-')
+        print(self.name)
+        print('    Passed: {}'.format(passed))
+        print('    Failed: {}'.format(failed))
+        if locked is not None:
+            print('    Locked: {}'.format(locked))
+
+        # Print [oook.....] progress bar
+        total = passed + failed + (0 if locked is None else locked)
+        percent = round(100 * passed / total, 1) if total != 0 else 0.0
+        print('[{}k{}] {}% of {} passed'.format(
+            'o' * int(percent // 10),
+            '.' * int(10 - (percent // 10)),
+            percent,
+            type))
+
     def score(self):
         passed, total = 0, 0
-        for suite in self.suites:
+        for i, suite in enumerate(self.suites):
             if not suite.scored:
                 continue
+
             total += 1
-            success = suite.run()
-            if success:
+            results = suite.run(self.name, i + 1)
+
+            if results['locked'] == 0 and results['failed'] == 0:
                 passed += 1
         if total > 0:
             score = passed * self.points / total
         else:
-            score = 0
+            score = 0.0
+
+        self._print_breakdown('suites', passed, total - passed)
+        print()
         return score
 
     def unlock(self, interact):
