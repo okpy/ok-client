@@ -29,6 +29,10 @@ def indent(text, indentation):
     """
     return '\n'.join([indentation + line for line in text.splitlines()])
 
+def normalize(text):
+    """Normalizes whitespace in a specified string of text."""
+    return " ".join(text.strip().split())
+
 ############
 # Printing #
 ############

@@ -5,11 +5,6 @@ import logging
 
 log = logging.getLogger(__name__)
 
-def normalize(text):
-    """Normalizes whitespace in a specified string of text."""
-    # TODO(albert): find a way to get rid of this.
-    return " ".join(text.split())
-
 class LockProtocol(models.Protocol):
     """Locking protocol that wraps that mechanism."""
 
@@ -28,11 +23,8 @@ class LockProtocol(models.Protocol):
             log.info('Locking {}'.format(test.name))
             test.lock(self._hash_fn)
 
-        # print('Completed locking {}.'.format(self.assignment.name))
-        # print()
-
     def _hash_fn(self, text):
-        text = normalize(text)
+        text = format.normalize(text)
         return hmac.new(self.assignment.name.encode('utf-8'),
                         text.encode('utf-8')).hexdigest()
 

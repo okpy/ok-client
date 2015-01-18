@@ -70,26 +70,17 @@ class ConceptCase(common_models.Case):
         return True
 
     def lock(self, hash_fn):
-        if self.choices is not core.NoValue:
-            # TODO(albert): ask Soumya why join is used
-            self.answer = hash_fn("".join(self.answer))
-        else:
-            self.answer = hash_fn(self.answer)
+        self.answer = hash_fn(self.answer)
         self.locked = True
 
     def unlock(self, interact):
         """Unlocks the conceptual test case."""
-        if self.locked == core.NoValue:
-            # TODO(albert): determine best initial setting.
+        print('Q: ' + self.question)
+        answer = interact([self.answer], self.choices)
+        assert len(answer) == 1
+        answer = answer[0]
+        if answer != self.answer:
+            # Answer was presumably unlocked
             self.locked = False
-        if self.locked:
-            # TODO(albert): perhaps move ctrl-c handling here
-            # TODO(albert): print question
-            # print('Q: ' + self['question'])
-            # print()
-            answer = interact(self.answer, self.choices)
-            if answer != self.answer:
-                # Answer was presumably unlocked
-                self.locked = False
-                self.answer = answer
+            self.answer = answer
 

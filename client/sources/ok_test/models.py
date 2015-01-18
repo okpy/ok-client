@@ -47,23 +47,6 @@ class OkTest(models.Test):
             print(self.description)
         print()
 
-    def _print_breakdown(self, type, passed, failed, locked=None):
-        format.print_line('-')
-        print(self.name)
-        print('    Passed: {}'.format(passed))
-        print('    Failed: {}'.format(failed))
-        if locked is not None:
-            print('    Locked: {}'.format(locked))
-
-        # Print [oook.....] progress bar
-        total = passed + failed + (0 if locked is None else locked)
-        percent = round(100 * passed / total, 1) if total != 0 else 0.0
-        print('[{}k{}] {}% of {} passed'.format(
-            'o' * int(percent // 10),
-            '.' * int(10 - (percent // 10)),
-            percent,
-            type))
-
     def score(self):
         passed, total = 0, 0
         for i, suite in enumerate(self.suites):
@@ -85,19 +68,28 @@ class OkTest(models.Test):
         return score
 
     def unlock(self, interact):
-        # formatting.underline('Unlocking tests for {}'.format(test.name))
-        # print()
+        total_cases = len([case for suite in self.suites
+                                for case in suite.cases])
+        for suite_num, suite in enumerate(self.suites):
+            for case_num, case in enumerate(suite.cases):
+                format.print_line('-')
+                print('{} > Suite {} > Case {}'.format(self.name, suite_num + 1,
+                                                       case_num + 1))
+                print('(cases remaining: {})'.format(total_cases))
+                print()
+                total_cases -= 1
 
-        for suite in self.suites:
-            for case in suite.cases:
                 if case.locked != True:
+                    print('-- Already unlocked --')
+                    print()
                     continue
 
-                # formatting.underline('Case {}'.format(cases), line='-')
-
                 case.unlock(interact)
-        # print("You are done unlocking tests for this question!")
-        # print()
+
+        assert total_cases == 0, 'Number of cases is incorrect'
+        format.print_line('-')
+        print('OK! All cases for {} unlocked.'.format(self.name))
+        print()
 
     def lock(self, hash_fn):
         format.print_line('-')
@@ -127,6 +119,24 @@ class OkTest(models.Test):
         json = format.prettyjson(self.to_json())
         with open(file, 'w') as f:
             f.write('test = ' + json)
+
+    def _print_breakdown(self, type, passed, failed, locked=None):
+        format.print_line('-')
+        print(self.name)
+        print('    Passed: {}'.format(passed))
+        print('    Failed: {}'.format(failed))
+        if locked is not None:
+            print('    Locked: {}'.format(locked))
+
+        # Print [oook.....] progress bar
+        total = passed + failed + (0 if locked is None else locked)
+        percent = round(100 * passed / total, 1) if total != 0 else 0.0
+        print('[{}k{}] {}% of {} passed'.format(
+            'o' * int(percent // 10),
+            '.' * int(10 - (percent // 10)),
+            percent,
+            type))
+
 
 class Suite(core.Serializable):
     type = core.String()

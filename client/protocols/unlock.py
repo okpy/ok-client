@@ -20,11 +20,6 @@ try:
 except ImportError:
     HAS_READLINE = False
 
-
-def normalize(text):
-    """Normalizes whitespace in a specified string of text."""
-    return " ".join(text.split())
-
 class UnlockProtocol(models.Protocol):
     """Unlocking protocol that wraps that mechanism."""
 
@@ -46,32 +41,31 @@ class UnlockProtocol(models.Protocol):
         """
         if not self.args.unlock:
             return
-        # formatting.print_title('Unlocking tests for {}'.format(
-        #     self.assignment['name']))
-        #
-        # print('At each "{}",'.format(UnlockConsole.PROMPT)
-        #       + ' type in what you would expect the output to be.')
-        # print('Type {} to quit'.format(UnlockConsole.EXIT_INPUTS[0]))
+
+        format.print_line('~')
+        print('Unlocking tests')
+        print()
+
+        print('At each "{}", type what you would expect the output to be.'.format(
+              self.PROMPT))
+        print('Type {} to quit'.format(self.EXIT_INPUTS[0]))
+        print()
 
         for test in self.assignment.specified_tests:
             log.info('Unlocking test {}'.format(test.name))
             try:
-                # TODO(albert): pass appropriate arguments to unlock
                 test.unlock(self._interact)
             except (KeyboardInterrupt, EOFError):
                 try:
                     # TODO(albert): When you use Ctrl+C in Windows, it
                     # throws two exceptions, so you need to catch both
                     # of them. Find a cleaner fix for this.
-                    pass
-                    # print("-- Exiting unlocker --")
+                    print()
+                    print('-- Exiting unlocker --')
                 except (KeyboardInterrupt, EOFError):
                     pass
+                print()
                 break
-            else:
-                pass
-                # print("-- Congratulations, you unlocked this case! --")
-                # print()
         return self.analytics
 
     ###################
@@ -102,47 +96,52 @@ class UnlockProtocol(models.Protocol):
         RETURNS:
         str  -- the correct solution (that the student supplied)
         """
-        # TODO(albert): rewrite this function
+        # attempts = 0
         correct = False
-        attempts = 0
         while not correct:
+            # attempts += 1
             if choices:
+                assert len(answer) == 1, 'Choices must have 1 line of output'
                 choice_map = self._display_choices(choices)
-            try:
-                attempts += 1
-                # TODO(albert): handle multiple lines of output
-                student_input = self._input(self.PROMPT)
-            except (KeyboardInterrupt, EOFError):
-                try:
-                    # TODO(albert): When you use Ctrl+C in Windows, it
-                    # throws two exceptions, so you need to catch both
-                    # of them. Find a cleaner fix for this.
-                    print()
-                except (KeyboardInterrupt, EOFError):
-                    pass
-                self._analytics[self._analytics['current']].append((attempts, correct))
-                raise UnlockException
-            student_input.strip()
-            if student_input.lower() in self.EXIT_INPUTS:
-                attempts -= 1
-                self._analytics[self._analytics['current']].append((attempts, correct))
-                raise UnlockException
 
-            self._add_history(student_input)
-
-            if choices:
-                if student_input in choice_map:
-                    student_input = normalize(choice_map[student_input])
+            input_lines = []
+            for i in range(len(answer)):
+                if len(answer) == 1:
+                    prompt = self.PROMPT
                 else:
-                    student_input = normalize(student_input)
-            correct = self._verify(student_input, answer)
-            # if not correct:
-            #     print("-- Not quite. Try again! --")
-            #     print()
-            # else:
-            #     print("OK!")
-        self._analytics[self._analytics['current']].append((attempts, correct))
-        return student_input
+                    prompt = '(line {}){}'.format(i + 1, self.PROMPT)
+
+                student_input = format.normalize(self._input(prompt))
+                if student_input in self.EXIT_INPUTS:
+                    raise EOFError
+                input_lines.append(student_input)
+                self._add_history(input_lines[-1])
+
+                if choices and student_input in choice_map:
+                    student_input = choice_map[student_input]
+
+                if not self._verify(student_input, answer[i]):
+                    break
+            else:
+                correct = True
+
+
+            # TODO(albert): record analytis
+            # Performt his before the function exits?
+            # self._analytics[self._analytics['current']].append((attempts, correct))
+
+            # if input_lines.lower() in self.EXIT_INPUTS:
+            #     attempts -= 1
+            #     self._analytics[self._analytics['current']].append((attempts, correct))
+            #     return
+
+            if not correct:
+                print("-- Not quite. Try again! --")
+            else:
+                print("-- OK! --")
+            print()
+        # self._analytics[self._analytics['current']].append((attempts, correct))
+        return input_lines
 
 
     def _verify(self, guess, locked):
@@ -157,11 +156,13 @@ class UnlockProtocol(models.Protocol):
         """Prints a mapping of numbers to choices and returns the
         mapping as a dictionary.
         """
-        # print("Choose the number of the correct choice:")
+        print("Choose the number of the correct choice:")
         choice_map = {}
+        # TODO(albert): consider using letters as choices instead of numbers.
         for i, choice in enumerate(random.sample(choices, len(choices))):
+            print('    {}) {}'.format(i, choice))
             i = str(i)
-            # print(i + ') ' + choice)
+            choice = format.normalize(choice)
             choice_map[i] = choice
         return choice_map
 
