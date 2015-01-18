@@ -14,8 +14,8 @@ def load_config(filepath, args):
         config = json.load(f, object_pairs_hook=collections.OrderedDict)
     log.info('Loaded config from {}'.format(filepath))
     if not isinstance(config, dict):
-        # TODO(albert): raise an error
-        pass
+        # TODO(albert): raise a more appropriate error
+        raise TypeError('Config should be a dictionary')
     return Assignment(args, **config)
 
 class Assignment(core.Serializable):
