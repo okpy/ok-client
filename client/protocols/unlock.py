@@ -112,16 +112,17 @@ class UnlockProtocol(models.Protocol):
                     prompt = '(line {}){}'.format(i + 1, self.PROMPT)
 
                 student_input = format.normalize(self._input(prompt))
+                self._add_history(student_input)
                 if student_input in self.EXIT_INPUTS:
                     raise EOFError
-                input_lines.append(student_input)
-                self._add_history(input_lines[-1])
 
                 if choices and student_input in choice_map:
                     student_input = choice_map[student_input]
 
                 if not self._verify(student_input, answer[i]):
                     break
+                else:
+                    input_lines.append(student_input)
             else:
                 correct = True
 
