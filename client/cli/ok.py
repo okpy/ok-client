@@ -118,11 +118,8 @@ def main():
             sys.exit("SSL Bindings are not installed. You can install python3 SSL bindings or \nrun ok locally with python3 ok --local")
 
     # Load assignment from config.
-    try:
-        assign = assignment.load_config(args.config, args)
-    except TypeError:
-        # TODO(albert): catch a more appropriate error here
-        exit(1)
+    # TODO(albert): fail fast.
+    assign = assignment.load_config(args.config, args)
 
     # TODO(albert): what are these variables used for?
     server_thread, timer_thread = None, None

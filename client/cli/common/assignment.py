@@ -50,10 +50,16 @@ class Assignment(core.Serializable):
         """
         log.info('Loading tests')
         for file_pattern, source in self.tests.items():
+            # Separate filepath and parameter
+            if ':' in file_pattern:
+                file_pattern, parameter = file_pattern.split(':', maxsplit=1)
+            else:
+                parameter = ''
+
             for file in glob.glob(file_pattern):
                 # TODO(albert): add error handling
                 module = importlib.import_module(self._TESTS_PACKAGE + '.' + source)
-                self.test_map[file] = module.load(file, self.cmd_args)
+                self.test_map[file] = module.load(file, parameter, self.cmd_args)
                 log.info('Loaded {}'.format(file))
 
     def dump_tests(self):
@@ -90,6 +96,9 @@ class Assignment(core.Serializable):
         for question in self.cmd_args.question:
             matches = {}
             for test in self.test_map:
+                # TODO(albert): change to subsequence matching. edit distance
+                # will always return a match, even if the input resembles no
+                # such test.
                 score = _edit_distance(test.lower(), question.lower())
                 matches.setdefault(score, []).append(test)
             best_score = min(matches)
