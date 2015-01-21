@@ -6,17 +6,29 @@ import glob
 import importlib
 import json
 import logging
+import os
+import zipfile
 
 log = logging.getLogger(__name__)
 
 def load_config(filepath, args):
-    with open(filepath, 'r') as f:
-        config = json.load(f, object_pairs_hook=collections.OrderedDict)
+    config = get_config(filepath)
     log.info('Loaded config from {}'.format(filepath))
     if not isinstance(config, dict):
         # TODO(albert): raise a more appropriate error
         raise TypeError('Config should be a dictionary')
     return Assignment(args, **config)
+
+def get_config(filepath):
+    if os.path.isfile(filepath):
+        with open(filepath, 'r') as f:
+            return json.load(f, object_pairs_hook=collections.OrderedDict)
+    elif os.path.exists('ok'):
+        # Assume using zipped version of OK, and assume there exists a
+        # config.json file in the zip archive
+        archive = zipfile.ZipFile('ok')
+        config = archive.read('client/config.json').decode('utf-8')
+        return json.loads(config)
 
 class Assignment(core.Serializable):
     name = core.String()
