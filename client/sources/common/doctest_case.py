@@ -262,6 +262,7 @@ def _split_code(code, PS1, PS2):
             processed_lines.append(line)
             continue
 
+        assert len(processed_lines) > 0, 'code improperly formated: {}'.format(code)
         if not isinstance(processed_lines[-1], _Answer):
             processed_lines.append(_Answer())
         processed_lines[-1].update(line)

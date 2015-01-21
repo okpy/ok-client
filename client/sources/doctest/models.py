@@ -18,7 +18,7 @@ class Doctest(models.Test):
     PS2 = '... '
 
     SETUP = PS1 + 'from {} import *'
-    prompt_re = re.compile(r'(\s*)({}|{})'.format(PS1, PS2))
+    prompt_re = re.compile(r'(\s*)({}|{})'.format(PS1, '\.\.\. '))
 
     def __init__(self, file, verbose, interactive, timeout=None, **fields):
         super().__init__(**fields)

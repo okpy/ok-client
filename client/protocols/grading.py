@@ -19,14 +19,13 @@ class GradingProtocol(models.Protocol):
     """A Protocol that runs tests, formats results, and sends results
     to the server.
     """
-    name = 'grading'
-
     def on_interact(self):
         """Run gradeable tests and print results and return analytics.
 
-        For this protocol, analytics consists of a dictionary whose key(s) are
-        the questions being tested and the value is the number of test cases
-        that they passed.
+        RETURNS:
+        dict; a mapping of test name -> JSON-serializable object. It is up to
+        each test to determine what kind of data it wants to return as
+        significant for analytics.
         """
         if self.args.score:
             return
@@ -35,10 +34,12 @@ class GradingProtocol(models.Protocol):
         print('Running tests')
         print()
 
+        analytics = {}
+
         for test in self.assignment.specified_tests:
             log.info('Running tests for {}'.format(test.name))
-            test.run()
+            analytics[test.name] = test.run()
 
-        return self.analytics
+        return analytics
 
 protocol = GradingProtocol

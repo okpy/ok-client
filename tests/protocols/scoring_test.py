@@ -1,138 +1,61 @@
 """Tests the ScoringProtocol."""
 
-from client.models import core
-from client.protocols import grading
 from client.protocols import scoring
-from client.utils import output
-from collections import OrderedDict
+from client.sources.common import core
+from client.sources.common import models
 import mock
 import unittest
 
-class DisplayBreakdownTest(unittest.TestCase):
-    def display(self, expect, scores):
-        scores_as_dict = OrderedDict(scores)
-        self.assertEqual(expect, scoring.display_breakdown(scores_as_dict))
-
-    def testNoScores(self):
-        self.display({}, [])
-
-    def testFullPoints(self):
-        self.display({core.Test.DEFAULT_PARTNER: 5}, [
-            (('q1', core.Test.DEFAULT_PARTNER), (2, 2)),
-            (('q2', core.Test.DEFAULT_PARTNER), (3, 3)),
-        ])
-
-    def testPartialPoints(self):
-        self.display({core.Test.DEFAULT_PARTNER: 2}, [
-            (('q1', core.Test.DEFAULT_PARTNER), (1, 2)),
-            (('q2', core.Test.DEFAULT_PARTNER), (1, 9)),
-        ])
-
-    def testZeroPoints(self):
-        self.display({core.Test.DEFAULT_PARTNER: 0}, [
-            (('q1', core.Test.DEFAULT_PARTNER), (0, 2)),
-            (('q2', core.Test.DEFAULT_PARTNER), (0, 9)),
-        ])
-
-    def testPartnerPoints_noDefault(self):
-        self.display({'A': 2, 'B': 7}, [
-            (('q1', 'A'), (2, 2)),
-            (('q2', 'B'), (7, 9)),
-        ])
-
-    def testPartnerPoints_default(self):
-        self.display({core.Test.DEFAULT_PARTNER: 3, 'A': 2, 'B': 4}, [
-            (('q1', 'A'), (2, 2)),
-            (('q2', 'B'), (4, 9)),
-            (('q3', core.Test.DEFAULT_PARTNER), (3, 3)),
-        ])
-
-class ScoreTest(unittest.TestCase):
-    POINTS = 1
+class ScoringProtocolTest(unittest.TestCase):
+    SCORE0 = 1
+    SCORE1 = 2
+    SCORE2 = 3
 
     def setUp(self):
-        self.logger = mock.Mock()
-        self.mock_test = core.Test(names=['dummy'], points=self.POINTS)
+        self.cmd_args = mock.Mock()
+        self.assignment = mock.MagicMock()
+        self.proto = scoring.protocol(self.cmd_args, self.assignment)
 
-    def makeGradedTestCase(self, error=False, should_grade=True):
-        case = grading.GradedTestCase(type=grading.GradedTestCase.type)
-        case.on_grade = mock.Mock(return_value=error)
-        case.should_grade = mock.Mock(return_value=should_grade)
-        return case
+        self.mockTest0 = self.makeMockTest('Test 0', self.SCORE0, self.SCORE0)
+        self.mockTest1 = self.makeMockTest('Test 1', self.SCORE1, self.SCORE1)
+        self.mockTest2 = self.makeMockTest('Test 2', self.SCORE2, self.SCORE2)
+        self.assignment.specified_tests = [
+            self.mockTest0,
+            self.mockTest1,
+            self.mockTest2,
+        ]
 
-    def calls_score(self, test, expect_score, expect_passed, expect_total):
-        score, passed, total = scoring.score(test, self.logger)
-        self.assertEqual(expect_score, score)
-        self.assertEqual(expect_passed, passed)
-        self.assertEqual(expect_total, total)
+    def makeMockTest(self, name, points, score):
+        test = models.Test(name=name, points=points)
+        test.score = mock.Mock()
+        test.score.return_value = score
+        return test
 
-    def testNoSuites(self):
-        self.calls_score(self.mock_test, 0, 0, 0)
+    def testOnInteract_noTests(self):
+        self.assignment.specified_tests = []
+        self.assertEqual({
+            0: 0,
+        }, self.proto.on_interact())
 
-    def testNoPoints(self):
-        self.mock_test['points'] = 0
-        self.mock_test.add_suite([
-            self.makeGradedTestCase(),
-        ])
-        self.calls_score(self.mock_test, 0, 1, 1)
+    def testOnInteract_noSpecifiedPartners(self):
+        self.assertEqual({
+            0: self.SCORE0 + self.SCORE1 + self.SCORE2
+        }, self.proto.on_interact())
 
-    def testOneSuite_noGradedTestCase(self):
-        self.mock_test.add_suite([
-            core.TestCase(type=core.TestCase.type),
-        ])
-        self.calls_score(self.mock_test, 0, 0, 0)
+    def testOnInteract_specifiedPartners_noSharedPoints(self):
+        self.mockTest0.partner = 0
+        self.mockTest1.partner = 0
+        self.mockTest2.partner = 1
+        self.assertEqual({
+            0: self.SCORE0 + self.SCORE1,
+            1: self.SCORE2
+        }, self.proto.on_interact())
 
-    def testOneSuite_oneCasePass(self):
-        self.mock_test.add_suite([
-            self.makeGradedTestCase(),
-        ])
-        self.calls_score(self.mock_test, self.POINTS, 1, 1)
-
-    def testOneSuite_oneCaseFail(self):
-        self.mock_test.add_suite([
-            self.makeGradedTestCase(error=True),
-        ])
-        self.calls_score(self.mock_test, 0, 0, 1)
-
-    def testOneSuite_multipleCasePass(self):
-        self.mock_test.add_suite([
-            self.makeGradedTestCase(),
-            self.makeGradedTestCase(),
-            self.makeGradedTestCase(),
-        ])
-        self.calls_score(self.mock_test, self.POINTS, 1, 1)
-
-    def testOneSuite_secondCaseFail(self):
-        self.mock_test.add_suite([
-            self.makeGradedTestCase(error=False),
-            self.makeGradedTestCase(error=True),
-        ])
-        self.calls_score(self.mock_test, 0, 0, 1)
-
-    def testOneSuite_shouldNotGrade(self):
-        self.mock_test.add_suite([
-            self.makeGradedTestCase(should_grade=False),
-            self.makeGradedTestCase(),
-        ])
-        self.calls_score(self.mock_test, self.POINTS, 1, 1)
-
-    def testMultipleSuites_pass(self):
-        self.mock_test.add_suite([
-            self.makeGradedTestCase(),
-            self.makeGradedTestCase(),
-        ])
-        self.mock_test.add_suite([
-            self.makeGradedTestCase(),
-            self.makeGradedTestCase(),
-        ])
-        self.calls_score(self.mock_test, self.POINTS, 2, 2)
-
-    def testMultipleSuites_firstSuiteFail(self):
-        self.mock_test.add_suite([
-            self.makeGradedTestCase(error=True),
-        ])
-        self.mock_test.add_suite([
-            self.makeGradedTestCase(error=False),
-        ])
-        self.calls_score(self.mock_test, self.POINTS * 1 / 2, 1, 2)
+    def testOnInteract_specifiedPartners_sharedPoints(self):
+        self.mockTest0.partner = 0
+        self.mockTest1.partner = 1
+        self.assertEqual({
+            0: self.SCORE0 + self.SCORE2,
+            1: self.SCORE1 + self.SCORE2
+        }, self.proto.on_interact())
 

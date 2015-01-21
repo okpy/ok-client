@@ -5,26 +5,40 @@ import os
 log = logging.getLogger(__name__)
 
 class BackupProtocol(models.Protocol):
-    """The contents of changed source files are sent to the server."""
-    name = 'backup'
+    """The contents of source files are sent to the server."""
 
     def on_start(self):
-        """Find all source files and return their complete contents."""
+        """Find all source files and return their complete contents.
+
+        Source files are considered to be files listed self.assignment.src.
+        If a certain source filepath is not a valid file (e.g. does not exist
+        or is not a file), then the contents associated with that filepath will
+        be an empty string.
+
+        RETURNS:
+        dict; a mapping of source filepath -> contents as strings.
+        """
         files = {}
-        if self.args.submit:
-            # TODO(albert): it seems strange to put this here. Consider moving
-            # it elsewhere.
-            files['submit'] = True
         for file in self.assignment.src:
-            if not os.path.isfile(file):
+            if not self.is_file(file):
                 # TODO(albert): add an error message
                 contents = ''
                 log.warning('File {} does not exist'.format(file))
             else:
-                with open(file, 'r', encoding='utf-8') as lines:
-                    contents = lines.read()
-                log.warning('Loaded contents of {} to send to server'.format(file))
+                contents = self.read_file(file)
+                log.info('Loaded contents of {} to send to server'.format(file))
             files[file] = contents
         return files
+
+    #####################
+    # Mockable by tests #
+    #####################
+
+    def is_file(self, filepath):
+        return os.path.isfile(filepath)
+
+    def read_file(self, filepath):
+        with open(filepath, 'r', encoding='utf-8') as lines:
+            return lines.read()
 
 protocol = BackupProtocol
