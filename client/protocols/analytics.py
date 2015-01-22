@@ -5,6 +5,9 @@ for the ok grading session.
 from client.protocols.common import models
 from datetime import datetime
 
+# TODO(albert): rename this InformationProtocol
+# Add all command line arguments here
+
 class AnalyticsProtocol(models.Protocol):
     """A Protocol that analyzes how much students are using the autograder.
     """

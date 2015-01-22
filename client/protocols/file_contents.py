@@ -4,6 +4,9 @@ import os
 
 log = logging.getLogger(__name__)
 
+# TODO(albert): rename this file to backup.py. Leaving it as file_contents.py
+# for now because server isn't ready for a change yet.
+
 class BackupProtocol(models.Protocol):
     """The contents of source files are sent to the server."""
 
@@ -19,6 +22,9 @@ class BackupProtocol(models.Protocol):
         dict; a mapping of source filepath -> contents as strings.
         """
         files = {}
+        # TODO(albert): move this to AnalyticsProtocol
+        if self.args.submit:
+            files['submit'] = True
         for file in self.assignment.src:
             if not self.is_file(file):
                 # TODO(albert): add an error message
