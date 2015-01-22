@@ -65,10 +65,28 @@ class Doctest(models.Test):
         RETURNS:
         bool; True if the doctest completely passes, False otherwise.
         """
+        output.off()
+        log_id = output.new_log()
+
         format.print_line('-')
         print('Doctests for {}'.format(self.name))
         print()
-        return self.case.run()
+
+        success = self.case.run()
+        if success:
+            print('-- OK! --')
+
+        output.on()
+        output_log = output.get_log(log_id)
+        output.remove_log(log_id)
+
+        if not success or self.verbose:
+            print(''.join(output_log))
+
+        if not success and self.interactive:
+            self.console.interact()
+
+        return success
 
     def score(self):
         format.print_line('-')

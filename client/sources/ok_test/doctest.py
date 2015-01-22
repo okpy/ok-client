@@ -62,6 +62,9 @@ class DoctestSuite(models.Suite):
             if not success or self.verbose:
                 print(''.join(output_log))
 
+            if not success and self.interactive:
+                self.console.interact()
+
             if success:
                 results['passed'] += 1
             else:

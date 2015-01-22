@@ -71,8 +71,9 @@ class Assignment(core.Serializable):
             for file in glob.glob(file_pattern):
                 # TODO(albert): add error handling
                 module = importlib.import_module(self._TESTS_PACKAGE + '.' + source)
-                self.test_map[file] = module.load(file, parameter, self.cmd_args)
-                log.info('Loaded {}'.format(file))
+                test_name = file_pattern + ':' + parameter
+                self.test_map[test_name] = module.load(file, parameter, self.cmd_args)
+                log.info('Loaded {}'.format(test_name))
 
     def dump_tests(self):
         """Dumps all tests, as determined by their .dump() method.

@@ -27,7 +27,16 @@ class OkTest(models.Test):
                     self.verbose, self.interactive, self.timeout, **suite)
 
     def run(self):
-        """Runs the suites associated with this OK test."""
+        """Runs the suites associated with this OK test.
+
+        RETURNS:
+        dict; the results for this test, in the form
+        {
+            'passed': int,
+            'failed': int,
+            'locked': int,
+        }
+        """
         passed, failed, locked = 0, 0, 0
         for i, suite in enumerate(self.suites):
             results = suite.run(self.name, i + 1)
@@ -46,6 +55,11 @@ class OkTest(models.Test):
             print()
             print(self.description)
         print()
+        return {
+            'passed': passed,
+            'failed': failed,
+            'locked': locked,
+        }
 
     def score(self):
         passed, total = 0, 0

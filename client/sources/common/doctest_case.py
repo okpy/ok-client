@@ -151,8 +151,6 @@ class PythonConsole(interpreter.Console):
             self._interpret_lines(self._code, compare=True)
         except PythonConsoleException as e:
             # TODO(albert): print error details
-            if self.interactive:
-                self.interact()
             return False
         else:
             return True
@@ -200,6 +198,7 @@ class PythonConsole(interpreter.Console):
 
         expected = expected.strip()
         if expected != actual:
+            print()
             print('# Error: expected')
             print('\n'.join('#     {}'.format(line)
                             for line in expected.split('\n')))
