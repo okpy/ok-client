@@ -71,7 +71,9 @@ class Assignment(core.Serializable):
             for file in glob.glob(file_pattern):
                 # TODO(albert): add error handling
                 module = importlib.import_module(self._TESTS_PACKAGE + '.' + source)
-                test_name = file_pattern + ':' + parameter
+                test_name = file
+                if parameter:
+                    test_name += ':' + parameter
                 self.test_map[test_name] = module.load(file, parameter, self.cmd_args)
                 log.info('Loaded {}'.format(test_name))
 

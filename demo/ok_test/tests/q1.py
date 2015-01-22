@@ -1,44 +1,38 @@
 test = {
-  'extra': False,
   'name': 'Question 1',
   'points': 3,
   'suites': [
     {
       'cases': [
         {
-          'answer': '1',
+          'question': 'What is the domain and range of the square function?',
+          'answer': 'Domain is numbers. Range is numbers',
           'choices': [
             'Domain is numbers. Range is numbers',
             'Domain is numbers. Range is strings',
             'Domain is strings. Range is numbers',
             'Domain is strings. Range is strings'
           ],
-          'hidden': False,
-          'locked': False,
-          'question': 'What is the domain and range of the square function?'
         }
       ],
-      'scored': False,
       'type': 'concept'
     },
     {
+      'type': 'doctest',
       'cases': [
         {
           'code': r"""
           >>> square(3)
           9
           """,
-          'hidden': False,
-          'locked': False
         },
         {
           'code': r"""
-          >>> square(-2)
+          >>> square(2)
           4
           # explanation: Squaring a negative number
           """,
-          'hidden': False,
-          'locked': False
+          'hidden': True,
         },
         {
           'code': r"""
@@ -46,24 +40,22 @@ test = {
           0
           # explanation: Squaring zero
           """,
-          'hidden': False,
-          'locked': False
+          'hidden': True,
         },
         {
           'code': r"""
-          >>> sd
-          NameError
+          >>> 1 / square(0)
+          ZeroDivisionError
           """,
-          'hidden': False,
-          'locked': False
+          'hidden': True,
         }
       ],
-      'scored': True,
       'setup': r"""
       >>> from hw1 import *
       """,
-      'teardown': '',
-      'type': 'doctest'
+      'teardown': """
+      >>> print('Teardown code')
+      """,
     }
   ]
 }
