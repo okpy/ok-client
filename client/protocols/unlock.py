@@ -23,8 +23,6 @@ except ImportError:
 class UnlockProtocol(models.Protocol):
     """Unlocking protocol that wraps that mechanism."""
 
-    name = 'unlock'
-
     PROMPT = '? '       # Prompt that is used for user input.
     EXIT_INPUTS = (     # Valid user inputs for aborting the session.
         'exit()',
@@ -36,8 +34,14 @@ class UnlockProtocol(models.Protocol):
         self.hash_key = assignment.name
 
     def on_interact(self):
-        """
-        Responsible for unlocking each test.
+        """Responsible for unlocking each test.
+
+        The unlocking process can be aborted by raising a KeyboardInterrupt or
+        an EOFError.
+
+        RETURNS:
+        dict; mapping of test name (str) -> JSON-serializable object. It is up
+        to each test to determine what information is significant for analytics.
         """
         if not self.args.unlock:
             return
@@ -51,10 +55,11 @@ class UnlockProtocol(models.Protocol):
         print('Type {} to quit'.format(self.EXIT_INPUTS[0]))
         print()
 
+        analytics = {}
         for test in self.assignment.specified_tests:
             log.info('Unlocking test {}'.format(test.name))
             try:
-                test.unlock(self._interact)
+                analytics[test.name] = test.unlock(self.interact)
             except (KeyboardInterrupt, EOFError):
                 try:
                     # TODO(albert): When you use Ctrl+C in Windows, it
@@ -66,18 +71,14 @@ class UnlockProtocol(models.Protocol):
                     pass
                 print()
                 break
-        return self.analytics
+        return analytics
 
-    ###################
-    # Private Methods #
-    ###################
-
-    def _interact(self, answer, choices=None):
+    def interact(self, answer, choices=None, randomize=True):
         """Reads student input for unlocking tests until the student
         answers correctly.
 
         PARAMETERS:
-        answer    -- str; a locked test case answer.
+        answer    -- list; a list of locked lines in a test case answer.
         choices   -- list or None; a list of choices. If None or an
                      empty list, signifies the question is not multiple
                      choice.
@@ -94,9 +95,12 @@ class UnlockProtocol(models.Protocol):
         Correctness is determined by the verify method.
 
         RETURNS:
-        str  -- the correct solution (that the student supplied)
+        list; the correct solution (that the student supplied). Each element
+        in the list is a line of the correct output.
         """
         # attempts = 0
+        if randomize and choices:
+            choices = random.sample(choices, len(choices))
         correct = False
         while not correct:
             # attempts += 1
@@ -144,6 +148,9 @@ class UnlockProtocol(models.Protocol):
         # self._analytics[self._analytics['current']].append((attempts, correct))
         return input_lines
 
+    ###################
+    # Private Methods #
+    ###################
 
     def _verify(self, guess, locked):
         return hmac.new(self.hash_key.encode('utf-8'),
@@ -160,7 +167,7 @@ class UnlockProtocol(models.Protocol):
         print("Choose the number of the correct choice:")
         choice_map = {}
         # TODO(albert): consider using letters as choices instead of numbers.
-        for i, choice in enumerate(random.sample(choices, len(choices))):
+        for i, choice in enumerate(choices):
             print('    {}) {}'.format(i, choice))
             i = str(i)
             choice = format.normalize(choice)
@@ -173,45 +180,5 @@ class UnlockProtocol(models.Protocol):
         """
         if line and HAS_READLINE:
             readline.add_history(line)
-
-def unlock(test, logger, hash_key, analytics=None):
-    """Unlocks TestCases for a given Test.
-
-    PARAMETERS:
-    test   -- Test; the test to unlock.
-    logger -- OutputLogger.
-    hash_key -- string; hash_key to be used to unlock.
-    analytics -- dict; dictionary used to store analytics for this protocol
-
-    DESCRIPTION:
-    This function incrementally unlocks all TestCases in a specified
-    Test. Students must answer in the order that TestCases are
-    written. Once a TestCase is unlocked, it will remain unlocked.
-
-    RETURN:
-    int, bool; the number of cases that are newly unlocked for this Test
-    after going through an unlocking session and whether the student wanted
-    to exit the unlocker or not.
-    """
-    if analytics is None:
-        analytics = {}
-    console = UnlockConsole(logger, hash_key, analytics)
-    cases = 0
-    cases_unlocked = 0
-    analytics[test.name] = []
-    analytics['current'] = test.name
-    for suite in test['suites']:
-        for case in suite:
-            cases += 1
-            if not isinstance(case, UnlockTestCase) \
-                    or not case['locked']:
-                continue
-            formatting.underline('Case {}'.format(cases), line='-')
-            if console.run(case):   # Abort unlocking.
-                return cases_unlocked, True
-            cases_unlocked += 1
-    print("You are done unlocking tests for this question!")
-    del analytics['current']
-    return cases_unlocked, False
 
 protocol = UnlockProtocol
