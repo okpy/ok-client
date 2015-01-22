@@ -56,11 +56,12 @@ class ConceptCase(common_models.Case):
         self.question = textwrap.dedent(self.question).strip()
         self.answer = textwrap.dedent(self.answer).strip()
 
-        for i, choice in enumerate(self.choices):
-            self.choices[i] = textwrap.dedent(choice).strip()
+        if self.choices != core.NoValue:
+            for i, choice in enumerate(self.choices):
+                self.choices[i] = textwrap.dedent(choice).strip()
 
     def run(self):
-        """Runs the test conceptual test case.
+        """Runs the conceptual test case.
 
         RETURNS:
         bool; True if the test case passes, False otherwise.

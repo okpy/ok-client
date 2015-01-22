@@ -40,6 +40,9 @@ class _OutputLogger(object):
         assert log_id in self._logs, 'Log id {} not found'.format(log_id)
         del self._logs[log_id]
 
+    def remove_all_logs(self):
+        self._logs = {}
+
     def is_on(self):
         return self._current_stream == self._stdout
 
@@ -79,3 +82,5 @@ def new_log():
 def remove_log(log_id):
     _logger.remove_log(log_id)
 
+def remove_all_logs():
+    _logger.remove_all_logs()

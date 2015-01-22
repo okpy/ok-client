@@ -31,8 +31,8 @@ class Doctest(models.Test):
                                                   self.timeout)
 
     def post_instantiation(self):
-        # TODO(albert): often, the first line of a docstring is at the beginning
-        # of the string. Dedenting will have no effect.
+        # TODO(albert): rewrite test validation. Inconsistent leading space is
+        # currently not validated correctly (see tests).
         self.docstring = textwrap.dedent(self.docstring)
         code = []
         prompt_on = False
@@ -60,11 +60,15 @@ class Doctest(models.Test):
                                              code='\n'.join(code))
 
     def run(self):
-        """Runs the suites associated with this doctest."""
+        """Runs the suites associated with this doctest.
+
+        RETURNS:
+        bool; True if the doctest completely passes, False otherwise.
+        """
         format.print_line('-')
         print('Doctests for {}'.format(self.name))
         print()
-        self.case.run()
+        return self.case.run()
 
     def score(self):
         format.print_line('-')

@@ -1,10 +1,10 @@
-from client.utils import formatting
+from client.utils import format
 import unittest
 
 class PrettyJsonTest(unittest.TestCase):
     def assertFormat(self, expect, json):
-        self.assertEqual(formatting.dedent(expect),
-                         formatting.prettyjson(json))
+        self.assertEqual(format.dedent(expect),
+                         format.prettyjson(json))
 
     def testInt(self):
         self.assertFormat('42', 42)
