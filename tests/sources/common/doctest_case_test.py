@@ -1,20 +1,12 @@
-"""Tests the DoctestCase model."""
-
-from client.sources.common import core
 from client.sources.common import doctest_case
-from client.utils import output
 import mock
-import sys
 import textwrap
 import unittest
 
 class PythonConsoleTest(unittest.TestCase):
-    def setUp(self):
-        self.logger = output.OutputLogger()
-
     def createConsole(self, verbose=True, interactive=False, timeout=None):
         self.console = doctest_case.PythonConsole(
-                self.logger, verbose, interactive, timeout)
+                verbose, interactive, timeout)
 
     def calls_interpret(self, success, code, setup='', teardown=''):
         self.createConsole()
@@ -120,176 +112,54 @@ class PythonConsoleTest(unittest.TestCase):
         # TODO(albert):
         pass
 
-# class OnGradeTest(unittest.TestCase):
-#     ASSIGN_NAME = 'dummy'
-#
-#     def setUp(self):
-#         # This logger captures output and is used by the unittest,
-#         # it is wired to stdout.
-#         self.log = []
-#         self.capture = sys.stdout = output.OutputLogger()
-#         self.capture.register_log(self.log)
-#         self.capture.on = mock.Mock()
-#         self.capture.off = mock.Mock()
-#
-#         # This logger is used by on_grade.
-#         self.logger = output.OutputLogger()
-#
-#         self.case_map = {'doctest': doctest_case.DoctestCase}
-#         self.makeAssignment()
-#         self.makeTest()
-#
-#     def tearDown(self):
-#         self.stdout = sys.__stdout__
-#
-#     def makeAssignment(self, hidden_params=None, params=None):
-#         json = {
-#             'name': self.ASSIGN_NAME,
-#             'version': '1.0',
-#         }
-#         if hidden_params:
-#             json['hidden_params'] = hidden_params
-#         if params:
-#             json['params'] = params
-#         self.assignment = core.Assignment.deserialize(json, self.case_map)
-#         return self.assignment
-#
-#     def makeTest(self, hidden_params=None, params=None):
-#         json = {
-#             'names': ['q1'],
-#             'points': 1,
-#         }
-#         if hidden_params:
-#             json['hidden_params'] = hidden_params
-#         if params:
-#             json['params'] = params
-#         self.test = core.Test.deserialize(json, self.assignment, self.case_map)
-#         return self.test
-#
-#     def makeTestCase(self, case_json):
-#         case_json['type'] = doctest_case.DoctestCase.type
-#         if 'locked' not in case_json:
-#             case_json['locked'] = False
-#         return doctest_case.DoctestCase.deserialize(case_json,
-#                 self.assignment, self.test)
-#
-#     def calls_onGrade(self, case_json, errors=False, verbose=False,
-#             interact=False):
-#         case = self.makeTestCase(case_json)
-#         error = case.on_grade(self.logger, verbose, interact, 10)
-#         if errors:
-#             self.assertTrue(error)
-#         else:
-#             self.assertFalse(error)
-#
-#     def assertCorrectLog(self, expected_log):
-#         expected_log = '\n'.join(expected_log).strip('\n')
-#         log = ''.join(self.capture.log).strip('\n')
-#         self.assertEqual(expected_log, log)
-#
-#     def testOutput_singleLine(self):
-#         self.calls_onGrade({
-#             'test': """
-#             >>> 1 + 2
-#             3
-#             """
-#         })
-#         self.assertCorrectLog([
-#             '>>> 1 + 2',
-#             '3'
-#         ])
-#
-#     def testOutput_multiLineIndentNoNewline(self):
-#         self.calls_onGrade({
-#             'test': """
-#             >>> def square(x):
-#             ...     return x * x
-#             >>> square(4)
-#             16
-#             """,
-#         })
-#         self.assertCorrectLog([
-#             '>>> def square(x):',
-#             '...     return x * x',
-#             '>>> square(4)',
-#             '16',
-#         ])
-#
-#     def testOutput_multiLineIndentWithNewLine(self):
-#         self.calls_onGrade({
-#             'test': """
-#             >>> def square(x):
-#             ...     return x * x
-#
-#             >>> square(4)
-#             16
-#             """,
-#         })
-#         self.assertCorrectLog([
-#             '>>> def square(x):',
-#             '...     return x * x',
-#             '>>> square(4)',
-#             '16',
-#         ])
-#
-#     def testOutput_forLoop(self):
-#         self.calls_onGrade({
-#             'test': """
-#             >>> for i in range(3):
-#             ...     print(i)
-#             >>> 3 + 4
-#             7
-#             """
-#         })
-#         self.assertCorrectLog([
-#             '>>> for i in range(3):',
-#             '...     print(i)',
-#             '0',
-#             '1',
-#             '2',
-#             '>>> 3 + 4',
-#             '7',
-#         ])
-#
-#     def testOutput_errorNotEqual(self):
-#         self.calls_onGrade({
-#             'test': """
-#             >>> 3 + 4
-#             1
-#             """,
-#         }, errors=True)
-#         self.assertCorrectLog([
-#             '>>> 3 + 4',
-#             '7',
-#             '# Error: expected 1 got 7'
-#         ])
-#
-#     def testOutput_errorOnNonPrompt(self):
-#         self.calls_onGrade({
-#             'test': """
-#             >>> x = 1 / 0
-#             >>> 3 + 4
-#             7
-#             """,
-#         }, errors=True)
-#         self.assertCorrectLog([
-#             '>>> x = 1 / 0',
-#             'ZeroDivisionError: division by zero'
-#         ])
-#
-#     def testOutput_errorOnPromptWithException(self):
-#         self.calls_onGrade({
-#             'test': """
-#             >>> 1 / 0
-#             1
-#             """,
-#         }, errors=True)
-#         self.assertCorrectLog([
-#             '>>> 1 / 0',
-#             'ZeroDivisionError: division by zero',
-#             '# Error: expected 1 got ZeroDivisionError'
-#         ])
-#
+class DoctestCaseTest(unittest.TestCase):
+    def setUp(self):
+        self.console = doctest_case.PythonConsole(False, False)
+
+    def makeCase(self, code, setup='', teardown=''):
+        return doctest_case.DoctestCase(self.console, setup, teardown, code=code)
+
+    def testConstructor_basicCase(self):
+        try:
+            self.makeCase("""
+            >>> 4 + 2
+            6
+            """)
+        except TypeError:
+            self.fail()
+
+    def testConstructor_missingCode(self):
+        self.assertRaises(TypeError, doctest_case.DoctestCase, self.console)
+
+    def testConstructor_setupAndTeardown(self):
+        try:
+            self.makeCase("""
+            >>> 4 + 2
+            6
+            """,
+            setup="""
+            >>> import hi
+            """,
+            teardown="""
+            >>> print('hi')
+            """)
+        except TypeError:
+            self.fail()
+
+    def testRun_success(self):
+        case = self.makeCase("""
+        >>> 2 + 2
+        4
+        """)
+        self.assertTrue(case.run())
+
+    def testRun_fail(self):
+        case = self.makeCase("""
+        >>> 2 + 2
+        5
+        """)
+        self.assertFalse(case.run())
+
 class UnlockTest(unittest.TestCase):
     def setUp(self):
         self.console = mock.Mock(spec=doctest_case.PythonConsole)
@@ -351,7 +221,7 @@ class UnlockTest(unittest.TestCase):
             [['7'],
              self.mock_answer])
 
-class OnLockTest(unittest.TestCase):
+class LockTest:
     ANSWER = 42
 
     def setUp(self):
@@ -413,7 +283,7 @@ class OnLockTest(unittest.TestCase):
              ['9']])
 
 
-class ToJsonTest(unittest.TestCase):
+class ToJsonTest:
     def setUp(self):
         self.console = mock.Mock(spec=doctest_case.PythonConsole)
         self.interact_fn = mock.Mock(side_effect=lambda x, y: x)

@@ -20,7 +20,8 @@ class OkTest(models.Test):
 
     def post_instantiation(self):
         for i, suite in enumerate(self.suites):
-            if not isinstance(suite, dict) or 'type' not in suite:
+            if not isinstance(suite, dict) or 'type' not in suite or\
+                    suite['type'] not in self.suite_map:
                 # TODO(albert): raise an appropriate error
                 raise TypeError
             self.suites[i] = self.suite_map[suite['type']](
@@ -62,6 +63,15 @@ class OkTest(models.Test):
         }
 
     def score(self):
+        """Runs test cases and computes the score for this particular test.
+
+        Scores are determined by aggregating results from suite.run() for each
+        suite. A suite is considered passed only if it results in no locked
+        nor failed results.
+
+        The points available for this test are distributed evenly across
+        scoreable (i.e. unlocked and 'scored' = True) suites.
+        """
         passed, total = 0, 0
         for i, suite in enumerate(self.suites):
             if not suite.scored:
@@ -165,6 +175,10 @@ class Suite(core.Serializable):
 
     def run(self, test_name, suite_number):
         """Subclasses should override this method to run tests.
+
+        PARAMETERS:
+        test_name    -- str; name of the parent test.
+        suite_number -- int; suite number, assumed to be 1-indexed.
 
         RETURNS:
         dict; results of the following form:
