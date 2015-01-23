@@ -25,6 +25,7 @@ class Test(core.Serializable):
 
     def dump(self, file):
         """Subclasses should override this method for serialization."""
+        raise NotImplementedError
 
 class Case(core.Serializable):
     """Abstract case class."""

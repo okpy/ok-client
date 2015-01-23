@@ -18,12 +18,11 @@ setup(
     keywords=['education', 'autograding'],
     packages=find_packages(include=[
         'client',
-        'client.cli',
-        'client.models',
-        'client.protocols',
-        'client.utils.sanction',
-        'client.utils',
+        'client.*',
     ]),
+    package_data={
+        'client': ['config.json'],
+    },
     # install_requires=[],
     entry_points={
         'console_scripts': [
