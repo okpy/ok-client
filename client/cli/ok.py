@@ -134,7 +134,6 @@ def main():
         except (IOError, EOFError) as e:
             log.info('Error reading from ' + BACKUP_FILE \
                     + ', assume nothing backed up')
-        else:
             msg_list = []
 
         # Run protocol.on_start
@@ -164,7 +163,7 @@ def main():
                 msg_list.append(messages)
                 print("Backing up your work...")
                 response = network.dump_to_server(access_token, msg_list,
-                                   assign.name, args.server, args.insecure,
+                                   assign.endpoint, args.server, args.insecure,
                                    client.__version__, log, send_all=args.submit)
 
                 if response:
