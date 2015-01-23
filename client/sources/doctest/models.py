@@ -99,3 +99,11 @@ class Doctest(models.Test):
         print()
         return score
 
+    def unlock(self, interact):
+        """Doctests cannot be unlocked."""
+
+    def lock(self, hash_fn):
+        """Doctests cannot be locked."""
+
+    def dump(self, file):
+        """Doctests do not need to be dumped, since no state changes."""

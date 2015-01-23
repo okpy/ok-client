@@ -9,15 +9,19 @@ class Test(core.Serializable):
 
     def run(self):
         """Subclasses should override this method to run tests."""
+        raise NotImplementedError
 
     def score(self):
         """Subclasses should override this method to score the test."""
+        raise NotImplementedError
 
-    def unlock(self, console):
+    def unlock(self, interact):
         """Subclasses should override this method to lock the test."""
+        raise NotImplementedError
 
     def lock(self, hash_fn):
         """Subclasses should override this method to lock the test."""
+        raise NotImplementedError
 
     def dump(self, file):
         """Subclasses should override this method for serialization."""
