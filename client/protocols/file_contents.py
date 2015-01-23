@@ -1,20 +1,50 @@
-from client.protocols import protocol
+from client.protocols.common import models
+import logging
 import os
 
+log = logging.getLogger(__name__)
 
-class FileContents(protocol.Protocol):
-    """The contents of changed source files are sent to the server."""
-    name = 'file_contents'
+# TODO(albert): rename this file to backup.py. Leaving it as file_contents.py
+# for now because server isn't ready for a change yet.
+
+class BackupProtocol(models.Protocol):
+    """The contents of source files are sent to the server."""
 
     def on_start(self):
-        """Find all source files and return their complete contents."""
-        contents = {}
-        if self.args.submit:
-            contents['submit'] = True
-        for path in self.assignment['src_files']:
-            key = os.path.normpath(os.path.split(path)[1])
-            with open(path, 'r', encoding='utf-8') as lines:
-                value = lines.read()
-            contents[key] = value
-        return contents
+        """Find all source files and return their complete contents.
 
+        Source files are considered to be files listed self.assignment.src.
+        If a certain source filepath is not a valid file (e.g. does not exist
+        or is not a file), then the contents associated with that filepath will
+        be an empty string.
+
+        RETURNS:
+        dict; a mapping of source filepath -> contents as strings.
+        """
+        files = {}
+        # TODO(albert): move this to AnalyticsProtocol
+        if self.args.submit:
+            files['submit'] = True
+        for file in self.assignment.src:
+            if not self.is_file(file):
+                # TODO(albert): add an error message
+                contents = ''
+                log.warning('File {} does not exist'.format(file))
+            else:
+                contents = self.read_file(file)
+                log.info('Loaded contents of {} to send to server'.format(file))
+            files[file] = contents
+        return files
+
+    #####################
+    # Mockable by tests #
+    #####################
+
+    def is_file(self, filepath):
+        return os.path.isfile(filepath)
+
+    def read_file(self, filepath):
+        with open(filepath, 'r', encoding='utf-8') as lines:
+            return lines.read()
+
+protocol = BackupProtocol

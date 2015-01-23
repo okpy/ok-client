@@ -6,21 +6,17 @@ required files (as determined by config.py) into a separate directory
 and then make a zipfile called "ok" that can be distributed to students.
 """
 
+import client
 import os
-OK_ROOT = os.path.normpath(os.path.join(
-    os.path.dirname(os.path.relpath(__file__)), '..'))  # Parent of cli/
-
-from client.models import *
-from client.protocols import *
 import argparse
-import importlib
+import json
 import shutil
-import sys
 import zipfile
 
+OK_ROOT = os.path.normpath(os.path.dirname(client.__file__))
 STAGING_DIR = os.path.join(os.getcwd(), 'staging')
 OK_NAME = 'ok'
-CONFIG_NAME = 'config.py'
+CONFIG_NAME = 'config.json'
 
 REQUIRED_FILES = [
     '__init__',
@@ -41,6 +37,9 @@ def populate_staging(staging_dir, config_path):
         filename += '.py'
         fullname = os.path.join(OK_ROOT, 'cli', filename)
         shutil.copy(fullname, os.path.join(staging_dir, 'cli'))
+    shutil.copytree(os.path.join(OK_ROOT, 'cli', 'common'),
+                    os.path.join(staging_dir, 'cli', 'common'))
+
     # Top-level files.
     for filename in REQUIRED_FILES:
         filename += '.py'
@@ -55,77 +54,53 @@ def populate_staging(staging_dir, config_path):
 
     config = load_config(config_path)
     populate_protocols(staging_dir, config)
-    populate_models(staging_dir, config)
+    populate_sources(staging_dir, config)
 
 def load_config(filepath):
     """Loads the configuration file at the given filepath."""
-    # TODO(albert): merge this import tool with the one in ok
-    if not filepath:
-        import config
-        return config
-    module_dir, module_name = os.path.split(os.path.abspath(filepath))
-    sys.path.insert(0, module_dir)
-    config = importlib.import_module(os.path.splitext(module_name)[0])
-    sys.path.pop(0)
-    return config
+    with open(filepath, 'r') as f:
+        return json.load(f)
 
 def populate_protocols(staging_dir, config):
     """Populates the protocols/ directory in the staging directory with
     relevant protocols.
     """
     os.mkdir(os.path.join(staging_dir, 'protocols'))
-    shutil.copyfile(os.path.join(OK_ROOT, 'protocols', 'protocol.py'),
-                    os.path.join(staging_dir, 'protocols', 'protocol.py'))
+    shutil.copyfile(os.path.join(OK_ROOT, 'protocols', '__init__.py'),
+                    os.path.join(staging_dir, 'protocols', '__init__.py'))
+    shutil.copytree(os.path.join(OK_ROOT, 'protocols', 'common'),
+                    os.path.join(staging_dir, 'protocols', 'common'))
 
-    protocol_modules = ['protocol']
-    for proto in protocol.get_protocols(config.protocols):
-        # Split the module along pacakge delimiters, the '.'
-        path_components = proto.__module__.split('.')
-        # Remove 'client' from path, since it's already part of OK_ROOT.
-        path_components.pop(0)
-        # Add the module to the list of imports in protocols/__init__
-        protocol_modules.append(path_components[-1])
-        # Convert to filesystem path.
-        protocol_src = os.path.join(OK_ROOT, *path_components) + '.py'
-        protocol_dest = os.path.join(staging_dir, *path_components) + '.py'
+    for proto in config.get('protocols', []):
+        protocol_src = os.path.join(OK_ROOT, 'protocols', proto + '.py')
+        protocol_dest = os.path.join(staging_dir, 'protocols', proto + '.py')
 
         if os.path.isfile(protocol_src):
             shutil.copyfile(protocol_src, protocol_dest)
         else:
             print('Unable to copy protocol {} from {}.'.format(
-                proto.name, protocol_src))
-    with open(os.path.join(staging_dir, 'protocols', '__init__.py'), 'w') as f:
-        f.write('__all__ = {}'.format(protocol_modules))
+                proto, protocol_src))
 
-def populate_models(staging_dir, config):
-    """Populates the models/ directory in the staging directory with
-    relevant test cases.
+def populate_sources(staging_dir, config):
+    """Populates the sources/ directory in the staging directory with
+    relevant sources.
     """
-    os.mkdir(os.path.join(staging_dir, 'models'))
-    shutil.copyfile(os.path.join(OK_ROOT, 'models', 'core.py'),
-                    os.path.join(staging_dir, 'models', 'core.py'))
-    shutil.copyfile(os.path.join(OK_ROOT, 'models', 'serialize.py'),
-                    os.path.join(staging_dir, 'models', 'serialize.py'))
+    os.mkdir(os.path.join(staging_dir, 'sources'))
+    shutil.copyfile(os.path.join(OK_ROOT, 'sources', '__init__.py'),
+                    os.path.join(staging_dir, 'sources', '__init__.py'))
+    shutil.copytree(os.path.join(OK_ROOT, 'sources', 'common'),
+                    os.path.join(staging_dir, 'sources', 'common'))
 
-    case_modules = ['core', 'serialize']
-    for case in core.get_testcases(config.cases):
-        # Split the module along pacakge delimiters, the '.'
-        path_components = case.__module__.split('.')
-        # Remove 'client' from path, since it's already part of OK_ROOT.
-        path_components.pop(0)
-        # Add the module to the list of imports in models/__init__
-        case_modules.append(path_components[-1])
-        # Convert to filesystem path.
-        case_src = os.path.join(OK_ROOT, *path_components) + '.py'
-        case_dest = os.path.join(staging_dir, *path_components) + '.py'
+    for source in set(config.get('tests', {}).values()):
+        src = os.path.join(OK_ROOT, 'sources', source)
+        dst = os.path.join(staging_dir, 'sources', source)
 
-        if os.path.isfile(case_src):
-            shutil.copyfile(case_src, case_dest)
+        if os.path.isfile(src):
+            shutil.copyfile(src, dst)
+        elif os.path.isdir(src):
+            shutil.copytree(src, dst)
         else:
-            print('Unable to copy test case {} from {}.'.format(
-                case.type, case_src))
-    with open(os.path.join(staging_dir, 'models', '__init__.py'), 'w') as f:
-        f.write('__all__ = {}'.format(case_modules))
+            print('Unable to copy source {} from {}.'.format(src, dst))
 
 def create_zip(staging_dir, destination):
     if not os.path.isdir(destination):

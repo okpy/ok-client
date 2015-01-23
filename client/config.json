@@ -1,0 +1,20 @@
+{
+    "name": "Homework 1",
+    "endpoint": "https://okpy.org/path/to/endpoint",
+    "src": [
+        "hw1.py"
+    ],
+    "tests": {
+        "tests/[!_]*.py": "ok_test",
+        "hw1.py:square": "doctest",
+        "hw1.py:double": "doctest"
+    },
+    "protocols": [
+        "file_contents",
+        "unlock",
+        "lock",
+        "grading",
+        "scoring",
+        "analytics"
+    ]
+}

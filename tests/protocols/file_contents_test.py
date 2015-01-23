@@ -1,24 +1,78 @@
 from client.protocols import file_contents
 import mock
-import os
 import unittest
 
-DEMO = 'client/demo_assignments'
-INVALID = os.path.join(DEMO, 'invalid')
-VALID = os.path.join(DEMO, 'valid')
-TMP = os.path.join(DEMO, 'tmp')
-
+# TODO(albert): change this to BackupProtocol once server is ready for the
+# change.
 class TestFileContentsProtocol(unittest.TestCase):
-    SRC_FILE = os.path.join(VALID, 'hw1', 'hw1.py')
-
     def setUp(self):
-        cmd_line_args = mock.Mock()
+        self.cmd_args = mock.Mock()
+        self.cmd_args.submit = True
         self.assignment = mock.MagicMock()
-        self.assignment.__getitem__.return_value =  [self.SRC_FILE]
-        self.logger = mock.Mock()
-        self.proto = file_contents.FileContents(cmd_line_args, self.assignment, self.logger)
+        self.files = {}
 
-    def test_on_start(self):
-        contents = self.proto.on_start()
-        self.assertIn('hw1.py', contents)
-        self.assertIn('def square(x):', contents['hw1.py'])
+        self.proto = file_contents.protocol(self.cmd_args, self.assignment)
+        self.proto.is_file = self.mockIsFile
+        self.proto.read_file = self.mockReadFile
+
+    def testOnStart_emptySourceList(self):
+        self.assignment.src = []
+        self.assertEqual({
+            'submit': True,
+        }, self.proto.on_start())
+
+    def testOnStart_validSources(self):
+        self.assignment.src = [
+            'file1',
+            'file2',
+        ]
+        self.files = {
+            'file1': 'contents 1',
+            'file2': """
+            contents
+            2
+            """,
+        }
+        self.assertEqual({
+            'file1': 'contents 1',
+            'file2': """
+            contents
+            2
+            """,
+            'submit': True,
+        }, self.proto.on_start())
+
+    def testOnStart_sourceInvalidFile(self):
+        self.assignment.src = [
+            'file1',
+            'file2',
+        ]
+        self.files = {
+            'file1': 'contents 1',
+            # file2 does not exist
+        }
+        self.assertEqual({
+            'file1': 'contents 1',
+            'file2': '',
+            'submit': True,
+        }, self.proto.on_start())
+
+    def testOnStart_duplicateSources(self):
+        self.assignment.src = [
+            'file1',
+            'file1',    # file1 twice
+        ]
+        self.files = {
+            'file1': 'contents 1',
+        }
+        self.assertEqual({
+            'file1': 'contents 1',
+            'submit': True,
+        }, self.proto.on_start())
+
+    def mockIsFile(self, filepath):
+        return filepath in self.files
+
+    def mockReadFile(self, filepath):
+        return self.files[filepath]
+

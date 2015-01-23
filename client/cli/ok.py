@@ -32,25 +32,26 @@ outside of this lifecycle, the send_to_server function can be used to send and
 receive information from the server outside of the default times. Such
 communications should be limited to the body of an on_interact method.
 """
-from client import config
 from client import exceptions
-from client.models import *
-from client.protocols import *
+from client.cli.common import assignment
 from client.utils import auth
-from client.utils import loading
 from client.utils import network
 from client.utils import output
 from datetime import datetime
 from urllib import error
 import argparse
 import client
+import logging
 import os
 import pickle
 import sys
-import logging
 
+LOGGING_FORMAT = '%(levelname)s | pid %(process)d | %(filename)s:%(lineno)d | %(message)s'
+logging.basicConfig(format=LOGGING_FORMAT)
+log = logging.getLogger('client')   # Get top-level logger
+
+CLIENT_ROOT = os.path.dirname(client.__file__)
 BACKUP_FILE = ".ok_messages"
-LOGGING_FORMAT = '%(levelname)-10s | pid %(process)d | %(filename)s, line %(lineno)d: %(message)s'
 
 ##########################
 # Command-line Interface #
@@ -61,8 +62,8 @@ def parse_input():
     parser = argparse.ArgumentParser(
         description=__doc__,
         formatter_class=argparse.RawDescriptionHelpFormatter)
-    parser.add_argument('-q', '--question', type=str,
-                        help="focus on a specific question")
+    parser.add_argument('-q', '--question', type=str, action='append',
+                        help="focus on specific questions")
     parser.add_argument('--server', type=str,
                         default='ok-server.appspot.com',
                         help="server address")
@@ -78,7 +79,7 @@ def parse_input():
                         help="uses http instead of https")
     parser.add_argument('-i', '--interactive', action='store_true',
                         help="toggle interactive mode")
-    parser.add_argument('-l', '--lock', type=str,
+    parser.add_argument('-l', '--lock', action='store_true',
                         help="partial path to directory to lock")
     parser.add_argument('--submit', action='store_true',
                         help="wait for server response without timeout")
@@ -92,25 +93,23 @@ def parse_input():
                         help="Prints the version number and quits")
     parser.add_argument('--score', action='store_true',
                         help="Scores the assignment")
+    parser.add_argument('--config', type=str,
+                        default=os.path.join(CLIENT_ROOT, 'config.json'),
+                        help="Scores the assignment")
     return parser.parse_args()
 
 def main():
     """Run all relevant aspects of ok.py."""
     args = parse_input()
 
-    logging.basicConfig(format=LOGGING_FORMAT)
-    log = logging.getLogger(__name__)
-    if args.debug:
-        log.setLevel(logging.INFO)
-    else:
-        log.setLevel(logging.ERROR)
-
-    log.info(args)
+    log.setLevel(logging.DEBUG if args.debug else logging.ERROR)
+    log.debug(args)
 
     if args.version:
         print("okpy=={}".format(client.__version__))
         exit(0)
 
+    # Check if ssl is available
     if not args.local and not args.insecure:
         try:
             import ssl
@@ -118,29 +117,15 @@ def main():
             log.warning('Error importing ssl', stack_info=True)
             sys.exit("SSL Bindings are not installed. You can install python3 SSL bindings or \nrun ok locally with python3 ok --local")
 
+    # Load assignment from config.
+    # TODO(albert): fail fast.
+    assign = assignment.load_config(args.config, args)
 
+    # TODO(albert): what are these variables used for?
     server_thread, timer_thread = None, None
     try:
-        print("You are running version {0} of ok.py".format(client.__version__))
 
-        cases = {case.type: case for case in core.get_testcases(config.cases)}
-        assignment = None
-        try:
-            assignment = loading.load_tests(args.tests, cases)
-        except exceptions.OkException as e:
-            print('Error:', e)
-            exit(1)
-
-        log.info('Replacing stdout with OutputLogger')
-        output_logger = sys.stdout = output.OutputLogger()
-
-        log.info('Instantiating protocols')
-        protocols = [p(args, assignment, output_logger, log)
-                     for p in protocol.get_protocols(config.protocols)]
-
-        messages = dict()
-        msg_list= []
-
+        # Load backup files
         try:
             with open(BACKUP_FILE, 'rb') as fp:
                 msg_list = pickle.load(fp)
@@ -149,22 +134,25 @@ def main():
         except (IOError, EOFError) as e:
             log.info('Error reading from ' + BACKUP_FILE \
                     + ', assume nothing backed up')
+            msg_list = []
 
-        for proto in protocols:
-            log.info('Execute %s.on_start()', proto.name)
-            messages[proto.name] = proto.on_start()
+        # Run protocol.on_start
+        messages = dict()
+        for name, proto in assign.protocol_map.items():
+            log.info('Execute {}.on_start()'.format(name))
+            messages[name] = proto.on_start()
         messages['timestamp'] = str(datetime.now())
 
+        # Run protocol.on_interact
         interact_msg = {}
-
-        for proto in protocols:
-            log.info('Execute %s.on_interact()', proto.name)
-            interact_msg[proto.name] = proto.on_interact()
-
+        for name, proto in assign.protocol_map.items():
+            log.info('Execute {}.on_interact()'.format(name))
+            interact_msg[name] = proto.on_interact()
         interact_msg['timestamp'] = str(datetime.now())
 
         # TODO(denero) Print server responses.
 
+        # Send request to server
         if not args.local:
             msg_list.append(interact_msg)
 
@@ -175,7 +163,7 @@ def main():
                 msg_list.append(messages)
                 print("Backing up your work...")
                 response = network.dump_to_server(access_token, msg_list,
-                                   assignment['name'], args.server, args.insecure,
+                                   assign.endpoint, args.server, args.insecure,
                                    client.__version__, log, send_all=args.submit)
 
                 if response:
@@ -195,12 +183,11 @@ def main():
                 print("Server submission successful")
 
     except KeyboardInterrupt:
+        # TODO(albert): add more error handling
         print("Quitting ok.")
 
     finally:
-        if assignment:
-            log.info('Dump tests for %s to %s', assignment['name'], args.tests)
-            loading.dump_tests(args.tests, assignment, log)
+        assign.dump_tests()
 
 if __name__ == '__main__':
     main()

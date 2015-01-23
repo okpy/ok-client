@@ -1,59 +1,86 @@
 from client.utils import output
-import mock
 import sys
 import unittest
 
+LOGGER = sys.stdout
+assert isinstance(LOGGER, output._OutputLogger)
+sys.stdout = sys.__stdout__
+
 class OutputLoggerTest(unittest.TestCase):
-    """Tests the OutputLogger."""
+    MESSAGE1 = 'message 1'
+    MESSAGE2 = 'message 2'
 
     def setUp(self):
-        self.mock_output = mock.MagicMock(spec=output.OutputLogger)
-        # The OutputLogger will think stdout was the MockOutputStream.
-        sys.stdout = self.mock_output
-        self.logger = sys.stdout = output.OutputLogger()
+        sys.stdout = LOGGER
+        output.on()
 
     def tearDown(self):
+        output.on()
+        output.remove_all_logs()
         sys.stdout = sys.__stdout__
 
-    def testLoggerOn(self):
-        self.logger.on()
-        print("logger on 1")
-        print("logger on 2")
-        self.assertTrue(self.logger.is_on())
-        self.assertTrue(self.mock_output.write.called)
+    def testRegisterLog_oneLog_outputOn(self):
+        output.on()
+        log_id = output.new_log()
 
-    def testLoggerOff(self):
-        self.logger.off()
-        print("logger off 1")
-        print("logger off 2")
-        self.assertFalse(self.logger.is_on())
-        self.assertFalse(self.mock_output.write.called)
+        print(self.MESSAGE1)
+        print(self.MESSAGE2)
 
-    def testRegisterLog_loggerOn(self):
-        log = []
-        self.logger.register_log(log)
-        self.logger.on()
+        log = output.get_log(log_id)
+        output.remove_log(log_id)
 
-        print("message 1")
-        print("message 2")
+        self.assertEqual([self.MESSAGE1, "\n", self.MESSAGE2, "\n"], log)
 
-        self.assertEqual(["message 1", "\n", "message 2", "\n"], log)
+    def testRegisterLog_manyLogs_outputOn(self):
+        output.on()
+        log_id1 = output.new_log()
+        log_id2 = output.new_log()
 
-    def testRegisterLog_loggerOff(self):
-        log = []
-        self.logger.register_log(log)
-        self.logger.off()
+        print(self.MESSAGE1)
 
-        print("message 1")
-        print("message 2")
+        log1 = output.get_log(log_id1)
+        log2 = output.get_log(log_id2)
+        output.remove_log(log_id1)
 
-        self.assertEqual(["message 1", "\n", "message 2", "\n"], log)
+        self.assertEqual([self.MESSAGE1, "\n"], log1)
+        self.assertEqual([self.MESSAGE1, "\n"], log2)
 
-    def testRegisterLog_logIsNone(self):
-        self.logger.register_log(None)
-        self.logger.on()
+        print(self.MESSAGE2)
 
-        # The following should not cause any errors.
-        print("message 1")
-        print("message 2")
+        log2 = output.get_log(log_id2)
+        output.remove_log(log_id2)
+        self.assertEqual([self.MESSAGE1, "\n"], log1)
+        self.assertEqual([self.MESSAGE1, "\n", self.MESSAGE2, "\n"], log2)
 
+    def testRegisterLog_oneLog_outputOff(self):
+        output.off()
+        log_id = output.new_log()
+
+        print(self.MESSAGE1)
+        print(self.MESSAGE2)
+
+        log = output.get_log(log_id)
+        output.remove_log(log_id)
+
+        self.assertEqual([self.MESSAGE1, "\n", self.MESSAGE2, "\n"], log)
+
+    def testRegisterLog_manyLogs_outputOff(self):
+        output.off()
+        log_id1 = output.new_log()
+        log_id2 = output.new_log()
+
+        print(self.MESSAGE1)
+
+        log1 = output.get_log(log_id1)
+        log2 = output.get_log(log_id2)
+        output.remove_log(log_id1)
+
+        self.assertEqual([self.MESSAGE1, "\n"], log1)
+        self.assertEqual([self.MESSAGE1, "\n"], log2)
+
+        print(self.MESSAGE2)
+
+        log2 = output.get_log(log_id2)
+        output.remove_log(log_id2)
+        self.assertEqual([self.MESSAGE1, "\n"], log1)
+        self.assertEqual([self.MESSAGE1, "\n", self.MESSAGE2, "\n"], log2)
