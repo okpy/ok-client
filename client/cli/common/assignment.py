@@ -1,6 +1,6 @@
+from client import exceptions as ex
 from client.sources.common import core
 from client.utils import format
-from client import exceptions
 import client
 import collections
 import glob
@@ -16,8 +16,7 @@ def load_config(filepath, args):
     config = get_config(filepath)
     log.info('Loaded config from {}'.format(filepath))
     if not isinstance(config, dict):
-        # TODO(albert): raise a more appropriate error
-        raise TypeError('Config should be a dictionary')
+        raise ex.LoadingException('Config should be a dictionary')
     return Assignment(args, **config)
 
 def get_config(filepath):
@@ -71,11 +70,16 @@ class Assignment(core.Serializable):
 
             files = glob.glob(file_pattern)
             if not files:
-                raise exceptions.FileNotFoundException(file_pattern)
+                error_msg = 'No tests found for pattern: {}'.format(file_pattern)
+                print(error_msg)
+                raise ex.LoadingException(error_msg)
 
             for file in files:
-                # TODO(albert): add error handling
-                module = importlib.import_module(self._TESTS_PACKAGE + '.' + source)
+                try:
+                    module = importlib.import_module(self._TESTS_PACKAGE + '.' + source)
+                except ImportError:
+                    raise ex.LoadingException('Invalid test source: {}'.format(source))
+
                 test_name = file
                 if parameter:
                     test_name += ':' + parameter
@@ -91,9 +95,13 @@ class Assignment(core.Serializable):
         """
         log.info('Dumping tests')
         for file, test in self.test_map.items():
-            # TODO(albert): add error handling
-            test.dump(file)
-            log.info('Dumped {} to {}'.format(test.name, file))
+            try:
+                test.dump(file)
+            except ex.SerializeException as e:
+                log.info('Unable to dump {} to {}: {}'.format(test.name, file,
+                         str(e)))
+            else:
+                log.info('Dumped {} to {}'.format(test.name, file))
 
     def _resolve_specified_tests(self):
         """For each of the questions specified on the command line,
@@ -120,19 +128,16 @@ class Assignment(core.Serializable):
                     matches.append(test)
 
             if len(matches) > 1:
-                print('Ambiguous test specified: {}'.format(question))
                 print('Did you mean one of the following?')
                 for test in matches:
                     print('    {}'.format(test))
-                # TODO(albert): raise an appropriate error
-                raise TypeError
+                raise ex.LoadingException('Ambiguous test specified: {}'.format(question))
+
             elif not matches:
-                print('Invalid test specified: {}'.format(question))
                 print('Did you mean one of the following?')
                 for test in self.test_map:
                     print('    {}'.format(test))
-                # TODO(albert): raise an appropriate error
-                raise TypeError
+                raise ex.LoadingException('Invalid test specified: {}'.format(question))
 
             match = matches[0]
             log.info('Matched {} to {}'.format(question, match))
@@ -142,9 +147,11 @@ class Assignment(core.Serializable):
     def _load_protocols(self):
         log.info('Loading protocols')
         for proto in self.protocols:
-            # TODO(albert): add error handling
-            module = importlib.import_module(self._PROTOCOL_PACKAGE + '.' + proto)
-            # TODO(albert): determine all arguments to a protocol
+            try:
+                module = importlib.import_module(self._PROTOCOL_PACKAGE + '.' + proto)
+            except ImportError:
+                raise ex.LoadingException('Invalid protocol: {}'.format(proto))
+
             self.protocol_map[proto] = module.protocol(self.cmd_args, self)
             log.info('Loaded protocol "{}"'.format(proto))
 

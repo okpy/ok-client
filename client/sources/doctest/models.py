@@ -1,3 +1,4 @@
+from client import exceptions as ex
 from client.sources.common import core
 from client.sources.common import models
 from client.sources.common import doctest_case
@@ -41,8 +42,7 @@ class Doctest(models.Test):
             prompt_match = self.prompt_re.match(line)
             if prompt_match:
                 if prompt_on and not line.startswith(leading_space):
-                    # TODO(albert): raise appropriate error
-                    raise TypeError('Inconsistent tabs for doctest')
+                    raise ex.SerializeException('Inconsistent tabs for doctest')
                 elif not prompt_on:
                     prompt_on = True
                     leading_space = prompt_match.group(1)
@@ -52,8 +52,7 @@ class Doctest(models.Test):
                 leading_space = ''
             elif prompt_on:
                 if not line.startswith(leading_space):
-                    # TODO(albert): raise appropriate error
-                    raise TypeError('Inconsistent tabs for doctest')
+                    raise ex.SerializeException('Inconsistent tabs for doctest')
                 code.append(line.lstrip())
         module = self.SETUP.format(importing.path_to_module_string(self.file))
         self.case = doctest_case.DoctestCase(self.console, module,

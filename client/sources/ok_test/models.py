@@ -20,10 +20,13 @@ class OkTest(models.Test):
 
     def post_instantiation(self):
         for i, suite in enumerate(self.suites):
-            if not isinstance(suite, dict) or 'type' not in suite or\
-                    suite['type'] not in self.suite_map:
-                # TODO(albert): raise an appropriate error
-                raise TypeError
+            if not isinstance(suite, dict):
+                raise ex.SerializeException('Test cases must be dictionaries')
+            elif 'type' not in suite:
+                raise ex.SerializeException('Suites must have field "type"')
+            elif suite['type'] not in self.suite_map:
+                raise ex.SerializeException('Invalid suite type: '
+                                            '{}'.format(suite['type']))
             self.suites[i] = self.suite_map[suite['type']](
                     self.verbose, self.interactive, self.timeout, **suite)
 
@@ -139,7 +142,6 @@ class OkTest(models.Test):
         # TODO(albert): writing causes an error halfway, the tests
         # directory may be left in a corrupted state.
         # TODO(albert): might need to delete obsolete test files too.
-        # TODO(albert): verify that test_json is serializable into json.
         json = format.prettyjson(self.to_json())
         with open(file, 'w') as f:
             f.write('test = ' + json)

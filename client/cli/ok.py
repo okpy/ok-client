@@ -32,7 +32,7 @@ outside of this lifecycle, the send_to_server function can be used to send and
 receive information from the server outside of the default times. Such
 communications should be limited to the body of an on_interact method.
 """
-from client import exceptions
+from client import exceptions as ex
 from client.cli.common import assignment
 from client.utils import auth
 from client.utils import network
@@ -101,8 +101,6 @@ def parse_input():
 def main():
     """Run all relevant aspects of ok.py."""
     args = parse_input()
-    failed = False
-    dump_tests = True
 
     log.setLevel(logging.DEBUG if args.debug else logging.ERROR)
     log.debug(args)
@@ -119,34 +117,29 @@ def main():
             log.warning('Error importing ssl', stack_info=True)
             sys.exit("SSL Bindings are not installed. You can install python3 SSL bindings or \nrun ok locally with python3 ok --local")
 
+    # Load assignment
     try:
-        # Load assignment from config.
-        # TODO(albert): fail fast.
         assign = assignment.load_config(args.config, args)
-    except exceptions.FileNotFoundException as e:
-        dump_tests = False
-        print(e.message)
-        failed = True
-        dump_tests = False
-    except exceptions.LargeEditDistanceError as e:
-        print(e.message)
-        failed = True
-        dump_tests = False
+    except (ex.LoadingException, ex.SerializeException) as e:
+        print(str(e))
+        exit(1)
+    except KeyboardInterrupt:
+        print("Quitting ok.")
+
+    # Load backup files
+    try:
+        with open(BACKUP_FILE, 'rb') as fp:
+            msg_list = pickle.load(fp)
+            log.info('Loaded %d backed up messages from %s',
+                     len(msg_list), BACKUP_FILE)
+    except (IOError, EOFError) as e:
+        log.info('Error reading from ' + BACKUP_FILE \
+                + ', assume nothing backed up')
+        msg_list = []
+    except KeyboardInterrupt:
+        print("Quitting ok.")
 
     try:
-        if failed:
-            raise KeyboardInterrupt
-        # Load backup files
-        try:
-            with open(BACKUP_FILE, 'rb') as fp:
-                msg_list = pickle.load(fp)
-                log.info('Loaded %d backed up messages from %s',
-                         len(msg_list), BACKUP_FILE)
-        except (IOError, EOFError) as e:
-            log.info('Error reading from ' + BACKUP_FILE \
-                    + ', assume nothing backed up')
-            msg_list = []
-
         # Run protocol.on_start
         messages = dict()
         for name, proto in assign.protocol_map.items():
@@ -160,10 +153,17 @@ def main():
             log.info('Execute {}.on_interact()'.format(name))
             interact_msg[name] = proto.on_interact()
         interact_msg['timestamp'] = str(datetime.now())
+    except KeyboardInterrupt:
+        print("Quitting ok.")
+    finally:
+        # Running protocols is the only task that modifies the assignment, so
+        # dumping is only necessary here.
+        assign.dump_tests()
 
+
+    # Send request to server
+    try:
         # TODO(denero) Print server responses.
-
-        # Send request to server
         if not args.local:
             msg_list.append(interact_msg)
 
@@ -180,7 +180,7 @@ def main():
                 if response:
                     print("Back-up successful: https://ok-server.appspot.com/#/submission/{0}".format(response['data']['key']))
 
-            except error.URLError as ex:
+            except error.URLError as e:
                 log.warning('on_start messages not sent to server: %s', str(e))
 
             with open(BACKUP_FILE, 'wb') as fp:
@@ -192,18 +192,8 @@ def main():
 
             if len(msg_list) == 0:
                 print("Server submission successful")
-
     except KeyboardInterrupt:
-        # TODO(albert): add more error handling
         print("Quitting ok.")
-
-    except exceptions.UsageException as e:
-        print(e.message)
-        print("Quitting ok.")
-        
-    finally:
-        if dump_tests:
-            assign.dump_tests()
 
 if __name__ == '__main__':
     main()

@@ -1,3 +1,4 @@
+from client import exceptions as ex
 from client.sources.common import core
 from client.sources.common import doctest_case
 from client.sources.ok_test import models
@@ -19,8 +20,7 @@ class DoctestSuite(models.Suite):
     def post_instantiation(self):
         for i, case in enumerate(self.cases):
             if not isinstance(case, dict):
-                # TODO(albert): raise an appropriate error
-                raise TypeError
+                raise ex.SerializeException('Test cases must be dictionaries')
             self.cases[i] = doctest_case.DoctestCase(self.console, self.setup,
                                                      self.teardown, **case)
 

@@ -1,3 +1,4 @@
+from client import exceptions as ex
 from client.sources.ok_test import concept
 from client.sources.ok_test import doctest
 from client.sources.ok_test import models
@@ -23,9 +24,9 @@ def load(file, parameter, args):
     Test
     """
     if not os.path.isfile(file) or not file.endswith('.py'):
-        # TODO(albert): standardize exceptions
         log.info('Cannot import {} as an OK test'.format(file))
-        raise Exception
+        raise ex.LoadingException('Cannot import {} as an OK test'.format(file))
+
     test = importing.load_module(file).test
     return models.OkTest(SUITES, args.verbose, args.interactive, args.timeout,
                          **test)

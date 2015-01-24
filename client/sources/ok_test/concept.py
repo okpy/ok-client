@@ -5,6 +5,7 @@ students understand high-level understanding. As such, these test cases
 focus mainly on unlocking.
 """
 
+from client import exceptions as ex
 from client.sources.common import models as common_models
 from client.sources.ok_test import models as ok_models
 from client.sources.common import core
@@ -20,8 +21,7 @@ class ConceptSuite(ok_models.Suite):
     def post_instantiation(self):
         for i, case in enumerate(self.cases):
             if not isinstance(case, dict):
-                # TODO(albert): raise an appropriate error
-                raise TypeError
+                raise ex.SerializeException('Test cases must be dictionaries')
             self.cases[i] = ConceptCase(**case)
 
     def run(self, test_name, suite_number):
