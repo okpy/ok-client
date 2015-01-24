@@ -1,5 +1,6 @@
 from client.sources.common import core
 from client.utils import format
+from client import exceptions
 import client
 import collections
 import glob
@@ -68,7 +69,11 @@ class Assignment(core.Serializable):
             else:
                 parameter = ''
 
-            for file in glob.glob(file_pattern):
+            files = glob.glob(file_pattern)
+            if not files:
+                raise exceptions.FileNotFoundException(file_pattern)
+
+            for file in files:
                 # TODO(albert): add error handling
                 module = importlib.import_module(self._TESTS_PACKAGE + '.' + source)
                 test_name = file

@@ -4,8 +4,11 @@ class OkException(BaseException):
     """Base exception for ok.py."""
     pass
 
+class UsageException(BaseException):
+    """Usage exception for errors in using ok.py"""
+
 # TODO(albert): extend from a base class designed for student bugs.
-class Timeout(BaseException):
+class Timeout(UsageException):
     """Exception for timeouts."""
     _message = 'Evaluation timed out!'
 
@@ -17,6 +20,22 @@ class Timeout(BaseException):
         """
         super().__init__(self)
         self.timeout = timeout
+        self.message = _message
+
+class FileNotFoundException(UsageException):
+    """Exception for files not being found."""
+    
+    def __init__(self, filename):
+        """Constructor.
+
+        PARAMETERS:
+        filename -- str; the file that couldn't be found
+        """
+        self._filename = filename
+
+    @property
+    def message(self):
+        return "Required file not found: {}".format(self._filename)
 
 
 class DeserializeError(OkException):

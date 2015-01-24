@@ -101,6 +101,7 @@ def parse_input():
 def main():
     """Run all relevant aspects of ok.py."""
     args = parse_input()
+    dump_tests = True
 
     log.setLevel(logging.DEBUG if args.debug else logging.ERROR)
     log.debug(args)
@@ -117,13 +118,10 @@ def main():
             log.warning('Error importing ssl', stack_info=True)
             sys.exit("SSL Bindings are not installed. You can install python3 SSL bindings or \nrun ok locally with python3 ok --local")
 
-    # Load assignment from config.
-    # TODO(albert): fail fast.
-    assign = assignment.load_config(args.config, args)
-
-    # TODO(albert): what are these variables used for?
-    server_thread, timer_thread = None, None
     try:
+        # Load assignment from config.
+        # TODO(albert): fail fast.
+        assign = assignment.load_config(args.config, args)
 
         # Load backup files
         try:
@@ -186,8 +184,17 @@ def main():
         # TODO(albert): add more error handling
         print("Quitting ok.")
 
+    except exceptions.FileNotFoundException as e:
+        dump_tests = False
+        print(e.message)
+        print("Quitting ok.")
+
+    except exceptions.UsageException as e:
+        print(e.message)
+        print("Quitting ok.")
     finally:
-        assign.dump_tests()
+        if dump_tests:
+            assign.dump_tests()
 
 if __name__ == '__main__':
     main()
