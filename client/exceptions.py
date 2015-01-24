@@ -37,6 +37,20 @@ class FileNotFoundException(UsageException):
     def message(self):
         return "Required file not found: {}".format(self._filename)
 
+class LargeEditDistanceError(UsageException):
+    """Exception for really large edit distances."""
+
+    def __init__(self, question, tests):
+        """Constructor
+
+        PARAMETERS:
+        question -- str; the input that was given
+        tests -- array; an array of tests to be matched
+        """
+        self.message = 'Unable to correct mistyped question: {}\n'.format(question)
+        self.message += 'Here are the questions with tests:\n'
+        for test in tests:
+            self.message += '    {}\n'.format(test)
 
 class DeserializeError(OkException):
     """Exceptions related to deserialization."""

@@ -101,6 +101,7 @@ def parse_input():
 def main():
     """Run all relevant aspects of ok.py."""
     args = parse_input()
+    failed = False
     dump_tests = True
 
     log.setLevel(logging.DEBUG if args.debug else logging.ERROR)
@@ -122,7 +123,19 @@ def main():
         # Load assignment from config.
         # TODO(albert): fail fast.
         assign = assignment.load_config(args.config, args)
+    except exceptions.FileNotFoundException as e:
+        dump_tests = False
+        print(e.message)
+        failed = True
+        dump_tests = False
+    except exceptions.LargeEditDistanceError as e:
+        print(e.message)
+        failed = True
+        dump_tests = False
 
+    try:
+        if failed:
+            raise KeyboardInterrupt
         # Load backup files
         try:
             with open(BACKUP_FILE, 'rb') as fp:
@@ -184,14 +197,10 @@ def main():
         # TODO(albert): add more error handling
         print("Quitting ok.")
 
-    except exceptions.FileNotFoundException as e:
-        dump_tests = False
-        print(e.message)
-        print("Quitting ok.")
-
     except exceptions.UsageException as e:
         print(e.message)
         print("Quitting ok.")
+        
     finally:
         if dump_tests:
             assign.dump_tests()

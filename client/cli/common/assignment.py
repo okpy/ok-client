@@ -119,7 +119,7 @@ class Assignment(core.Serializable):
                 # TODO(albert): change to subsequence matching. edit distance
                 # will always return a match, even if the input resembles no
                 # such test.
-                score = _edit_distance(test.lower(), question.lower())
+                score = _edit_distance(test.split(':')[1].lower(), question.lower())
                 matches.setdefault(score, []).append(test)
             best_score = min(matches)
 
@@ -127,9 +127,12 @@ class Assignment(core.Serializable):
                 print('Ambiguous question specified: {}'.format(question))
                 print('Did you mean one of the following?')
                 for test in matches[best_score]:
-                    print('    {}'.format(test))
+                    print('    {}'.format(test.split(':')[1]))
                 # TODO(albert): raise an appropriate error
                 raise TypeError
+
+            if best_score > 3:
+                raise exceptions.LargeEditDistanceError(question, [x.split(':')[1] for x in self.test_map])
 
             best_match = matches[best_score][0]
             log.info('Matched {} to {}'.format(question, best_match))
