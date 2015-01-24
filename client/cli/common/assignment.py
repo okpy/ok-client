@@ -114,30 +114,30 @@ class Assignment(core.Serializable):
             log.info('No tests loaded')
             return
         for question in self.cmd_args.question:
-            matches = {}
+            matches = []
             for test in self.test_map:
-                # TODO(albert): change to subsequence matching. edit distance
-                # will always return a match, even if the input resembles no
-                # such test.
-                score = _edit_distance(test.split(':')[1].lower(), question.lower())
-                matches.setdefault(score, []).append(test)
-            best_score = min(matches)
+                if _has_subsequence(test.lower(), question.lower()):
+                    matches.append(test)
 
-            if len(matches[best_score]) > 1:
-                print('Ambiguous question specified: {}'.format(question))
+            if len(matches) > 1:
+                print('Ambiguous test specified: {}'.format(question))
                 print('Did you mean one of the following?')
-                for test in matches[best_score]:
-                    print('    {}'.format(test.split(':')[1]))
+                for test in matches:
+                    print('    {}'.format(test))
+                # TODO(albert): raise an appropriate error
+                raise TypeError
+            elif not matches:
+                print('Invalid test specified: {}'.format(question))
+                print('Did you mean one of the following?')
+                for test in self.test_map:
+                    print('    {}'.format(test))
                 # TODO(albert): raise an appropriate error
                 raise TypeError
 
-            if best_score > 3:
-                raise exceptions.LargeEditDistanceError(question, [x.split(':')[1] for x in self.test_map])
-
-            best_match = matches[best_score][0]
-            log.info('Matched {} to {}'.format(question, best_match))
-            if best_match not in self.specified_tests:
-                self.specified_tests.append(self.test_map[best_match])
+            match = matches[0]
+            log.info('Matched {} to {}'.format(question, match))
+            if match not in self.specified_tests:
+                self.specified_tests.append(self.test_map[match])
 
     def _load_protocols(self):
         log.info('Loading protocols')
@@ -155,36 +155,14 @@ class Assignment(core.Serializable):
         format.print_line('=')
         print()
 
-def _edit_distance(s1, s2):
-    """Calculates the minimum edit distance between two strings.
-
-    The costs are as follows:
-    - match: 0
-    - mismatch: 2
-    - indel: 1
-
-    PARAMETERS:
-    s1 -- str; the first string to compare
-    s2 -- str; the second string to compare
-
-    RETURNS:
-    int; the minimum edit distance between s1 and s2
-    """
-    m, n = len(s1), len(s2)
-    subst_cost = lambda x, y: 0 if x == y else 2    # Penalize mismatches.
-
-    cost = [[0 for _ in range(n + 1)] for _ in range(m + 1)]
-    for col in range(1, n + 1):
-        cost[0][col] = cost[0][col - 1] + 1
-    for row in range(1, m + 1):
-        cost[row][0] = cost[row - 1][0] + 1
-
-    for col in range(1, n + 1):
-        for row in range(1, m + 1):
-            cost[row][col] = min(
-                cost[row - 1][col] + 1,
-                cost[row][col - 1] + 1,
-                cost[row - 1][col - 1] + subst_cost(s1[row-1], s2[col-1])
-            )
-    return cost[m][n]
+def _has_subsequence(string, pattern):
+    """Returns true if the pattern is a subsequence of string."""
+    string_index, pattern_index = 0, 0
+    while string_index < len(string) and pattern_index < len(pattern):
+        if string[string_index] == pattern[pattern_index]:
+            string_index += 1
+            pattern_index += 1
+        else:
+            string_index += 1
+    return pattern_index == len(pattern)
 
