@@ -48,6 +48,22 @@ def print_line(style, length=69):
     """
     print(style * length)
 
+def print_progress_bar(header, passed, failed, locked):
+    print_line('-')
+    print(header)
+    print('    Passed: {}'.format(passed))
+    print('    Failed: {}'.format(failed))
+    if locked > 0:
+        print('    Locked: {}'.format(locked))
+
+    # Print [oook.....] progress bar
+    total = passed + failed + locked
+    percent = round(100 * passed / total, 1) if total != 0 else 0.0
+    print('[{}k{}] {}% passed'.format(
+        'o' * int(percent // 10),
+        '.' * int(10 - (percent // 10)),
+        percent))
+
 #################
 # Serialization #
 #################

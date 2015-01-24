@@ -46,7 +46,7 @@ class OkTest(models.Test):
             failed += results['failed']
             locked += results['locked']
 
-        self._print_breakdown('cases', passed, failed, locked)
+        format.print_progress_bar(self.name, passed, failed, locked)
         if locked > 0:
             print()
             print('There are still unlocked tests! '
@@ -87,7 +87,7 @@ class OkTest(models.Test):
         else:
             score = 0.0
 
-        self._print_breakdown('suites', passed, total - passed)
+        format.print_progress_bar(self.name, passed, total - passed, 0)
         print()
         return score
 
@@ -143,23 +143,6 @@ class OkTest(models.Test):
         json = format.prettyjson(self.to_json())
         with open(file, 'w') as f:
             f.write('test = ' + json)
-
-    def _print_breakdown(self, type, passed, failed, locked=None):
-        format.print_line('-')
-        print(self.name)
-        print('    Passed: {}'.format(passed))
-        print('    Failed: {}'.format(failed))
-        if locked is not None:
-            print('    Locked: {}'.format(locked))
-
-        # Print [oook.....] progress bar
-        total = passed + failed + (0 if locked is None else locked)
-        percent = round(100 * passed / total, 1) if total != 0 else 0.0
-        print('[{}k{}] {}% of {} passed'.format(
-            'o' * int(percent // 10),
-            '.' * int(10 - (percent // 10)),
-            percent,
-            type))
 
 
 class Suite(core.Serializable):

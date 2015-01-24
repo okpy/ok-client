@@ -34,28 +34,22 @@ class GradingProtocol(models.Protocol):
         format.print_line('~')
         print('Running tests')
         print()
-        total_passed = 0
-        total_failed = 0
-        total_locked = 0
+        passed = 0
+        failed = 0
+        locked = 0
 
         analytics = {}
 
         for test in self.assignment.specified_tests:
             log.info('Running tests for {}'.format(test.name))
             results = test.run()
-            total_passed += results['passed']
-            total_failed += results['failed']
-            total_locked += results['locked']
+
+            passed += results['passed']
+            failed += results['failed']
+            locked += results['locked']
             analytics[test.name] = results
 
-        print('Summary:')
-        print('We ran {} test(s)'.format(total_passed+total_failed+total_locked))
-        print('    {} test(s) passed'.format(total_passed))
-        print('    {} test(s) failed'.format(total_failed))
-
-        if total_locked > 0:
-            print('    {} tests are still locked'.format(total_locked))
-
+        format.print_progress_bar('Test summary', passed, failed, locked)
         return analytics
 
 protocol = GradingProtocol
