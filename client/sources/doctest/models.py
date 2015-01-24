@@ -86,7 +86,10 @@ class Doctest(models.Test):
         if not success and self.interactive:
             self.console.interact()
 
-        return success
+        if success:
+            return {'passed': 1, 'failed': 0, 'locked': 0}
+        else:
+            return {'passed': 0, 'failed': 1, 'locked': 0}
 
     def score(self):
         format.print_line('-')
