@@ -49,7 +49,7 @@ class GradingProtocol(models.Protocol):
             analytics[test.name] = results
 
         print('Summary:')
-        print('We graded {} test(s)'.format(total_passed+total_failed+total_locked))
+        print('We ran {} test(s)'.format(total_passed+total_failed+total_locked))
         print('    {} test(s) passed'.format(total_passed))
         print('    {} test(s) failed'.format(total_failed))
 
