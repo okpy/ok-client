@@ -141,11 +141,11 @@ def main():
 
     try:
         # Run protocol.on_start
-        messages = dict()
+        start_messages = dict()
         for name, proto in assign.protocol_map.items():
             log.info('Execute {}.on_start()'.format(name))
             messages[name] = proto.on_start()
-        messages['timestamp'] = str(datetime.now())
+        start_messages['timestamp'] = str(datetime.now())
 
         # Run protocol.on_interact
         interact_msg = {}
@@ -178,7 +178,8 @@ def main():
                                    client.__version__, log, send_all=args.submit)
 
                 if response:
-                    print("Back-up successful: https://ok-server.appspot.com/#/submission/{0}".format(response['data']['key']))
+                    # Hardcode course id- we need to return it from the server at some point...
+                    print("Back-up successful: https://ok-server.appspot.com/#/5165212546105344/submission/{0}".format(response['data']['key']))
 
             except error.URLError as e:
                 log.warning('on_start messages not sent to server: %s', str(e))

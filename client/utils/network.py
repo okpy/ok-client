@@ -49,18 +49,6 @@ def send_to_server(access_token, messages, name, server, version, log,
             log.warning('Could not connect to %s', server)
 
 def dump_to_server(access_token, msg_list, name, server, insecure, version, log, send_all=False):
-    #TODO(soumya) Change after we get data on ok_messages
-    # This request is temporary- it'll be removed in the next day or two.
-    try:
-        prefix = "http" if insecure else "https"
-        address = prefix + "://" + server + "/api/v1/nothing"
-        address += "?access_token={0}&ok_messages={1}".format(access_token,
-                len(msg_list))
-        req = request.Request(address)
-        response = request.urlopen(req, b"", 0.4)
-    except Exception as e:
-        pass
-
     stop_time = datetime.datetime.now() + datetime.timedelta(milliseconds=TIMEOUT)
     initial_length = len(msg_list)
     retries = RETRY_LIMIT
