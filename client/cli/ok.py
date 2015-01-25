@@ -144,7 +144,7 @@ def main():
         start_messages = dict()
         for name, proto in assign.protocol_map.items():
             log.info('Execute {}.on_start()'.format(name))
-            messages[name] = proto.on_start()
+            start_messages[name] = proto.on_start()
         start_messages['timestamp'] = str(datetime.now())
 
         # Run protocol.on_interact
@@ -171,7 +171,7 @@ def main():
                 access_token = auth.authenticate(args.authenticate)
                 log.info('Authenticated with access token %s', access_token)
 
-                msg_list.append(messages)
+                msg_list.append(start_messages)
                 print("Backing up your work...")
                 response = network.dump_to_server(access_token, msg_list,
                                    assign.endpoint, args.server, args.insecure,
