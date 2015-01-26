@@ -18,7 +18,13 @@ class GradingProtocolTest(unittest.TestCase):
         self.assertIsInstance(results, dict)
 
     def testOnInteract_withTests(self):
-        self.assignment.specified_tests = [mock.Mock(spec=models.Test)]
+        test = mock.Mock(spec=models.Test)
+        test.run.return_value = {
+            'passed': 0,
+            'failed': 0,
+            'locked': 0,
+        }
+        self.assignment.specified_tests = [test]
         results = self.proto.on_interact()
         self.assertIsInstance(results, dict)
 

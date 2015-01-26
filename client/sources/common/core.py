@@ -42,7 +42,8 @@ class Field(object):
         For primitives like booleans, ints, floats, and strings, use
         this default version to avoid unintended type conversions."""
         if not self.is_valid(value):
-            raise TypeError
+            raise TypeError('{} is not a valid value for type {}'.format(value,
+                            self.__class__.__name__))
         return value
 
     def to_json(self, value):

@@ -19,7 +19,7 @@ class Timeout(OkException):
         """
         super().__init__(self)
         self.timeout = timeout
-        self.message = _message
+        self.message = self._message
 
 class LoadingException(OkException):
     """Exception related to loading assignments."""

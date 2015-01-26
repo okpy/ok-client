@@ -1,3 +1,4 @@
+from client import exceptions as ex
 from client.sources.common import core
 from client.sources.common import models
 from client.utils import format

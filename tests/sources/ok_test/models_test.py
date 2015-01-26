@@ -1,3 +1,4 @@
+from client import exceptions as ex
 from client.sources.ok_test import models
 from client.sources.common import core
 import mock
@@ -98,7 +99,7 @@ class OkTest(unittest.TestCase):
         self.assertEqual(1, self.mockSuite2.call_count)
 
     def testConstructor_unknownSuiteType(self):
-        self.assertRaises(TypeError, self.makeTest, suites=[
+        self.assertRaises(ex.SerializeException, self.makeTest, suites=[
             {
                 'type': 'mock1',
                 'foo': 'bar'
@@ -110,7 +111,7 @@ class OkTest(unittest.TestCase):
         ])
 
     def testConstructor_improperlyFormattedSuite(self):
-        self.assertRaises(TypeError, self.makeTest, suites=[
+        self.assertRaises(ex.SerializeException, self.makeTest, suites=[
             {
                 'foo': 'bar'
             },
