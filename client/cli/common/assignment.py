@@ -64,7 +64,7 @@ class Assignment(core.Serializable):
         for file_pattern, source in self.tests.items():
             # Separate filepath and parameter
             if ':' in file_pattern:
-                file_pattern, parameter = file_pattern.split(':', maxsplit=1)
+                file_pattern, parameter = file_pattern.split(':', 1)
             else:
                 parameter = ''
 
