@@ -68,13 +68,7 @@ class Assignment(core.Serializable):
             else:
                 parameter = ''
 
-
-            files = glob.glob(file_pattern)
-            if not files:
-                raise ex.LoadingException(
-                        'Unable to find file pattern: {}'.format(file_pattern))
-
-            for file in files:
+            for file in glob.glob(file_pattern):
                 try:
                     module = importlib.import_module(self._TESTS_PACKAGE + '.' + source)
                 except ImportError:
@@ -85,6 +79,9 @@ class Assignment(core.Serializable):
                     test_name += ':' + parameter
                 self.test_map[test_name] = module.load(file, parameter, self.cmd_args)
                 log.info('Loaded {}'.format(test_name))
+
+        if not test_map:
+            raise ex.LoadingException('No tests loaded')
 
     def dump_tests(self):
         """Dumps all tests, as determined by their .dump() method.

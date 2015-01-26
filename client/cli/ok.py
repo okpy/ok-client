@@ -120,7 +120,7 @@ def main():
     # Load assignment
     try:
         assign = assignment.load_config(args.config, args)
-    except (ex.LoadingException, ex.SerializeException) as e:
+    except (ex.LoadingException, ex.SerializeException, TypeError) as e:
         print(str(e))
         exit(1)
     except KeyboardInterrupt:
@@ -145,6 +145,7 @@ def main():
         for name, proto in assign.protocol_map.items():
             log.info('Execute {}.on_start()'.format(name))
             start_messages[name] = proto.on_start()
+        # TODO(albert): doesn't AnalyticsProtocol store the timestamp?
         start_messages['timestamp'] = str(datetime.now())
 
         # Run protocol.on_interact
@@ -152,6 +153,7 @@ def main():
         for name, proto in assign.protocol_map.items():
             log.info('Execute {}.on_interact()'.format(name))
             interact_msg[name] = proto.on_interact()
+        # TODO(albert): doesn't AnalyticsProtocol store the timestamp?
         interact_msg['timestamp'] = str(datetime.now())
     except KeyboardInterrupt:
         print("Quitting ok.")
