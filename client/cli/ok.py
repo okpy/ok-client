@@ -95,7 +95,7 @@ def parse_input():
                         help="Scores the assignment")
     parser.add_argument('--config', type=str,
                         default=os.path.join(CLIENT_ROOT, 'config.json'),
-                        help="Scores the assignment")
+                        help="Specifies the configuration file")
     return parser.parse_args()
 
 def main():

@@ -68,11 +68,11 @@ class Assignment(core.Serializable):
             else:
                 parameter = ''
 
+
             files = glob.glob(file_pattern)
             if not files:
-                error_msg = 'No tests found for pattern: {}'.format(file_pattern)
-                print(error_msg)
-                raise ex.LoadingException(error_msg)
+                raise ex.LoadingException(
+                        'Unable to find file pattern: {}'.format(file_pattern))
 
             for file in files:
                 try:
@@ -143,6 +143,7 @@ class Assignment(core.Serializable):
             log.info('Matched {} to {}'.format(question, match))
             if match not in self.specified_tests:
                 self.specified_tests.append(self.test_map[match])
+
 
     def _load_protocols(self):
         log.info('Loading protocols')

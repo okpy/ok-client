@@ -1,33 +1,36 @@
-from client.models import *
-from client.protocols import unlock
-from client.utils import loading
-from client.utils import output
-from client import config
+from client.protocols import lock
+from client.cli.common import assignment
 import argparse
-import sys
+import client
+import os.path
+
+CLIENT_ROOT = os.path.dirname(client.__file__)
 
 def parse_input():
     """Parses command line input."""
     parser = argparse.ArgumentParser(
         description=__doc__,
         formatter_class=argparse.RawDescriptionHelpFormatter)
-    parser.add_argument('-t', '--tests', type=str, default='tests',
-                        help="Path to a specific directory of tests")
+    parser.add_argument('--config', type=str,
+                        default=os.path.join(CLIENT_ROOT, 'config.json'),
+                        help="Specifies the configuration file")
     return parser.parse_args()
 
 def main():
     """Run the LockingProtocol."""
     args = parse_input()
     args.lock = True
-    cases = {case.type: case for case in core.get_testcases(config.cases)}
-    assignment = loading.load_tests(args.tests, cases)
+    args.question = []
+    args.timeout = 0
+    args.verbose = False
+    args.interactive = False
 
-    logger = sys.stdout = output.OutputLogger()
+    assign = assignment.load_config(args.config, args)
 
-    protocol = unlock.LockProtocol(args, assignment, logger)
+    protocol = lock.protocol(args, assign)
     protocol.on_start()
 
-    loading.dump_tests(args.tests, assignment)
+    assign.dump_tests()
 
 if __name__ == '__main__':
     main()
