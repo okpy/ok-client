@@ -93,8 +93,7 @@ def parse_input():
                         help="Prints the version number and quits")
     parser.add_argument('--score', action='store_true',
                         help="Scores the assignment")
-    parser.add_argument('--config', type=str,
-                        default=os.path.join(CLIENT_ROOT, 'config.json'),
+    parser.add_argument('--config', type=str, default='config.json',
                         help="Specifies the configuration file")
     return parser.parse_args()
 
