@@ -38,14 +38,6 @@ class AssignmentTest(unittest.TestCase):
         self.mockTest = mock.Mock()
         self.mockImportModule.return_value.load.return_value = self.mockTest
 
-        self.old_import, self.old_find = assignment._import_module, assignment._find_files
-        assignment._import_module = self.mockImportModule
-        assignment._find_files = self.mockFindFiles
-
-    def tearDown(self):
-        assignment._import_module = self.old_import
-        assignment._find_files = self.old_find
-
     def makeAssignment(self, tests=None, protocols=None):
         if tests is None:
             tests = {self.PATTERN1: self.SOURCE1}
@@ -56,6 +48,7 @@ class AssignmentTest(unittest.TestCase):
                                            tests=tests, protocols=protocols)
         assign._import_module = self.mockImportModule
         assign._find_files = self.mockFindFiles
+        assign.load()
         return assign
 
     def testConstructor_noTestSources(self):

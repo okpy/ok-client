@@ -116,17 +116,16 @@ def main():
             log.warning('Error importing ssl', stack_info=True)
             sys.exit("SSL Bindings are not installed. You can install python3 SSL bindings or \nrun ok locally with python3 ok --local")
 
-    # Load assignment
+    # Instantiating assignment
     try:
         assign = assignment.load_config(args.config, args)
-    except ex.LoadingException as e:
-        log.warning('Assignment could not load', exc_info=True)
+    except (ex.LoadingException, ex.SerializeException) as e:
+        log.warning('Assignment could not instantiate', exc_info=True)
         print('Error loading assignment')
         exit(1)
-    except KeyboardInterrupt:
-        print("Quitting ok.")
 
     # Load backup files
+    msg_list = []
     try:
         with open(BACKUP_FILE, 'rb') as fp:
             msg_list = pickle.load(fp)
@@ -135,11 +134,14 @@ def main():
     except (IOError, EOFError) as e:
         log.info('Error reading from ' + BACKUP_FILE \
                 + ', assume nothing backed up')
-        msg_list = []
     except KeyboardInterrupt:
-        print("Quitting ok.")
+        log.warning('Backup messages were not loaded due to KeyboardInterrupt')
+
 
     try:
+        # Load tests and protocols
+        assign.load()
+
         # Run protocol.on_start
         start_messages = dict()
         for name, proto in assign.protocol_map.items():
@@ -147,6 +149,7 @@ def main():
             start_messages[name] = proto.on_start()
         # TODO(albert): doesn't AnalyticsProtocol store the timestamp?
         start_messages['timestamp'] = str(datetime.now())
+        msg_list.append(start_messages)
 
         # Run protocol.on_interact
         interact_msg = {}
@@ -155,25 +158,25 @@ def main():
             interact_msg[name] = proto.on_interact()
         # TODO(albert): doesn't AnalyticsProtocol store the timestamp?
         interact_msg['timestamp'] = str(datetime.now())
+        msg_list.append(interact_msg)
+    except ex.LoadingException as e:
+        log.warning('Assignment could not load', exc_info=True)
+        print('Error loading assignment')
     except KeyboardInterrupt:
-        print("Quitting ok.")
-    finally:
-        # Running protocols is the only task that modifies the assignment, so
-        # dumping is only necessary here.
+        log.info('Quitting protocols')
         assign.dump_tests()
-
+    else:
+        assign.dump_tests()
 
     # Send request to server
     try:
         # TODO(denero) Print server responses.
         if not args.local:
-            msg_list.append(interact_msg)
 
             try:
                 access_token = auth.authenticate(args.authenticate)
                 log.info('Authenticated with access token %s', access_token)
 
-                msg_list.append(start_messages)
                 print("Backing up your work...")
                 response = network.dump_to_server(access_token, msg_list,
                                    assign.endpoint, args.server, args.insecure,

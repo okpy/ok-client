@@ -50,6 +50,9 @@ class Assignment(core.Serializable):
 
     def post_instantiation(self):
         self._print_header()
+
+    def load(self):
+        """Load tests and protocols."""
         self._load_tests()
         self._load_protocols()
         self._resolve_specified_tests()
@@ -70,9 +73,9 @@ class Assignment(core.Serializable):
             else:
                 parameter = ''
 
-            for file in _find_files(file_pattern):
+            for file in self._find_files(file_pattern):
                 try:
-                    module = _import_module(self._TESTS_PACKAGE + '.' + source)
+                    module = self._import_module(self._TESTS_PACKAGE + '.' + source)
                 except ImportError:
                     raise ex.LoadingException('Invalid test source: {}'.format(source))
 
@@ -148,7 +151,7 @@ class Assignment(core.Serializable):
         log.info('Loading protocols')
         for proto in self.protocols:
             try:
-                module = _import_module(self._PROTOCOL_PACKAGE + '.' + proto)
+                module = self._import_module(self._PROTOCOL_PACKAGE + '.' + proto)
             except ImportError:
                 raise ex.LoadingException('Invalid protocol: {}'.format(proto))
 
@@ -162,11 +165,11 @@ class Assignment(core.Serializable):
         format.print_line('=')
         print()
 
-def _find_files(pattern):
-    return glob.glob(pattern)
+    def _find_files(self, pattern):
+        return glob.glob(pattern)
 
-def _import_module(module):
-    return importlib.import_module(module)
+    def _import_module(self, module):
+        return importlib.import_module(module)
 
 def _has_subsequence(string, pattern):
     """Returns true if the pattern is a subsequence of string."""
