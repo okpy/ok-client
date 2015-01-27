@@ -30,7 +30,7 @@ def get_config(filepath):
         # config.json file in the zip archive
         archive = zipfile.ZipFile('ok')
         config = archive.read('client/config.json').decode('utf-8')
-        return json.loads(config)
+        return json.loads(config, object_pairs_hook=collections.OrderedDict)
 
 class Assignment(core.Serializable):
     name = core.String()
@@ -162,10 +162,10 @@ class Assignment(core.Serializable):
         format.print_line('=')
         print()
 
-def _find_files(self, pattern):
+def _find_files(pattern):
     return glob.glob(pattern)
 
-def _import_module(self, module):
+def _import_module(module):
     return importlib.import_module(module)
 
 def _has_subsequence(string, pattern):
