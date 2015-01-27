@@ -120,8 +120,9 @@ def main():
     # Load assignment
     try:
         assign = assignment.load_config(args.config, args)
-    except (ex.LoadingException, ex.SerializeException, TypeError) as e:
-        print(str(e))
+    except ex.LoadingException as e:
+        log.warning('Assignment could not load', stack_info=True)
+        print('Error loading assignment')
         exit(1)
     except KeyboardInterrupt:
         print("Quitting ok.")
