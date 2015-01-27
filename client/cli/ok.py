@@ -120,7 +120,7 @@ def main():
     try:
         assign = assignment.load_config(args.config, args)
     except ex.LoadingException as e:
-        log.warning('Assignment could not load', stack_info=True)
+        log.warning('Assignment could not load', exc_info=True)
         print('Error loading assignment')
         exit(1)
     except KeyboardInterrupt:
