@@ -38,6 +38,11 @@ def populate_staging(staging_dir):
     shutil.copytree(os.path.join(OK_ROOT, 'cli', 'common'),
                     os.path.join(staging_dir, 'cli', 'common'))
 
+    # TODO(albert): remove this as soon as homework 1 is due. This is
+    # just to avoid catastrophe when transitioning to the new config path search.
+    # Copy the config.json for CS 61A's homework 1 into OK.
+    shutil.copyfile(os.path.join(OK_ROOT, '61a_config.json'),
+                    os.path.join(staging_dir, CONFIG_NAME))
     # Top-level files.
     for filename in REQUIRED_FILES:
         filename += '.py'
