@@ -24,6 +24,8 @@ def get_config(filepath):
         with open(filepath, 'r') as f:
             return json.load(f, object_pairs_hook=collections.OrderedDict)
     elif os.path.exists('ok'):
+        # TODO(albert): remove this as soon as homework 1 is due. This is
+        # just to avoid catastrophe when transitioning to the new config path search.
         # Assume using zipped version of OK, and assume there exists a
         # config.json file in the zip archive
         archive = zipfile.ZipFile('ok')

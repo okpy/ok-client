@@ -21,7 +21,7 @@ setup(
         'client.*',
     ]),
     package_data={
-        'client': ['config.json'],
+        'client': ['61a_config.json', 'config.json'],
     },
     # install_requires=[],
     entry_points={
