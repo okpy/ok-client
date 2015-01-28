@@ -85,7 +85,7 @@ def create_zip(staging_dir, destination):
     zipf.close()
 
 def new_config():
-    """Creates a new config.json in the current directory."""
+    """Creates a new config file in the current directory."""
     shutil.copyfile(os.path.join(OK_ROOT, CONFIG_NAME),
                     CONFIG_NAME)
 
@@ -95,7 +95,7 @@ def parse_args():
     parser.add_argument('-d', '--destination', type=str, default='.',
                         help='Publish to the specified directory.')
     parser.add_argument('--new-config', action='store_true',
-                        help='Creates a new config.json in the current directory.')
+                        help='Creates a new config file in the current directory.')
 
     return parser.parse_args()
 
