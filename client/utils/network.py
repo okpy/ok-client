@@ -52,7 +52,7 @@ def dump_to_server(access_token, msg_list, name, server, insecure, version, log,
     stop_time = datetime.datetime.now() + datetime.timedelta(milliseconds=TIMEOUT)
     initial_length = len(msg_list)
     retries = RETRY_LIMIT
-    first_response = None
+    first_response = 1
     while msg_list:
         if not send_all and datetime.datetime.now() > stop_time:
             return
@@ -61,7 +61,9 @@ def dump_to_server(access_token, msg_list, name, server, insecure, version, log,
             response = send_to_server(access_token, message, name, server, version, log, insecure)
 
             if response:
-                if not first_response:
+                if type(first_response) == int and first_response > 0:
+                    first_response -= 1
+                else:
                     first_response = response
                 msg_list.pop()
             elif retries > 0:
