@@ -9,24 +9,32 @@ import json
 import logging
 import os
 import zipfile
+import textwrap
 
 log = logging.getLogger(__name__)
 
 CONFIG_EXTENSION = '*.ok'
 
-def load_config(args):
-    config = get_config()
+def load_config(filepath, args):
+    config = get_config(filepath)
     if not isinstance(config, dict):
         raise ex.LoadingException('Config should be a dictionary')
     return Assignment(args, **config)
 
-def get_config():
-    configs = glob.glob(CONFIG_EXTENSION)
-    if len(configs) > 1:
-        raise ex.LoadingException('Multiple .ok files found: {}'.format(configs))
-    elif not configs:
-        raise ex.LoadingException('No .ok configuration file found')
-    config = configs[0]
+def get_config(config):
+    if config is None:
+        configs = glob.glob(CONFIG_EXTENSION)
+        if len(configs) > 1:
+            raise ex.LoadingException(textwrap.dedent("""
+            Multiple .ok files found:
+                {}
+
+            Please specify a particular assignment's config file with
+                python3 ok --config <config file>
+            """.format(' '.join(configs))))
+        elif not configs:
+            raise ex.LoadingException('No .ok configuration file found')
+        config = configs[0]
 
     try:
         with open(config, 'r') as f:

@@ -11,6 +11,8 @@ def parse_input():
     parser = argparse.ArgumentParser(
         description=__doc__,
         formatter_class=argparse.RawDescriptionHelpFormatter)
+    parser.add_argument('--config', type=str,
+                        help="Specify a configuration file")
     return parser.parse_args()
 
 def main():
@@ -22,7 +24,7 @@ def main():
     args.verbose = False
     args.interactive = False
 
-    assign = assignment.load_config(args)
+    assign = assignment.load_config(args.config, args)
     assign.load()
 
     protocol = lock.protocol(args, assign)
