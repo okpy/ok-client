@@ -44,5 +44,12 @@ def load(file, name, args):
     func = getattr(module, name)
     if not callable(func):
         raise ex.LoadingException('Attribute {} is not a function'.format(name))
-    return models.Doctest(file, args.verbose, args.interactive, args.timeout,
-                          name=name, points=1, docstring=func.__doc__)
+
+    docstring = func.__doc__ if func.__doc__ else ''
+
+    try:
+        return models.Doctest(file, args.verbose, args.interactive, args.timeout,
+                              name=name, points=1, docstring=docstring)
+    except ex.SerializeException:
+        raise ex.LoadingException('Unable to load doctest for {} '
+                                  'from {}'.format(name, file))

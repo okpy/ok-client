@@ -1,3 +1,4 @@
+from client import exceptions as ex
 from client.sources.common import core
 import mock
 import unittest
@@ -30,7 +31,8 @@ class FieldTest(unittest.TestCase):
         self.assertEqual(field.default, MockField.VALID_INT)
 
     def testDefaultArgument_invalidDefault(self):
-        self.assertRaises(TypeError, MockField, default=MockField.INVALID_INT)
+        self.assertRaises(ex.SerializeException, MockField,
+                          default=MockField.INVALID_INT)
 
     def testDefaultArgument_optionalFalse(self):
         field = MockField(optional=False, default=MockField.VALID_INT)
@@ -49,7 +51,8 @@ class FieldTest(unittest.TestCase):
 
     def testToJson_invalidValue(self):
         field = MockField()
-        self.assertRaises(TypeError, field.to_json, MockField.INVALID_INT)
+        self.assertRaises(ex.SerializeException, field.to_json,
+                          MockField.INVALID_INT)
 
 
 class ListFieldTest(unittest.TestCase):
@@ -85,7 +88,7 @@ class ListFieldTest(unittest.TestCase):
 
     def assertCoerce_errors(self, value, **fields):
         field = core.List(**fields)
-        self.assertRaises((TypeError, ValueError), field.coerce, value)
+        self.assertRaises(ex.SerializeException, field.coerce, value)
 
     def testCoerce_heterogeneousList(self):
         lst = [1, 'hi', 3, True]
@@ -179,7 +182,7 @@ class DictFieldTest(unittest.TestCase):
 
     def assertCoerce_errors(self, value, **fields):
         field = core.Dict(**fields)
-        self.assertRaises((TypeError, ValueError), field.coerce, value)
+        self.assertRaises(ex.SerializeException, field.coerce, value)
 
     def testCoerce_heterogeneousDict(self):
         d = {'a': 1, 2: False}
@@ -268,29 +271,29 @@ class SerializableTest(unittest.TestCase):
     TEST_STR = 'hi'
 
     def testConstructor_missingRequiredFields(self):
-        self.assertRaises(TypeError, MockSerializable)
+        self.assertRaises(ex.SerializeException, MockSerializable)
 
     def testConstructor_incorrectRequiredFields(self):
-        self.assertRaises(TypeError, MockSerializable, var1=self.TEST_INT)
+        self.assertRaises(ex.SerializeException, MockSerializable, var1=self.TEST_INT)
 
     def testConstructor_incorrectOptionalFields(self):
-        self.assertRaises(TypeError, MockSerializable, var1=self.TEST_BOOL,
+        self.assertRaises(ex.SerializeException, MockSerializable, var1=self.TEST_BOOL,
                           var2=self.TEST_BOOL)
 
     def testConstructor_unexpectedFields(self):
-        self.assertRaises(TypeError, MockSerializable, var1=self.TEST_BOOL,
+        self.assertRaises(ex.SerializeException, MockSerializable, var1=self.TEST_BOOL,
                           var2=self.TEST_INT, foo=self.TEST_INT)
 
     def testConstructor_validArguments(self):
         try:
             MockSerializable(var1=self.TEST_BOOL, var3=self.TEST_STR)
-        except TypeError:
+        except ex.SerializeException:
             self.fail("Should not have failed")
 
     def testConstructor_overrideSuperclassFields(self):
         try:
             obj = MockSerializable2(var1=self.TEST_BOOL)
-        except TypeError:
+        except ex.SerializeException:
             self.fail("Should not have failed")
 
         self.assertEqual(MockSerializable2.TEST_INT, obj.var2)
@@ -310,10 +313,10 @@ class SerializableTest(unittest.TestCase):
         obj = MockSerializable(var1=self.TEST_BOOL, var3=self.TEST_STR)
         try:
             obj.var1 = self.TEST_INT
-        except TypeError:
+        except ex.SerializeException:
             pass
         else:
-            self.fail("Should have raised a TypeError")
+            self.fail("Should have raised a SerializeException")
 
     def testToJson_noOptional(self):
         obj = MockSerializable(var1=self.TEST_BOOL)

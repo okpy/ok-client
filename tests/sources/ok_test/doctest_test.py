@@ -1,3 +1,4 @@
+from client import exceptions as ex
 from client.sources.ok_test import doctest
 import unittest
 
@@ -77,16 +78,13 @@ class DoctestSuiteTest(unittest.TestCase):
         except TypeError:
             self.fail()
 
-    def testConstructor_badTestCase(self):
-        self.assertRaises(TypeError, self.makeSuite,
+    def testConstructor_improperlyFormattedTestCase(self):
+        self.assertRaises(ex.SerializeException, self.makeSuite,
             [
                 {
                     'foo': "Not a valid case",
                 },
-            ],
-            teardown="""
-            >>> assign = assign.teardown()
-            """)
+            ])
 
     def testRun_noCases(self):
         test = self.makeSuite([])

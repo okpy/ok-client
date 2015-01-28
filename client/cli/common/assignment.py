@@ -30,7 +30,7 @@ def get_config(filepath):
         # config.json file in the zip archive
         archive = zipfile.ZipFile('ok')
         config = archive.read('client/config.json').decode('utf-8')
-        return json.loads(config)
+        return json.loads(config, object_pairs_hook=collections.OrderedDict)
 
 class Assignment(core.Serializable):
     name = core.String()
@@ -50,6 +50,9 @@ class Assignment(core.Serializable):
 
     def post_instantiation(self):
         self._print_header()
+
+    def load(self):
+        """Load tests and protocols."""
         self._load_tests()
         self._load_protocols()
         self._resolve_specified_tests()
@@ -70,15 +73,9 @@ class Assignment(core.Serializable):
             else:
                 parameter = ''
 
-
-            files = glob.glob(file_pattern)
-            if not files:
-                raise ex.LoadingException(
-                        'Unable to find file pattern: {}'.format(file_pattern))
-
-            for file in files:
+            for file in self._find_files(file_pattern):
                 try:
-                    module = importlib.import_module(self._TESTS_PACKAGE + '.' + source)
+                    module = self._import_module(self._TESTS_PACKAGE + '.' + source)
                 except ImportError:
                     raise ex.LoadingException('Invalid test source: {}'.format(source))
 
@@ -87,6 +84,9 @@ class Assignment(core.Serializable):
                     test_name += ':' + parameter
                 self.test_map[test_name] = module.load(file, parameter, self.cmd_args)
                 log.info('Loaded {}'.format(test_name))
+
+        if not self.test_map:
+            raise ex.LoadingException('No tests loaded')
 
     def dump_tests(self):
         """Dumps all tests, as determined by their .dump() method.
@@ -151,7 +151,7 @@ class Assignment(core.Serializable):
         log.info('Loading protocols')
         for proto in self.protocols:
             try:
-                module = importlib.import_module(self._PROTOCOL_PACKAGE + '.' + proto)
+                module = self._import_module(self._PROTOCOL_PACKAGE + '.' + proto)
             except ImportError:
                 raise ex.LoadingException('Invalid protocol: {}'.format(proto))
 
@@ -164,6 +164,12 @@ class Assignment(core.Serializable):
         print('OK, version {}'.format(client.__version__))
         format.print_line('=')
         print()
+
+    def _find_files(self, pattern):
+        return glob.glob(pattern)
+
+    def _import_module(self, module):
+        return importlib.import_module(module)
 
 def _has_subsequence(string, pattern):
     """Returns true if the pattern is a subsequence of string."""

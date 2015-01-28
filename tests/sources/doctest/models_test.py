@@ -74,7 +74,11 @@ class DoctestTest(unittest.TestCase):
         >>> 1 + 3
         4
         """, self.FILE)
-        self.assertTrue(test.run())
+        self.assertEqual({
+            'passed': 1,
+            'failed': 0,
+            'locked': 0,
+        }, test.run())
 
     def testRun_partialFail(self):
         test = self.makeDoctest("""
@@ -83,7 +87,11 @@ class DoctestTest(unittest.TestCase):
         >>> 2 + 2
         5
         """, self.FILE)
-        self.assertFalse(test.run())
+        self.assertEqual({
+            'passed': 0,
+            'failed': 1,
+            'locked': 0,
+        }, test.run())
 
     def testRun_completeFail(self):
         test = self.makeDoctest("""
@@ -92,7 +100,11 @@ class DoctestTest(unittest.TestCase):
         >>> 2 + 2
         5
         """, self.FILE)
-        self.assertFalse(test.run())
+        self.assertEqual({
+            'passed': 0,
+            'failed': 1,
+            'locked': 0,
+        }, test.run())
 
     def testScore_completePass(self):
         test = self.makeDoctest("""
@@ -101,7 +113,7 @@ class DoctestTest(unittest.TestCase):
         >>> 1 + 3
         4
         """, self.FILE)
-        self.assertEqual(1, test.run())
+        self.assertEqual(1, test.score())
 
     def testScore_partialFail(self):
         test = self.makeDoctest("""
@@ -110,7 +122,7 @@ class DoctestTest(unittest.TestCase):
         >>> 2 + 2
         5
         """, self.FILE)
-        self.assertEqual(0, test.run())
+        self.assertEqual(0, test.score())
 
     def testScore_completeFail(self):
         test = self.makeDoctest("""
@@ -119,4 +131,4 @@ class DoctestTest(unittest.TestCase):
         >>> 2 + 2
         5
         """, self.FILE)
-        self.assertEqual(0, test.run())
+        self.assertEqual(0, test.score())

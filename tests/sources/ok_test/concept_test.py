@@ -1,3 +1,4 @@
+from client import exceptions as ex
 from client.sources.ok_test import concept
 import unittest
 
@@ -30,7 +31,7 @@ class ConceptSuiteTest(unittest.TestCase):
             self.fail()
 
     def testConstructor_missingQuestion(self):
-        self.assertRaises(TypeError, self.makeTest, [
+        self.assertRaises(ex.SerializeException, self.makeTest, [
                 {
                     'answer': 'Answer',
                 },
@@ -41,7 +42,7 @@ class ConceptSuiteTest(unittest.TestCase):
             ])
 
     def testConstructor_missingAnswer(self):
-        self.assertRaises(TypeError, self.makeTest, [
+        self.assertRaises(ex.SerializeException, self.makeTest, [
                 {
                     'question': 'Question 1',
                     'answer': 'Answer',

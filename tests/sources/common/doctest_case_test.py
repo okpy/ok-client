@@ -1,3 +1,4 @@
+from client import exceptions as ex
 from client.sources.common import doctest_case
 import mock
 import textwrap
@@ -129,7 +130,8 @@ class DoctestCaseTest(unittest.TestCase):
             self.fail()
 
     def testConstructor_missingCode(self):
-        self.assertRaises(TypeError, doctest_case.DoctestCase, self.console)
+        self.assertRaises(ex.SerializeException, doctest_case.DoctestCase,
+                          self.console)
 
     def testConstructor_setupAndTeardown(self):
         try:
