@@ -12,6 +12,11 @@ class GradingProtocolTest(unittest.TestCase):
         self.assignment = mock.Mock()
         self.proto = grading.protocol(self.cmd_args, self.assignment)
 
+    def testOnInteract_doNothingWhenScoring(self):
+        self.cmd_args.score = True
+        results = self.proto.on_interact()
+        self.assertEqual(None, results)
+
     def testOnInteract_noTests(self):
         self.assignment.specified_tests = []
         results = self.proto.on_interact()

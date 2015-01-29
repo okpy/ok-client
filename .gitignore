@@ -13,6 +13,7 @@ tmp
 *.project
 *.pydevproject
 *.kpf
+.coverage
 
 # pip-related files
 *.egg-info
