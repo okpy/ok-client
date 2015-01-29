@@ -29,6 +29,7 @@ setup(
             'ok=client.cli.ok:main',
             'ok-publish=client.cli.publish:main',
             'ok-lock=client.cli.lock:main',
+            'ok-test=client.cli.test:main',
         ],
     },
     classifiers=[
