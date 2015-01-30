@@ -14,7 +14,7 @@ import zipfile
 OK_ROOT = os.path.normpath(os.path.dirname(client.__file__))
 STAGING_DIR = os.path.join(os.getcwd(), 'staging')
 OK_NAME = 'ok'
-CONFIG_NAME = 'config.json'
+CONFIG_NAME = 'config.ok'
 
 REQUIRED_FILES = [
     '__init__',
@@ -38,11 +38,6 @@ def populate_staging(staging_dir):
     shutil.copytree(os.path.join(OK_ROOT, 'cli', 'common'),
                     os.path.join(staging_dir, 'cli', 'common'))
 
-    # TODO(albert): remove this as soon as homework 1 is due. This is
-    # just to avoid catastrophe when transitioning to the new config path search.
-    # Copy the config.json for CS 61A's homework 1 into OK.
-    shutil.copyfile(os.path.join(OK_ROOT, '61a_config.json'),
-                    os.path.join(staging_dir, CONFIG_NAME))
     # Top-level files.
     for filename in REQUIRED_FILES:
         filename += '.py'
@@ -90,7 +85,7 @@ def create_zip(staging_dir, destination):
     zipf.close()
 
 def new_config():
-    """Creates a new config.json in the current directory."""
+    """Creates a new config file in the current directory."""
     shutil.copyfile(os.path.join(OK_ROOT, CONFIG_NAME),
                     CONFIG_NAME)
 
@@ -100,7 +95,7 @@ def parse_args():
     parser.add_argument('-d', '--destination', type=str, default='.',
                         help='Publish to the specified directory.')
     parser.add_argument('--new-config', action='store_true',
-                        help='Creates a new config.json in the current directory.')
+                        help='Creates a new config file in the current directory.')
 
     return parser.parse_args()
 

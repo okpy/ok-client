@@ -93,8 +93,8 @@ def parse_input():
                         help="Prints the version number and quits")
     parser.add_argument('--score', action='store_true',
                         help="Scores the assignment")
-    parser.add_argument('--config', type=str, default='config.json',
-                        help="Specifies the configuration file")
+    parser.add_argument('--config', type=str,
+                        help="Specify a configuration file")
     return parser.parse_args()
 
 def main():
@@ -121,7 +121,7 @@ def main():
         assign = assignment.load_config(args.config, args)
     except (ex.LoadingException, ex.SerializeException) as e:
         log.warning('Assignment could not instantiate', exc_info=True)
-        print('Error loading assignment')
+        print('Error: ' + str(e).strip())
         exit(1)
 
     # Load backup files

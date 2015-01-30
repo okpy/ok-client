@@ -21,7 +21,7 @@ setup(
         'client.*',
     ]),
     package_data={
-        'client': ['61a_config.json', 'config.json'],
+        'client': ['config.ok'],
     },
     # install_requires=[],
     entry_points={
@@ -29,6 +29,7 @@ setup(
             'ok=client.cli.ok:main',
             'ok-publish=client.cli.publish:main',
             'ok-lock=client.cli.lock:main',
+            'ok-test=client.cli.test:main',
         ],
     },
     classifiers=[

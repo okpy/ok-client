@@ -9,28 +9,42 @@ import json
 import logging
 import os
 import zipfile
+import textwrap
 
 log = logging.getLogger(__name__)
 
+CONFIG_EXTENSION = '*.ok'
+
 def load_config(filepath, args):
     config = get_config(filepath)
-    log.info('Loaded config from {}'.format(filepath))
     if not isinstance(config, dict):
         raise ex.LoadingException('Config should be a dictionary')
     return Assignment(args, **config)
 
-def get_config(filepath):
-    if os.path.isfile(filepath):
-        with open(filepath, 'r') as f:
-            return json.load(f, object_pairs_hook=collections.OrderedDict)
-    elif os.path.exists('ok'):
-        # TODO(albert): remove this as soon as homework 1 is due. This is
-        # just to avoid catastrophe when transitioning to the new config path search.
-        # Assume using zipped version of OK, and assume there exists a
-        # config.json file in the zip archive
-        archive = zipfile.ZipFile('ok')
-        config = archive.read('client/config.json').decode('utf-8')
-        return json.loads(config, object_pairs_hook=collections.OrderedDict)
+def get_config(config):
+    if config is None:
+        configs = glob.glob(CONFIG_EXTENSION)
+        if len(configs) > 1:
+            raise ex.LoadingException(textwrap.dedent("""
+            Multiple .ok files found:
+                {}
+
+            Please specify a particular assignment's config file with
+                python3 ok --config <config file>
+            """.format(' '.join(configs))))
+        elif not configs:
+            raise ex.LoadingException('No .ok configuration file found')
+        config = configs[0]
+
+    try:
+        with open(config, 'r') as f:
+            result = json.load(f, object_pairs_hook=collections.OrderedDict)
+    except IOError:
+        raise ex.LoadingException('Error loading config: {}'.format(config))
+    else:
+        log.info('Loaded config from {}'.format(config))
+        return result
+
 
 class Assignment(core.Serializable):
     name = core.String()
