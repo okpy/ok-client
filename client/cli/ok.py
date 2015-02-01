@@ -82,7 +82,7 @@ def parse_input():
     parser.add_argument('--timeout', type=int, default=10,
                         help="set the timeout duration for running tests")
 
-    # Information
+    # Debug information
     parser.add_argument('--version', action='store_true',
                         help="Prints the version number and quits")
     parser.add_argument('--tests', action='store_true',
@@ -90,7 +90,7 @@ def parse_input():
     parser.add_argument('--debug', action='store_true',
                         help="show debug statements")
 
-    # Server communication
+    # Server parameters
     parser.add_argument('--local', action='store_true',
                         help="disable any network activity")
     parser.add_argument('--server', type=str,
@@ -211,7 +211,7 @@ def main():
             os.fsync(fp)
 
         if len(msg_list) == 0:
-            print("Server submission successful")
+            print("Backup successful.")
     except KeyboardInterrupt:
         print("Quitting ok.")
 
