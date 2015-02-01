@@ -62,39 +62,45 @@ def parse_input():
     parser = argparse.ArgumentParser(
         description=__doc__,
         formatter_class=argparse.RawDescriptionHelpFormatter)
+    # Protocol paramters
     parser.add_argument('-q', '--question', type=str, action='append',
                         help="focus on specific questions")
-    parser.add_argument('--server', type=str,
-                        default='ok-server.appspot.com',
-                        help="server address")
-    parser.add_argument('-t', '--tests', metavar='A', default='tests', type=str,
-                        help="partial name or path to test file or directory")
     parser.add_argument('-u', '--unlock', action='store_true',
                         help="unlock tests interactively")
-    parser.add_argument('-v', '--verbose', action='store_true',
-                        help="print more output")
-    parser.add_argument('--debug', action='store_true',
-                        help="show debug statements")
-    parser.add_argument('--insecure', action='store_true',
-                        help="uses http instead of https")
     parser.add_argument('-i', '--interactive', action='store_true',
                         help="toggle interactive mode")
-    parser.add_argument('-l', '--lock', action='store_true',
-                        help="partial path to directory to lock")
+    parser.add_argument('-v', '--verbose', action='store_true',
+                        help="print more output")
     parser.add_argument('--submit', action='store_true',
                         help="wait for server response without timeout")
-    parser.add_argument('-a', '--authenticate', action='store_true',
-                        help="authenticate, ignoring previous authentication")
-    parser.add_argument('--local', action='store_true',
-                        help="disable any network activity")
-    parser.add_argument('--timeout', type=int, default=10,
-                        help="set the timeout duration for running tests")
-    parser.add_argument('--version', action='store_true',
-                        help="Prints the version number and quits")
+    parser.add_argument('--lock', action='store_true',
+                        help="partial path to directory to lock")
     parser.add_argument('--score', action='store_true',
                         help="Scores the assignment")
     parser.add_argument('--config', type=str,
                         help="Specify a configuration file")
+    parser.add_argument('--timeout', type=int, default=10,
+                        help="set the timeout duration for running tests")
+
+    # Debug information
+    parser.add_argument('--version', action='store_true',
+                        help="Prints the version number and quits")
+    parser.add_argument('--tests', action='store_true',
+                        help="display a list of all available tests")
+    parser.add_argument('--debug', action='store_true',
+                        help="show debug statements")
+
+    # Server parameters
+    parser.add_argument('--local', action='store_true',
+                        help="disable any network activity")
+    parser.add_argument('--server', type=str,
+                        default='ok-server.appspot.com',
+                        help="server address")
+    parser.add_argument('--authenticate', action='store_true',
+                        help="authenticate, ignoring previous authentication")
+    parser.add_argument('--insecure', action='store_true',
+                        help="uses http instead of https")
+
     return parser.parse_args()
 
 def main():
@@ -107,14 +113,6 @@ def main():
     if args.version:
         print("okpy=={}".format(client.__version__))
         exit(0)
-
-    # Check if ssl is available
-    if not args.local and not args.insecure:
-        try:
-            import ssl
-        except:
-            log.warning('Error importing ssl', stack_info=True)
-            sys.exit("SSL Bindings are not installed. You can install python3 SSL bindings or \nrun ok locally with python3 ok --local")
 
     # Instantiating assignment
     try:
@@ -142,6 +140,12 @@ def main():
         # Load tests and protocols
         assign.load()
 
+        if args.tests:
+            print('Available tests:')
+            for name in assign.test_map:
+                print('    ' + name)
+            exit(0)
+
         # Run protocol.on_start
         start_messages = dict()
         for name, proto in assign.protocol_map.items():
@@ -168,36 +172,46 @@ def main():
     else:
         assign.dump_tests()
 
+    if args.local:
+        return
+
     # Send request to server
     try:
         # TODO(denero) Print server responses.
-        if not args.local:
 
+        # Check if ssl is available
+        if not args.insecure:
             try:
-                access_token = auth.authenticate(args.authenticate)
-                log.info('Authenticated with access token %s', access_token)
+                import ssl
+            except:
+                log.warning('Error importing ssl', stack_info=True)
+                sys.exit("SSL Bindings are not installed. You can install python3 SSL bindings or \nrun ok locally with python3 ok --local")
 
-                print("Backing up your work...")
-                response = network.dump_to_server(access_token, msg_list,
-                                   assign.endpoint, args.server, args.insecure,
-                                   client.__version__, log, send_all=args.submit)
+        try:
+            access_token = auth.authenticate(args.authenticate)
+            log.info('Authenticated with access token %s', access_token)
 
-                if response:
-                    # Hardcode course id- we need to return it from the server at some point...
-                    print("Back-up successful: https://ok-server.appspot.com/#/5165212546105344/submission/{0}".format(response['data']['key']))
+            print("Backing up your work...")
+            response = network.dump_to_server(access_token, msg_list,
+                               assign.endpoint, args.server, args.insecure,
+                               client.__version__, log, send_all=args.submit)
 
-            except error.URLError as e:
-                log.warning('on_start messages not sent to server: %s', str(e))
+            if response:
+                # Hardcode course id- we need to return it from the server at some point...
+                print("Back-up successful: https://ok-server.appspot.com/#/5165212546105344/submission/{0}".format(response['data']['key']))
 
-            with open(BACKUP_FILE, 'wb') as fp:
-                log.info('Save %d unsent messages to %s', len(msg_list),
-                         BACKUP_FILE)
+        except error.URLError as e:
+            log.warning('on_start messages not sent to server: %s', str(e))
 
-                pickle.dump(msg_list, fp)
-                os.fsync(fp)
+        with open(BACKUP_FILE, 'wb') as fp:
+            log.info('Save %d unsent messages to %s', len(msg_list),
+                     BACKUP_FILE)
 
-            if len(msg_list) == 0:
-                print("Server submission successful")
+            pickle.dump(msg_list, fp)
+            os.fsync(fp)
+
+        if len(msg_list) == 0:
+            print("Backup successful.")
     except KeyboardInterrupt:
         print("Quitting ok.")
 

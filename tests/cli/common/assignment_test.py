@@ -36,7 +36,12 @@ class AssignmentTest(unittest.TestCase):
         self.mockFindFiles = mock.Mock()
         self.mockImportModule = mock.Mock()
         self.mockTest = mock.Mock()
-        self.mockImportModule.return_value.load.return_value = self.mockTest
+
+        self.mockModule = mock.Mock()
+        self.mockModule.load.return_value = {
+            self.FILE1: self.mockTest
+        }
+        self.mockImportModule.return_value = self.mockModule
 
     def makeAssignment(self, tests=None, protocols=None):
         if tests is None:
@@ -90,12 +95,16 @@ class AssignmentTest(unittest.TestCase):
         )))
 
         self.assertEqual(collections.OrderedDict((
-            (self.FILE1 + ':' + self.PARAMETER, self.mockTest),
+            (self.FILE1, self.mockTest),
         )), assign.test_map)
 
     def testConstructor_specifiedTest_ambiguousTest(self):
         self.cmd_args.question = [self.AMBIGUOUS_QUESTION]
         self.mockFindFiles.return_value = self.FILES
+        self.mockModule.load.return_value = collections.OrderedDict((
+            (self.FILE1, self.mockTest),
+            (self.FILE2, self.mockTest)
+        ))
         self.assertRaises(ex.LoadingException, self.makeAssignment)
 
     def testConstructor_specifiedTest_invalidTest(self):
@@ -106,6 +115,10 @@ class AssignmentTest(unittest.TestCase):
     def testConstructor_specifiedTest_match(self):
         self.cmd_args.question = [self.QUESTION1]
         self.mockFindFiles.return_value = self.FILES
+        self.mockModule.load.return_value = collections.OrderedDict((
+            (self.FILE1, self.mockTest),
+            (self.FILE2, self.mockTest)
+        ))
         assign = self.makeAssignment()
 
         self.assertEqual(collections.OrderedDict((
@@ -117,6 +130,10 @@ class AssignmentTest(unittest.TestCase):
     def testConstructor_specifiedTest_multipleQuestions(self):
         self.cmd_args.question = [self.QUESTION1, self.QUESTION2]
         self.mockFindFiles.return_value = self.FILES
+        self.mockModule.load.return_value = collections.OrderedDict((
+            (self.FILE1, self.mockTest),
+            (self.FILE2, self.mockTest)
+        ))
         assign = self.makeAssignment()
 
         self.assertEqual(collections.OrderedDict((
@@ -128,6 +145,10 @@ class AssignmentTest(unittest.TestCase):
     def testConstructor_specifiedTest_noSpecifiedTests(self):
         self.cmd_args.question = []
         self.mockFindFiles.return_value = self.FILES
+        self.mockModule.load.return_value = collections.OrderedDict((
+            (self.FILE1, self.mockTest),
+            (self.FILE2, self.mockTest)
+        ))
         assign = self.makeAssignment()
 
         self.assertEqual(collections.OrderedDict((
@@ -142,7 +163,9 @@ class AssignmentTest(unittest.TestCase):
                 raise ImportError
             else:
                 result = mock.Mock()
-                result.load.return_value = self.mockTest
+                result.load.return_value = {
+                    self.FILE1: self.mockTest
+                }
                 return result
         self.mockImportModule.side_effect = import_module
         self.mockFindFiles.return_value = [self.FILE1]
@@ -159,10 +182,13 @@ class AssignmentTest(unittest.TestCase):
 
     def testDumpTests(self):
         self.mockFindFiles.return_value = self.FILES
+        self.mockModule.load.return_value = collections.OrderedDict((
+            (self.FILE1, self.mockTest),
+            (self.FILE2, self.mockTest)
+        ))
         assign = self.makeAssignment()
 
         assign.dump_tests()
-        self.assertEqual(2, self.mockTest.dump.call_count)
         self.mockTest.dump.assert_has_calls([
             mock.call(self.FILE1),
             mock.call(self.FILE2)
