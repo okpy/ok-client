@@ -29,8 +29,8 @@ def load(file, parameter, args):
 
     test = importing.load_module(file).test
     try:
-        return models.OkTest(SUITES, args.verbose, args.interactive,
-                             args.timeout, **test)
+        return {file: models.OkTest(SUITES, args.verbose, args.interactive,
+                             args.timeout, **test)}
     except ex.SerializeException:
         raise ex.LoadingException('Cannot load OK test {}'.format(file))
 
