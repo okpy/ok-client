@@ -31,12 +31,11 @@ SUCCESS_HTML = """
 def pick_free_port():
     import socket
     port_guess = 7777
-    while True:
+    while port_guess < 65535:
         try:
             s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             s.bind(('localhost', port_guess))
         except Exception as e: # Something went wrong with the binding
-            print(e)
             port_guess += 1
             continue
         finally:
