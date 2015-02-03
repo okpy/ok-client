@@ -144,10 +144,11 @@ class Assignment(core.Serializable):
                     matches.append(test)
 
             if len(matches) > 1:
-                print('Did you mean one of the following?')
-                for test in matches:
-                    print('    {}'.format(test))
-                raise ex.LoadingException('Ambiguous test specified: {}'.format(question))
+                if not any([question == test.split(':', 1)[1] for test in matches]):
+                    print('Did you mean one of the following?')
+                    for test in matches:
+                        print('    {}'.format(test))
+                    raise ex.LoadingException('Ambiguous test specified: {}'.format(question))
 
             elif not matches:
                 print('Did you mean one of the following?')
