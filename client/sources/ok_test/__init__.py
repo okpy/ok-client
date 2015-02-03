@@ -23,13 +23,15 @@ def load(file, parameter, args):
     RETURNS:
     Test
     """
-    if not os.path.isfile(file) or not file.endswith('.py'):
+    filename, ext = os.path.splitext(file)
+    if not os.path.isfile(file) or ext != '.py':
         log.info('Cannot import {} as an OK test'.format(file))
         raise ex.LoadingException('Cannot import {} as an OK test'.format(file))
 
     test = importing.load_module(file).test
+    name = os.path.basename(filename)
     try:
-        return {file: models.OkTest(SUITES, args.verbose, args.interactive,
+        return {name: models.OkTest(SUITES, args.verbose, args.interactive,
                              args.timeout, **test)}
     except ex.SerializeException:
         raise ex.LoadingException('Cannot load OK test {}'.format(file))

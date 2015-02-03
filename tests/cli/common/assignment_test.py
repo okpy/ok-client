@@ -20,8 +20,8 @@ class AssignmentTest(unittest.TestCase):
     FILE1 = 'tests/q1.py'
     FILE2 = 'tests/q2.py'
     FILES = [FILE1, FILE2]
-    QUESTION1 = 'q1'
-    QUESTION2 = 'tests2'
+    QUESTION1 = FILE1
+    QUESTION2 = FILE2
     AMBIGUOUS_QUESTION = 'q'
     INVALID_QUESTION = 'x'
 
