@@ -41,7 +41,7 @@ def load(file, name, args):
         raise ex.LoadingException('Error importing file {}'.format(file))
 
     if name:
-        return {file + ':' + name: _load_test(file, module, name, args)}
+        return {name: _load_test(file, module, name, args)}
     else:
         return _load_tests(file, module, args)
 
@@ -50,7 +50,7 @@ def _load_tests(file, module, args):
     tests = {}
     for name in dir(module):
         if callable(getattr(module, name)):
-            tests[file + ':' + name] = _load_test(file, module, name, args)
+            tests[name] = _load_test(file, module, name, args)
     return tests
 
 def _load_test(file, module, name, args):
