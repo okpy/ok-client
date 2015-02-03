@@ -71,9 +71,13 @@ class Doctest(models.Test):
         print('Doctests for {}'.format(self.name))
         print()
 
-        success = self.case.run()
-        if success:
-            print('-- OK! --')
+        if not self.docstring:
+            print('-- No doctests found for {} --'.format(self.name))
+            success = False
+        else:
+            success = self.case.run()
+            if success:
+                print('-- OK! --')
 
         output.on()
         output_log = output.get_log(log_id)

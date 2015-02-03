@@ -1,3 +1,4 @@
+from client import exceptions as ex
 from client.sources.common import core
 from client.sources.common import models
 from client.utils import format
@@ -52,7 +53,7 @@ class OkTest(models.Test):
         format.print_progress_bar(self.name, passed, failed, locked)
         if locked > 0:
             print()
-            print('There are still unlocked tests! '
+            print('There are still locked tests! '
                   'Use the -u option to unlock them')
 
         if type(self.description) == str and self.description:

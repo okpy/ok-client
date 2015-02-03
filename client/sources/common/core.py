@@ -1,3 +1,4 @@
+from client import exceptions as ex
 import collections
 
 ###############
@@ -17,7 +18,7 @@ class Field(object):
         if 'default' in kargs:
             value = kargs['default']
             if not self.is_valid(value):
-                raise TypeError('Invalid default: {}'.format(value))
+                raise ex.SerializeException('Invalid default: {}'.format(value))
             self._optional = True
             self._default = value
 
@@ -37,18 +38,19 @@ class Field(object):
         """Subclasses should override this method for type coercion.
 
         Default version will simply return the argument. If the argument
-        is not valid, a TypeError is raised.
+        is not valid, a SerializeException is raised.
 
         For primitives like booleans, ints, floats, and strings, use
         this default version to avoid unintended type conversions."""
         if not self.is_valid(value):
-            raise TypeError
+            raise ex.SerializeException('{} is not a valid value for '
+                                        'type {}'.format(value, self.__class__.__name__))
         return value
 
     def to_json(self, value):
         """Subclasses should override this method for JSON encoding."""
         if not self.is_valid(value):
-            raise TypeError('Invalid value: {}'.format(value))
+            raise ex.SerializeException('Invalid value: {}'.format(value))
         return value
 
 class Boolean(Field):
@@ -87,11 +89,17 @@ class List(Field):
 
     def coerce(self, value):
         if self._type is None:
-            return list(value)
+            try:
+                return list(value)
+            except TypeError as e:
+                raise ex.SerializeException(str(e))
         else:
             # TODO(albert): find a way to do better element-wise type coercion
             # so that constructors can take additional arguments
-            return [self._type(elem) for elem in value]
+            try:
+                return [self._type(elem) for elem in value]
+            except TypeError as e:
+                raise ex.SerializeException(str(e))
 
     def to_json(self, value):
         value = super().to_json(value)
@@ -119,8 +127,13 @@ class Dict(Field):
         return valid
 
     def coerce(self, value):
+        try:
+            coerced = self._constructor(value)
+        except TypeError as e:
+            raise ex.SerializeException(str(e))
+
         result = self._constructor()
-        for k, v in self._constructor(value).items():
+        for k, v in coerced.items():
             if self._keys is not None:
                 k = self._keys(k)
             elif self._values is not None:
@@ -158,7 +171,7 @@ class _SerializeMeta(type):
         # Validate existing arguments
         for attr, value in kargs.items():
             if attr not in cls._fields:
-                raise TypeError('__init__() got an unexpected '
+                raise ex.SerializeException('__init__() got an unexpected '
                                 'keyword argument: {}'.format(attr))
             else:
                 setattr(obj, attr, value)
@@ -169,7 +182,7 @@ class _SerializeMeta(type):
             elif value.optional:
                 setattr(obj, attr, value.default)
             else:
-                raise TypeError('__init__() missing expected '
+                raise ex.SerializeException('__init__() missing expected '
                                 'argument {}'.format(attr))
         obj.post_instantiation()
         return obj

@@ -99,5 +99,5 @@ def prettyjson(json, indentation='  '):
             pairs.append(indent(k + ': ' + v, indentation))
         return '{\n' + ',\n'.join(pairs) + '\n}'
     else:
-        raise exceptions.DeserializeError('Invalid json type: {}'.format(json))
+        raise exceptions.SerializeException('Invalid json type: {}'.format(json))
 

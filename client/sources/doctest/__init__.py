@@ -13,6 +13,8 @@ def load(file, name, args):
     PARAMETERS:
     file -- str; a filepath to a Python module containing OK-style
             tests.
+    name -- str; optional parameter that specifies a particular function in
+            the file. If omitted, all doctests will be included.
 
     RETURNS:
     Test
@@ -38,11 +40,32 @@ def load(file, name, args):
 
         raise ex.LoadingException('Error importing file {}'.format(file))
 
+    if name:
+        return {file + ':' + name: _load_test(file, module, name, args)}
+    else:
+        return _load_tests(file, module, args)
+
+
+def _load_tests(file, module, args):
+    tests = {}
+    for name in dir(module):
+        if callable(getattr(module, name)):
+            tests[file + ':' + name] = _load_test(file, module, name, args)
+    return tests
+
+def _load_test(file, module, name, args):
     if not hasattr(module, name):
         raise ex.LoadingException('Module {} has no function {}'.format(
                                   module.__name__, name))
     func = getattr(module, name)
     if not callable(func):
         raise ex.LoadingException('Attribute {} is not a function'.format(name))
-    return models.Doctest(file, args.verbose, args.interactive, args.timeout,
-                          name=name, points=1, docstring=func.__doc__)
+
+    docstring = func.__doc__ if func.__doc__ else ''
+    try:
+        return models.Doctest(file, args.verbose, args.interactive, args.timeout,
+                              name=name, points=1, docstring=docstring)
+    except ex.SerializeException:
+        raise ex.LoadingException('Unable to load doctest for {} '
+                                  'from {}'.format(name, file))
+

@@ -13,6 +13,7 @@ class ScoringProtocolTest(unittest.TestCase):
 
     def setUp(self):
         self.cmd_args = mock.Mock()
+        self.cmd_args.score = True
         self.assignment = mock.MagicMock()
         self.proto = scoring.protocol(self.cmd_args, self.assignment)
 
@@ -30,6 +31,10 @@ class ScoringProtocolTest(unittest.TestCase):
         test.score = mock.Mock()
         test.score.return_value = score
         return test
+
+    def testOnInteract_doNothingOnNoScore(self):
+        self.cmd_args.score = False
+        self.assertEqual(None, self.proto.on_interact())
 
     def testOnInteract_noTests(self):
         self.assignment.specified_tests = []
