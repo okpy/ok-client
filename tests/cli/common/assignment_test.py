@@ -190,8 +190,8 @@ class AssignmentTest(unittest.TestCase):
 
         assign.dump_tests()
         self.mockTest.dump.assert_has_calls([
-            mock.call(self.FILE1),
-            mock.call(self.FILE2)
+            mock.call(),
+            mock.call(),
         ])
 
     def testDumpTests_serializeError(self):

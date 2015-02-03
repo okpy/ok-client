@@ -7,6 +7,7 @@ import unittest
 class OkTest(unittest.TestCase):
     NAME = 'ok test'
     POINTS = 10
+    FILE = 'file'
 
     def setUp(self):
         self.mockSuite1 = mock.Mock(spec=models.Suite)
@@ -29,8 +30,8 @@ class OkTest(unittest.TestCase):
         self.interact = mock.Mock()
         self.hash_fn = mock.Mock()
 
-    def makeTest(self, name=NAME, points=POINTS, **fields):
-        return models.OkTest(self.suite_map, False, False, name=name,
+    def makeTest(self, name=NAME, points=POINTS, file=FILE, **fields):
+        return models.OkTest(file, self.suite_map, False, False, name=name,
                              points=points, **fields)
 
     def callsRun(self, passed, failed, locked):
