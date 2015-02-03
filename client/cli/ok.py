@@ -178,7 +178,8 @@ def main():
                                    client.__version__, log, send_all=args.submit)
 
                 if response:
-                    print("Back-up successful: https://ok-server.appspot.com/#/{0}/submission/{1}".format(response['data']['course'], response['data']['key']))
+                    print("Back-up successful for user: {0}".format(response['data']['email']))
+                    print("URL: https://ok-server.appspot.com/#/{0}/submission/{1}".format(response['data']['course'], response['data']['key']))
 
             except error.URLError as e:
                 log.warning('on_start messages not sent to server: %s', str(e))
