@@ -121,10 +121,7 @@ class Assignment(core.Serializable):
 
     def _resolve_specified_tests(self):
         """For each of the questions specified on the command line,
-        find the best test corresponding that question.
-
-        The best match is found by finding the test filepath that has the
-        smallest edit distance with the specified question.
+        find the test corresponding that question.
 
         Questions are preserved in the order that they are specified on the
         command line. If no questions are specified, use the entire set of
@@ -138,27 +135,17 @@ class Assignment(core.Serializable):
             log.info('No tests loaded')
             return
         for question in self.cmd_args.question:
-            matches = []
-            for test in self.test_map:
-                if _has_subsequence(test.lower(), question.lower()):
-                    matches.append(test)
-
-            if len(matches) > 1:
-                print('Did you mean one of the following?')
-                for test in matches:
-                    print('    {}'.format(test))
-                raise ex.LoadingException('Ambiguous test specified: {}'.format(question))
-
-            elif not matches:
-                print('Did you mean one of the following?')
+            if question not in self.test_map:
+                print('Test "{}" not found.'.format(question))
+                print('Did you mean one of the following? '
+                      '(Names are case sensitive)')
                 for test in self.test_map:
                     print('    {}'.format(test))
                 raise ex.LoadingException('Invalid test specified: {}'.format(question))
 
-            match = matches[0]
-            log.info('Matched {} to {}'.format(question, match))
-            if match not in self.specified_tests:
-                self.specified_tests.append(self.test_map[match])
+            log.info('Adding {} to specified tests'.format(question))
+            if question not in self.specified_tests:
+                self.specified_tests.append(self.test_map[question])
 
 
     def _load_protocols(self):
