@@ -28,7 +28,11 @@ def load(file, parameter, args):
         log.info('Cannot import {} as an OK test'.format(file))
         raise ex.LoadingException('Cannot import {} as an OK test'.format(file))
 
-    test = importing.load_module(file).test
+    try:
+        test = importing.load_module(file).test
+    except Exception as e:
+        raise ex.LoadingException('Error importing file {}: {}'.format(file, str(e)))
+
     name = os.path.basename(filename)
     try:
         return {name: models.OkTest(file, SUITES, args.verbose, args.interactive,
