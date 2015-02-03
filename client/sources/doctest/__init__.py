@@ -20,7 +20,6 @@ def load(file, name, args):
     Test
     """
     if not os.path.isfile(file) or not file.endswith('.py'):
-        log.info('Cannot import doctests from {}'.format(file))
         raise ex.LoadingException('Cannot import doctests from {}'.format(file))
 
     try:
