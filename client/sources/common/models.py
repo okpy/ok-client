@@ -23,7 +23,7 @@ class Test(core.Serializable):
         """Subclasses should override this method to lock the test."""
         raise NotImplementedError
 
-    def dump(self, file):
+    def dump(self):
         """Subclasses should override this method for serialization."""
         raise NotImplementedError
 

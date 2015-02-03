@@ -111,5 +111,5 @@ class Doctest(models.Test):
     def lock(self, hash_fn):
         """Doctests cannot be locked."""
 
-    def dump(self, file):
+    def dump(self):
         """Doctests do not need to be dumped, since no state changes."""

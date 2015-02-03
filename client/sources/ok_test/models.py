@@ -12,8 +12,9 @@ class OkTest(models.Test):
     suites = core.List()
     description = core.String(optional=True)
 
-    def __init__(self, suite_map, verbose, interactive, timeout=None, **fields):
+    def __init__(self, file, suite_map, verbose, interactive, timeout=None, **fields):
         super().__init__(**fields)
+        self.file = file
         self.suite_map = suite_map
         self.verbose = verbose
         self.interactive = interactive
@@ -138,13 +139,13 @@ class OkTest(models.Test):
                     print(message + 'already unlocked')
         print()
 
-    def dump(self, file):
+    def dump(self):
         # TODO(albert): add log messages
         # TODO(albert): writing causes an error halfway, the tests
         # directory may be left in a corrupted state.
         # TODO(albert): might need to delete obsolete test files too.
         json = format.prettyjson(self.to_json())
-        with open(file, 'w') as f:
+        with open(self.file, 'w') as f:
             f.write('test = ' + json)
 
 

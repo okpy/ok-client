@@ -110,14 +110,13 @@ class Assignment(core.Serializable):
                  that takes a filename and serializes the test object.
         """
         log.info('Dumping tests')
-        for file, test in self.test_map.items():
+        for test in self.test_map.values():
             try:
-                test.dump(file)
+                test.dump()
             except ex.SerializeException as e:
-                log.info('Unable to dump {} to {}: {}'.format(test.name, file,
-                         str(e)))
+                log.warning('Unable to dump {}: {}'.format(test.name, str(e)))
             else:
-                log.info('Dumped {} to {}'.format(test.name, file))
+                log.info('Dumped {}'.format(test.name))
 
     def _resolve_specified_tests(self):
         """For each of the questions specified on the command line,
