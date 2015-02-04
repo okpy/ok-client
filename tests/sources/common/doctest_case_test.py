@@ -1,5 +1,6 @@
 from client import exceptions as ex
 from client.sources.common import doctest_case
+import client
 import mock
 import textwrap
 import unittest
@@ -72,8 +73,20 @@ class PythonConsoleTest(unittest.TestCase):
             """)
 
     def testPass_teardown(self):
-        # TODO(albert)
-        pass
+        self.calls_interpret(True,
+            """
+            >>> def square(x):
+            ...     return x * x
+            >>> square(3)
+            9
+            >>> square(1)
+            1
+            """,
+            teardown="""
+            >>> import client
+            >>> client.foo = 1
+            """)
+        self.assertEqual(1, client.foo)
 
     def testError_notEqualError(self):
         self.calls_interpret(False,
@@ -110,8 +123,39 @@ class PythonConsoleTest(unittest.TestCase):
         pass
 
     def testError_teardown(self):
-        # TODO(albert):
-        pass
+        self.calls_interpret(False,
+            """
+            >>> 1 / 0
+            """,
+            teardown="""
+            >>> import client
+            >>> client.foo = 2
+            """)
+        self.assertEqual(2, client.foo)
+
+    def testError_setUpFails(self):
+        self.calls_interpret(False,
+            """
+            >>> client.foo = 4
+            """,
+            setup="""
+            >>> import client
+            >>> client.foo = 3
+            >>> 1 / 0
+            """,
+            teardown="""
+            >>> client.foo = 5
+            """)
+        self.assertEqual(3, client.foo)
+
+    def testError_tearDownFails(self):
+        self.calls_interpret(False,
+            """
+            >>> x = 3
+            """,
+            teardown="""
+            >>> 1 / 0
+            """)
 
 class DoctestCaseTest(unittest.TestCase):
     def setUp(self):

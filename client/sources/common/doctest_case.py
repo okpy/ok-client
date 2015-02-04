@@ -146,18 +146,20 @@ class PythonConsole(interpreter.Console):
         RETURNS:
         bool; True if the code passes, False otherwise.
         """
-        try:
-            self._interpret_lines(self._setup)
-            self._interpret_lines(self._code, compare=True)
-        except PythonConsoleException as e:
-            # TODO(albert): print error details
+        # If the setup fails, do not proceed with the rest of the test
+        if not self._interpret_lines(self._setup):
             return False
-        else:
-            return True
-        finally:
-            self._interpret_lines(self._teardown)
+
+        success = self._interpret_lines(self._code, compare=True)
+        success &= self._interpret_lines(self._teardown)
+        return success
 
     def _interpret_lines(self, lines, compare=False):
+        """Interprets the set of lines.
+
+        RETURNS:
+        bool; True if successful, False otherwise.
+        """
         self.clear_history()
 
         current = []
@@ -165,7 +167,10 @@ class PythonConsole(interpreter.Console):
             if isinstance(line, str):
                 if current and (line.startswith(self.PS1) or not line):
                     # Previous prompt ends when PS1 or a blank line occurs
-                    self._evaluate('\n'.join(current))
+                    try:
+                        self._evaluate('\n'.join(current))
+                    except PythonConsoleException:
+                        return False
                     current = []
                 if line:
                     print(line)
@@ -174,8 +179,12 @@ class PythonConsole(interpreter.Console):
                 current.append(line)
             elif isinstance(line, _Answer):
                 assert len(current) > 0, 'Answer without a prompt'
-                self._compare('\n'.join(line.output), '\n'.join(current))
+                try:
+                    self._compare('\n'.join(line.output), '\n'.join(current))
+                except PythonConsoleException:
+                    return False
                 current = []
+        return True
 
     def interact(self):
         """Opens up an interactive session with the current state of
