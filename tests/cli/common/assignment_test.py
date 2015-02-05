@@ -32,10 +32,15 @@ class AssignmentTest(unittest.TestCase):
         self.cmd_args.question = []
         self.mockSource1 = mock.Mock()
         self.mockProtocol1 = mock.Mock()
-
-        self.mockFindFiles = mock.Mock()
-        self.mockImportModule = mock.Mock()
         self.mockTest = mock.Mock()
+
+        self.patcherFindFiles = mock.patch('glob.glob')
+        self.addCleanup(self.patcherFindFiles.stop)
+        self.mockFindFiles = self.patcherFindFiles.start()
+
+        self.patcherLoadModule = mock.patch('importlib.import_module')
+        self.addCleanup(self.patcherLoadModule.stop)
+        self.mockImportModule = self.patcherLoadModule.start()
 
         self.mockModule = mock.Mock()
         self.mockModule.load.return_value = {
