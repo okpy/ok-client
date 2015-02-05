@@ -106,6 +106,35 @@ class DoctestTest(unittest.TestCase):
             'locked': 0,
         }, test.run())
 
+    def testRun_solitaryPS1(self):
+        test = self.makeDoctest("""
+        >>> 1 + 2
+        3
+        >>>
+        >>> 1
+        1
+        """, self.FILE)
+        self.assertEqual({
+            'passed': 0,
+            'failed': 1,
+            'locked': 0,
+        }, test.run())
+
+    def testRun_solitaryPS2(self):
+        test = self.makeDoctest("""
+        >>> def f():
+        ...     return 4
+        ...
+        >>> f()
+        4
+        """, self.FILE)
+        self.assertEqual({
+            'passed': 1,
+            'failed': 0,
+            'locked': 0,
+        }, test.run())
+
+
     def testScore_completePass(self):
         test = self.makeDoctest("""
         >>> 2 + 3
