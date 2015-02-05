@@ -166,7 +166,7 @@ class Assignment(core.Serializable):
         print()
 
     def _find_files(self, pattern):
-        return glob.glob(pattern)
+        return sorted(glob.glob(pattern))
 
     def _import_module(self, module):
         return importlib.import_module(module)
