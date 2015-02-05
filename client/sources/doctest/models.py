@@ -47,6 +47,10 @@ class Doctest(models.Test):
                     prompt_on = True
                     leading_space = prompt_match.group(1)
                 code.append(line.lstrip())
+            elif line.endswith('...'):
+                # A line consisting only of ... is treated as a noop. See
+                # issue #46
+                continue
             elif not line.strip():
                 prompt_on = False
                 leading_space = ''
