@@ -227,11 +227,10 @@ class PythonConsole(interpreter.Console):
                 timer.timed(self.timeout, exec, (code, frame))
                 result = None
         except RuntimeError as e:
-            stacktrace_length = 9
-            stacktrace = traceback.format_exc().split('\n')
+            stacktrace_length = 15
+            stacktrace = traceback.format_exc().strip().split('\n')
             print('Traceback (most recent call last):\n  ...')
-            print('\n'.join(stacktrace[-stacktrace_length:-1]))
-            print('# Error: maximum recursion depth exceeded.')
+            print('\n'.join(stacktrace[-stacktrace_length:]))
             raise PythonConsoleException(e)
         except exceptions.Timeout as e:
             print('# Error: evaluation exceeded {} seconds.'.format(e.timeout))
