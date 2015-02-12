@@ -168,8 +168,9 @@ class UnlockProtocol(models.Protocol):
         choice_map = {}
         # TODO(albert): consider using letters as choices instead of numbers.
         for i, choice in enumerate(choices):
-            print('    {}) {}'.format(i, choice))
             i = str(i)
+            print('{}) {}'.format(i, format.indent(choice,
+                                                   ' ' * (len(i) + 2)).strip()))
             choice = format.normalize(choice)
             choice_map[i] = choice
         return choice_map
