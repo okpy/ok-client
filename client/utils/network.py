@@ -6,7 +6,7 @@ import time
 import datetime
 import socket
 
-TIMEOUT = 1000
+TIMEOUT = 500
 RETRY_LIMIT = 5
 
 def send_to_server(access_token, messages, name, server, version, log,
