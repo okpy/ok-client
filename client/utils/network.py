@@ -55,6 +55,7 @@ def dump_to_server(access_token, msg_list, name, server, insecure, version, log,
     first_response = 1
     while msg_list:
         if not send_all and datetime.datetime.now() > stop_time:
+            print('Connection to server timed out after {} milliseconds'.format(TIMEOUT))
             return
         message = msg_list[-1]
         try:
