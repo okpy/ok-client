@@ -165,7 +165,7 @@ def main():
         msg_list.append(interact_msg)
     except ex.LoadingException as e:
         log.warning('Assignment could not load', exc_info=True)
-        print('Error loading assignment')
+        print('Error loading assignment: ' + str(e))
     except KeyboardInterrupt:
         log.info('Quitting protocols')
         assign.dump_tests()
@@ -198,7 +198,6 @@ def main():
 
             if isinstance(response, dict):
                 print("Backup successful for user: {0}".format(response['data']['email']))
-                print("URL: https://ok-server.appspot.com/#/{0}/submission/{1}".format(response['data']['course'], response['data']['key']))
             else:
                 print('Unable to complete backup.')
                 log.warning('network.dump_to_server returned {}'.format(response))
@@ -212,9 +211,6 @@ def main():
 
             pickle.dump(msg_list, fp)
             os.fsync(fp)
-
-        if len(msg_list) == 0:
-            print("Backup successful.")
     except KeyboardInterrupt:
         print("Quitting ok.")
 
