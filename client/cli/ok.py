@@ -198,6 +198,8 @@ def main():
 
             if isinstance(response, dict):
                 print("Backup successful for user: {0}".format(response['data']['email']))
+                if args.submit:
+                    print("URL: https://ok-server.appspot.com/#/{0}/submission/{1}".format(response['data']['course'], response['data']['key']))
             else:
                 print('Unable to complete backup.')
                 log.warning('network.dump_to_server returned {}'.format(response))
