@@ -9,7 +9,7 @@
         "hw1.py:double": "doctest"
     },
     "protocols": [
-        "file_contents",
+        "backup",
         "grading",
         "analytics"
     ]

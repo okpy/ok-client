@@ -10,7 +10,7 @@
         "hw1.py:double": "doctest"
     },
     "protocols": [
-        "file_contents",
+        "backup",
         "unlock",
         "lock",
         "grading",
