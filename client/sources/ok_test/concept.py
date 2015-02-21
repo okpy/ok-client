@@ -16,7 +16,6 @@ log = logging.getLogger(__name__)
 
 class ConceptSuite(ok_models.Suite):
     scored = core.Boolean(default=False)
-    cases = core.List()
 
     def post_instantiation(self):
         for i, case in enumerate(self.cases):
