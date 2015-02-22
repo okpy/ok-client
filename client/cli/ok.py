@@ -74,7 +74,7 @@ def parse_input():
     parser.add_argument('--submit', action='store_true',
                         help="Submit assignment")
     parser.add_argument('--backup', action='store_true',
-                        help="Backupt assignment reliably")
+                        help="Backup assignment reliably")
     parser.add_argument('--lock', action='store_true',
                         help="partial path to directory to lock")
     parser.add_argument('--score', action='store_true',
