@@ -72,7 +72,9 @@ def parse_input():
     parser.add_argument('-v', '--verbose', action='store_true',
                         help="print more output")
     parser.add_argument('--submit', action='store_true',
-                        help="wait for server response without timeout")
+                        help="Submit assignment")
+    parser.add_argument('--backup', action='store_true',
+                        help="Backupt assignment reliably")
     parser.add_argument('--lock', action='store_true',
                         help="partial path to directory to lock")
     parser.add_argument('--score', action='store_true',
@@ -194,7 +196,8 @@ def main():
             print("Backing up your work...")
             response = network.dump_to_server(access_token, msg_list,
                                assign.endpoint, args.server, args.insecure,
-                               client.__version__, log, send_all=args.submit)
+                               client.__version__, log,
+                               send_all=args.submit or args.backup)
 
             if isinstance(response, dict):
                 print("Backup successful for user: {0}".format(response['data']['email']))
