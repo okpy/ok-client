@@ -8,8 +8,6 @@ import logging
 log = logging.getLogger(__name__)
 
 class DoctestSuite(models.Suite):
-
-    cases = core.List()
     setup = core.String(default='')
     teardown = core.String(default='')
 

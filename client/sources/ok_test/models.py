@@ -137,6 +137,9 @@ class OkTest(models.Test):
                     print(message + 'leaving unlocked')
                 elif case.locked == True:
                     print(message + 'already unlocked')
+            if not suite.cases:
+                self.suites.remove(suite)
+                print('* Suite {}: removing empty suite'.format(suite_num))
         print()
 
     def dump(self):
@@ -152,9 +155,9 @@ class OkTest(models.Test):
 class Suite(core.Serializable):
     type = core.String()
     scored = core.Boolean(default=True)
+    cases = core.List()
 
-    def __init__(self, verbose, interactive, timeout=None,
-                 **fields):
+    def __init__(self, verbose, interactive, timeout=None, **fields):
         super().__init__(**fields)
         self.verbose = verbose
         self.interactive = interactive

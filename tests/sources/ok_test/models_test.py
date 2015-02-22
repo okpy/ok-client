@@ -245,6 +245,52 @@ class OkTest(unittest.TestCase):
         self.assertEqual(1, self.mockCase1.lock.call_count)
         self.assertEqual(0, self.mockCase2.lock.call_count)
 
+    def testLock_emptySuite(self):
+        self.mockSuite1.return_value.cases = []
+        test = self.makeTest(suites=[
+            {'type': 'mock1'},
+        ])
+
+        try:
+            test.lock(self.hash_fn)
+        except Exception as e:
+            self.fail(e)
+        self.assertEqual(0, len(test.suites))
+
+    def testLock_allCasesHidden(self):
+        self.mockCase1.locked = core.NoValue
+        self.mockCase1.hidden = True
+        test = self.makeTest(suites=[
+            {'type': 'mock1'},
+        ])
+
+        try:
+            test.lock(self.hash_fn)
+        except Exception as e:
+            self.fail(e)
+        self.assertEqual(0, len(self.mockSuite1.return_value.cases))
+        self.assertEqual(0, len(test.suites))
+
+    def testLock_someCasesHidden(self):
+        self.mockCase1.locked = core.NoValue
+        self.mockCase1.hidden = True
+        self.mockCase2.locked = core.NoValue
+        self.mockCase2.hidden = False
+        self.mockSuite1.return_value.cases = [
+            self.mockCase1,
+            self.mockCase2
+        ]
+        test = self.makeTest(suites=[
+            {'type': 'mock1'},
+        ])
+
+        try:
+            test.lock(self.hash_fn)
+        except Exception as e:
+            self.fail(e)
+        self.assertEqual(1, len(self.mockSuite1.return_value.cases))
+        self.assertEqual(1, len(test.suites))
+
     def testDump(self):
         # TODO(albert)
         pass
