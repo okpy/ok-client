@@ -201,8 +201,12 @@ def main():
 
             if isinstance(response, dict):
                 print("Backup successful for user: {0}".format(response['data']['email']))
-                if args.submit:
+                if args.submit or args.backup:
                     print("URL: https://ok-server.appspot.com/#/{0}/submission/{1}".format(response['data']['course'], response['data']['key']))
+                if args.backup:
+                    print('NOTE: this is only a backup. '
+                          'To submit your assignment, run ok with --submit.')
+
             else:
                 print('Unable to complete backup.')
                 log.warning('network.dump_to_server returned {}'.format(response))
