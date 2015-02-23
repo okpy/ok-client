@@ -57,7 +57,7 @@ class Doctest(models.Test):
             elif prompt_on:
                 if not line.startswith(leading_space):
                     raise ex.SerializeException('Inconsistent tabs for doctest')
-                code.append(line.lstrip())
+                code.append(line[len(leading_space):])
         module = self.SETUP.format(importing.path_to_module_string(self.file))
         self.case = doctest_case.DoctestCase(self.console, module,
                                              code='\n'.join(code))
