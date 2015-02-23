@@ -1,4 +1,6 @@
 from client.sources.doctest import models
+from client.utils import output
+import sys
 import unittest
 
 class DoctestTest(unittest.TestCase):
@@ -6,8 +8,18 @@ class DoctestTest(unittest.TestCase):
     POINTS = 1
     FILE = 'operator'
 
-    def makeDoctest(self, docstring, file, verbose=False, interactive=False):
-        return models.Doctest(file, verbose, interactive, name=self.NAME,
+    def setUp(self):
+        self.old_stdout = sys.stdout
+        self.old_logger = output._logger
+        sys.stdout = output._logger = output._OutputLogger()
+        output.on()
+
+    def tearDown(self):
+        sys.stdout = self.old_stdout
+        output._logger = self.old_logger
+
+    def makeDoctest(self, docstring, verbose=False, interactive=False):
+        return models.Doctest(self.FILE, verbose, interactive, name=self.NAME,
                               points=self.POINTS, docstring=docstring)
 
     def testConstructor_standardDoctest(self):
@@ -15,7 +27,7 @@ class DoctestTest(unittest.TestCase):
             self.makeDoctest("""
             >>> 2 + 3
             5
-            """, self.FILE)
+            """)
         except TypeError:
             self.fail()
 
@@ -23,7 +35,7 @@ class DoctestTest(unittest.TestCase):
         try:
             self.makeDoctest("""
             This is just a docstring
-            """, self.FILE)
+            """)
         except TypeError:
             self.fail()
 
@@ -35,7 +47,7 @@ class DoctestTest(unittest.TestCase):
 
             >>> 1 + 2
             3
-            """, self.FILE)
+            """)
         except TypeError:
             self.fail()
 
@@ -47,9 +59,22 @@ class DoctestTest(unittest.TestCase):
 
             >>> 1 + 2
             3
-            """, self.FILE)
+            """)
         except TypeError:
             self.fail()
+
+    def testConstructor_indentationInOutput(self):
+        test = self.makeDoctest("""
+        >>> print('1\\n  2')
+        1
+          2
+        """)
+        self.assertEqual({
+            'passed': 1,
+            'failed': 0,
+            'locked': 0,
+        }, test.run())
+
 
     def testConstructor_invalidIndentationInconsistencies(self):
         # TODO(albert): test not passing
@@ -59,13 +84,13 @@ class DoctestTest(unittest.TestCase):
         #     9
         #         >>> 1 + 2
         #         3
-        #     """, self.FILE)
+        #     """)
         # self.assertRaises(TypeError, self.makeDoctest, """
         #         >>> 4 + 5
         #         9
         #     >>> 1 + 2
         #     3
-        #     """, self.FILE)
+        #     """)
 
     def testRun_completePass(self):
         test = self.makeDoctest("""
@@ -73,7 +98,7 @@ class DoctestTest(unittest.TestCase):
         5
         >>> 1 + 3
         4
-        """, self.FILE)
+        """)
         self.assertEqual({
             'passed': 1,
             'failed': 0,
@@ -86,7 +111,7 @@ class DoctestTest(unittest.TestCase):
         5
         >>> 2 + 2
         5
-        """, self.FILE)
+        """)
         self.assertEqual({
             'passed': 0,
             'failed': 1,
@@ -99,7 +124,7 @@ class DoctestTest(unittest.TestCase):
         5
         >>> 2 + 2
         5
-        """, self.FILE)
+        """)
         self.assertEqual({
             'passed': 0,
             'failed': 1,
@@ -113,7 +138,7 @@ class DoctestTest(unittest.TestCase):
         >>>
         >>> 1
         1
-        """, self.FILE)
+        """)
         self.assertEqual({
             'passed': 0,
             'failed': 1,
@@ -127,7 +152,7 @@ class DoctestTest(unittest.TestCase):
         ...
         >>> f()
         4
-        """, self.FILE)
+        """)
         self.assertEqual({
             'passed': 1,
             'failed': 0,
@@ -141,7 +166,7 @@ class DoctestTest(unittest.TestCase):
         5
         >>> 1 + 3
         4
-        """, self.FILE)
+        """)
         self.assertEqual(1, test.score())
 
     def testScore_partialFail(self):
@@ -150,7 +175,7 @@ class DoctestTest(unittest.TestCase):
         5
         >>> 2 + 2
         5
-        """, self.FILE)
+        """)
         self.assertEqual(0, test.score())
 
     def testScore_completeFail(self):
@@ -159,5 +184,5 @@ class DoctestTest(unittest.TestCase):
         5
         >>> 2 + 2
         5
-        """, self.FILE)
+        """)
         self.assertEqual(0, test.score())
