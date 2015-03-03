@@ -75,6 +75,34 @@ class DoctestTest(unittest.TestCase):
             'locked': 0,
         }, test.run())
 
+    def testConstructor_printThenReturn(self):
+        test = self.makeDoctest("""
+        >>> def foo():
+        ...     print('hi')
+        ...     return 1
+        >>> foo()
+        hi
+        1
+        """)
+        self.assertEqual({
+            'passed': 1,
+            'failed': 0,
+            'locked': 0,
+        }, test.run())
+
+    def testConstructor_printNoEndCharThenReturn(self):
+        test = self.makeDoctest("""
+        >>> def foo():
+        ...     print('hi', end='')
+        ...     return 1
+        >>> foo()
+        hi1
+        """)
+        self.assertEqual({
+            'passed': 1,
+            'failed': 0,
+            'locked': 0,
+        }, test.run())
 
     def testConstructor_invalidIndentationInconsistencies(self):
         # TODO(albert): test not passing
