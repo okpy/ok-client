@@ -201,7 +201,7 @@ class PythonConsole(interpreter.Console):
         else:
             if value is not None:
                 print(repr(value))
-                actual = (output + '\n' + repr(value)).strip()
+                actual = (output + repr(value)).strip()
             else:
                 actual = output.strip()
 
