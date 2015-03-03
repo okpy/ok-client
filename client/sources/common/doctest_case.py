@@ -199,7 +199,6 @@ class PythonConsole(interpreter.Console):
         except PythonConsoleException as e:
             actual = e.exception.__class__.__name__
         else:
-            print(list(output))
             if value is not None:
                 print(repr(value))
                 actual = (output + repr(value)).strip()
