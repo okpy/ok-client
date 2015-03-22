@@ -1,8 +1,9 @@
 from client import exceptions as ex
 from client.sources.common import core
-from client.sources.common import models
-from client.sources.common import doctest_case
 from client.sources.common import importing
+from client.sources.common import interpreter
+from client.sources.common import models
+from client.sources.common import pyconsole
 from client.utils import format
 from client.utils import output
 import re
@@ -28,7 +29,7 @@ class Doctest(models.Test):
         self.interactive = interactive
         self.timeout = timeout
 
-        self.console = doctest_case.PythonConsole(self.verbose, self.interactive,
+        self.console = pyconsole.PythonConsole(self.verbose, self.interactive,
                                                   self.timeout)
 
     def post_instantiation(self):
@@ -59,7 +60,7 @@ class Doctest(models.Test):
                     raise ex.SerializeException('Inconsistent tabs for doctest')
                 code.append(line[len(leading_space):])
         module = self.SETUP.format(importing.path_to_module_string(self.file))
-        self.case = doctest_case.DoctestCase(self.console, module,
+        self.case = interpreter.CodeCase(self.console, module,
                                              code='\n'.join(code))
 
     def run(self):
