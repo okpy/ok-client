@@ -1,6 +1,7 @@
 from client import exceptions as ex
 from client.sources.ok_test import concept
 from client.sources.ok_test import doctest
+from client.sources.ok_test import scheme
 from client.sources.ok_test import models
 from client.sources.common import importing
 import logging
@@ -11,6 +12,7 @@ log = logging.getLogger(__name__)
 SUITES = {
     'doctest': doctest.DoctestSuite,
     'concept': concept.ConceptSuite,
+    'scheme': scheme.SchemeSuite,
 }
 
 def load(file, parameter, args):
