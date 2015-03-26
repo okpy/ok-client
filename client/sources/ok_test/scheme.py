@@ -32,7 +32,8 @@ class SchemeConsole(interpreter.Console):
         """Opens up an interactive session with the current state of
         the console.
         """
-        pass
+        self.scheme.read_eval_print_loop(self.scheme.buffer_input, self._frame,
+                                         interactive=True)
 
     def evaluate(self, code):
         if not code.strip():
@@ -66,7 +67,6 @@ class SchemeConsole(interpreter.Console):
             return result, printed_output
         finally:
             output.remove_log(log_id)
-
 
     def _import_scheme(self):
         try:

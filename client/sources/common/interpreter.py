@@ -246,7 +246,7 @@ class Console(object):
     ######################
 
     def add_history(self, line):
-        if HAS_READLINE:
+        if HAS_READLINE and line:
             readline.add_history(line)
 
     def clear_history(self):
