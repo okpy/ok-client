@@ -120,6 +120,8 @@ class Console(object):
     PS1 = '> '
     PS2 = '. '
 
+    _output_fn = repr
+
     ####################
     # Public interface #
     ####################
@@ -218,8 +220,8 @@ class Console(object):
             actual = e.exception_type
         else:
             if value is not None:
-                print(repr(value))
-                actual = (printed + repr(value)).strip()
+                print(self._output_fn(value))
+                actual = (printed + self._output_fn(value)).strip()
             else:
                 actual = printed.strip()
 

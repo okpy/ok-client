@@ -24,6 +24,7 @@ class SchemeConsole(interpreter.Console):
     PS2 = '.... '
 
     MODULE = 'scheme'
+    _output_fn = str
 
     def __init__(self, verbose, interactive, timeout=None):
         """Loads the Scheme module from the current working directory
