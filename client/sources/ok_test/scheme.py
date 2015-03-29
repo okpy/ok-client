@@ -1,9 +1,21 @@
+"""Console for interpreting Scheme. In particular, this is meant to integrate
+with UC Berkeley CS 61A's Scheme project. SchemeConsole expects the an
+importable module called "scheme" with the following interface:
+
+    scheme.create_global_frame()
+    scheme.read_eval_print_loop(next_line_fn, frame, interactive)
+    scheme.buffer_input()
+    scheme.read_line(code)
+    scheme.scheme_eval(exp, env)
+"""
+
 from client import exceptions
 from client.sources.common import interpreter
 from client.sources.ok_test import doctest
 from client.utils import output
 from client.utils import timer
 import importlib
+import sys
 import textwrap
 import traceback
 
@@ -70,6 +82,7 @@ class SchemeConsole(interpreter.Console):
 
     def _import_scheme(self):
         try:
+            sys.path.insert(0, 'scheme')
             self.scheme = importlib.import_module(self.MODULE)
         except ImportError as e:
             raise e
