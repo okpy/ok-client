@@ -1,6 +1,7 @@
 from client import exceptions as ex
 from client.sources.common import core
-from client.sources.common import doctest_case
+from client.sources.common import interpreter
+from client.sources.common import pyconsole
 from client.sources.ok_test import models
 from client.utils import format
 import logging
@@ -11,16 +12,18 @@ class DoctestSuite(models.Suite):
     setup = core.String(default='')
     teardown = core.String(default='')
 
+    console_type = pyconsole.PythonConsole
+
     def __init__(self, verbose, interactive, timeout=None, **fields):
         super().__init__(verbose, interactive, timeout, **fields)
-        self.console = doctest_case.PythonConsole(verbose, interactive, timeout)
+        self.console = self.console_type(verbose, interactive, timeout)
 
     def post_instantiation(self):
         for i, case in enumerate(self.cases):
             if not isinstance(case, dict):
                 raise ex.SerializeException('Test cases must be dictionaries')
-            self.cases[i] = doctest_case.DoctestCase(self.console, self.setup,
-                                                     self.teardown, **case)
+            self.cases[i] = interpreter.CodeCase(self.console, self.setup,
+                                                 self.teardown, **case)
 
     def run(self, test_name, suite_number):
         """Runs test for the doctest suite.
