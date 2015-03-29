@@ -215,7 +215,7 @@ class Console(object):
         try:
             value, printed = self.evaluate(code)
         except ConsoleException as e:
-            actual = e.exception.__class__.__name__
+            actual = e.exception_type
         else:
             if value is not None:
                 print(repr(value))
@@ -290,6 +290,10 @@ class CodeAnswer(object):
 
 
 class ConsoleException(Exception):
-    def __init__(self, exception=None):
+    def __init__(self, exception=None, exception_type=''):
         self.exception = exception
+        if not exception or exception_type:
+            self.exception_type = exception_type
+        else:
+            self.exception_type = exception.__class__.__name__
 

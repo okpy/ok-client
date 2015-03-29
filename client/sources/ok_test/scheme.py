@@ -65,6 +65,9 @@ class SchemeConsole(interpreter.Console):
         except exceptions.Timeout as e:
             print('# Error: evaluation exceeded {} seconds.'.format(e.timeout))
             raise interpreter.ConsoleException(e)
+        except self.scheme.SchemeError as e:
+            print('# Error: {}'.format(e))
+            raise interpreter.ConsoleException(e, exception_type='SchemeError')
         except Exception as e:
             stacktrace = traceback.format_exc()
             token = '<module>\n'
