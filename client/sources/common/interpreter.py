@@ -65,6 +65,7 @@ class CodeCase(models.Case):
         interact -- function; handles user interaction during the unlocking
                     phase.
         """
+        print(self.setup.strip())
         try:
             for line in self.lines:
                 if isinstance(line, str) and line:
