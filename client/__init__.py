@@ -1,4 +1,4 @@
-__version__ = 'v1.3.18'
+__version__ = 'v1.3.19'
 
 import os
 import sys
