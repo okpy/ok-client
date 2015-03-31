@@ -46,7 +46,7 @@ class SchemeConsole(interpreter.Console):
         the console.
         """
         self.scheme.read_eval_print_loop(self.scheme.buffer_input, self._frame,
-                                         interactive=True)
+                                         True)
 
     def evaluate(self, code):
         if not code.strip():
