@@ -157,7 +157,7 @@ class Console(object):
         if not self._interpret_lines(self._setup):
             return False
 
-        success = self._interpret_lines(self._code, compare=True)
+        success = self._interpret_lines(self._code)
         success &= self._interpret_lines(self._teardown)
         return success
 
@@ -184,7 +184,7 @@ class Console(object):
     # Interpretation utilities #
     ############################
 
-    def _interpret_lines(self, lines, compare=False):
+    def _interpret_lines(self, lines, quiet=False):
         """Interprets the set of lines.
 
         RETURNS:
@@ -200,7 +200,7 @@ class Console(object):
                     except ConsoleException:
                         return False
                     current = []
-                if line:
+                if line and not quiet:
                     print(line)
                 line = self._strip_prompt(line)
                 self.add_history(line)
