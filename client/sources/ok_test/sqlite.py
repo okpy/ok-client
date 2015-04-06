@@ -13,17 +13,12 @@ class SqliteConsole(interpreter.Console):
 
     MODULE = 'sqlite3'
     VERSION = (3, 8, 3)
-    _output_fn = str
-
-    def __init__(self, verbose, interactive, timeout=None):
-        """Loads the Scheme module from the current working directory
-        before calling the superclass constructor.
-        """
-        super().__init__(verbose, interactive, timeout)
 
     def load(self, code, setup='', teardown=''):
         """Prepares a set of setup, test, and teardown code to be
         run in the console.
+
+        Loads the sqlite3 module before loading any code.
         """
         self.sqlite3 = self._import_sqlite()
         super().load(code, setup, teardown)

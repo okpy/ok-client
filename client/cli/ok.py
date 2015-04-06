@@ -119,7 +119,7 @@ def main():
     # Instantiating assignment
     try:
         assign = assignment.load_config(args.config, args)
-    except ex.OkException as e:
+    except ex.LoadingException as e:
         log.warning('Assignment could not instantiate', exc_info=True)
         print('Error: ' + str(e).strip())
         exit(1)

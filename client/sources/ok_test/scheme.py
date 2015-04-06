@@ -26,19 +26,14 @@ class SchemeConsole(interpreter.Console):
     MODULE = 'scheme'
     _output_fn = str
 
-    def __init__(self, verbose, interactive, timeout=None):
-        """Loads the Scheme module from the current working directory
-        before calling the superclass constructor.
-        """
-        self._import_scheme()
-        super().__init__(verbose, interactive, timeout)
-
     def load(self, code, setup='', teardown=''):
         """Prepares a set of setup, test, and teardown code to be
         run in the console.
+
+        Loads the Scheme module before loading any code.
         """
-        super().load(code, setup, teardown)
         self._import_scheme()
+        super().load(code, setup, teardown)
         self._frame = self.scheme.create_global_frame()
 
     def interact(self):
