@@ -89,7 +89,7 @@ class SchemeConsole(interpreter.Console):
             sys.path.insert(0, 'scheme')
             self.scheme = importlib.import_module(self.MODULE)
         except ImportError as e:
-            raise e
+            raise exceptions.ProtocolException('Could not import scheme')
 
 class SchemeSuite(doctest.DoctestSuite):
     console_type = SchemeConsole

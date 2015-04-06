@@ -5,12 +5,14 @@ from client.sources.common import interpreter
 from client.sources.ok_test import doctest
 from client.utils import timer
 import importlib
+import os
 
 class SqliteConsole(interpreter.Console):
     PS1 = 'sqlite> '
     PS2 = '   ...> '
 
     MODULE = 'sqlite3'
+    VERSION = (3, 8, 3)
     _output_fn = str
 
     def __init__(self, verbose, interactive, timeout=None):
@@ -23,7 +25,7 @@ class SqliteConsole(interpreter.Console):
         """Prepares a set of setup, test, and teardown code to be
         run in the console.
         """
-        self.sqlite3 = self.import_sqlite()
+        self.sqlite3 = self._import_sqlite()
         super().load(code, setup, teardown)
         self._conn = self.sqlite3.connect(':memory:', check_same_thread=False)
 
@@ -35,8 +37,11 @@ class SqliteConsole(interpreter.Console):
 
     def evaluate(self, code):
         if code.startswith('.'):
-            if not self.evaluate_dot(code):
-                raise interpreter.ConsoleException(None)
+            try:
+                self.evaluate_dot(code)
+            except interpreter.ConsoleException as e:
+                print('Error: {}'.format(e))
+                raise
             return
         try:
             cursor = timer.timed(self.timeout, self._conn.execute, (code,))
@@ -69,13 +74,21 @@ class SqliteConsole(interpreter.Console):
                             for line in actual))
             raise interpreter.ConsoleException
 
-    def import_sqlite(self):
+    def _import_sqlite(self):
         try:
             sqlite = importlib.import_module(self.MODULE)
         except ImportError:
-            print('Could not import sqlite3. Make sure you have installed sqlite3')
-            raise e
-        # TODO(albert): check version
+            print()
+            raise exceptions.ProtocolException(
+                    'Could not import sqlite3. '
+                    'Make sure you have installed sqlite3')
+        if sqlite.sqlite_version_info < self.VERSION:
+            raise exceptions.ProtocolException(
+            'You are running an outdated version of sqlite3:\n'
+            '    {}\n'
+            'Please install sqlite version {} '
+            'or newer'.format(sqlite.sqlite_version,
+                              '.'.join(map(str, self.VERSION))))
         return sqlite
 
     def format_rows(self, cursor):
@@ -101,16 +114,20 @@ class SqliteConsole(interpreter.Console):
         bool; True if the evaluation was successful.
         """
         if code.startswith('.read'):
-            return self._interpret_lines(self.evaluate_read(code), quiet=True)
+            if not self._interpret_lines(self.evaluate_read(code), quiet=True):
+                raise interpreter.ConsoleException
 
     def evaluate_read(self, line):
         """Subroutine for evaluating a .read command."""
         filename = line.replace('.read', '').strip()
         if ' ' in filename:
-            # TODO(albert): handle invalid usage
-            pass
+            raise interpreter.ConsoleException(
+                Exception('Invalid usage of .read'), exception_type='Error')
+        if not os.path.exists(filename):
+            raise interpreter.ConsoleException(
+                Exception('No such file: {}'.format(filename)),
+                exception_type='Error')
         with open(filename, 'r') as f:
-            # TODO(albert): handle non-existent file
             return f.read().split('\n')
 
 class SqliteSuite(doctest.DoctestSuite):
