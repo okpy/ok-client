@@ -51,7 +51,7 @@ class SchemeConsole(interpreter.Console):
     def evaluate(self, code):
         if not code.strip():
             # scheme.scheme_read can't handle empty strings.
-            return None, None
+            return None, ''
         log_id = output.new_log()
         try:
             exp = self.scheme.read_line(code)
