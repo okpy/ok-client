@@ -33,6 +33,8 @@ test = {
           scm> (double 4)
           8
           # explanation: doubling a negative number
+          scm> (define x 4)
+          x
           """,
           'hidden': False
         }

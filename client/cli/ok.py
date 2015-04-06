@@ -119,7 +119,7 @@ def main():
     # Instantiating assignment
     try:
         assign = assignment.load_config(args.config, args)
-    except (ex.LoadingException, ex.SerializeException) as e:
+    except ex.LoadingException as e:
         log.warning('Assignment could not instantiate', exc_info=True)
         print('Error: ' + str(e).strip())
         exit(1)
@@ -168,6 +168,9 @@ def main():
     except ex.LoadingException as e:
         log.warning('Assignment could not load', exc_info=True)
         print('Error loading assignment: ' + str(e))
+    except ex.OkException as e:
+        log.warning('General OK exception occurred', exc_info=True)
+        print('Error: ' + str(e))
     except KeyboardInterrupt:
         log.info('Quitting protocols')
         assign.dump_tests()

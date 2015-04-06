@@ -157,7 +157,7 @@ class Console(object):
         if not self._interpret_lines(self._setup):
             return False
 
-        success = self._interpret_lines(self._code, compare=True)
+        success = self._interpret_lines(self._code, compare_all=True)
         success &= self._interpret_lines(self._teardown)
         return success
 
@@ -184,8 +184,14 @@ class Console(object):
     # Interpretation utilities #
     ############################
 
-    def _interpret_lines(self, lines, compare=False):
+    def _interpret_lines(self, lines, quiet=False, compare_all=False):
         """Interprets the set of lines.
+
+        PARAMTERS:
+        lines       -- list of str; lines of code
+        quiet       -- bool; if True, do not print lines of output
+        compare_all -- bool; if True, check for no output for lines that are not
+                       followed by a CodeAnswer
 
         RETURNS:
         bool; True if successful, False otherwise.
@@ -196,11 +202,14 @@ class Console(object):
                 if current and (line.startswith(self.PS1) or not line):
                     # Previous prompt ends when PS1 or a blank line occurs
                     try:
-                        self.evaluate('\n'.join(current))
+                        if compare_all:
+                            self._compare('', '\n'.join(current))
+                        else:
+                            self.evaluate('\n'.join(current))
                     except ConsoleException:
                         return False
                     current = []
-                if line:
+                if line and not quiet:
                     print(line)
                 line = self._strip_prompt(line)
                 self.add_history(line)

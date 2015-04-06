@@ -1,9 +1,10 @@
 from client import exceptions as ex
+from client.sources.common import importing
 from client.sources.ok_test import concept
 from client.sources.ok_test import doctest
-from client.sources.ok_test import scheme
 from client.sources.ok_test import models
-from client.sources.common import importing
+from client.sources.ok_test import scheme
+from client.sources.ok_test import sqlite
 import logging
 import os
 
@@ -13,6 +14,7 @@ SUITES = {
     'doctest': doctest.DoctestSuite,
     'concept': concept.ConceptSuite,
     'scheme': scheme.SchemeSuite,
+    'sqlite': sqlite.SqliteSuite,
 }
 
 def load(file, parameter, args):

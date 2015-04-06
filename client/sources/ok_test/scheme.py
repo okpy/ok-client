@@ -26,19 +26,14 @@ class SchemeConsole(interpreter.Console):
     MODULE = 'scheme'
     _output_fn = str
 
-    def __init__(self, verbose, interactive, timeout=None):
-        """Loads the Scheme module from the current working directory
-        before calling the superclass constructor.
-        """
-        self._import_scheme()
-        super().__init__(verbose, interactive, timeout)
-
     def load(self, code, setup='', teardown=''):
         """Prepares a set of setup, test, and teardown code to be
         run in the console.
+
+        Loads the Scheme module before loading any code.
         """
-        super().load(code, setup, teardown)
         self._import_scheme()
+        super().load(code, setup, teardown)
         self._frame = self.scheme.create_global_frame()
 
     def interact(self):
@@ -51,7 +46,7 @@ class SchemeConsole(interpreter.Console):
     def evaluate(self, code):
         if not code.strip():
             # scheme.scheme_read can't handle empty strings.
-            return None, None
+            return None, ''
         log_id = output.new_log()
         try:
             exp = self.scheme.read_line(code)
@@ -89,7 +84,7 @@ class SchemeConsole(interpreter.Console):
             sys.path.insert(0, 'scheme')
             self.scheme = importlib.import_module(self.MODULE)
         except ImportError as e:
-            raise e
+            raise exceptions.ProtocolException('Could not import scheme')
 
 class SchemeSuite(doctest.DoctestSuite):
     console_type = SchemeConsole
