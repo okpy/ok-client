@@ -100,7 +100,7 @@ class SqliteConsole(interpreter.Console):
         """
         rows = set()
         for row in cursor:
-            row = '|'.join(row)
+            row = '|'.join(map(str, row))
             rows.add(row)
             print(row)
         return rows
