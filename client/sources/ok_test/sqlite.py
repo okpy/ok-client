@@ -6,6 +6,7 @@ from client.sources.ok_test import doctest
 from client.utils import timer
 import importlib
 import os
+import re
 
 class SqliteConsole(interpreter.Console):
     PS1 = 'sqlite> '
@@ -31,6 +32,9 @@ class SqliteConsole(interpreter.Console):
         # TODO(albert)
 
     def evaluate(self, code):
+        if not code.strip():
+            return
+        code = re.sub(r'(\A|\n)\s*--.*?\n', '', code, re.M)
         if code.startswith('.'):
             try:
                 self.evaluate_dot(code)
@@ -50,6 +54,8 @@ class SqliteConsole(interpreter.Console):
             return cursor
 
     def _compare(self, expected, code):
+        if not code.strip():
+            return
         try:
             cursor = self.evaluate(code)
         except interpreter.ConsoleException as e:
