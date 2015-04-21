@@ -41,6 +41,9 @@ class SqliteConsole(interpreter.Console):
             except interpreter.ConsoleException as e:
                 print('Error: {}'.format(e))
                 raise
+            except self.sqlite3.Error as e:
+                print('Error: {}'.format(e))
+                raise interpreter.ConsoleException(e, exception_type='Error')
             return
         try:
             cursor = timer.timed(self.timeout, self._conn.execute, (code,))
@@ -116,8 +119,7 @@ class SqliteConsole(interpreter.Console):
         bool; True if the evaluation was successful.
         """
         if code.startswith('.read'):
-            if not self._interpret_lines(self.evaluate_read(code), quiet=True):
-                raise interpreter.ConsoleException
+            self._conn.executescript(self.evaluate_read(code))
 
     def evaluate_read(self, line):
         """Subroutine for evaluating a .read command."""
@@ -130,7 +132,10 @@ class SqliteConsole(interpreter.Console):
                 Exception('No such file: {}'.format(filename)),
                 exception_type='Error')
         with open(filename, 'r') as f:
-            return f.read().split('\n')
+            contents = f.read()
+        return re.sub(r'^\.read\s+.*$',
+                      lambda m: self.evaluate_read(m.group(0)),
+                      contents, flags=re.M)
 
 class SqliteSuite(doctest.DoctestSuite):
     console_type = SqliteConsole
