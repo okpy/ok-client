@@ -88,9 +88,9 @@ class SqliteConsole(interpreter.Console):
             'You are running an outdated version of sqlite3:\n'
             '    {}\n'
             'Please install sqlite version {} or newer\n'
-            'Tests might not pass, but it is still '
-            'possible to submit'.format(sqlite.sqlite_version,
-                                        '.'.join(map(str, self.VERSION))))
+            'Tests might not pass, but it is still possible\n'
+            'to submit'.format(sqlite.sqlite_version,
+                               '.'.join(map(str, self.VERSION))))
         return sqlite
 
     def format_rows(self, cursor):
