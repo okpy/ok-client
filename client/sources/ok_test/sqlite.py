@@ -84,12 +84,13 @@ class SqliteConsole(interpreter.Console):
                     'Could not import sqlite3. '
                     'Make sure you have installed sqlite3')
         if sqlite.sqlite_version_info < self.VERSION:
-            raise exceptions.ProtocolException(
+            print(
             'You are running an outdated version of sqlite3:\n'
             '    {}\n'
-            'Please install sqlite version {} '
-            'or newer'.format(sqlite.sqlite_version,
-                              '.'.join(map(str, self.VERSION))))
+            'Please install sqlite version {} or newer\n'
+            'Tests will not pass, but it is still'
+            'possible to submit'.format(sqlite.sqlite_version,
+                                        '.'.join(map(str, self.VERSION))))
         return sqlite
 
     def format_rows(self, cursor):
