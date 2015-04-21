@@ -184,12 +184,11 @@ class Console(object):
     # Interpretation utilities #
     ############################
 
-    def _interpret_lines(self, lines, quiet=False, compare_all=False):
+    def _interpret_lines(self, lines, compare_all=False):
         """Interprets the set of lines.
 
         PARAMTERS:
         lines       -- list of str; lines of code
-        quiet       -- bool; if True, do not print lines of output
         compare_all -- bool; if True, check for no output for lines that are not
                        followed by a CodeAnswer
 
@@ -209,7 +208,7 @@ class Console(object):
                     except ConsoleException:
                         return False
                     current = []
-                if line and not quiet:
+                if line:
                     print(line)
                 line = self._strip_prompt(line)
                 self.add_history(line)
