@@ -3,10 +3,12 @@
 from client import exceptions
 from client.sources.common import interpreter
 from client.sources.ok_test import doctest
+from client.utils import format
 from client.utils import timer
 import importlib
 import os
 import re
+import subprocess
 
 class SqliteConsole(interpreter.Console):
     PS1 = 'sqlite> '
@@ -21,9 +23,47 @@ class SqliteConsole(interpreter.Console):
 
         Loads the sqlite3 module before loading any code.
         """
-        self.sqlite3 = self._import_sqlite()
         super().load(code, setup, teardown)
-        self._conn = self.sqlite3.connect(':memory:', check_same_thread=False)
+
+    def interpret(self):
+        """Interprets the code in this Console.
+
+        Due to inconsistencies with sqlite3 and Python's bindings, the following
+        process is used to interpret code:
+
+        1. If the Python sqlite3 module has an up-to-date binding (compared to
+           self.VERSION), interpret line-by-line with full output validation.
+        2. Otherwise, if there is an executable called "sqlite3" (in the current
+           directory is okay), pipe the test case into sqlite3 and display
+           expected and actual output. No output validation is available;
+           students have to verify their solutions manually.
+        3. Otherwise, report an error.
+        """
+        if self._import_sqlite():
+            self._conn = self.sqlite3.connect(':memory:', check_same_thread=False)
+            return super().interpret()
+        env = dict(os.environ,
+                   PATH=os.getcwd() + os.pathsep + os.environ["PATH"])
+        if self._has_sqlite_cli(env):
+            print('Unfortunately, OK is unable to use sqlite3 to test your code directly.')
+            print('Here is a transcript of what your code does in the sqlite3 interpreter.')
+            print()
+            test, expected, result = self._use_sqlite_cli(env)
+            print('TEST:')
+            print(format.indent(test, '    '))
+            print('EXPECTED (order does not matter):')
+            print(format.indent(expected, '    '))
+            print('OUTPUT:')
+            print(format.indent(result, '    '))
+            print()
+            print("Please manually check if your solution's output is correct.")
+            return False
+        else:
+            print("ERROR: could not run sqlite3.")
+            print("Tests will not pass, but you can still submit your assignment.")
+            print("Please download the newest version of sqlite3 into this folder")
+            print("to run tests.")
+            return False
 
     def interact(self):
         """Opens up an interactive session with the current state of
@@ -79,22 +119,72 @@ class SqliteConsole(interpreter.Console):
             raise interpreter.ConsoleException
 
     def _import_sqlite(self):
+        """Attempts to import the sqlite3 Python module.
+
+        RETURNS:
+        bool; True if able to import the sqlite3 module and the binding version
+        is at least self.VERSION; False otherwise.
+        """
         try:
-            sqlite = importlib.import_module(self.MODULE)
+            self.sqlite3 = importlib.import_module(self.MODULE)
         except ImportError:
-            print()
-            raise exceptions.ProtocolException(
-                    'Could not import sqlite3. '
-                    'Make sure you have installed sqlite3')
-        if sqlite.sqlite_version_info < self.VERSION:
-            print(
-            'You are running an outdated version of sqlite3:\n'
-            '    {}\n'
-            'Please install sqlite version {} or newer\n'
-            'Tests might not pass, but it is still possible\n'
-            'to submit'.format(sqlite.sqlite_version,
-                               '.'.join(map(str, self.VERSION))))
-        return sqlite
+            return False
+        return self.sqlite3.sqlite_version_info >= self.VERSION
+
+    def _has_sqlite_cli(self, env):
+        """Checks if the command "sqlite3" is executable with the given
+        shell environment variables.
+
+        PARAMETERS:
+        env -- mapping; represents shell environment variables. Primarily, this
+               allows modifications to PATH to check the current directory first.
+
+        RETURNS:
+        bool; True if "sqlite3" is executable and the version is at least
+        self.VERSION; False otherwise.
+        """
+        # Modify PATH in subprocess to check current directory first for sqlite3
+        # executable.
+        try:
+            version = subprocess.check_output(["sqlite3", "--version"],
+                                              env=env).decode()
+        except (subprocess.CalledProcessError, FileNotFoundError):
+            return False
+        version = version.split(' ')[0].split('.')
+        version_info = tuple(int(num) for num in version)
+        return version_info >= self.VERSION
+
+    def _use_sqlite_cli(self, env):
+        """Pipes the test case into the "sqlite3" executable.
+
+        The method _has_sqlite_cli MUST be called before this method is called.
+
+        PARAMETERS:
+        env -- mapping; represents shell environment variables. Primarily, this
+               allows modifications to PATH to check the current directory first.
+
+        RETURNS:
+        (test, expected, result), where
+        test     -- str; test input that is piped into sqlite3
+        expected -- str; the expected output, for display purposes
+        result   -- str; the actual output form piping input into sqlite3
+        """
+        test = []
+        expected = []
+        for line in self._setup + self._code + self._teardown:
+            if isinstance(line, interpreter.CodeAnswer):
+                expected.extend(line.output)
+            elif line.startswith(self.PS1):
+                test.append(line[len(self.PS1):])
+            elif line.startswith(self.PS2):
+                test.append(line[len(self.PS2):])
+        test = '\n'.join(test)
+        process = subprocess.Popen(["sqlite3"],
+                                    universal_newlines=True,
+                                    stdin=subprocess.PIPE,
+                                    stdout=subprocess.PIPE)
+        result, _ = process.communicate(test)
+        return test, '\n'.join(expected), result
 
     def format_rows(self, cursor):
         """Print rows from the given sqlite cursor, formatted with pipes "|".
