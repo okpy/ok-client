@@ -61,7 +61,8 @@ class SqliteConsole(interpreter.Console):
         else:
             print("ERROR: could not run sqlite3.")
             print("Tests will not pass, but you can still submit your assignment.")
-            print("Please download the newest version of sqlite3 to run tests.")
+            print("Please download the newest version of sqlite3 into this folder")
+            print("to run tests.")
             return False
 
     def interact(self):
