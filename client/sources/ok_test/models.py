@@ -51,7 +51,6 @@ class OkTest(models.Test):
             failed += results['failed']
             locked += results['locked']
 
-        format.print_progress_bar(self.name, passed, failed, locked)
         if locked > 0:
             print()
             print('There are still locked tests! '
@@ -60,7 +59,7 @@ class OkTest(models.Test):
         if type(self.description) == str and self.description:
             print()
             print(self.description)
-        print()
+            print()
         return {
             'passed': passed,
             'failed': failed,
