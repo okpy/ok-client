@@ -182,9 +182,10 @@ class SqliteConsole(interpreter.Console):
         process = subprocess.Popen(["sqlite3"],
                                     universal_newlines=True,
                                     stdin=subprocess.PIPE,
-                                    stdout=subprocess.PIPE)
-        result, _ = process.communicate(test)
-        return test, '\n'.join(expected), result
+                                    stdout=subprocess.PIPE,
+                                    stderr=subprocess.PIPE)
+        result, error = process.communicate(test)
+        return test, '\n'.join(expected), (error + '\n' + result).strip()
 
     def format_rows(self, cursor):
         """Print rows from the given sqlite cursor, formatted with pipes "|".
