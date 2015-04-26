@@ -210,7 +210,12 @@ class SqliteConsole(interpreter.Console):
         bool; True if the evaluation was successful.
         """
         if code.startswith('.read'):
-            self._conn.executescript(self.evaluate_read(code))
+            contents = self.evaluate_read(code)
+            for i, segment in enumerate(re.split(r'(?:\n|\A)(\..*?)(?:\n|\Z)', contents)):
+                if i % 2 == 0:
+                    self._conn.executescript(segment)
+                else:
+                    self.evaluate_dot(segment)
         elif code.startswith('.open'):
             srcfile = self.evaluate_open(code)
             self._conn.close()
