@@ -1,11 +1,11 @@
 test = {
-  'name': 'Question 1',
+  'name': 'Question 2',
   'points': 2,
   'suites': [
     {
       'type': 'sqlite',
       'setup': r"""
-      sqlite> .read hw1.sql
+      sqlite> .open hw1.db
       """,
       'cases': [
         {
