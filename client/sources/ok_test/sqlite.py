@@ -211,6 +211,11 @@ class SqliteConsole(interpreter.Console):
         """
         if code.startswith('.read'):
             self._conn.executescript(self.evaluate_read(code))
+        elif code.startswith('.open'):
+            srcfile = self.evaluate_open(code)
+            self._conn.close()
+            self._conn = self.sqlite3.connect(srcfile, check_same_thread=False)
+        return True
 
     def evaluate_read(self, line):
         """Subroutine for evaluating a .read command."""
@@ -227,6 +232,18 @@ class SqliteConsole(interpreter.Console):
         return re.sub(r'^\.read\s+.*$',
                       lambda m: self.evaluate_read(m.group(0)),
                       contents, flags=re.M)
+
+    def evaluate_open(self, line):
+        """Subroutine for evaluating a .open command."""
+        filename = line.replace('.open', '').strip()
+        if ' ' in filename:
+            raise interpreter.ConsoleException(
+                Exception('Invalid usage of .open'), exception_type='Error')
+        if not os.path.exists(filename):
+            raise interpreter.ConsoleException(
+                Exception('No such file: {}'.format(filename)),
+                exception_type='Error')
+        return filename
 
 class SqliteSuite(doctest.DoctestSuite):
     console_type = SqliteConsole
