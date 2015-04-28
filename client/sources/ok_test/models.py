@@ -147,7 +147,7 @@ class OkTest(models.Test):
         # directory may be left in a corrupted state.
         # TODO(albert): might need to delete obsolete test files too.
         json = format.prettyjson(self.to_json())
-        with open(self.file, 'w') as f:
+        with open(self.file, 'w', enconding='utf-8') as f:
             f.write('test = ' + json)
 
 
