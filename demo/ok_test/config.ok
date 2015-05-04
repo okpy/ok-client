@@ -8,7 +8,7 @@
         "tests/[!_]*.py": "ok_test"
     },
     "protocols": [
-        "file_contents",
+        "backup",
         "unlock",
         "grading",
         "scoring",

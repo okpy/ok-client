@@ -1,17 +1,15 @@
-from client.protocols import file_contents
+from client.protocols import backup
 import mock
 import unittest
 
-# TODO(albert): change this to BackupProtocol once server is ready for the
-# change.
-class TestFileContentsProtocol(unittest.TestCase):
+class TestBackupProtocol(unittest.TestCase):
     def setUp(self):
         self.cmd_args = mock.Mock()
         self.cmd_args.submit = True
         self.assignment = mock.MagicMock()
         self.files = {}
 
-        self.proto = file_contents.protocol(self.cmd_args, self.assignment)
+        self.proto = backup.protocol(self.cmd_args, self.assignment)
         self.proto.is_file = self.mockIsFile
         self.proto.read_file = self.mockReadFile
 
