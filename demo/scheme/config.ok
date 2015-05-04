@@ -5,7 +5,8 @@
         "hw1.scm"
     ],
     "tests": {
-        "tests/[!_]*.py": "ok_test"
+        "tests/[!_]*.py": "ok_test",
+        "hw1.scm": "scheme_test"
     },
     "protocols": [
         "file_contents",
