@@ -5,6 +5,7 @@ from client.sources.ok_test import doctest
 from client.sources.ok_test import models
 from client.sources.ok_test import scheme
 from client.sources.ok_test import sqlite
+from client.sources.ok_test import wwpp
 import logging
 import os
 
@@ -15,6 +16,7 @@ SUITES = {
     'concept': concept.ConceptSuite,
     'scheme': scheme.SchemeSuite,
     'sqlite': sqlite.SqliteSuite,
+    'wwpp': wwpp.WwppSuite,
 }
 
 def load(file, parameter, args):
