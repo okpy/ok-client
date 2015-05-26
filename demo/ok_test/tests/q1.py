@@ -3,6 +3,7 @@ test = {
   'points': 3,
   'suites': [
     {
+      'type': 'concept',
       'cases': [
         {
           'answer': 'Domain is numbers. Range is numbers',
@@ -16,8 +17,26 @@ test = {
           'question': 'What is the domain and range of the square function?'
         }
       ],
-      'scored': False,
-      'type': 'concept'
+    },
+    {
+      'type': 'wwpp',
+      'cases': [
+        {
+          'code': r"""
+          >>> square(3)
+          9
+          >>> square(5)
+          25
+          """
+        },
+        {
+          'code': r"""
+          >>> print(print(square(4)))
+          16
+          None
+          """
+        }
+      ],
     },
     {
       'cases': [
