@@ -7,7 +7,6 @@ import pickle
 import sys
 import time
 import webbrowser
-from urllib.request import urlopen
 
 CLIENT_ID = \
     '931757735585-vb3p8g53a442iktc4nkv5q8cbjrtuonv.apps.googleusercontent.com'
@@ -125,8 +124,11 @@ def authenticate(force=False):
         
         def do_OK(self):
             """Fetch the proper authentication page"""
-            URL = 'https://ok-server.appspot.com/authSuccess?email=%s@berkeley.edu' % calnet_id
-            return urlopen(URL).read()
+            context = {
+                'site': 'https://ok-server.appspot.com',
+                'api': 'https://ok-server.appspot.com/enrollment?email=%s@berkeley.edu' % calnet_id
+            }
+            return open('../templates/auth.html'.format(context)).read()
 
     server_address = (host_name, port_number)
     httpd = http.server.HTTPServer(server_address, CodeHandler)
