@@ -7,6 +7,8 @@ import pickle
 import sys
 import time
 import webbrowser
+from urllib.request import urlopen
+import json
 
 CLIENT_ID = \
     '931757735585-vb3p8g53a442iktc4nkv5q8cbjrtuonv.apps.googleusercontent.com'
@@ -16,6 +18,8 @@ CLIENT_SECRET = 'zGY9okExIBnompFTWcBmOZo4'
 REFRESH_FILE = '.ok_refresh'
 REDIRECT_HOST = "localhost"
 TIMEOUT = 10
+
+SERVER = 'https://ok-server.appspot.com'
 
 def pick_free_port():
     import socket
@@ -117,18 +121,10 @@ def authenticate(force=False):
             self.send_response(200)
             self.send_header("Content-type", "text/html")
             self.end_headers()
-            self.wfile.write(bytes(self.do_OK(), "utf-8"))
+            self.wfile.write(bytes(success_page(SERVER, calnet_id), "utf-8"))
 
         def log_message(self, format, *args):
             return
-        
-        def do_OK(self):
-            """Fetch the proper authentication page"""
-            context = {
-                'site': 'https://ok-server.appspot.com',
-                'api': 'https://ok-server.appspot.com/enrollment?email=%s@berkeley.edu' % calnet_id
-            }
-            return open('../templates/auth.html'.format(context)).read()
 
     server_address = (host_name, port_number)
     httpd = http.server.HTTPServer(server_address, CodeHandler)
@@ -136,6 +132,54 @@ def authenticate(force=False):
 
     update_storage(access_token, expires_in, refresh_token)
     return access_token
+
+
+def success_page(server, calnet_id):
+    """Generate HTML for the auth page - fetch courses and plug into templates"""
+    API = server + '/enrollment?email=%s@berkeley.edu' % calnet_id
+    return success_auth(success_courses(urlopen(API).read()), server)
+
+
+def success_courses(response):
+    """Generates HTML for individual courses"""
+    courses = json.loads(response)
+    if len(courses) > 0:
+        template_course = get_contents('../templates/partial.course.html')
+        html = ''
+        for course in courses:
+            html += template_course.format(**course)
+        status = pluralize(len(courses), ' enrolled course')
+        byline = ', and all is well.'
+        title = 'Ok!'
+    else:
+        html = get_contents('../templates/partial.nocourses.html')
+        byline = ', but this email is not enrolled. Is it correct?'
+        status = 'No courses found'
+        title = 'Uh oh'
+    return html, status, byline, title
+
+
+def success_auth(data, server):
+    """Generates finalized HTML"""
+    return get_contents('../templates/auth.html').format(
+        site=server,
+        status=data[1],
+        courses=data[0],
+        byline=data[2],
+        title=data[3])
+
+import os
+
+def get_file(relative_path, purpose):
+    dir = os.path.dirname(__file__)
+    filename = os.path.join(dir, relative_path)
+    return open(filename, purpose)
+
+def get_contents(relative_path, purpose='r'):
+    return get_file(relative_path, purpose).read()
+
+def pluralize(num, string):
+    return str(num)+string+('s' if num != 1 else '')
 
 if __name__ == "__main__":
     print(authenticate())

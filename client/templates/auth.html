@@ -1,7 +1,7 @@
 <html>
 <head>
     <title>Okpy</title>
-    <link href="{site}/static/student/styles/public.css" rel="stylesheet">
+    <link href="{site}/static/student/styles/auth.css" rel="stylesheet">
 </head>
 <body>
 <header>
@@ -17,13 +17,18 @@
 </header>
 <section class="top center-container">
     <div class="center">
-        <h1 class="title">Ok!</h1>
-        <h2 class="subtitle">You have been authenticated.</h2>
+        <h1 class="title">{title}</h1>
+        <h2 class="subtitle">You have been authenticated {byline}</h2>
         <span class="break">
         <a href="{site}" class="button">Dashboard</a>
         <p class="copy">or <a href="{site}/static/student/tour.html">take a tour</a></p>
         </span>
-
+    </div>
+</section>
+<div class="rise status">{status}</div>
+<section class="courses">
+    <div class="wrap">
+        {courses}
     </div>
 </section>
 <footer>
