@@ -7,6 +7,7 @@ import pickle
 import sys
 import time
 import webbrowser
+from urllib.request import urlopen
 
 CLIENT_ID = \
     '931757735585-vb3p8g53a442iktc4nkv5q8cbjrtuonv.apps.googleusercontent.com'
@@ -16,17 +17,6 @@ CLIENT_SECRET = 'zGY9okExIBnompFTWcBmOZo4'
 REFRESH_FILE = '.ok_refresh'
 REDIRECT_HOST = "localhost"
 TIMEOUT = 10
-
-SUCCESS_HTML = """
-<html>
-<head>
-<title>Authentication Success</title>
-</head>
-<body>
-<b>Ok! You have successfully authenticated.</b>
-</body>
-</html>
-"""
 
 def pick_free_port():
     import socket
@@ -128,10 +118,15 @@ def authenticate(force=False):
             self.send_response(200)
             self.send_header("Content-type", "text/html")
             self.end_headers()
-            self.wfile.write(bytes(SUCCESS_HTML, "utf-8"))
+            self.wfile.write(bytes(self.do_OK(), "utf-8"))
 
         def log_message(self, format, *args):
             return
+        
+        def do_OK(self):
+            """Fetch the proper authentication page"""
+            URL = 'https://ok-server.appspot.com/#/auth_success?email=%s@berkeley.edu' % calnet_id
+            return urlopen(URL).read()
 
     server_address = (host_name, port_number)
     httpd = http.server.HTTPServer(server_address, CodeHandler)
