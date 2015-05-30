@@ -125,7 +125,7 @@ def authenticate(force=False):
         
         def do_OK(self):
             """Fetch the proper authentication page"""
-            URL = 'https://ok-server.appspot.com/#/auth_success?email=%s@berkeley.edu' % calnet_id
+            URL = 'https://ok-server.appspot.com/authSuccess?email=%s@berkeley.edu' % calnet_id
             return urlopen(URL).read()
 
     server_address = (host_name, port_number)
