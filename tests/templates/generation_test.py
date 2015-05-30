@@ -10,16 +10,16 @@ class SuccessPageTest(unittest.TestCase):
 		response = '[{"year": "2015", "institution": "UC Soumya", "url": "https://ok-server.appspot.com/#/course/5066549580791808", "display_name": "CS 61A", "term": "spring"}]'
 		html = success_courses(response)
 		self.write('test.partial.course.html', html)
-		assert html.find('2015') != -1
-		assert html.find('UC Soumya') != -1
-		assert html.find('CS 61A') != -1
-		assert html.find('spring') != -1
+		self.assertNotEqual(-1, html.find('2015'))
+		self.assertNotEqual(-1, html.find('UC Soumya'))
+		self.assertNotEqual(-1, html.find('CS 61A'))
+		self.assertNotEqual(-1, html.find('spring'))
 
 	def testCourseGeneration(self):
 		response = '[]'
 		html, status, byline, title = success_courses(response)
 		self.write('test.partial.nocourses.html', html)
-		assert html.find('It looks like this email is not enrolled') != -1
+		self.assertNotEqual(-1, html.find('It looks like this email is not enrolled'))
 		
 	def testAuthGeneration(self):
 		response = '[{"year": "2015", "institution": "UC Soumya", "url": "https://ok-server.appspot.com/#/course/5066549580791808", "display_name": "CS 61A", "term": "spring"}]'
