@@ -25,8 +25,14 @@ class SuccessPageTest(unittest.TestCase):
 		response = '[{"year": "2015", "institution": "UC Soumya", "url": "https://ok-server.appspot.com/#/course/5066549580791808", "display_name": "CS 61A", "term": "spring"}]'
 		html = success_auth(success_courses(response), 'http://localhost:8080')
 		self.write('test.auth.html', html)
+		self.assertNotEqual(-1, html.find('Ok!'))
+		self.assertNotEqual(-1, html.find(', and'))
+		self.assertNotEqual(-1, html.find('enrolled course'))
 
 	def testAuthEmptyGeneration(self):
 		response = '[]'
 		html = success_auth(success_courses(response), 'http://localhost:8080')
 		self.write('test.auth.empty.html', html)
+		self.assertNotEqual(-1, html.find('Uh oh'))
+		self.assertNotEqual(-1, html.find(', but'))
+		self.assertNotEqual(-1, html.find('No courses'))
