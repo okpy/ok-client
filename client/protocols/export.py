@@ -6,6 +6,7 @@ import client
 import logging
 import os
 import pickle
+import sys
 
 log = logging.getLogger(__name__)
 
@@ -18,14 +19,16 @@ class ExportProtocol(models.Protocol):
         """If the --export parameter was used, downloads all submissions 
         for the given assignment from the server and then exits
         """
-        self.access_token = auth.authenticate(self.args.authenticate)
-        log.info('Authenticated with access token %s', self.access_token)
         data = None
         try:
             data = pickle.load(open("export_cache.pkl", "rb"))
+            self.access_token = auth.authenticate(self.args.authenticate)
+            log.info('Authenticated with access token %s', self.access_token)
         except Exception as e:
             if self.args.export:
                 data = {}
+                self.access_token = auth.authenticate(self.args.authenticate)
+                log.info('Authenticated with access token %s', self.access_token)
                 data['assign'] = self.args.export
                 data['course'] = self.get_course()
                 data['students'] = self.get_students(data['course'])
@@ -54,19 +57,19 @@ class ExportProtocol(models.Protocol):
                         dl_left = len(data['students']) - i
                         print("Download failed. Run command again to continue.")
                         print("{0} submissions left to download".format(dl_left))
-                        exit(0)
+                        sys.exit(0)
                         
             except KeyboardInterrupt:
                 pickle.dump(data, open("export_cache.pkl", "wb"))
                 dl_left = len(data['students']) - i
                 print("Download interrupted. Run command again to continue.")
                 print("{0} submissions left to download".format(dl_left))
-                exit(0)
+                sys.exit(0)
                 
             print("Submissions downloaded.")
             if os.path.exists('export_cache.pkl'):
                 os.remove('export_cache.pkl')
-            exit(0)
+            sys.exit(0)
             
     def get_course(self):
         """Gets a course ID to search for"""
@@ -76,6 +79,11 @@ class ExportProtocol(models.Protocol):
         response = self.request('course')
         num = 0
         courses = response['data']['results']
+        if len(courses) == 1:
+            return courses[0]['id']
+        elif len(courses) == 0:
+            print("No courses found.")
+            sys.exit(0)
         for course in courses:
             name = course['display_name']
             offering = course['offering']

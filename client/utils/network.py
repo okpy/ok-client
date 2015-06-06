@@ -5,6 +5,7 @@ import json
 import time
 import datetime
 import socket
+import sys
 
 TIMEOUT = 500
 RETRY_LIMIT = 5
@@ -72,7 +73,7 @@ def api_request(access_token, server, route, version, log,
         try:
             if ex.code == 401:
                 print("Only members of the course staff can export submissions.")
-                exit(0)
+                sys.exit(0)
             if ex.code == 403:
                 if software_update(response_json['data']['download_link'], log):
                     raise SoftwareUpdated
