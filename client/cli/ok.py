@@ -34,6 +34,7 @@ communications should be limited to the body of an on_interact method.
 """
 from client import exceptions as ex
 from client.cli.common import assignment
+from client.protocols import export
 from client.utils import auth
 from client.utils import network
 from client.utils import output
@@ -84,6 +85,12 @@ def parse_input():
     parser.add_argument('--timeout', type=int, default=10,
                         help="set the timeout duration for running tests")
 
+    # Submission Export
+    parser.add_argument('--export', type=str,
+                        help="Downloads all submissions for a particular assignment")
+    parser.add_argument('--course', type=int, default=-1,
+                        help="Course id to export from (will prompt if not provided)")
+
     # Debug information
     parser.add_argument('--version', action='store_true',
                         help="Prints the version number and quits")
@@ -115,6 +122,9 @@ def main():
     if args.version:
         print("okpy=={}".format(client.__version__))
         exit(0)
+        
+    # Run through export protocol
+    export.protocol(args, None).on_interact()
 
     # Instantiating assignment
     try:
