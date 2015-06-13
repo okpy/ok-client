@@ -16,10 +16,10 @@ log = logging.getLogger(__name__)
 #####################
 
 class ScoringProtocol(protocol_models.Protocol):
-    """A Protocol that runs tests, formats results, and reports a
-    student's score.
+    """A Protocol that runs tests, formats results, and reports a student's
+    score.
     """
-    def on_interact(self):
+    def run(self, messages):
         """Score tests and print results
 
         Tests are taken from self.assignment.specified_tests. Each test belongs
@@ -51,7 +51,7 @@ class ScoringProtocol(protocol_models.Protocol):
             partner = test.partner if test.partner != core.NoValue else None
             raw_scores[test.name, partner] = (test.score(), test.points)
 
-        return display_breakdown(raw_scores)
+        messages['scoring'n] =  display_breakdown(raw_scores)
 
 def display_breakdown(scores):
     """Prints the point breakdown given a dictionary of scores.

@@ -19,7 +19,7 @@ class GradingProtocol(models.Protocol):
     """A Protocol that runs tests, formats results, and sends results
     to the server.
     """
-    def on_interact(self):
+    def run(self, messages):
         """Run gradeable tests and print results and return analytics.
 
         RETURNS:
@@ -50,6 +50,7 @@ class GradingProtocol(models.Protocol):
             analytics[test.name] = results
 
         format.print_progress_bar('Test summary', passed, failed, locked)
-        return analytics
+
+        messages['grading'] = analytics
 
 protocol = GradingProtocol
