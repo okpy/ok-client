@@ -137,10 +137,10 @@ def authenticate(force=False):
 def success_page(server, calnet_id):
     """Generate HTML for the auth page - fetch courses and plug into templates"""
     API = server + '/enrollment?email=%s@berkeley.edu' % calnet_id
-    return success_auth(success_courses(urlopen(API).read()), server)
+    return success_auth(success_courses(urlopen(API).read(), server))
 
 
-def success_courses(response):
+def success_courses(response, server):
     """Generates HTML for individual courses"""
     courses = json.loads(response)
     if len(courses) > 0:
@@ -148,25 +148,28 @@ def success_courses(response):
         html = ''
         for course in courses:
             html += template_course.format(**course)
-        status = pluralize(len(courses), ' enrolled course')
-        byline = ', and all is well.'
+        status = 'Scroll for more: '+', '.join([c['display_name'] for c in courses])
+        byline = ' and are currently enrolled in %s.' % pluralize(len(courses), ' course')
         title = 'Ok!'
+        head = ''
     else:
         html = get_contents('../templates/partial.nocourses.html')
         byline = ', but this email is not enrolled. Is it correct?'
         status = 'No courses found'
         title = 'Uh oh'
-    return html, status, byline, title
+        head = '<style>%s</style>' % get_contents('../templates/red.css')
+    return html, status, byline, title, head, server
 
 
-def success_auth(data, server):
+def success_auth(data):
     """Generates finalized HTML"""
     return get_contents('../templates/auth.html').format(
-        site=server,
+        site=data[5],
         status=data[1],
         courses=data[0],
         byline=data[2],
-        title=data[3])
+        title=data[3],
+        head=data[4])
 
 import os
 
