@@ -16,5 +16,6 @@
         "grading",
         "scoring",
         "analytics"
+        "backup",
     ]
 }
