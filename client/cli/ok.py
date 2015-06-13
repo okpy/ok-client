@@ -3,7 +3,6 @@
 from client import exceptions as ex
 from client.cli.common import assignment
 from client.utils import auth
-from client.utils import network
 from client.utils import output
 from client.utils import software_update
 from datetime import datetime
