@@ -46,6 +46,7 @@ class BackupProtocol(models.Protocol):
                       '\tpython3 ok --submit')
 
         self.dump_unsent_messages(message_list)
+        print()
 
 
     @classmethod
@@ -116,15 +117,12 @@ class BackupProtocol(models.Protocol):
                 retries -= 1
                 error_msg = 'Connection timed out. ' + \
                             'Please check your network connection.'
-            except urllib.error.URLError as ex:
-                log.warning('URLError: %s', str(ex))
-                retries -= 1
-                error_msg = 'Connection error: ' + str(ex)
-            except urllib.error.HTTPError as ex:
+            except (urllib.error.URLError, urllib.error.HTTPError) as ex:
                 response_json = json.loads(ex.read().decode('utf-8'))
 
-                log.warning('HTTPError: %s', str(ex))
-                log.warning('HTTPError error message: %s', response_json['message'])
+                log.warning('%s: %s', ex.__class__.__name__, str(ex))
+                log.warning('%s error message: %s', ex.__class__.__name__,
+                            response_json['message'])
 
                 if ex.code == 403 and 'download_link' in response_json['data']:
                     retries = 0
@@ -140,10 +138,10 @@ class BackupProtocol(models.Protocol):
 
         if retries <= 0:
             print()     # Preserve progress bar.
-            print('Error while ', action.lower(), ': ', error_msg)
+            print('Error while', action.lower() + ':', error_msg)
         elif not send_all and datetime.datetime.now() > stop_time:
             print()     # Preserve progress bar.
-            print('Error while backing up: '
+            print('Could not back up: '
                   'Connection to server timed out after {} milliseconds'.format(self.TIMEOUT))
         else:
             print('{action}... 100% complete'.format(action=action))

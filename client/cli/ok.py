@@ -66,6 +66,8 @@ def parse_input():
                         help="authenticate, ignoring previous authentication")
     parser.add_argument('--insecure', action='store_true',
                         help="uses http instead of https")
+    parser.add_argument('--no-update', action='store_true',
+                        help="turns off software updating")
 
     return parser.parse_args()
 
@@ -109,7 +111,9 @@ def main():
     except KeyboardInterrupt:
         log.info('KeyboardInterrupt received.')
     finally:
-        software_update.check_version(args.server)
+        if not args.no_update:
+            software_update.check_version(args.server, client.__version__,
+                                          client.FILE_NAME)
         if assign:
             assign.dump_tests()
 

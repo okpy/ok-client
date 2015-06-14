@@ -52,6 +52,7 @@ class ScoringProtocol(protocol_models.Protocol):
             raw_scores[test.name, partner] = (test.score(), test.points)
 
         messages['scoring'] =  display_breakdown(raw_scores)
+        print()
 
 def display_breakdown(scores):
     """Prints the point breakdown given a dictionary of scores.

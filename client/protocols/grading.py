@@ -50,6 +50,7 @@ class GradingProtocol(models.Protocol):
             analytics[test.name] = results
 
         format.print_progress_bar('Test summary', passed, failed, locked)
+        print()
 
         messages['grading'] = analytics
 
