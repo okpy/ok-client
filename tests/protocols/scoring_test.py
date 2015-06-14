@@ -32,35 +32,45 @@ class ScoringProtocolTest(unittest.TestCase):
         test.score.return_value = score
         return test
 
+    def callRun(self):
+        messages = {}
+        self.proto.run(messages)
+
+        self.assertIn('scoring', messages)
+        return messages['scoring']
+
     def testOnInteract_doNothingOnNoScore(self):
         self.cmd_args.score = False
-        self.assertEqual(None, self.proto.on_interact())
+        self.assertEqual(None, self.proto.run({}))
 
     def testOnInteract_noTests(self):
         self.assignment.specified_tests = []
         self.assertEqual({
             0: 0,
-        }, self.proto.on_interact())
+        }, self.callRun())
 
     def testOnInteract_noSpecifiedPartners(self):
+        messages = {}
         self.assertEqual({
             0: self.SCORE0 + self.SCORE1 + self.SCORE2
-        }, self.proto.on_interact())
+        }, self.callRun())
 
     def testOnInteract_specifiedPartners_noSharedPoints(self):
         self.mockTest0.partner = 0
         self.mockTest1.partner = 0
         self.mockTest2.partner = 1
+        messages = {}
         self.assertEqual({
             0: self.SCORE0 + self.SCORE1,
             1: self.SCORE2
-        }, self.proto.on_interact())
+        }, self.callRun())
 
     def testOnInteract_specifiedPartners_sharedPoints(self):
         self.mockTest0.partner = 0
         self.mockTest1.partner = 1
+        messages = {}
         self.assertEqual({
             0: self.SCORE0 + self.SCORE2,
             1: self.SCORE1 + self.SCORE2
-        }, self.proto.on_interact())
+        }, self.callRun())
 
