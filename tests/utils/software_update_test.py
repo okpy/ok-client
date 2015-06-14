@@ -1,7 +1,7 @@
 from client.utils import software_update
-from unittest import mock
 import client
 import json
+import mock
 import unittest
 import urllib.error
 
