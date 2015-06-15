@@ -33,7 +33,7 @@ class UnlockProtocol(models.Protocol):
         super().__init__(cmd_args, assignment)
         self.hash_key = assignment.name
 
-    def on_interact(self):
+    def run(self, messages):
         """Responsible for unlocking each test.
 
         The unlocking process can be aborted by raising a KeyboardInterrupt or
@@ -71,7 +71,7 @@ class UnlockProtocol(models.Protocol):
                     pass
                 print()
                 break
-        return analytics
+        messages['unlock'] = analytics
 
     def interact(self, answer, choices=None, randomize=True):
         """Reads student input for unlocking tests until the student

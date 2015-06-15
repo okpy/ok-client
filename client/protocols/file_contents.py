@@ -4,13 +4,10 @@ import os
 
 log = logging.getLogger(__name__)
 
-# TODO(albert): rename this file to backup.py. Leaving it as file_contents.py
-# for now because server isn't ready for a change yet.
-
-class BackupProtocol(models.Protocol):
+class FileContentsProtocol(models.Protocol):
     """The contents of source files are sent to the server."""
 
-    def on_start(self):
+    def run(self, messages):
         """Find all source files and return their complete contents.
 
         Source files are considered to be files listed self.assignment.src.
@@ -34,7 +31,8 @@ class BackupProtocol(models.Protocol):
                 contents = self.read_file(file)
                 log.info('Loaded contents of {} to send to server'.format(file))
             files[file] = contents
-        return files
+
+        messages['file_contents'] = files
 
     #####################
     # Mockable by tests #
@@ -47,4 +45,4 @@ class BackupProtocol(models.Protocol):
         with open(filepath, 'r', encoding='utf-8') as lines:
             return lines.read()
 
-protocol = BackupProtocol
+protocol = FileContentsProtocol

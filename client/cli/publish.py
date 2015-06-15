@@ -1,19 +1,14 @@
-#! /usr/bin/env python3
+"""This module is responsible for publishing OK."""
 
-"""
-This module is responsible for publishing ok.
-"""
-
-import client
-import os
 import argparse
+import client
 import json
+import os
 import shutil
 import zipfile
 
 OK_ROOT = os.path.normpath(os.path.dirname(client.__file__))
 STAGING_DIR = os.path.join(os.getcwd(), 'staging')
-OK_NAME = 'ok'
 CONFIG_NAME = 'config.ok'
 
 REQUIRED_FILES = [
@@ -69,7 +64,7 @@ def create_zip(staging_dir, destination):
     if not os.path.isdir(destination):
         os.mkdir(destination)
 
-    dest = os.path.join(destination, OK_NAME)
+    dest = os.path.join(destination, client.FILE_NAME)
     zipf = zipfile.ZipFile(dest, 'w')
     zipf.write(os.path.join(OK_ROOT, '__main__.py'), './__main__.py')
     for root, _, files in os.walk(staging_dir):

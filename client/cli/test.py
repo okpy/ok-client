@@ -1,7 +1,8 @@
 from client import exceptions as ex
+from client.cli.common import assignment
+from client.cli.common import messages
 from client.protocols import grading
 from client.protocols import scoring
-from client.cli.common import assignment
 import argparse
 import client
 import logging
@@ -47,8 +48,10 @@ def main():
         assign = assignment.load_config(args.config, args)
         assign.load()
 
-        grading.protocol(args, assign).on_interact()
-        scoring.protocol(args, assign).on_interact()
+        msgs = messages.Messages()
+
+        grading.protocol(args, assign).run(msgs)
+        scoring.protocol(args, assign).run(msgs)
     except (ex.LoadingException, ex.SerializeException) as e:
         log.warning('Assignment could not instantiate', exc_info=True)
         print('Error: ' + str(e).strip())

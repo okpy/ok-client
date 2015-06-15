@@ -10,7 +10,7 @@ class LockProtocol(models.Protocol):
 
     name = 'lock'
 
-    def on_start(self):
+    def run(self, messages):
         """Responsible for locking each test."""
         if not self.args.lock:
             return
