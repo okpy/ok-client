@@ -2,6 +2,7 @@
 
 from client import exceptions as ex
 from client.cli.common import assignment
+from client.cli.common import messages
 from client.utils import auth
 from client.utils import output
 from client.utils import software_update
@@ -94,13 +95,12 @@ def main():
                 print('    ' + name)
             exit(0)
 
-        messages = {}
+        msgs = messages.Messages()
         for name, proto in assign.protocol_map.items():
             log.info('Execute {}.run()'.format(name))
-            proto.run(messages)
+            proto.run(msgs)
 
-        # TODO(soumya): doesn't AnalyticsProtocol store the timestamp?
-        messages['timestamp'] = str(datetime.now())
+        msgs['timestamp'] = str(datetime.now())
 
     except ex.LoadingException as e:
         log.warning('Assignment could not load', exc_info=True)
