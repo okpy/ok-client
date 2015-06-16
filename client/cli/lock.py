@@ -1,5 +1,7 @@
-from client.protocols import lock
+from client import exceptions as ex
 from client.cli.common import assignment
+from client.cli.common import messages
+from client.protocols import lock
 import argparse
 import client
 import os.path
@@ -24,13 +26,21 @@ def main():
     args.verbose = False
     args.interactive = False
 
-    assign = assignment.load_config(args.config, args)
-    assign.load()
+    try:
+        assign = assignment.load_config(args.config, args)
+        assign.load()
 
-    protocol = lock.protocol(args, assign)
-    protocol.on_start()
+        msgs = messages.Messages()
 
-    assign.dump_tests()
+        lock.protocol(args, assign).run(msgs)
+    except (ex.LoadingException, ex.SerializeException) as e:
+        log.warning('Assignment could not instantiate', exc_info=True)
+        print('Error: ' + str(e).strip())
+        exit(1)
+    except (KeyboardInterrupt, EOFError):
+        log.info('Quitting...')
+    else:
+        assign.dump_tests()
 
 if __name__ == '__main__':
     main()

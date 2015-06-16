@@ -15,6 +15,7 @@
         "lock",
         "grading",
         "scoring",
-        "analytics"
+        "analytics",
+        "backup"
     ]
 }

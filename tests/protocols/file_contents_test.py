@@ -2,8 +2,6 @@ from client.protocols import file_contents
 import mock
 import unittest
 
-# TODO(albert): change this to BackupProtocol once server is ready for the
-# change.
 class TestFileContentsProtocol(unittest.TestCase):
     def setUp(self):
         self.cmd_args = mock.Mock()
@@ -15,11 +13,18 @@ class TestFileContentsProtocol(unittest.TestCase):
         self.proto.is_file = self.mockIsFile
         self.proto.read_file = self.mockReadFile
 
+    def callRun(self):
+        messages = {}
+        self.proto.run(messages)
+
+        self.assertIn('file_contents', messages)
+        return messages['file_contents']
+
     def testOnStart_emptySourceList(self):
         self.assignment.src = []
         self.assertEqual({
             'submit': True,
-        }, self.proto.on_start())
+        }, self.callRun())
 
     def testOnStart_validSources(self):
         self.assignment.src = [
@@ -40,7 +45,7 @@ class TestFileContentsProtocol(unittest.TestCase):
             2
             """,
             'submit': True,
-        }, self.proto.on_start())
+        }, self.callRun())
 
     def testOnStart_sourceInvalidFile(self):
         self.assignment.src = [
@@ -55,7 +60,7 @@ class TestFileContentsProtocol(unittest.TestCase):
             'file1': 'contents 1',
             'file2': '',
             'submit': True,
-        }, self.proto.on_start())
+        }, self.callRun())
 
     def testOnStart_duplicateSources(self):
         self.assignment.src = [
@@ -68,7 +73,7 @@ class TestFileContentsProtocol(unittest.TestCase):
         self.assertEqual({
             'file1': 'contents 1',
             'submit': True,
-        }, self.proto.on_start())
+        }, self.callRun())
 
     def mockIsFile(self, filepath):
         return filepath in self.files
