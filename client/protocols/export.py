@@ -59,15 +59,16 @@ class ExportProtocol(models.Protocol):
                         data['current'] = i
                         pickle.dump(data, open(EXPORT_CACHE, "wb"))
                         dl_left = len(data['students']) - i
-                        print("Download failed. Run command again to continue.")
-                        print("Progress is saved in export_cache.pkl.")
+                        print("Download failed. Run the following command to continue:")
+                        print("    python3 ok --export")
                         print("{0} submissions left to download.".format(dl_left))
                         return
                         
             except KeyboardInterrupt:
                 pickle.dump(data, open("export_cache.pkl", "wb"))
                 dl_left = len(data['students']) - i
-                print("Download interrupted. Run command again to continue.")
+                print("Download interrupted. Run the following command to continue:")
+                print("    python3 ok --export")
                 print("Progress is saved in export_cache.pkl.")
                 print("{0} submissions left to download.".format(dl_left))
                 return
