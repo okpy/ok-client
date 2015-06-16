@@ -12,6 +12,8 @@ log = logging.getLogger(__name__)
 
 GAE_DATETIME_FORMAT = "%Y-%m-%d %H:%M:%S.%f"
 
+EXPORT_CACHE = "export_cache.pkl"
+
 class ExportProtocol(models.Protocol):
     """Downloads submissions from the server"""
 
@@ -19,23 +21,24 @@ class ExportProtocol(models.Protocol):
         """If the --export parameter was used, downloads all submissions 
         for the current assignment from the server and then exits
         """
+        if not self.args.export:
+            return
+        
+        self.access_token = auth.authenticate(self.args.authenticate)
+        log.info('Authenticated with access token %s', self.access_token)
+        
         data = None
         try:
-            data = pickle.load(open("export_cache.pkl", "rb"))
-            self.access_token = auth.authenticate(self.args.authenticate)
-            log.info('Authenticated with access token %s', self.access_token)
+            data = pickle.load(open(EXPORT_CACHE, "rb"))
         except IOError:
-            if self.args.export:
-                self.access_token = auth.authenticate(self.args.authenticate)
-                log.info('Authenticated with access token %s', self.access_token)
-                data = {
-                    'endpoint': self.assignment.endpoint   
-                }
-                data['assign'], data['course'] = self.get_ids(data['endpoint'])
-                data['students'] = self.get_students(data['course'])
-                if not data['students']:
-                    return
-                data['current'] = 0
+            data = {
+                'endpoint': self.assignment.endpoint   
+            }
+            data['assign'], data['course'] = self.get_ids(data['endpoint'])
+            data['students'] = self.get_students(data['course'])
+            if not data['students']:
+                return
+            data['current'] = 0
         
         if data:
             i = 0
@@ -45,7 +48,7 @@ class ExportProtocol(models.Protocol):
                 
                 downloads_left = len(data['students']) - data['current']
                 
-                print("{0} submissions left to download".format(downloads_left))
+                print("{0} submissions left to download.".format(downloads_left))
                 
                 for i in range(data['current'], len(data['students'])):
                     student = data['students'][i]
@@ -54,23 +57,24 @@ class ExportProtocol(models.Protocol):
                         data['current'] = i + 1
                     except (IOError, error.HTTPError):
                         data['current'] = i
-                        pickle.dump(data, open("export_cache.pkl", "wb"))
+                        pickle.dump(data, open(EXPORT_CACHE, "wb"))
                         dl_left = len(data['students']) - i
                         print("Download failed. Run command again to continue.")
-                        print("Progress is saved in export_cache.pkl")
-                        print("{0} submissions left to download".format(dl_left))
+                        print("Progress is saved in export_cache.pkl.")
+                        print("{0} submissions left to download.".format(dl_left))
                         return
                         
             except KeyboardInterrupt:
                 pickle.dump(data, open("export_cache.pkl", "wb"))
                 dl_left = len(data['students']) - i
                 print("Download interrupted. Run command again to continue.")
-                print("{0} submissions left to download".format(dl_left))
+                print("Progress is saved in export_cache.pkl.")
+                print("{0} submissions left to download.".format(dl_left))
                 return
                 
             print("Submissions downloaded.")
-            if os.path.exists('export_cache.pkl'):
-                os.remove('export_cache.pkl')
+            if os.path.exists(EXPORT_CACHE):
+                os.remove(EXPORT_CACHE)
         
     def download_submission(self, student, assign_id):
         """Downloads a student's final submission for an assignment"""
