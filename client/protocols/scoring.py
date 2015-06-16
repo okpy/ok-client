@@ -36,7 +36,7 @@ class ScoringProtocol(protocol_models.Protocol):
         contain one entry, mapping (partner) 0 -> total score (float). This
         assumes there is always at least one partner.
         """
-        if not self.args.score:
+        if self.args.export or not self.args.score:
             return
 
         format.print_line('~')
