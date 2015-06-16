@@ -2,15 +2,13 @@
 
 from urllib import request, error
 import json
-import time
-import datetime
-import socket
+import logging
+
+log = logging.getLogger(__name__)
 
 TIMEOUT = 500
-RETRY_LIMIT = 5
             
-def api_request(access_token, server, route, version, log, 
-        insecure=False, arguments={}):
+def api_request(access_token, server, route, insecure=False, arguments={}):
     """Makes a request to the server API and returns the result."""
     try:
         prefix = "http" if insecure else "https"
@@ -30,13 +28,7 @@ def api_request(access_token, server, route, version, log,
         response = ex.read().decode('utf-8')
         response_json = json.loads(response)
         log.warning('Server error message: %s', response_json['message'])
-        try:
-            if ex.code == 401:
-                print("Only members of the course staff can export submissions.")
-                return
-            if ex.code == 403:
-                if software_update(response_json['data']['download_link'], log):
-                    raise SoftwareUpdated
-            return response_json
-        except Exception as e:
-            raise e
+        if ex.code == 401:
+            print("Only members of the course staff can export submissions.")
+            return
+        return response_json

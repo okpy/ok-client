@@ -3,7 +3,6 @@ from client.utils import auth
 from client.utils import network
 from datetime import datetime
 from urllib import error
-import client
 import logging
 import os
 import pickle
@@ -40,42 +39,33 @@ class ExportProtocol(models.Protocol):
                 return
             data['current'] = 0
         
-        if data:
-            i = 0
-            try:
-                if not os.path.exists('submissions'): 
-                    os.makedirs('submissions')
-                
-                downloads_left = len(data['students']) - data['current']
-                
-                print("{0} submissions left to download.".format(downloads_left))
-                
-                for i in range(data['current'], len(data['students'])):
-                    student = data['students'][i]
-                    try:
-                        self.download_submission(student, data['assign'])
-                        data['current'] = i + 1
-                    except (IOError, error.HTTPError):
-                        data['current'] = i
-                        pickle.dump(data, open(EXPORT_CACHE, "wb"))
-                        dl_left = len(data['students']) - i
-                        print("Download failed. Run the following command to continue:")
-                        print("    python3 ok --export")
-                        print("{0} submissions left to download.".format(dl_left))
-                        return
-                        
-            except KeyboardInterrupt:
-                pickle.dump(data, open("export_cache.pkl", "wb"))
-                dl_left = len(data['students']) - i
-                print("Download interrupted. Run the following command to continue:")
-                print("    python3 ok --export")
-                print("Progress is saved in export_cache.pkl.")
-                print("{0} submissions left to download.".format(dl_left))
-                return
-                
-            print("Submissions downloaded.")
-            if os.path.exists(EXPORT_CACHE):
-                os.remove(EXPORT_CACHE)
+        current_student = 0
+        try:
+            if not os.path.exists('submissions'): 
+                os.makedirs('submissions')
+            
+            downloads_left = len(data['students']) - data['current']
+            
+            print("{0} submissions left to download.".format(downloads_left))
+            
+            for current_student in range(data['current'], len(data['students'])):
+                student = data['students'][current_student]
+                try:
+                    self.download_submission(student, data['assign'])
+                except (IOError, error.HTTPError):
+                    data['current'] = current_student
+                    abort(data, len(data['students']), current_student)
+                    return
+                data['current'] = current_student + 1
+                    
+        except KeyboardInterrupt:
+            pickle.dump(data, open("export_cache.pkl", "wb"))
+            abort(data, len(data['students']), current_student)
+            return
+            
+        print("Submissions downloaded.")
+        if os.path.exists(EXPORT_CACHE):
+            os.remove(EXPORT_CACHE)
         
     def download_submission(self, student, assign_id):
         """Downloads a student's final submission for an assignment"""
@@ -103,7 +93,6 @@ class ExportProtocol(models.Protocol):
                 .format(student, subm_id, timestamp))
             f.flush()
             os.fsync(f.fileno())
-        
        
     def get_ids(self, endpoint):
         """Gets the course and assignment id for the given endpoint"""
@@ -115,7 +104,7 @@ class ExportProtocol(models.Protocol):
     def request(self, route, params={}):
         """Makes an API request"""
         return network.api_request(self.access_token, self.args.server, 
-            route, client.__version__, log, self.args.insecure, params)
+            route, self.args.insecure, params)
         
     def get_students(self, course):
         """Gets a list of students enrolled in the course"""
@@ -125,6 +114,11 @@ class ExportProtocol(models.Protocol):
             return
         return [student['user']['email'] for student in response['data']]
 
+def abort(data, total_students, current_student):
+    pickle.dump(data, open(EXPORT_CACHE, "wb"))
+    dl_left = total_students - current_student
+    print("Download failed. Run the following command to continue:")
+    print("    python3 ok --export")
+    print("{0} submissions left to download.".format(dl_left))
 
 protocol = ExportProtocol
-
