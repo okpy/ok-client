@@ -8,6 +8,7 @@ import unittest
 class UnlockProtocolTest(unittest.TestCase):
     def setUp(self):
         self.cmd_args = mock.Mock()
+        self.cmd_args.export = False
         self.assignment = mock.Mock()
         self.proto = unlock.protocol(self.cmd_args, self.assignment)
 

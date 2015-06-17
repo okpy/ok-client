@@ -20,7 +20,7 @@ class BackupProtocol(models.Protocol):
     SUBMISSION_ENDPOINT = '{prefix}://{server}/api/v1/submission?'
 
     def run(self, messages):
-        if self.args.local:
+        if self.args.local or self.args.export:
             return
 
         message_list = self.load_unsent_messages()

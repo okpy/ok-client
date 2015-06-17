@@ -49,6 +49,10 @@ def parse_input():
     parser.add_argument('--timeout', type=int, default=10,
                         help="set the timeout duration for running tests")
 
+    # Submission Export
+    parser.add_argument('--export', action='store_true',
+                        help="Downloads all submissions for the current assignment")
+
     # Debug information
     parser.add_argument('--version', action='store_true',
                         help="Prints the version number and quits")
