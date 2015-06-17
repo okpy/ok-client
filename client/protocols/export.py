@@ -10,8 +10,8 @@ import pickle
 log = logging.getLogger(__name__)
 
 GAE_DATETIME_FORMAT = "%Y-%m-%d %H:%M:%S.%f"
-
 EXPORT_CACHE = "export_cache.pkl"
+SUBMISSION_DIR = "submissions"
 
 class ExportProtocol(models.Protocol):
     """Downloads submissions from the server"""
@@ -41,8 +41,8 @@ class ExportProtocol(models.Protocol):
         
         current_student = 0
         try:
-            if not os.path.exists('submissions'): 
-                os.makedirs('submissions')
+            if not os.path.exists(SUBMISSION_DIR): 
+                os.makedirs(SUBMISSION_DIR)
             
             downloads_left = len(data['students']) - data['current']
             
@@ -79,7 +79,7 @@ class ExportProtocol(models.Protocol):
         contents = raw_data['submission']['backup']['messages']['file_contents']
         timestamp = datetime.strptime(raw_data['submission']['backup']['server_time'], GAE_DATETIME_FORMAT)
         subm_id = raw_data['submission']['backup']['id']
-        subm_dir = os.path.join('submissions', student[0])
+        subm_dir = os.path.join(SUBMISSION_DIR, student[0])
         os.makedirs(subm_dir)
         for filename in contents:
             if filename != 'submit':
