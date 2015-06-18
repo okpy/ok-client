@@ -3,6 +3,7 @@ test = {
   'points': 3,
   'suites': [
     {
+      'type': 'concept',
       'cases': [
         {
           'question': 'What is the domain and range of the square function?',
@@ -15,7 +16,26 @@ test = {
           ],
         }
       ],
-      'type': 'concept'
+    },
+    {
+      'type': 'wwpp',
+      'cases': [
+        {
+          'code': r"""
+          >>> square(3)
+          9
+          >>> square(5)
+          25
+          """
+        },
+        {
+          'code': r"""
+          >>> print(print(square(4)))
+          16
+          None
+          """
+        }
+      ],
     },
     {
       'type': 'doctest',
