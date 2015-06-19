@@ -28,7 +28,7 @@ class BackupProtocol(models.Protocol):
 
         self.check_ssl()
 
-        access_token = auth.authenticate(self.args.authenticate)
+        access_token = auth.authenticate(False)
         log.info('Authenticated with access token %s', access_token)
 
         response = self.send_all_messages(access_token, message_list)
