@@ -9,6 +9,7 @@ class GradingProtocolTest(unittest.TestCase):
     def setUp(self):
         self.cmd_args = mock.Mock()
         self.cmd_args.score = False
+        self.cmd_args.export = False
         self.assignment = mock.Mock()
         self.proto = grading.protocol(self.cmd_args, self.assignment)
 

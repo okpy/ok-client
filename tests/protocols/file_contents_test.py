@@ -6,6 +6,7 @@ class TestFileContentsProtocol(unittest.TestCase):
     def setUp(self):
         self.cmd_args = mock.Mock()
         self.cmd_args.submit = True
+        self.cmd_args.export = False
         self.assignment = mock.MagicMock()
         self.files = {}
 
