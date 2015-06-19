@@ -89,6 +89,9 @@ def main():
 
     assign = None
     try:
+        if args.authenticate:
+            auth.authenticate(True)
+
         # Instantiating assignment
         assign = assignment.load_config(args.config, args)
         assign.load()
