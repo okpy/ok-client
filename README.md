@@ -41,3 +41,23 @@ To run all tests, use the following command:
 
     nosetests tests
 
+## Deployment
+
+To deploy a new version of ok-client, do the following:
+
+1. Change the version number in `client/__init__.py`.
+2. Make sure your virtualenv is activated. Also make sure that your `~/.pypirc`
+   contains okpy's Pypi credentials.
+3. From the base of the repo, make sure your virtualenv is activated and run
+
+        python setup.py sdist upload
+
+4. Make sure to deploy a development version locally:
+
+        python setup.py develop
+
+5. Create an `ok` binary:
+
+        ok-publish
+
+6. Draft a new release on Github with the newly created `ok` binary.
