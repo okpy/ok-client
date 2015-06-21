@@ -52,8 +52,9 @@ class ExportProtocol(models.Protocol):
                 student = data['students'][current_student]
                 try:
                     self.download_submission(student, data['assign'])
-                except (IOError, error.HTTPError):
+                except (IOError, error.HTTPError) as e:
                     data['current'] = current_student
+                    print(e)
                     abort(data, len(data['students']), current_student)
                     return
                 data['current'] = current_student + 1
@@ -80,7 +81,8 @@ class ExportProtocol(models.Protocol):
         timestamp = datetime.strptime(raw_data['submission']['backup']['server_time'], GAE_DATETIME_FORMAT)
         subm_id = raw_data['submission']['backup']['id']
         subm_dir = os.path.join(SUBMISSION_DIR, student[0])
-        os.makedirs(subm_dir)
+        if not os.path.exists(subm_dir):
+            os.makedirs(subm_dir)
         for filename in contents:
             if filename != 'submit':
                 with open(os.path.join(subm_dir, filename), "w+") as f:
