@@ -75,10 +75,12 @@ def display_breakdown(scores):
     finalized_scores = {}
     print('Score:')
     if len(partner_totals) == 0:
-        partner_totals[NO_PARTNER_NAME] = 0
-    for partner, score in sorted(partner_totals.items()):
-        print('    Partner {}: {}'.format(partner, score + shared_points))
-        finalized_scores[partner] = score + shared_points
+        print('    {}: {}'.format(NO_PARTNER_NAME, shared_points))
+        finalized_scores[NO_PARTNER_NAME] = shared_points
+    else:
+        for partner, score in sorted(partner_totals.items()):
+            print('    Partner {}: {}'.format(partner, score + shared_points))
+            finalized_scores[partner] = score + shared_points
     return finalized_scores
 
 protocol = ScoringProtocol
