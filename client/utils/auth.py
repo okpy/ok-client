@@ -96,14 +96,14 @@ def authenticate(force=False):
         except Exception as _:
             print('Performing authentication')
 
-    print("Please enter your CalNet ID.")
-    calnet_id = input("CalNet ID: ")
+    print("Please enter your bCourses email (@berkeley.edu).")
+    email = input("bCourses email: ")
 
     c = Client(auth_endpoint='https://accounts.google.com/o/oauth2/auth',
                client_id=CLIENT_ID)
     url = c.auth_uri(scope="profile email", access_type='offline',
                      name='ok-server', redirect_uri=REDIRECT_URI,
-                     login_hint='%s@berkeley.edu' % (calnet_id))
+                     login_hint=email)
 
     webbrowser.open_new(url)
 
