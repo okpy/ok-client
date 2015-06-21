@@ -35,6 +35,8 @@ def parse_input():
                         help="Specify verbose mode")
     parser.add_argument('--debug', action='store_true',
                         help="show debug statements")
+    parser.add_argument('--export', action='store_true',
+                        help="This is a nop. Used for compatibility with OK.")
     return parser.parse_args()
 
 def main():
