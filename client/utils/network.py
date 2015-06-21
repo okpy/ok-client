@@ -2,129 +2,33 @@
 
 from urllib import request, error
 import json
-import time
-import datetime
-import socket
+import logging
+
+log = logging.getLogger(__name__)
 
 TIMEOUT = 500
-RETRY_LIMIT = 5
-
-def send_to_server(access_token, messages, name, server, version, log,
-        insecure=False):
-    """Send messages to server, along with user authentication."""
-    data = {
-        'assignment': name,
-        'messages': messages,
-    }
+            
+def api_request(access_token, server, route, insecure=False, arguments={}):
+    """Makes a request to the server API and returns the result."""
     try:
         prefix = "http" if insecure else "https"
-        address = prefix + '://' + server + '/api/v1/submission'
-        serialized = json.dumps(data).encode(encoding='utf-8')
-        # TODO(denero) Wrap in timeout (maybe use PR #51 timed execution).
-        # TODO(denero) Send access token with the request
-        address += "?access_token={0}&client_version={1}".format(
-            access_token, version)
-
-        log.info('Sending data to %s', address)
+        address = prefix + "://" + server + '/api/v1'
+        address += route if route.startswith('/') else '/' + route
+        address += "?access_token={0}".format(
+            access_token)
+        for arg in arguments:
+            address += "&{0}={1}".format(arg, arguments[arg])
+        log.info('Requesting data from %s', address)
         req = request.Request(address)
-        req.add_header("Content-Type", "application/json")
-        response = request.urlopen(req, serialized, TIMEOUT)
+        arguments = []
+        response = request.urlopen(req, None, TIMEOUT)
         return json.loads(response.read().decode('utf-8'))
     except error.HTTPError as ex:
-        log.warning('Error while sending to server: %s', str(ex))
+        log.warning('Error while requesting from server: %s', str(ex))
         response = ex.read().decode('utf-8')
         response_json = json.loads(response)
         log.warning('Server error message: %s', response_json['message'])
-        try:
-            if ex.code == 403:
-                if software_update(response_json['data']['download_link'], log):
-                    raise SoftwareUpdated
-            return {}
-        except SoftwareUpdated as e:
-            raise e
-        #TODO(soumya) Figure out what exceptions can happen here specifically
-        # I'll fix this after the ants project is over so we don't risk breaking
-        # anything.
-        except Exception as e:
-            log.warning('Could not connect to %s', server)
-
-def dump_to_server(access_token, msg_list, name, server, insecure, version, log, send_all=False):
-    stop_time = datetime.datetime.now() + datetime.timedelta(milliseconds=TIMEOUT)
-    initial_length = len(msg_list)
-    retries = RETRY_LIMIT
-    first_response = 1
-    while msg_list:
-        if not send_all and datetime.datetime.now() > stop_time:
-            print('Connection to server timed out after {} milliseconds'.format(TIMEOUT))
+        if ex.code == 401:
+            print("Only members of the course staff can export submissions.")
             return
-        message = msg_list[-1]
-        try:
-            response = send_to_server(access_token, message, name, server, version, log, insecure)
-
-            if response:
-                if type(first_response) == int and first_response > 0:
-                    first_response -= 1
-                else:
-                    first_response = response
-                msg_list.pop()
-            elif retries > 0:
-                retries -= 1
-            else:
-                print("Submission failed. Please check your network connection and try again")
-                return
-
-            if send_all:
-                print("Submitting project... {0}% complete".format(100 - round(len(msg_list)*100/initial_length), 2))
-
-        except SoftwareUpdated:
-            print("ok was updated. We will now terminate this run of ok.")
-            log.info('ok was updated. Abort now; messages will be sent '
-                     'to server on next invocation')
-            return
-        except error.URLError as ex:
-            log.warning('URLError: %s', str(ex))
-        except socket.timeout as ex:
-            log.warning("socket.timeout: %s", str(ex))
-
-    # Assumption is that msg_list is ordered in chronogical order of creation. The last item in the list
-    # is the stuff from this run, so the response from there contains the id that we can then display.
-    return first_response
-
-def server_timer():
-    """Timeout for the server."""
-    time.sleep(0.8)
-
-#####################
-# Software Updating #
-#####################
-
-class SoftwareUpdated(BaseException):
-    pass
-
-def software_update(download_link, log):
-    """Check for the latest version of ok and update this file accordingly.
-
-    RETURN:
-    bool; True if the newest version of ok was written to the filesystem, False
-    otherwise.
-    """
-    log.info('Retrieving latest version from %s', download_link)
-
-    file_destination = 'ok'
-    try:
-        req = request.Request(download_link)
-        log.info('Sending request to %s', download_link)
-        response = request.urlopen(req)
-
-        zip_binary = response.read()
-        log.info('Writing new version to %s', file_destination)
-        with open(file_destination, 'wb') as f:
-            f.write(zip_binary)
-            os.fsync(f)
-        log.info('Successfully wrote to %s', file_destination)
-        return True
-    except error.HTTPError as e:
-        log.warning('Error when downloading new version of ok: %s', str(e))
-    except IOError as e:
-        log.warning('Error writing to %s: %s', file_destination, str(e))
-    return False
+        return response_json

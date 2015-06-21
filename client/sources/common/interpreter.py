@@ -8,8 +8,10 @@ import textwrap
 # TODO(albert): come up with a better cross-platform readline solution.
 try:
     import readline
+    assert hasattr(readline, 'clear_history')
+    assert hasattr(readline, 'add_history')
     HAS_READLINE = True
-except ImportError:
+except (ImportError, AssertionError):
     HAS_READLINE = False
 
 class CodeCase(models.Case):

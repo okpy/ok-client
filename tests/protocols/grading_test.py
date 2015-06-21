@@ -9,18 +9,25 @@ class GradingProtocolTest(unittest.TestCase):
     def setUp(self):
         self.cmd_args = mock.Mock()
         self.cmd_args.score = False
+        self.cmd_args.export = False
         self.assignment = mock.Mock()
         self.proto = grading.protocol(self.cmd_args, self.assignment)
 
+    def callRun(self):
+        messages = {}
+        self.proto.run(messages)
+
+        self.assertIn('grading', messages)
+        return messages['grading']
+
     def testOnInteract_doNothingWhenScoring(self):
         self.cmd_args.score = True
-        results = self.proto.on_interact()
+        results = self.proto.run({})
         self.assertEqual(None, results)
 
     def testOnInteract_noTests(self):
         self.assignment.specified_tests = []
-        results = self.proto.on_interact()
-        self.assertIsInstance(results, dict)
+        self.assertIsInstance(self.callRun(), dict)
 
     def testOnInteract_withTests(self):
         test = mock.Mock(spec=models.Test)
@@ -30,6 +37,5 @@ class GradingProtocolTest(unittest.TestCase):
             'locked': 0,
         }
         self.assignment.specified_tests = [test]
-        results = self.proto.on_interact()
-        self.assertIsInstance(results, dict)
+        self.assertIsInstance(self.callRun(), dict)
 

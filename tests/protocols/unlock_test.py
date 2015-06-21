@@ -8,24 +8,31 @@ import unittest
 class UnlockProtocolTest(unittest.TestCase):
     def setUp(self):
         self.cmd_args = mock.Mock()
+        self.cmd_args.export = False
         self.assignment = mock.Mock()
         self.proto = unlock.protocol(self.cmd_args, self.assignment)
 
     def testOnInteract_noTests(self):
         self.assignment.specified_tests = []
+        messages = {}
         try:
-            results = self.proto.on_interact()
+            self.proto.run(messages)
         except (KeyboardInterrupt, EOFError):
-            self.fail('UnlockProtocol.on_interact should abort gracefully')
-        self.assertIsInstance(results, dict)
+            self.fail('UnlockProtocol.run should abort gracefully')
+
+        self.assertIn('unlock', messages)
+        self.assertIsInstance(messages['unlock'], dict)
 
     def testOnInteract_withTests(self):
         self.assignment.specified_tests = [mock.Mock(spec=models.Test)]
+        messages = {}
         try:
-            results = self.proto.on_interact()
+            self.proto.run(messages)
         except (KeyboardInterrupt, EOFError):
-            self.fail('UnlockProtocol.on_interact should abort gracefully')
-        self.assertIsInstance(results, dict)
+            self.fail('UnlockProtocol.run should abort gracefully')
+
+        self.assertIn('unlock', messages)
+        self.assertIsInstance(messages['unlock'], dict)
 
 class InteractTest(unittest.TestCase):
     SHORT_ANSWER = ['42']

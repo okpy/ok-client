@@ -10,11 +10,13 @@
         "hw1.py:double": "doctest"
     },
     "protocols": [
+        "export",
         "file_contents",
         "unlock",
         "lock",
         "grading",
         "scoring",
-        "analytics"
+        "analytics",
+        "backup"
     ]
 }
