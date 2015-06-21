@@ -12,8 +12,10 @@ import logging
 log = logging.getLogger(__name__)
 
 #####################
-# Testing Mechanism #
+# Scoring Mechanism #
 #####################
+
+NO_PARTNER_NAME = 'Total'
 
 class ScoringProtocol(protocol_models.Protocol):
     """A Protocol that runs tests, formats results, and reports a student's
@@ -26,15 +28,12 @@ class ScoringProtocol(protocol_models.Protocol):
         to a partner. If test.partner is omitted (i.e. core.NoValue), the score
         for that test is added to every partner's score.
 
-        RETURNS
-        dict; mapping of partner (int) -> finalized scores (float).
-
         If there are no tests, the mapping will only contain one entry, mapping
-        (partner) 0 -> 0 (total score).
+        "Total" -> 0 (total score).
 
         If there are no partners specified by the tests, the mapping will only
-        contain one entry, mapping (partner) 0 -> total score (float). This
-        assumes there is always at least one partner.
+        contain one entry, mapping "Total" (partner) -> total score (float).
+        This assumes there is always at least one partner.
         """
         if self.args.export or not self.args.score:
             return
@@ -58,7 +57,7 @@ def display_breakdown(scores):
     """Prints the point breakdown given a dictionary of scores.
 
     RETURNS:
-    dict; maps partner (int) -> finalized score (float)
+    dict; maps partner (str) -> finalized score (float)
     """
     partner_totals = {}
 
@@ -74,10 +73,9 @@ def display_breakdown(scores):
         del partner_totals[None]
 
     finalized_scores = {}
-    print('Score')
+    print('Score:')
     if len(partner_totals) == 0:
-        # Add partner 0 as only partner.
-        partner_totals[0] = 0
+        partner_totals[NO_PARTNER_NAME] = 0
     for partner, score in sorted(partner_totals.items()):
         print('    Partner {}: {}'.format(partner, score + shared_points))
         finalized_scores[partner] = score + shared_points
