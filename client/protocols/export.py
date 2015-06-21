@@ -52,9 +52,8 @@ class ExportProtocol(models.Protocol):
                 student = data['students'][current_student]
                 try:
                     self.download_submission(student, data['assign'])
-                except (IOError, error.HTTPError) as e:
+                except (IOError, error.HTTPError):
                     data['current'] = current_student
-                    print(e)
                     abort(data, len(data['students']), current_student)
                     return
                 data['current'] = current_student + 1
