@@ -80,7 +80,8 @@ class ExportProtocol(models.Protocol):
         timestamp = datetime.strptime(raw_data['submission']['backup']['server_time'], GAE_DATETIME_FORMAT)
         subm_id = raw_data['submission']['backup']['id']
         subm_dir = os.path.join(SUBMISSION_DIR, student[0])
-        os.makedirs(subm_dir)
+        if not os.path.exists(subm_dir):
+            os.makedirs(subm_dir)
         for filename in contents:
             if filename != 'submit':
                 with open(os.path.join(subm_dir, filename), "w+") as f:
