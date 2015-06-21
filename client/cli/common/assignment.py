@@ -41,6 +41,10 @@ def get_config(config):
             result = json.load(f, object_pairs_hook=collections.OrderedDict)
     except IOError:
         raise ex.LoadingException('Error loading config: {}'.format(config))
+    except ValueError:
+        raise ex.LoadingException(textwrap.dedent("""
+        {0} is a malformed .ok configuration file. Please re-download {0}.
+        """.format(config)))
     else:
         log.info('Loaded config from {}'.format(config))
         return result
