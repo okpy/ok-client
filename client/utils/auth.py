@@ -19,7 +19,7 @@ REFRESH_FILE = '.ok_refresh'
 REDIRECT_HOST = "localhost"
 TIMEOUT = 10
 
-SERVER = 'http://localhost:8080'
+SERVER = 'http://ok-server.appspot.com'
 
 def pick_free_port():
     import socket
