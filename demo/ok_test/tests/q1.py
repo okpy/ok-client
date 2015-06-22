@@ -5,7 +5,6 @@ test = {
     {
       'cases': [
         {
-          'question': 'What is the domain and range of the square function?',
           'answer': 'Domain is numbers. Range is numbers',
           'choices': [
             'Domain is numbers. Range is numbers',
@@ -13,18 +12,21 @@ test = {
             'Domain is strings. Range is numbers',
             'Domain is strings. Range is strings'
           ],
+          'hidden': False,
+          'question': 'What is the domain and range of the square function?'
         }
       ],
+      'scored': False,
       'type': 'concept'
     },
     {
-      'type': 'doctest',
       'cases': [
         {
           'code': r"""
           >>> square(3)
           9
           """,
+          'hidden': False
         },
         {
           'code': r"""
@@ -32,7 +34,7 @@ test = {
           4
           # explanation: Squaring a negative number
           """,
-          'hidden': True,
+          'hidden': True
         },
         {
           'code': r"""
@@ -40,22 +42,24 @@ test = {
           0
           # explanation: Squaring zero
           """,
-          'hidden': True,
+          'hidden': True
         },
         {
           'code': r"""
           >>> 1 / square(0)
           ZeroDivisionError
           """,
-          'hidden': True,
+          'hidden': True
         }
       ],
+      'scored': True,
       'setup': r"""
       >>> from hw1 import *
       """,
-      'teardown': """
+      'teardown': r"""
       >>> print('Teardown code')
       """,
+      'type': 'doctest'
     }
   ]
 }
