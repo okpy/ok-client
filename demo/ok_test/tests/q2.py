@@ -3,10 +3,8 @@ test = {
   'points': 2,
   'suites': [
     {
-      'type': 'concept',
       'cases': [
         {
-          'question': 'What is the domain and range of the double function?',
           'answer': 'Domain is numbers. Range is numbers',
           'choices': [
             'Domain is numbers. Range is numbers',
@@ -14,17 +12,21 @@ test = {
             'Domain is strings. Range is numbers',
             'Domain is strings. Range is strings'
           ],
+          'hidden': False,
+          'question': 'What is the domain and range of the double function?'
         }
       ],
+      'scored': False,
+      'type': 'concept'
     },
     {
-      'type': 'doctest',
       'cases': [
         {
           'code': r"""
           >>> double(3)
           6
           """,
+          'hidden': False
         },
         {
           'code': r"""
@@ -32,11 +34,15 @@ test = {
           8
           # explanation: doubling a negative number
           """,
-        },
+          'hidden': False
+        }
       ],
+      'scored': True,
       'setup': r"""
       >>> from hw1 import *
       """,
+      'teardown': '',
+      'type': 'doctest'
     }
   ]
 }

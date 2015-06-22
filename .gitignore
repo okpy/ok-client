@@ -22,3 +22,7 @@ dist
 # ok-related files
 *.ok_refresh
 *.ok_messages
+
+# IDE
+*.iml
+.idea/

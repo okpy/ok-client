@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-
 from .sanction import Client
 from urllib.parse import urlparse, parse_qs
 import http.server
@@ -7,6 +6,9 @@ import pickle
 import sys
 import time
 import webbrowser
+from urllib.request import urlopen
+import json
+from .html import auth_html, partial_course_html, partial_nocourse_html, red_css
 
 CLIENT_ID = \
     '931757735585-vb3p8g53a442iktc4nkv5q8cbjrtuonv.apps.googleusercontent.com'
@@ -17,16 +19,7 @@ REFRESH_FILE = '.ok_refresh'
 REDIRECT_HOST = "localhost"
 TIMEOUT = 10
 
-SUCCESS_HTML = """
-<html>
-<head>
-<title>Authentication Success</title>
-</head>
-<body>
-<b>Ok! You have successfully authenticated.</b>
-</body>
-</html>
-"""
+SERVER = 'http://ok-server.appspot.com'
 
 def pick_free_port():
     import socket
@@ -96,14 +89,14 @@ def authenticate(force=False):
         except Exception as _:
             print('Performing authentication')
 
-    print("Please enter your CalNet ID.")
-    calnet_id = input("CalNet ID: ")
+    print("Please enter your bCourses email (@berkeley.edu).")
+    email = input("bCourses email: ")
 
     c = Client(auth_endpoint='https://accounts.google.com/o/oauth2/auth',
                client_id=CLIENT_ID)
     url = c.auth_uri(scope="profile email", access_type='offline',
                      name='ok-server', redirect_uri=REDIRECT_URI,
-                     login_hint='%s@berkeley.edu' % (calnet_id))
+                     login_hint=email)
 
     webbrowser.open_new(url)
 
@@ -128,7 +121,7 @@ def authenticate(force=False):
             self.send_response(200)
             self.send_header("Content-type", "text/html")
             self.end_headers()
-            self.wfile.write(bytes(SUCCESS_HTML, "utf-8"))
+            self.wfile.write(bytes(success_page(SERVER, email), "utf-8"))
 
         def log_message(self, format, *args):
             return
@@ -139,6 +132,61 @@ def authenticate(force=False):
 
     update_storage(access_token, expires_in, refresh_token)
     return access_token
+
+
+def success_page(server, email):
+    """Generate HTML for the auth page - fetch courses and plug into templates"""
+    API = server + '/enrollment?email=%s' % email
+    data = urlopen(API).read().decode("utf-8")
+    return success_auth(success_courses(email, data, server))
+
+
+def success_courses(email, response, server):
+    """Generates HTML for individual courses"""
+    courses = json.loads(response)
+    if len(courses) > 0:
+        template_course = partial_course_html
+        html = ''
+        for course in courses:
+            html += template_course.format(**course)
+        status = 'Scroll for more: '+', '.join([c['display_name'] for c in courses])
+        byline = '"%s" is currently enrolled in %s.' % (email, pluralize(len(courses), ' course'))
+        title = 'Ok!'
+        head = ''
+    else:
+        html = partial_nocourse_html
+        byline = 'The email "%s" is not enrolled. Is it correct?' % email
+        status = 'No courses found'
+        title = 'Uh oh'
+        head = '<style>%s</style>' % red_css
+    return html, status, byline, title, head, server
+
+
+def success_auth(data):
+    """Generates finalized HTML"""
+    return auth_html.format(
+        site=data[5],
+        status=data[1],
+        courses=data[0],
+        byline=data[2],
+        title=data[3],
+        head=data[4])
+
+import os
+
+
+def get_file(relative_path, purpose):
+    dir = os.path.dirname(__file__)
+    filename = os.path.join(dir, relative_path)
+    return open(filename, purpose)
+
+
+def get_contents(relative_path, purpose='r'):
+    return get_file(relative_path, purpose).read()
+
+
+def pluralize(num, string):
+    return str(num)+string+('s' if num != 1 else '')
 
 if __name__ == "__main__":
     print(authenticate())
