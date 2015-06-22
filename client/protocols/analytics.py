@@ -1,6 +1,7 @@
 """Implements the AnalyticsProtocol, which keeps track of configuration
 for the ok grading session.
 """
+import logging
 import re
 
 from client.protocols.common import models
@@ -24,12 +25,12 @@ class AnalyticsProtocol(models.Protocol):
             # TODO(denero) Get the canonical name of the question
             statistics['question'] = self.args.question
 
-        # TODO(Jack) start from here: for adding the file analysis
-        statistics['started'] = self.analyze_file(messages['file_contents'])
+        statistics['started'] = self.check_start(messages['file_contents'])
+        print("DEBUG:" + statistics['started'])
 
         messages['analytics'] = statistics
 
-    def analyze_file(self, files):
+    def check_start(self, files):
         """returns a dictionary where the key is question number, and the value
         signals whether the question has been started.
         """
@@ -47,10 +48,6 @@ class AnalyticsProtocol(models.Protocol):
 
         q_status = {}
 
-        # tags = [i for i in range(len(lines)) if
-        #     begin.match(lines[i]) or end.match(lines[i])]
-        #
-        # if len(tag)
         for path in files:
             lines = files[path].splitlines()
             if len(lines) == 0:
@@ -58,36 +55,34 @@ class AnalyticsProtocol(models.Protocol):
             line_num = 0
             started = False
             in_block = False
-            prev_q_tag = None
+            prev_begin_tag = None
+
             while line_num < len(lines):
                 line = lines[line_num]
                 begin_match = begin.match(line)
                 end_match = end.match(line)
                 if begin_match:
                     q_tag = begin_match.group(1)
-                    prev_q_tag = q_tag
-                    started = True
                     if not in_block:
                         in_block = True
                     else:
-                        # write current q_tag, started to dictionary
-                        if not (q_tag in q_status and q_status[q_tag]):
-                            q_status[q_tag] = started
-                        started = True
-                        in_block = True
+                        if not (prev_begin_tag in q_status and q_status[prev_begin_tag]):
+                            q_status[prev_begin_tag] = True
+                    prev_begin_tag = q_tag
+                    started = False
                 elif end_match:
                     q_tag = end_match.group(1)
                     if not (q_tag in q_status and q_status[q_tag]):
-                        if q_tag == prev_q_tag:
+                        if q_tag == prev_begin_tag:
                             q_status[q_tag] = started
                         else:
                             q_status[q_tag] = True
-                    started = False
                     in_block = False
-                    prev_q_tag = None
                 else:
                     if in_block:
-                        if not replace.search(line) or not line.strip():
+                        if not (replace.search(line) or (not line.strip())):
                             started = True
                 line_num += 1
             return q_status
+
+protocol = AnalyticsProtocol
