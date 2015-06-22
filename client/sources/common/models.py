@@ -5,7 +5,7 @@ from client.sources.common import core
 class Test(core.Serializable):
     name = core.String()
     points = core.Float()
-    partner = core.Int(optional=True)
+    partner = core.String(optional=True)
 
     def run(self):
         """Subclasses should override this method to run tests."""
