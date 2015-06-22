@@ -89,7 +89,7 @@ def authenticate(force=False):
         except Exception as _:
             print('Performing authentication')
 
-    print("Please enter your bCourses email (@berkeley.edu).")
+    print("Please enter your bCourses email.")
     email = input("bCourses email: ")
 
     c = Client(auth_endpoint='https://accounts.google.com/o/oauth2/auth',
