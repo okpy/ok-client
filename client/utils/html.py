@@ -1,3 +1,4 @@
+
 auth_html = """
 <html>
 <head>

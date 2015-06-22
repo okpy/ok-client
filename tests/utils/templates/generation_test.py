@@ -2,7 +2,7 @@ from client.utils.auth import success_page, success_auth, success_courses, get_f
 import unittest
 
 
-class SuccessPageTest(unittest.TestCase):
+class TemplateGenerationTest(unittest.TestCase):
 	
 	def write(self, file, html):
 		get_file(file, 'w').write(html)
