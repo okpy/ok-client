@@ -21,7 +21,7 @@ auth_html = """
 <section class="top center-container">
     <div class="center">
         <h1 class="title">{title}</h1>
-        <h2 class="subtitle">You have been authenticated {byline}</h2>
+        <h2 class="subtitle">{byline}</h2>
         <span class="break">
         <a href="{site}" class="button">Dashboard</a>
         <p class="copy">or <a href="{site}/static/student/tour.html">take a tour</a></p>

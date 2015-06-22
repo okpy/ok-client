@@ -138,10 +138,10 @@ def success_page(server, email):
     """Generate HTML for the auth page - fetch courses and plug into templates"""
     API = server + '/enrollment?email=%s' % email
     data = urlopen(API).read().decode("utf-8")
-    return success_auth(success_courses(data, server))
+    return success_auth(success_courses(email, data, server))
 
 
-def success_courses(response, server):
+def success_courses(email, response, server):
     """Generates HTML for individual courses"""
     courses = json.loads(response)
     if len(courses) > 0:
@@ -150,12 +150,12 @@ def success_courses(response, server):
         for course in courses:
             html += template_course.format(**course)
         status = 'Scroll for more: '+', '.join([c['display_name'] for c in courses])
-        byline = ' and are currently enrolled in %s.' % pluralize(len(courses), ' course')
+        byline = '"%s" is currently enrolled in %s.' % (email, pluralize(len(courses), ' course'))
         title = 'Ok!'
         head = ''
     else:
         html = partial_nocourse_html
-        byline = ', but this email is not enrolled. Is it correct?'
+        byline = 'The email "%s" is not enrolled. Is it correct?' % email
         status = 'No courses found'
         title = 'Uh oh'
         head = '<style>%s</style>' % red_css
