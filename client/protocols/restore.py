@@ -3,10 +3,8 @@ from client.utils import auth
 from client.utils import network
 from datetime import datetime
 from urllib import error
-import client
 import logging
 import os
-import pickle
 import shutil
 
 log = logging.getLogger(__name__)
@@ -29,7 +27,10 @@ class RestoreProtocol(models.Protocol):
         
         print('Loading backups...')
         
-        user = self.request('user')['data']['results'][0]
+        response = self.request('user')
+        if not response:
+            print('Could not connect to server')
+        user = response['data']['results'][0]
         email = user['email'][0]
         assign_id = self.get_assign_id(self.assignment.endpoint)
         params = {
