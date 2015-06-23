@@ -83,6 +83,12 @@ class AnalyticsProtocol(models.Protocol):
                         if not (replace.search(line) or (not line.strip())):
                             started = True
                 line_num += 1
-            return q_status
+
+            # check if last tag is a begin tag alone
+            if (in_block and
+                (not (prev_begin_tag in q_status and q_status[prev_begin_tag]))):
+                q_status[prev_begin_tag] = True
+
+        return q_status
 
 protocol = AnalyticsProtocol
