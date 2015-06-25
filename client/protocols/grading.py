@@ -39,12 +39,17 @@ class GradingProtocol(models.Protocol):
         locked = 0
 
         analytics = {}
-        started = messages['analytics']['started']
+        # check if analytics info is in messages
+        if 'analytics' in messages:
+            started = messages['analytics']['started']
+        else:
+            started = None
 
         for test in self.assignment.specified_tests:
             log.info('Check if tests for {} need to run'.format(test.name))
             # run test if the question is not detected, or question detected and started
-            if test.name not in started or started[test.name]:
+            if (started is None or
+                test.name not in started or started[test.name]):
                 log.info('Running tests for {}'.format(test.name))
                 results = test.run()
                 passed += results['passed']
