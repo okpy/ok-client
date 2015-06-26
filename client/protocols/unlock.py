@@ -7,6 +7,7 @@ compatible with the UnlockProtocol.
 
 from client.protocols.common import models
 from client.utils import format
+from datetime import datetime
 import hmac
 import logging
 import random
@@ -28,10 +29,13 @@ class UnlockProtocol(models.Protocol):
         'exit()',
         'quit()',
     )
+    TIMESTAMP_FORMAT = '%Y-%m-%d %H:%M:%S.%f'
 
     def __init__(self, cmd_args, assignment):
         super().__init__(cmd_args, assignment)
         self.hash_key = assignment.name
+        self.analytics = {}
+        self.current_test = None
 
     def run(self, messages):
         """Responsible for unlocking each test.
@@ -55,11 +59,12 @@ class UnlockProtocol(models.Protocol):
         print('Type {} to quit'.format(self.EXIT_INPUTS[0]))
         print()
 
-        analytics = {}
         for test in self.assignment.specified_tests:
             log.info('Unlocking test {}'.format(test.name))
+            self.current_test = test.name
+
             try:
-                analytics[test.name] = test.unlock(self.interact)
+                test.unlock(self.interact)
             except (KeyboardInterrupt, EOFError):
                 try:
                     # TODO(albert): When you use Ctrl+C in Windows, it
@@ -71,17 +76,19 @@ class UnlockProtocol(models.Protocol):
                     pass
                 print()
                 break
-        messages['unlock'] = analytics
+        messages['unlock'] = self.analytics
 
-    def interact(self, answer, choices=None, randomize=True):
+    def interact(self, question, answer, choices=None, randomize=True):
         """Reads student input for unlocking tests until the student
         answers correctly.
 
         PARAMETERS:
+        question  -- str; the question prompt
         answer    -- list; a list of locked lines in a test case answer.
         choices   -- list or None; a list of choices. If None or an
                      empty list, signifies the question is not multiple
                      choice.
+        randomize -- bool; if True, randomizes the choices on first invocation.
 
         DESCRIPTION:
         Continually prompt the student for an answer to an unlocking
@@ -98,22 +105,23 @@ class UnlockProtocol(models.Protocol):
         list; the correct solution (that the student supplied). Each element
         in the list is a line of the correct output.
         """
-        # attempts = 0
         if randomize and choices:
             choices = random.sample(choices, len(choices))
+
         correct = False
         while not correct:
-            # attempts += 1
             if choices:
                 assert len(answer) == 1, 'Choices must have 1 line of output'
                 choice_map = self._display_choices(choices)
 
+            question_timestamp = datetime.now()
             input_lines = []
-            for i in range(len(answer)):
+
+            for line_number, line in enumerate(answer):
                 if len(answer) == 1:
                     prompt = self.PROMPT
                 else:
-                    prompt = '(line {}){}'.format(i + 1, self.PROMPT)
+                    prompt = '(line {}){}'.format(line_number + 1, self.PROMPT)
 
                 student_input = format.normalize(self._input(prompt))
                 self._add_history(student_input)
@@ -123,29 +131,26 @@ class UnlockProtocol(models.Protocol):
                 if choices and student_input in choice_map:
                     student_input = choice_map[student_input]
 
-                if not self._verify(student_input, answer[i]):
+                input_lines.append(student_input)
+                if not self._verify(student_input, line):
                     break
-                else:
-                    input_lines.append(student_input)
             else:
                 correct = True
 
-
-            # TODO(albert): record analytis
-            # Performt his before the function exits?
-            # self._analytics[self._analytics['current']].append((attempts, correct))
-
-            # if input_lines.lower() in self.EXIT_INPUTS:
-            #     attempts -= 1
-            #     self._analytics[self._analytics['current']].append((attempts, correct))
-            #     return
+            self.analytics.setdefault(self.current_test, []).append({
+                'question timestamp': question_timestamp.strftime(self.TIMESTAMP_FORMAT),
+                'answer timestamp': datetime.now().strftime(self.TIMESTAMP_FORMAT),
+                'question': question,
+                'answer': input_lines,
+                'correct': correct,
+                # TODO: add anonymized student ID
+            })
 
             if not correct:
                 print("-- Not quite. Try again! --")
             else:
                 print("-- OK! --")
             print()
-        # self._analytics[self._analytics['current']].append((attempts, correct))
         return input_lines
 
     ###################

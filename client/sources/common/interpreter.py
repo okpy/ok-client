@@ -68,15 +68,17 @@ class CodeCase(models.Case):
                     phase.
         """
         print(self.setup.strip())
+        previous_line = None
         try:
             for line in self.lines:
                 if isinstance(line, str) and line:
                     print(line)
+                    previous_line = line
                 elif isinstance(line, CodeAnswer):
                     if not line.locked:
                         print('\n'.join(line.output))
                         continue
-                    line.output = interact(line.output, line.choices)
+                    line.output = interact(previous_line, line.output, line.choices)
                     line.locked = False
             self.locked = False
         finally:

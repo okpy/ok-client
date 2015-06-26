@@ -76,7 +76,7 @@ class ConceptCase(common_models.Case):
     def unlock(self, interact):
         """Unlocks the conceptual test case."""
         print('Q: ' + self.question)
-        answer = interact([self.answer], self.choices)
+        answer = interact(self.question, [self.answer], self.choices)
         assert len(answer) == 1
         answer = answer[0]
         if answer != self.answer:
