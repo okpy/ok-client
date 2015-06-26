@@ -29,13 +29,11 @@ class RestoreProtocol(models.Protocol):
         
         response = self.request('user')
         if not response:
-            print('Could not connect to server')
+            print('Could not connect to server.')
+            return
         user = response['data']['results'][0]
         email = user['email'][0]
         assign_id = self.get_assign_id(self.assignment.endpoint)
-        params = {
-            'assignment': assign_id   
-        }
         backups = self.get_backups(email, assign_id)
         current_time = datetime.now()
         print('0: Cancel Restore')
@@ -46,6 +44,7 @@ class RestoreProtocol(models.Protocol):
         response = input('Backup #: ')
         selection = int(response) - 1
         if selection < 0 or selection >= len(backups):
+            print("Invalid option for restoring backups.")
             return
         self.restore_backup(backups[selection])
         
