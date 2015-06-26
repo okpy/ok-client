@@ -63,3 +63,8 @@ class WwppCase(interpreter.CodeCase):
                 print('\n'.join(line.output))
         return True
 
+    def unlock(self, interact):
+        print('What would Python print? If you get stuck, try it out in the '
+              'Python\ninterpreter!')
+        super().unlock(interact)
+
