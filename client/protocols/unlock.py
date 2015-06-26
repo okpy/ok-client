@@ -29,7 +29,6 @@ class UnlockProtocol(models.Protocol):
         'exit()',
         'quit()',
     )
-    TIMESTAMP_FORMAT = '%Y-%m-%d %H:%M:%S.%f'
 
     def __init__(self, cmd_args, assignment):
         super().__init__(cmd_args, assignment)
@@ -138,8 +137,8 @@ class UnlockProtocol(models.Protocol):
                 correct = True
 
             self.analytics.setdefault(self.current_test, []).append({
-                'question timestamp': question_timestamp.strftime(self.TIMESTAMP_FORMAT),
-                'answer timestamp': datetime.now().strftime(self.TIMESTAMP_FORMAT),
+                'question timestamp': self.unix_time(question_timestamp),
+                'answer timestamp': self.unix_time(datetime.now()),
                 'question': question,
                 'answer': input_lines,
                 'correct': correct,
@@ -186,5 +185,16 @@ class UnlockProtocol(models.Protocol):
         """
         if line and HAS_READLINE:
             readline.add_history(line)
+
+    def unix_time(self, dt):
+        """Returns the number of seconds since the UNIX epoch for the given
+        datetime (dt).
+
+        PARAMETERS:
+        dt -- datetime
+        """
+        epoch = datetime.utcfromtimestamp(0)
+        delta = dt - epoch
+        return delta.total_seconds()
 
 protocol = UnlockProtocol
