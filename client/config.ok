@@ -10,7 +10,7 @@
         "hw1.py:double": "doctest"
     },
     "protocols": [
-        "restore"
+        "restore",
         "export",
         "file_contents",
         "unlock",
