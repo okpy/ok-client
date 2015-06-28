@@ -144,7 +144,6 @@ class UnlockProtocol(models.Protocol):
                 'question': question,
                 'answer': input_lines,
                 'correct': correct,
-                # TODO: add anonymized student ID
             })
 
             if not correct:
@@ -172,7 +171,6 @@ class UnlockProtocol(models.Protocol):
         """
         print("Choose the number of the correct choice:")
         choice_map = {}
-        # TODO(albert): consider using letters as choices instead of numbers.
         for i, choice in enumerate(choices):
             i = str(i)
             print('{}) {}'.format(i, format.indent(choice,
