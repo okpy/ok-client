@@ -48,13 +48,21 @@ def print_line(style, length=69):
     """
     print(style * length)
 
-def print_progress_bar(header, passed, failed, locked):
+def print_progress_bar(header, passed, failed, locked, verbose=True):
     print_line('-')
     print(header)
-    print('    Passed: {}'.format(passed))
-    print('    Failed: {}'.format(failed))
     if locked > 0:
         print('    Locked: {}'.format(locked))
+    if verbose:
+        print('    Passed: {}'.format(passed))
+        print('    Failed: {}'.format(failed))
+    elif failed > 0:
+        print('    {} test cases passed before encountering '
+              'first failed test case'.format(passed))
+        return
+    else:
+        print('    {} test cases passed!'.format(passed))
+        return
 
     # Print [oook.....] progress bar
     total = passed + failed + locked

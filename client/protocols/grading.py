@@ -28,7 +28,7 @@ class GradingProtocol(models.Protocol):
         significant for analytics. However, all tests must include the number
         passed, the number of locked tests and the number of failed tests.
         """
-        if self.args.score or self.args.export:
+        if self.args.score or self.args.export or self.args.unlock:
             return
 
         format.print_line('~')
@@ -49,7 +49,12 @@ class GradingProtocol(models.Protocol):
             locked += results['locked']
             analytics[test.name] = results
 
-        format.print_progress_bar('Test summary', passed, failed, locked)
+            if not self.args.verbose and (failed > 0 or locked > 0):
+                # Stop at the first failed test
+                break
+
+        format.print_progress_bar('Test summary', passed, failed, locked,
+                                  verbose=self.args.verbose)
         print()
 
         messages['grading'] = analytics
