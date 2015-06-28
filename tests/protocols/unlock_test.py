@@ -38,6 +38,7 @@ class UnlockProtocolTest(unittest.TestCase):
 
 class InteractTest(unittest.TestCase):
     TEST = 'Test 0'
+    QUESTION_ID = TEST + ' > Suite 1 > Case 1'
     QUESTION = 'Question 0'
     SHORT_ANSWER = ['42']
     LONG_ANSWER = ['3.1', '41', '59']
@@ -74,17 +75,18 @@ class InteractTest(unittest.TestCase):
     def testInputExitPattern(self):
         self.input_choices = [self.proto.EXIT_INPUTS[0]]
         self.assertRaises((KeyboardInterrupt, EOFError), self.proto.interact,
-                          self.QUESTION, self.SHORT_ANSWER)
+                          self.QUESTION_ID, self.QUESTION, self.SHORT_ANSWER)
 
     def testRaiseError(self):
         self.proto._input = mock.Mock(side_effect=KeyboardInterrupt)
         self.assertRaises((KeyboardInterrupt, EOFError), self.proto.interact,
-                          self.QUESTION, self.SHORT_ANSWER)
+                          self.QUESTION_ID, self.QUESTION, self.SHORT_ANSWER)
 
     def testSingleLine_immediatelyCorrect(self):
         self.input_choices = list(self.SHORT_ANSWER)
         self.assertEqual(self.SHORT_ANSWER,
-                         self.proto.interact(self.QUESTION, self.SHORT_ANSWER))
+                         self.proto.interact(self.QUESTION_ID, self.QUESTION,
+                                             self.SHORT_ANSWER))
 
         self.checkNumberOfAttempts(1)
         attempt = self.proto.analytics[self.TEST][0]
@@ -96,7 +98,8 @@ class InteractTest(unittest.TestCase):
     def testSingleLine_multipleFailsBeforeSuccess(self):
         self.input_choices = self.INCORRECT_ANSWERS + self.SHORT_ANSWER
         self.assertEqual(self.SHORT_ANSWER,
-                         self.proto.interact(self.QUESTION, self.SHORT_ANSWER))
+                         self.proto.interact(self.QUESTION_ID, self.QUESTION,
+                                             self.SHORT_ANSWER))
 
         self.checkNumberOfAttempts(1 + len(self.INCORRECT_ANSWERS))
         for attempt_number, attempt in enumerate(self.proto.analytics[self.TEST]):
@@ -111,7 +114,8 @@ class InteractTest(unittest.TestCase):
     def testMultipleLine_immediatelyCorrect(self):
         self.input_choices = list(self.LONG_ANSWER)
         self.assertEqual(self.LONG_ANSWER,
-                         self.proto.interact(self.QUESTION, self.LONG_ANSWER))
+                         self.proto.interact(self.QUESTION_ID, self.QUESTION,
+                                             self.LONG_ANSWER))
 
         self.checkNumberOfAttempts(1)
         attempt = self.proto.analytics[self.TEST][0]
@@ -124,7 +128,8 @@ class InteractTest(unittest.TestCase):
         self.input_choices = self.LONG_ANSWER[:1] + self.INCORRECT_ANSWERS + \
                              self.LONG_ANSWER
         self.assertEqual(self.LONG_ANSWER,
-                         self.proto.interact(self.QUESTION, self.LONG_ANSWER))
+                         self.proto.interact(self.QUESTION_ID, self.QUESTION,
+                                             self.LONG_ANSWER))
 
         print(self.proto.analytics[self.TEST])
         self.checkNumberOfAttempts(1 + len(self.INCORRECT_ANSWERS))
@@ -144,7 +149,8 @@ class InteractTest(unittest.TestCase):
     def testMultipleChoice_immediatelyCorrect(self):
         self.input_choices = ['0']
         self.assertEqual(self.SHORT_ANSWER,
-                         self.proto.interact(self.QUESTION, self.SHORT_ANSWER, self.CHOICES,
+                         self.proto.interact(self.QUESTION_ID, self.QUESTION,
+                                             self.SHORT_ANSWER, self.CHOICES,
                                              randomize=False))
 
         self.checkNumberOfAttempts(1)
@@ -157,8 +163,9 @@ class InteractTest(unittest.TestCase):
     def testMultipleChoice_multipleFailsBeforeSuccess(self):
         self.input_choices = ['1', '2', '0']
         self.assertEqual(self.SHORT_ANSWER,
-                         self.proto.interact(self.QUESTION, self.SHORT_ANSWER,
-                                             self.CHOICES, randomize=False))
+                         self.proto.interact(self.QUESTION_ID, self.QUESTION,
+                                             self.SHORT_ANSWER, self.CHOICES,
+                                             randomize=False))
 
         self.checkNumberOfAttempts(len(self.input_choices))
         for attempt_number, attempt in enumerate(self.proto.analytics[self.TEST]):

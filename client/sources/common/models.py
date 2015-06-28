@@ -51,13 +51,15 @@ class Case(core.Serializable):
         """
         raise NotImplementedError
 
-    def unlock(self, interact):
+    def unlock(self, case_id, interact):
         """Subclasses should override this method for unlocking a test case.
 
         It is the responsibility of the the subclass to make any changes to the
         test case, including setting its locked field to False.
 
         PARAMETERS:
+        case_id  -- string; an identifier for this Case, for purposes of
+                    analytics.
         interact -- function; handles user interaction during the unlocking
                     phase.
         """

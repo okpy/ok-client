@@ -100,9 +100,11 @@ class OkTest(models.Test):
                                 for case in suite.cases])
         for suite_num, suite in enumerate(self.suites):
             for case_num, case in enumerate(suite.cases):
+                case_id = '{} > Suite {} > Case {}'.format(
+                            self.name, suite_num + 1, case_num + 1)
+
                 format.print_line('-')
-                print('{} > Suite {} > Case {}'.format(self.name, suite_num + 1,
-                                                       case_num + 1))
+                print(case_id)
                 print('(cases remaining: {})'.format(total_cases))
                 print()
                 total_cases -= 1
@@ -112,7 +114,7 @@ class OkTest(models.Test):
                     print()
                     continue
 
-                case.unlock(interact)
+                case.unlock(case_id, interact)
 
         assert total_cases == 0, 'Number of cases is incorrect'
         format.print_line('-')

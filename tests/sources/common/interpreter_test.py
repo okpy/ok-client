@@ -58,6 +58,8 @@ class CodeCaseTest(unittest.TestCase):
         self.assertFalse(case.run())
 
 class UnlockTest(unittest.TestCase):
+    CASE_ID = 'Test 1 > Suite 1 > Case 1'
+
     def setUp(self):
         self.console = mock.Mock(interpreter.Console)
         self.console.PS1 = '> '
@@ -72,9 +74,10 @@ class UnlockTest(unittest.TestCase):
     def calls_unlock(self, code, expect, errors=False):
         case = self.makeCase(code)
         if errors:
-            self.assertRaises(unlock.UnlockException, case.unlock, self.interact_fn)
+            self.assertRaises(unlock.UnlockException, case.unlock, self.CASE_ID,
+                              self.interact_fn)
             return
-        case.unlock(self.interact_fn)
+        case.unlock(self.CASE_ID, self.interact_fn)
         self.assertFalse(case.locked)
 
         answers = [line for line in case.lines
@@ -187,6 +190,8 @@ class LockTest:
 
 
 class ToJsonTest:
+    CASE_ID = 'Test 1 > Suite 1 > Case 1'
+
     def setUp(self):
         self.console = mock.Mock(interpreter.Console)
         self.interact_fn = mock.Mock(side_effect=lambda x, y: x)
@@ -217,7 +222,7 @@ class ToJsonTest:
             > square(-2)
             3
             """)
-        case.unlock(self.interact_fn)
+        case.unlock(self.CASE_ID, self.interact_fn)
         result = case.to_json()
 
         self.assertIn('code', result)

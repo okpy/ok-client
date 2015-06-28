@@ -60,14 +60,17 @@ class CodeCase(models.Case):
         self.locked = True
         self._sync_code()
 
-    def unlock(self, interact):
+    def unlock(self, case_id, interact):
         """Unlocks the CodeCase.
 
         PARAMETERS:
+        case_id  -- string; an identifier for this Case, for purposes of
+                    analytics.
         interact -- function; handles user interaction during the unlocking
                     phase.
         """
         print(self.setup.strip())
+        part = 1
         current_prompt = []
         try:
             for line in self.lines:
@@ -78,10 +81,12 @@ class CodeCase(models.Case):
                     if not line.locked:
                         print('\n'.join(line.output))
                         continue
-                    line.output = interact('\n'.join(current_prompt),
+                    line.output = interact(case_id + ' >  Part {}'.format(part),
+                                           '\n'.join(current_prompt),
                                            line.output, line.choices)
                     line.locked = False
                     current_prompt = []
+                    part += 1
             self.locked = False
         finally:
             self._sync_code()

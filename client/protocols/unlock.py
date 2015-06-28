@@ -77,17 +77,18 @@ class UnlockProtocol(models.Protocol):
                 break
         messages['unlock'] = self.analytics
 
-    def interact(self, question, answer, choices=None, randomize=True):
+    def interact(self, question_id, question, answer, choices=None, randomize=True):
         """Reads student input for unlocking tests until the student
         answers correctly.
 
         PARAMETERS:
-        question  -- str; the question prompt
-        answer    -- list; a list of locked lines in a test case answer.
-        choices   -- list or None; a list of choices. If None or an
-                     empty list, signifies the question is not multiple
-                     choice.
-        randomize -- bool; if True, randomizes the choices on first invocation.
+        question_id -- str; the ID that is recorded with this unlocking attempt.
+        question    -- str; the question prompt
+        answer      -- list; a list of locked lines in a test case answer.
+        choices     -- list or None; a list of choices. If None or an
+                       empty list, signifies the question is not multiple
+                       choice.
+        randomize   -- bool; if True, randomizes the choices on first invocation.
 
         DESCRIPTION:
         Continually prompt the student for an answer to an unlocking
@@ -137,6 +138,7 @@ class UnlockProtocol(models.Protocol):
                 correct = True
 
             self.analytics.setdefault(self.current_test, []).append({
+                'id': question_id,
                 'question timestamp': self.unix_time(question_timestamp),
                 'answer timestamp': self.unix_time(datetime.now()),
                 'question': question,
@@ -195,6 +197,6 @@ class UnlockProtocol(models.Protocol):
         """
         epoch = datetime.utcfromtimestamp(0)
         delta = dt - epoch
-        return delta.total_seconds()
+        return int(delta.total_seconds())
 
 protocol = UnlockProtocol
