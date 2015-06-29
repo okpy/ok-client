@@ -38,6 +38,8 @@ class InteractTest(unittest.TestCase):
     SHORT_ANSWER = ['42']
     LONG_ANSWER = ['3.1', '41', '59']
     INCORRECT_ANSWERS = ['a', 'b', 'c']
+    CORRECT_EVAL = ['2 + (2**3)*5']
+    INCORRECT_EVALS = ['1 + 43', '2**3', 'raise Exception("test")']
     CHOICES = SHORT_ANSWER + INCORRECT_ANSWERS
 
     def setUp(self):
@@ -97,4 +99,14 @@ class InteractTest(unittest.TestCase):
         self.assertEqual(self.SHORT_ANSWER,
                          self.proto.interact(self.SHORT_ANSWER, self.CHOICES,
                                              randomize=False))
+                                             
+    def testEvaluatedInput_immediatelyCorrect(self):
+        self.input_choices = list(self.CORRECT_EVAL)
+        self.assertEqual(self.SHORT_ANSWER, 
+                         self.proto.interact(self.SHORT_ANSWER))
+                         
+    def testEvaluatedInput_multipleFailsBeforeSuccess(self):
+        self.input_choices = self.INCORRECT_EVALS + self.CORRECT_EVAL
+        self.assertEqual(self.SHORT_ANSWER, 
+                         self.proto.interact(self.SHORT_ANSWER))
 

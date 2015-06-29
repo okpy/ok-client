@@ -122,11 +122,17 @@ class UnlockProtocol(models.Protocol):
 
                 if choices and student_input in choice_map:
                     student_input = choice_map[student_input]
-
-                if not self._verify(student_input, answer[i]):
-                    break
-                else:
+                    
+                if self._verify(student_input, answer[i]):
                     input_lines.append(student_input)
+                else:
+                    try:
+                        eval_input = repr(eval(student_input, {}, {}))
+                        if not self._verify(eval_input, answer[i]):
+                            break
+                        input_lines.append(eval_input)
+                    except:
+                        break
             else:
                 correct = True
 
