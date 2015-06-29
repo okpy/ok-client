@@ -18,7 +18,7 @@ class FileContentsProtocol(models.Protocol):
         RETURNS:
         dict; a mapping of source filepath -> contents as strings.
         """
-        if self.args.export:
+        if self.args.export or self.args.restore:
             return
         
         files = {}
