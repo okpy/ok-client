@@ -51,6 +51,10 @@ class OkTest(models.Test):
             failed += results['failed']
             locked += results['locked']
 
+            if not self.verbose and (failed > 0 or locked > 0):
+                # Stop at the first failed test
+                break
+
         if locked > 0:
             print()
             print('There are still locked tests! '
