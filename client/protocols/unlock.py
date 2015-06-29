@@ -122,11 +122,17 @@ class UnlockProtocol(models.Protocol):
 
                 if choices and student_input in choice_map:
                     student_input = choice_map[student_input]
-
-                if not self._verify(student_input, answer[i]):
-                    break
-                else:
+                    
+                if self._verify(student_input, answer[i]):
                     input_lines.append(student_input)
+                else:
+                    try:
+                        eval_input = repr(eval(student_input, {}, {}))
+                        if not self._verify(eval_input, answer[i]):
+                            break
+                        input_lines.append(eval_input)
+                    except:
+                        break
             else:
                 correct = True
 
@@ -153,16 +159,8 @@ class UnlockProtocol(models.Protocol):
     ###################
 
     def _verify(self, guess, locked):
-        correct = hmac.new(self.hash_key.encode('utf-8'),
+        return hmac.new(self.hash_key.encode('utf-8'),
                         guess.encode('utf-8')).hexdigest() == locked
-        if correct:
-            return True
-        try:
-            reval = repr(eval(guess, {}, {}))
-            return hmac.new(self.hash_key.encode('utf-8'),
-                        reval.encode('utf-8')).hexdigest() == locked
-        except:
-            return False
 
     def _input(self, prompt):
         """Retrieves user input from stdin."""
