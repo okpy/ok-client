@@ -153,8 +153,16 @@ class UnlockProtocol(models.Protocol):
     ###################
 
     def _verify(self, guess, locked):
-        return hmac.new(self.hash_key.encode('utf-8'),
+        correct = hmac.new(self.hash_key.encode('utf-8'),
                         guess.encode('utf-8')).hexdigest() == locked
+        if correct:
+            return True
+        try:
+            reval = repr(eval(guess, {}, {}))
+            return hmac.new(self.hash_key.encode('utf-8'),
+                        reval.encode('utf-8')).hexdigest() == locked
+        except:
+            return False
 
     def _input(self, prompt):
         """Retrieves user input from stdin."""
