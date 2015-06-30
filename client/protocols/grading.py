@@ -46,18 +46,24 @@ class GradingProtocol(models.Protocol):
             started = None
 
         for test in self.assignment.specified_tests:
-            log.info('Check if tests for {} need to run'.format(test.name))
+            print('Check if tests for {} need to run'.format(test.name))
+
             # run test if the question is not detected, or question detected and started
-            if (started is None or
-                test.name not in started or started[test.name]):
-                log.info('Running tests for {}'.format(test.name))
+            if (started is None
+                or test.name not in started
+                or started[test.name]):
+
+                print('Running tests for {}'.format(test.name))
                 results = test.run()
                 passed += results['passed']
                 failed += results['failed']
                 locked += results['locked']
                 analytics[test.name] = results
             else:
-                log.info('No change for {}, skipping'.format(test.name))
+                print('{} not started, skipping'.format(test.name))
+
+            # print extra empty line to seperate messages for each test
+            print()
 
         format.print_progress_bar('Test summary', passed, failed, locked)
         print()
