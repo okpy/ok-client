@@ -36,6 +36,8 @@ def parse_input():
                         help="toggle interactive mode")
     parser.add_argument('-v', '--verbose', action='store_true',
                         help="print more output")
+    parser.add_argument('--all', action='store_true',
+                        help="run tests for all questions in config file")
     parser.add_argument('--submit', action='store_true',
                         help="Submit assignment")
     parser.add_argument('--backup', action='store_true',
@@ -48,7 +50,7 @@ def parse_input():
                         help="Scores the assignment")
     parser.add_argument('--config', type=str,
                         help="Specify a configuration file")
-    parser.add_argument('--timeout', type=int, default=10,
+    parser.add_argument('--timeout', type=int, default=5,
                         help="set the timeout duration for running tests")
 
     # Submission Export

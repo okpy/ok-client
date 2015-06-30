@@ -1,5 +1,6 @@
 from client import exceptions as ex
 from client.cli.common import assignment
+from client.sources.common import core
 import collections
 import mock
 import unittest
@@ -30,6 +31,7 @@ class AssignmentTest(unittest.TestCase):
     def setUp(self):
         self.cmd_args = mock.Mock()
         self.cmd_args.question = []
+        self.cmd_args.all = False
         self.mockSource1 = mock.Mock()
         self.mockProtocol1 = mock.Mock()
         self.mockTest = mock.Mock()
@@ -48,14 +50,17 @@ class AssignmentTest(unittest.TestCase):
         }
         self.mockImportModule.return_value = self.mockModule
 
-    def makeAssignment(self, tests=None, protocols=None):
+    def makeAssignment(self, tests=None, protocols=None, default_tests=None):
         if tests is None:
             tests = {self.PATTERN1: self.SOURCE1}
         if protocols is None:
             protocols = [self.PROTOCOL]
+        if default_tests is None:
+            default_tests = core.NoValue
         assign = assignment.Assignment(self.cmd_args, name=self.NAME,
-                                           endpoint=self.ENDPOINT, src=self.SRC,
-                                           tests=tests, protocols=protocols)
+                                       endpoint=self.ENDPOINT, src=self.SRC,
+                                       tests=tests, protocols=protocols,
+                                       default_tests=default_tests)
         assign._import_module = self.mockImportModule
         assign._find_files = self.mockFindFiles
         assign.load()
@@ -155,6 +160,89 @@ class AssignmentTest(unittest.TestCase):
             (self.FILE2, self.mockTest)
         ))
         assign = self.makeAssignment()
+
+        self.assertEqual(collections.OrderedDict((
+            (self.FILE1, self.mockTest),
+            (self.FILE2, self.mockTest),
+        )), assign.test_map)
+        self.assertEqual([self.mockTest, self.mockTest], assign.specified_tests)
+
+    def testConstructor_specifiedTest_multipleQuestions(self):
+        """Specified questions should override default tests."""
+        self.cmd_args.question = [self.QUESTION1, self.QUESTION2]
+        self.mockFindFiles.return_value = self.FILES
+        self.mockModule.load.return_value = collections.OrderedDict((
+            (self.FILE1, self.mockTest),
+            (self.FILE2, self.mockTest)
+        ))
+        default_tests = [self.QUESTION1]
+        assign = self.makeAssignment(default_tests=default_tests)
+
+        self.assertEqual(collections.OrderedDict((
+            (self.FILE1, self.mockTest),
+            (self.FILE2, self.mockTest),
+        )), assign.test_map)
+        self.assertEqual([self.mockTest, self.mockTest], assign.specified_tests)
+
+    def testConstructor_defaultTests(self):
+        self.cmd_args.question = []
+        self.mockFindFiles.return_value = self.FILES
+        self.mockModule.load.return_value = collections.OrderedDict((
+            (self.FILE1, self.mockTest),
+            (self.FILE2, self.mockTest)
+        ))
+        default_tests = [self.QUESTION1]
+        assign = self.makeAssignment(default_tests=default_tests)
+
+        self.assertEqual(collections.OrderedDict((
+            (self.FILE1, self.mockTest),
+            (self.FILE2, self.mockTest),
+        )), assign.test_map)
+        self.assertEqual([self.mockTest], assign.specified_tests)
+
+    def testConstructor_allTests_noSpecifiedTests(self):
+        self.cmd_args.question = []
+        self.cmd_args.all = True
+        self.mockFindFiles.return_value = self.FILES
+        self.mockModule.load.return_value = collections.OrderedDict((
+            (self.FILE1, self.mockTest),
+            (self.FILE2, self.mockTest)
+        ))
+        assign = self.makeAssignment()
+
+        self.assertEqual(collections.OrderedDict((
+            (self.FILE1, self.mockTest),
+            (self.FILE2, self.mockTest),
+        )), assign.test_map)
+        self.assertEqual([self.mockTest, self.mockTest], assign.specified_tests)
+
+    def testConstructor_allTests_specifiedTtests(self):
+        self.cmd_args.question = [self.QUESTION1]
+        self.cmd_args.all = True
+        self.mockFindFiles.return_value = self.FILES
+        self.mockModule.load.return_value = collections.OrderedDict((
+            (self.FILE1, self.mockTest),
+            (self.FILE2, self.mockTest)
+        ))
+        assign = self.makeAssignment()
+
+        self.assertEqual(collections.OrderedDict((
+            (self.FILE1, self.mockTest),
+            (self.FILE2, self.mockTest),
+        )), assign.test_map)
+        self.assertEqual([self.mockTest], assign.specified_tests)
+
+    def testConstructor_allTests_defaultTests(self):
+        """The --all option should override default tests."""
+        self.cmd_args.question = []
+        self.cmd_args.all = True
+        self.mockFindFiles.return_value = self.FILES
+        self.mockModule.load.return_value = collections.OrderedDict((
+            (self.FILE1, self.mockTest),
+            (self.FILE2, self.mockTest)
+        ))
+        default_tests = [self.QUESTION1]
+        assign = self.makeAssignment(default_tests=default_tests)
 
         self.assertEqual(collections.OrderedDict((
             (self.FILE1, self.mockTest),

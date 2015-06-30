@@ -55,6 +55,7 @@ class Assignment(core.Serializable):
     endpoint = core.String()
     src = core.List(type=str, optional=True)
     tests = core.Dict(keys=str, values=str, ordered=True)
+    default_tests = core.List(type=str, optional=True)
     protocols = core.List(type=str)
 
     _TESTS_PACKAGE = 'client.sources'
@@ -76,13 +77,7 @@ class Assignment(core.Serializable):
         self._resolve_specified_tests()
 
     def _load_tests(self):
-        """Loads all tests specified by test_map.
-
-        PARAMETERS:
-        test_map -- dict; file pattern -> serialize module. Every file that
-                    that matches the UNIX style file pattern will be loaded
-                    by the module.load method.
-        """
+        """Loads all tests specified by test_map."""
         log.info('Loading tests')
         for file_pattern, source in self.tests.items():
             # Separate filepath and parameter
@@ -130,8 +125,16 @@ class Assignment(core.Serializable):
         command line. If no questions are specified, use the entire set of
         tests.
         """
-        if not self.cmd_args.question:
-            log.info('Using all tests (no questions specified)')
+        if not self.cmd_args.question and not self.cmd_args.all \
+                and self.default_tests != core.NoValue \
+                and len(self.default_tests) > 0:
+            log.info('Using default tests (no questions specified): '
+                     '{}'.format(self.default_tests))
+            self.specified_tests = [self.test_map[test]
+                                    for test in self.default_tests]
+            return
+        elif not self.cmd_args.question:
+            log.info('Using all tests (no questions specified and no default tests)')
             self.specified_tests = list(self.test_map.values())
             return
         elif not self.test_map:

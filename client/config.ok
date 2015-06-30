@@ -9,6 +9,9 @@
         "hw1.py:square": "doctest",
         "hw1.py:double": "doctest"
     },
+    "default_tests": [
+        "square"
+    ],
     "protocols": [
         "restore",
         "export",
