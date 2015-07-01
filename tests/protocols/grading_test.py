@@ -39,3 +39,35 @@ class GradingProtocolTest(unittest.TestCase):
         self.assignment.specified_tests = [test]
         self.assertIsInstance(self.callRun(), dict)
 
+    def testRun_skipTestsWhenQuestionNotStarted(self):
+        test1 = mock.Mock(spec=models.Test)
+        test1.run.return_value = {
+            'passed': 1,
+            'failed': 0,
+            'locked': 0
+        }
+        test1.name = "test1"
+        test2 = mock.Mock(spec=models.Test)
+        test2.run.return_value = {
+            'passed': 1,
+            'failed': 0,
+            'locked': 0
+        }
+        test2.name = "test2"
+        self.assignment.specified_tests = [test1, test2]
+
+        messages = {
+            'analytics': {
+                'started': {
+                    'test1': False,
+                    'test2': True
+                }
+            }
+        }
+
+        self.proto.run(messages)
+
+        self.assertIn('grading', messages)
+        results = messages['grading']
+        self.assertNotIn('test1', results)
+        self.assertIn('test2', results)
