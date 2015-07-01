@@ -16,7 +16,7 @@ log = logging.getLogger('client')   # Get top-level logger
 CLIENT_ROOT = os.path.dirname(client.__file__)
 
 def main():
-    """Run the LockingProtocol."""
+    """Run GradingProtocol and ScoringProtocol."""
     args = ok.parse_input()
 
     log.setLevel(logging.DEBUG if args.debug else logging.ERROR)
