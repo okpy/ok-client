@@ -15,17 +15,17 @@ log = logging.getLogger(__name__)
 class AnalyticsProtocol(models.Protocol):
     """A Protocol that analyzes how much students are using the autograder."""
 
-    re_snippet = re.compile(r"""
+    RE_SNIPPET = re.compile(r"""
         \s*[\#\;]\s+BEGIN\s+(.*?)\n # \1 is question name
         (.*)                        # \2 is the contents in between
         \s*[\#\;]\s+END\s+\1\n
         """, re.X | re.I | re.S)
 
-    re_default_code = re.compile(r"""
+    RE_DEFAULT_CODE = re.compile(r"""
     \"\*\*\*\sREPLACE\sTHIS\sLINE\s\*\*\*\"
     """, re.X | re.I)
 
-    re_replace_mark = re.compile(r"""
+    RE_REPLACE_MARK = re.compile(r"""
             [\#\;][ ]Replace[ ].+$
             """, re.X | re.I | re.M)
 
@@ -53,7 +53,7 @@ class AnalyticsProtocol(models.Protocol):
             if len(lines) == 0:
                 log.warning("File {0} has no content".format(path))
 
-            snippets = AnalyticsProtocol.re_snippet.findall(lines)
+            snippets = self.RE_SNIPPET.findall(lines)
 
             for snippet in snippets:
                 question_name = snippet[0]
@@ -61,11 +61,13 @@ class AnalyticsProtocol(models.Protocol):
                 started = True
 
                 if (contents != None
-                    and (AnalyticsProtocol.re_default_code.fullmatch(contents.strip())
+                    and (self.RE_DEFAULT_CODE.fullmatch(contents.strip())
                          or (not self.replaced(contents)))):
                     started = False
 
-                question_status[question_name] = started
+                if (question_name not in question_status
+                    or (not question_status[question_name])):
+                    question_status[question_name] = started
 
         return question_status
 
@@ -75,7 +77,7 @@ class AnalyticsProtocol(models.Protocol):
         '\# Replace with your solution' at the end of each line.
         """
         line_num = len(contents.strip(' ').splitlines())
-        replace_marks = AnalyticsProtocol.re_replace_mark.findall(contents)
+        replace_marks = self.RE_REPLACE_MARK.findall(contents)
         if len(replace_marks) == line_num:
             return False
         return True
