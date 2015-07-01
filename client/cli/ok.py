@@ -27,7 +27,7 @@ def parse_input():
     parser = argparse.ArgumentParser(
         description=__doc__,
         formatter_class=argparse.RawDescriptionHelpFormatter)
-    # Protocol paramters
+    # Protocol parameters
     parser.add_argument('-q', '--question', type=str, action='append',
                         help="focus on specific questions")
     parser.add_argument('-u', '--unlock', action='store_true',
