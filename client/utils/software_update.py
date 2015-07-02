@@ -8,7 +8,7 @@ log = logging.getLogger(__name__)
 
 # TODO(sumukh): does software update require ssl?
 VERSION_ENDPOINT = 'https://{server}/api/v1/version'
-TIMEOUT = 0.5  # seconds
+TIMEOUT = 1  # seconds
 
 def check_version(server, version, filename):
     """Check for the latest version of OK and update accordingly."""

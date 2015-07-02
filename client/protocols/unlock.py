@@ -160,7 +160,6 @@ class UnlockProtocol(models.Protocol):
                 'answer': input_lines,
                 'correct': correct,
             })
-            print(self.analytics[-1])
 
             if not correct:
                 print("-- Not quite. Try again! --")
