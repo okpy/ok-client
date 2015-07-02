@@ -14,7 +14,7 @@ log = logging.getLogger(__name__)
 
 class BackupProtocol(models.Protocol):
 
-    TIMEOUT = 500
+    TIMEOUT = 0.5
     RETRY_LIMIT = 5
     BACKUP_FILE = ".ok_messages"
     SUBMISSION_ENDPOINT = '{prefix}://{server}/api/v1/submission?'
@@ -84,6 +84,9 @@ class BackupProtocol(models.Protocol):
                     'SSL Bindings are not installed. '
                     'You can install python3 SSL bindings or run OK locally:\n'
                     '\tpython3 ok --local')
+        else:
+            log.info('SSL bindings are available.')
+
 
 
     def send_all_messages(self, access_token, message_list):
@@ -92,7 +95,7 @@ class BackupProtocol(models.Protocol):
 
         send_all = self.args.submit or self.args.backup
         retries = self.RETRY_LIMIT
-        stop_time = datetime.datetime.now() + datetime.timedelta(milliseconds=self.TIMEOUT)
+        stop_time = datetime.datetime.now() + datetime.timedelta(milliseconds=1000 * self.TIMEOUT)
 
         first_response = None
         error_msg = ''
