@@ -44,6 +44,8 @@ class InteractTest(unittest.TestCase):
     SHORT_ANSWER = ['42']
     LONG_ANSWER = ['3.1', '41', '59']
     INCORRECT_ANSWERS = ['a', 'b', 'c']
+    CORRECT_EVAL = ['2 + (2**3)*5']
+    INCORRECT_EVALS = ['1 + 43', '2**3', 'raise Exception("test")']
     CHOICES = SHORT_ANSWER + INCORRECT_ANSWERS
 
     def setUp(self):
@@ -203,3 +205,25 @@ class InteractTest(unittest.TestCase):
                         correct=False)
             else:
                 self.validateRecord(attempt, answer=self.SHORT_ANSWER, correct=True)
+
+    def testEvaluatedInput_immediatelyCorrect(self):
+        self.input_choices = list(self.CORRECT_EVAL)
+        self.callsInteract(self.SHORT_ANSWER, self.SHORT_ANSWER)
+
+        self.checkNumberOfAttempts(1)
+        attempt = self.proto.analytics[0]
+
+        self.validateRecord(attempt, answer=self.SHORT_ANSWER, correct=True)
+
+    def testEvaluatedInput_multipleFailsBeforeSuccess(self):
+        self.input_choices = self.INCORRECT_EVALS + self.CORRECT_EVAL
+        self.callsInteract(self.SHORT_ANSWER, self.SHORT_ANSWER)
+
+        self.checkNumberOfAttempts(len(self.INCORRECT_EVALS) + 1)
+        for attempt_number, attempt in enumerate(self.proto.analytics):
+            if attempt_number < len(self.INCORRECT_EVALS):
+                self.validateRecord(attempt, answer=[self.INCORRECT_EVALS[attempt_number]],
+                                    correct=False)
+            else:
+                self.validateRecord(attempt, answer=self.SHORT_ANSWER, correct=True)
+

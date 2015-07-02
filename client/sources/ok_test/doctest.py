@@ -70,4 +70,8 @@ class DoctestSuite(models.Suite):
                 results['passed'] += 1
             else:
                 results['failed'] += 1
+
+            if not success and not self.verbose:
+                # Stop at the first failed test
+                break
         return results

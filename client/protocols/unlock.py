@@ -136,7 +136,18 @@ class UnlockProtocol(models.Protocol):
 
                 input_lines.append(student_input)
                 if not self._verify(student_input, line):
-                    break
+                    # Try to evaluate student answer as Python expression and
+                    # use the result as the answer.
+                    try:
+                        eval_input = repr(eval(student_input, {}, {}))
+                        if not self._verify(eval_input, answer[line_number]):
+                            break
+                        # Replace student_input with evaluated input.
+                        input_lines[-1] = eval_input
+                    except Exception as e:
+                        # Incorrect answer.
+                        break
+
             else:
                 correct = True
 
@@ -149,6 +160,7 @@ class UnlockProtocol(models.Protocol):
                 'answer': input_lines,
                 'correct': correct,
             })
+            print(self.analytics[-1])
 
             if not correct:
                 print("-- Not quite. Try again! --")
