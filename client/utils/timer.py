@@ -11,15 +11,14 @@ def timed(timeout, fn, args=(), kargs={}):
     fn      -- function; Python function to be evaluated
     args    -- tuple; positional arguments for fn
     kargs   -- dict; keyword arguments for fn
-    timeout -- int; number of seconds before timer interrupt (defaults
-               to TIMEOUT
+    timeout -- int; number of seconds before timer interrupt
 
     RETURN:
     Result of calling fn(*args, **kargs).
 
     RAISES:
-    Timeout -- if thread takes longer than timemout to execute
-    Error        -- if calling fn raises an error, raise it
+    Timeout -- if thread takes longer than timeout to execute
+    Error   -- if calling fn raises an error, raise it
     """
     submission = __ReturningThread(fn, args, kargs)
     submission.start()
