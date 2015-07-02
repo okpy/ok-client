@@ -23,10 +23,10 @@ class LoadTest(unittest.TestCase):
 
         self.mockFunction = mock.Mock()
 
-        self.cmd_args = mock.Mock()
+        self.assign = mock.Mock()
 
     def call_load(self, file=VALID_FILE, name=''):
-        return doctest.load(file, name, self.cmd_args)
+        return doctest.load(file, name, self.assign)
 
     def testFileDoesNotExist(self):
         self.mockIsFile.return_value = False

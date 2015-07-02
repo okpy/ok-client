@@ -7,6 +7,7 @@ compatible with the UnlockProtocol.
 
 from client.protocols.common import models
 from client.utils import format
+from datetime import datetime
 import hmac
 import logging
 import random
@@ -32,6 +33,7 @@ class UnlockProtocol(models.Protocol):
     def __init__(self, cmd_args, assignment):
         super().__init__(cmd_args, assignment)
         self.hash_key = assignment.name
+        self.analytics = []
 
     def run(self, messages):
         """Responsible for unlocking each test.
@@ -55,11 +57,12 @@ class UnlockProtocol(models.Protocol):
         print('Type {} to quit'.format(self.EXIT_INPUTS[0]))
         print()
 
-        analytics = {}
         for test in self.assignment.specified_tests:
             log.info('Unlocking test {}'.format(test.name))
+            self.current_test = test.name
+
             try:
-                analytics[test.name] = test.unlock(self.interact)
+                test.unlock(self.interact)
             except (KeyboardInterrupt, EOFError):
                 try:
                     # TODO(albert): When you use Ctrl+C in Windows, it
@@ -71,17 +74,24 @@ class UnlockProtocol(models.Protocol):
                     pass
                 print()
                 break
-        messages['unlock'] = analytics
+        messages['unlock'] = self.analytics
 
-    def interact(self, answer, choices=None, randomize=True):
+    def interact(self, unique_id, case_id, question_prompt, answer, choices=None, randomize=True):
         """Reads student input for unlocking tests until the student
         answers correctly.
 
         PARAMETERS:
-        answer    -- list; a list of locked lines in a test case answer.
-        choices   -- list or None; a list of choices. If None or an
-                     empty list, signifies the question is not multiple
-                     choice.
+        unique_id       -- str; the ID that is recorded with this unlocking
+                           attempt.
+        case_id         -- str; the ID that is recorded with this unlocking
+                           attempt.
+        question_prompt -- str; the question prompt
+        answer          -- list; a list of locked lines in a test case answer.
+        choices         -- list or None; a list of choices. If None or an
+                           empty list, signifies the question is not multiple
+                           choice.
+        randomize       -- bool; if True, randomizes the choices on first
+                           invocation.
 
         DESCRIPTION:
         Continually prompt the student for an answer to an unlocking
@@ -98,22 +108,23 @@ class UnlockProtocol(models.Protocol):
         list; the correct solution (that the student supplied). Each element
         in the list is a line of the correct output.
         """
-        # attempts = 0
         if randomize and choices:
             choices = random.sample(choices, len(choices))
+
         correct = False
         while not correct:
-            # attempts += 1
             if choices:
                 assert len(answer) == 1, 'Choices must have 1 line of output'
                 choice_map = self._display_choices(choices)
 
+            question_timestamp = datetime.now()
             input_lines = []
-            for i in range(len(answer)):
+
+            for line_number, line in enumerate(answer):
                 if len(answer) == 1:
                     prompt = self.PROMPT
                 else:
-                    prompt = '(line {}){}'.format(i + 1, self.PROMPT)
+                    prompt = '(line {}){}'.format(line_number + 1, self.PROMPT)
 
                 student_input = format.normalize(self._input(prompt))
                 self._add_history(student_input)
@@ -122,36 +133,40 @@ class UnlockProtocol(models.Protocol):
 
                 if choices and student_input in choice_map:
                     student_input = choice_map[student_input]
-                    
-                if self._verify(student_input, answer[i]):
-                    input_lines.append(student_input)
-                else:
+
+                input_lines.append(student_input)
+                if not self._verify(student_input, line):
+                    # Try to evaluate student answer as Python expression and
+                    # use the result as the answer.
                     try:
                         eval_input = repr(eval(student_input, {}, {}))
-                        if not self._verify(eval_input, answer[i]):
+                        if not self._verify(eval_input, answer[line_number]):
                             break
-                        input_lines.append(eval_input)
-                    except:
+                        # Replace student_input with evaluated input.
+                        input_lines[-1] = eval_input
+                    except Exception as e:
+                        # Incorrect answer.
                         break
+
             else:
                 correct = True
 
-
-            # TODO(albert): record analytis
-            # Performt his before the function exits?
-            # self._analytics[self._analytics['current']].append((attempts, correct))
-
-            # if input_lines.lower() in self.EXIT_INPUTS:
-            #     attempts -= 1
-            #     self._analytics[self._analytics['current']].append((attempts, correct))
-            #     return
+            self.analytics.append({
+                'id': unique_id,
+                'case_id': case_id,
+                'question timestamp': self.unix_time(question_timestamp),
+                'answer timestamp': self.unix_time(datetime.now()),
+                'prompt': question_prompt,
+                'answer': input_lines,
+                'correct': correct,
+            })
+            print(self.analytics[-1])
 
             if not correct:
                 print("-- Not quite. Try again! --")
             else:
                 print("-- OK! --")
             print()
-        # self._analytics[self._analytics['current']].append((attempts, correct))
         return input_lines
 
     ###################
@@ -172,7 +187,6 @@ class UnlockProtocol(models.Protocol):
         """
         print("Choose the number of the correct choice:")
         choice_map = {}
-        # TODO(albert): consider using letters as choices instead of numbers.
         for i, choice in enumerate(choices):
             i = str(i)
             print('{}) {}'.format(i, format.indent(choice,
@@ -187,5 +201,16 @@ class UnlockProtocol(models.Protocol):
         """
         if line and HAS_READLINE:
             readline.add_history(line)
+
+    def unix_time(self, dt):
+        """Returns the number of seconds since the UNIX epoch for the given
+        datetime (dt).
+
+        PARAMETERS:
+        dt -- datetime
+        """
+        epoch = datetime.utcfromtimestamp(0)
+        delta = dt - epoch
+        return int(delta.total_seconds())
 
 protocol = UnlockProtocol

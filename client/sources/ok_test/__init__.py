@@ -19,7 +19,7 @@ SUITES = {
     'wwpp': wwpp.WwppSuite,
 }
 
-def load(file, parameter, args):
+def load(file, parameter, assign):
     """Loads an OK-style test from a specified filepath.
 
     PARAMETERS:
@@ -41,8 +41,10 @@ def load(file, parameter, args):
 
     name = os.path.basename(filename)
     try:
-        return {name: models.OkTest(file, SUITES, args.verbose, args.interactive,
-                             args.timeout, **test)}
+        return {name: models.OkTest(file, SUITES, assign.endpoint,
+                                    assign.cmd_args.verbose,
+                                    assign.cmd_args.interactive,
+                                    assign.cmd_args.timeout, **test)}
     except ex.SerializeException:
         raise ex.LoadingException('Cannot load OK test {}'.format(file))
 

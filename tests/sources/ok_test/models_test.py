@@ -5,6 +5,7 @@ import mock
 import unittest
 
 class OkTest(unittest.TestCase):
+    ASSIGNMENT = 'assignment'
     NAME = 'ok test'
     POINTS = 10
     FILE = 'file'
@@ -31,8 +32,8 @@ class OkTest(unittest.TestCase):
         self.hash_fn = mock.Mock()
 
     def makeTest(self, name=NAME, points=POINTS, file=FILE, **fields):
-        return models.OkTest(file, self.suite_map, True, False, name=name,
-                             points=points, **fields)
+        return models.OkTest(file, self.suite_map, self.ASSIGNMENT, True, False,
+                             name=name, points=points, **fields)
 
     def callsRun(self, passed, failed, locked):
         test = self.makeTest(suites=[

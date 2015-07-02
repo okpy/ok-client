@@ -73,10 +73,11 @@ class ConceptCase(common_models.Case):
         self.answer = hash_fn(self.answer)
         self.locked = True
 
-    def unlock(self, interact):
+    def unlock(self, unique_id_prefix, case_id, interact):
         """Unlocks the conceptual test case."""
         print('Q: ' + self.question)
-        answer = interact([self.answer], self.choices)
+        answer = interact(unique_id_prefix + '\n' + self.question,
+                          case_id, self.question, [self.answer], self.choices)
         assert len(answer) == 1
         answer = answer[0]
         if answer != self.answer:

@@ -7,7 +7,7 @@ import traceback
 
 log = logging.getLogger(__name__)
 
-def load(file, name, args):
+def load(file, name, assign):
     """Loads doctests from a specified filepath.
 
     PARAMETERS:
@@ -40,19 +40,19 @@ def load(file, name, args):
         raise ex.LoadingException('Error importing file {}'.format(file))
 
     if name:
-        return {name: _load_test(file, module, name, args)}
+        return {name: _load_test(file, module, name, assign)}
     else:
-        return _load_tests(file, module, args)
+        return _load_tests(file, module, assign)
 
 
-def _load_tests(file, module, args):
+def _load_tests(file, module, assign):
     tests = {}
     for name in dir(module):
         if callable(getattr(module, name)):
-            tests[name] = _load_test(file, module, name, args)
+            tests[name] = _load_test(file, module, name, assign)
     return tests
 
-def _load_test(file, module, name, args):
+def _load_test(file, module, name, assign):
     if not hasattr(module, name):
         raise ex.LoadingException('Module {} has no function {}'.format(
                                   module.__name__, name))
@@ -62,8 +62,9 @@ def _load_test(file, module, name, args):
 
     docstring = func.__doc__ if func.__doc__ else ''
     try:
-        return models.Doctest(file, args.verbose, args.interactive, args.timeout,
-                              name=name, points=1, docstring=docstring)
+        return models.Doctest(file, assign.cmd_args.verbose, assign.cmd_args.interactive,
+                              assign.cmd_args.timeout, name=name, points=1,
+                              docstring=docstring)
     except ex.SerializeException:
         raise ex.LoadingException('Unable to load doctest for {} '
                                   'from {}'.format(name, file))
