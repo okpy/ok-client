@@ -85,8 +85,8 @@ class CodeCase(models.Case):
                         continue
 
                     unique_id = self._construct_unique_id(unique_id_prefix, self.lines)
-                    case_id = case_id + ' >  Prompt {}'.format(prompt_num)
-                    line.output = interact(unique_id, case_id,
+                    line.output = interact(unique_id,
+                                           case_id + ' >  Prompt {}'.format(prompt_num),
                                            '\n'.join(current_prompt),
                                            line.output, line.choices)
                     line.locked = False
