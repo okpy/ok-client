@@ -146,11 +146,11 @@ class BackupProtocol(models.Protocol):
 
         if not error_msg and message_list:
             # No errors occurred, but could not complete request within TIMEOUT.
-            print('{action}... {percent}% complete'.format(action=action,
-                percent=100 - round(len(message_list) * 100 / num_messages, 2)))
+            print()     # Preserve progress bar.
             print('Could not {} within {} seconds.'.format(action.lower(), self.TIMEOUT))
 
         elif message_list:
+            # If not all messages could be backed up successfully.
             print()     # Preserve progress bar.
             print('Could not', action.lower() + ':', error_msg)
         else:
