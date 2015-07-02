@@ -93,7 +93,7 @@ class ExportProtocol(models.Protocol):
             os.fsync(f.fileno())
             
     def get_final_submission(self, student, assign_id):
-        """Gets the final_submisssion from the server for use in download_submission"""
+        """Gets the final_submission from the server for use in download_submission"""
         params = {'assignment': assign_id}
         response = self.request('user/{0}/final_submission'.format(student[0]),
             params)
