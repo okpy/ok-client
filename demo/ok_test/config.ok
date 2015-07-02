@@ -12,6 +12,7 @@
         "unlock",
         "grading",
         "scoring",
-        "analytics"
+        "analytics",
+        "backup"
     ]
 }

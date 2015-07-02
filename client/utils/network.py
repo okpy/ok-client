@@ -6,8 +6,8 @@ import logging
 
 log = logging.getLogger(__name__)
 
-TIMEOUT = 500
-            
+TIMEOUT = 1
+
 def api_request(access_token, server, route, insecure=False, arguments={}):
     """Makes a request to the server API and returns the result."""
     try:
