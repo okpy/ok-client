@@ -60,17 +60,19 @@ class CodeCase(models.Case):
         self.locked = True
         self._sync_code()
 
-    def unlock(self, case_id, interact):
+    def unlock(self, unique_id_prefix, case_id, interact):
         """Unlocks the CodeCase.
 
         PARAMETERS:
-        case_id  -- string; an identifier for this Case, for purposes of
-                    analytics.
-        interact -- function; handles user interaction during the unlocking
-                    phase.
+        unique_id_prefix -- string; a prefix of a unique identifier for this
+                            Case, for purposes of analytics.
+        case_id          -- string; an identifier for this Case, for purposes of
+                            analytics.
+        interact         -- function; handles user interaction during the unlocking
+                            phase.
         """
         print(self.setup.strip())
-        part = 1
+        prompt_num = 1
         current_prompt = []
         try:
             for line in self.lines:
@@ -81,12 +83,15 @@ class CodeCase(models.Case):
                     if not line.locked:
                         print('\n'.join(line.output))
                         continue
-                    line.output = interact(case_id + ' >  Part {}'.format(part),
+
+                    unique_id = self._construct_unique_id(unique_id_prefix, self.lines)
+                    case_id = case_id + ' >  Prompt {}'.format(prompt_num)
+                    line.output = interact(unique_id, case_id,
                                            '\n'.join(current_prompt),
                                            line.output, line.choices)
                     line.locked = False
                     current_prompt = []
-                    part += 1
+                    prompt_num += 1
             self.locked = False
         finally:
             self._sync_code()
@@ -127,6 +132,19 @@ class CodeCase(models.Case):
             else:
                 new_code.append(line)
         self.code = '\n'.join(new_code)
+
+    def _construct_unique_id(self, id_prefix, lines):
+        """Constructs a unique ID for a particular prompt in this case,
+        based on the id_prefix and the lines in the prompt.
+        """
+        text = []
+        for line in lines:
+            if isinstance(line, str):
+                text.append(line)
+            elif isinstance(line, CodeAnswer):
+                text.append(line.dump())
+        return id_prefix + '\n' + '\n'.join(text)
+
 
 class Console(object):
     PS1 = '> '

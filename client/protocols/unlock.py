@@ -33,8 +33,7 @@ class UnlockProtocol(models.Protocol):
     def __init__(self, cmd_args, assignment):
         super().__init__(cmd_args, assignment)
         self.hash_key = assignment.name
-        self.analytics = {}
-        self.current_test = None
+        self.analytics = []
 
     def run(self, messages):
         """Responsible for unlocking each test.
@@ -77,18 +76,22 @@ class UnlockProtocol(models.Protocol):
                 break
         messages['unlock'] = self.analytics
 
-    def interact(self, question_id, question, answer, choices=None, randomize=True):
+    def interact(self, unique_id, case_id, question_prompt, answer, choices=None, randomize=True):
         """Reads student input for unlocking tests until the student
         answers correctly.
 
         PARAMETERS:
-        question_id -- str; the ID that is recorded with this unlocking attempt.
-        question    -- str; the question prompt
-        answer      -- list; a list of locked lines in a test case answer.
-        choices     -- list or None; a list of choices. If None or an
-                       empty list, signifies the question is not multiple
-                       choice.
-        randomize   -- bool; if True, randomizes the choices on first invocation.
+        unique_id       -- str; the ID that is recorded with this unlocking
+                           attempt.
+        case_id         -- str; the ID that is recorded with this unlocking
+                           attempt.
+        question_prompt -- str; the question prompt
+        answer          -- list; a list of locked lines in a test case answer.
+        choices         -- list or None; a list of choices. If None or an
+                           empty list, signifies the question is not multiple
+                           choice.
+        randomize       -- bool; if True, randomizes the choices on first
+                           invocation.
 
         DESCRIPTION:
         Continually prompt the student for an answer to an unlocking
@@ -137,11 +140,12 @@ class UnlockProtocol(models.Protocol):
             else:
                 correct = True
 
-            self.analytics.setdefault(self.current_test, []).append({
-                'id': question_id,
+            self.analytics.append({
+                'id': unique_id,
+                'case_id': case_id,
                 'question timestamp': self.unix_time(question_timestamp),
                 'answer timestamp': self.unix_time(datetime.now()),
-                'question': question,
+                'prompt': question_prompt,
                 'answer': input_lines,
                 'correct': correct,
             })

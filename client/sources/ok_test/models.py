@@ -12,13 +12,15 @@ class OkTest(models.Test):
     suites = core.List()
     description = core.String(optional=True)
 
-    def __init__(self, file, suite_map, verbose, interactive, timeout=None, **fields):
+    def __init__(self, file, suite_map, assign_name, verbose, interactive,
+                 timeout=None, **fields):
         super().__init__(**fields)
         self.file = file
         self.suite_map = suite_map
         self.verbose = verbose
         self.interactive = interactive
         self.timeout = timeout
+        self.assignment_name = assign_name
 
     def post_instantiation(self):
         for i, suite in enumerate(self.suites):
@@ -114,7 +116,7 @@ class OkTest(models.Test):
                     print()
                     continue
 
-                case.unlock(case_id, interact)
+                case.unlock(self.unique_id_prefix, case_id, interact)
 
         assert total_cases == 0, 'Number of cases is incorrect'
         format.print_line('-')
@@ -152,6 +154,9 @@ class OkTest(models.Test):
         with open(self.file, 'w', encoding='utf-8') as f:
             f.write('test = ' + json)
 
+    @property
+    def unique_id_prefix(self):
+        return self.assignment_name + '\n' + self.name
 
 class Suite(core.Serializable):
     type = core.String()
