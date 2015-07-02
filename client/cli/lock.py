@@ -22,6 +22,7 @@ def main():
     args = parse_input()
     args.lock = True
     args.question = []
+    args.all = False
     args.timeout = 0
     args.verbose = False
     args.interactive = False
