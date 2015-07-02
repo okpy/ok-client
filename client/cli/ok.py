@@ -36,6 +36,8 @@ def parse_input():
                         help="toggle interactive mode")
     parser.add_argument('-v', '--verbose', action='store_true',
                         help="print more output")
+    parser.add_argument('--all', action='store_true',
+                        help="run tests for all questions in config file")
     parser.add_argument('--submit', action='store_true',
                         help="Submit assignment")
     parser.add_argument('--backup', action='store_true',
