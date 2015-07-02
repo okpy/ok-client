@@ -69,16 +69,13 @@ class ExportProtocol(models.Protocol):
         
     def download_submission(self, student, assign_id):
         """Downloads a student's final submission for an assignment"""
-        params = {'assignment': assign_id}
-        response = self.request('user/{0}/final_submission'.format(student[0]),
-            params)
-        if not response['data']:
-            print("No final submission for {0}".format(student[0]))
+        if self.args.latest:
+            submission = self.get_latest_submission(student, assign_id)
+        else:
+            submission = self.get_final_submission(student, assign_id)
+        if not submission:
             return
-        raw_data = response['data']
-        contents = raw_data['submission']['backup']['messages']['file_contents']
-        timestamp = datetime.strptime(raw_data['submission']['backup']['server_time'], GAE_DATETIME_FORMAT)
-        subm_id = raw_data['submission']['backup']['id']
+        contents, timestamp, subm_id = submission
         subm_dir = os.path.join(SUBMISSION_DIR, student[0])
         if not os.path.exists(subm_dir):
             os.makedirs(subm_dir)
@@ -94,6 +91,38 @@ class ExportProtocol(models.Protocol):
                 .format(student, subm_id, timestamp))
             f.flush()
             os.fsync(f.fileno())
+            
+    def get_final_submission(self, student, assign_id):
+        """Gets the final_submisssion from the server for use in download_submission"""
+        params = {'assignment': assign_id}
+        response = self.request('user/{0}/final_submission'.format(student[0]),
+            params)
+        if not response['data']:
+            print("No final submission for {0}".format(student[0]))
+            return
+        raw_data = response['data']
+        contents = raw_data['submission']['backup']['messages']['file_contents']
+        timestamp = datetime.strptime(raw_data['submission']['backup']['server_time'], GAE_DATETIME_FORMAT)
+        subm_id = raw_data['submission']['backup']['id']
+        return contents, timestamp, subm_id
+        
+    def get_latest_submission(self, student, assign_id):
+        """Gets the latest submission from the server for use in download_submission"""
+        params = {'assignment': assign_id}
+        data = self.request('user/{0}/get_submissions'.format(student[0]), 
+            params)['data']
+        if len(data) == 0:
+            print("No submissions for {0}".format(student[0]))
+            return
+        newest_time = None
+        newest_subm = None
+        for subm in data:
+            time = datetime.strptime(subm['server_time'], GAE_DATETIME_FORMAT)
+            if newest_time is None or time > newest_time:
+                newest_time = time
+                newest_subm = subm
+        contents = newest_subm['messages']['file_contents']
+        return contents, newest_time, newest_subm['id']
        
     def get_ids(self, endpoint):
         """Gets the course and assignment id for the given endpoint"""
