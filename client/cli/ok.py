@@ -50,7 +50,7 @@ def parse_input():
                         help="Scores the assignment")
     parser.add_argument('--config', type=str,
                         help="Specify a configuration file")
-    parser.add_argument('--timeout', type=int, default=5,
+    parser.add_argument('--timeout', type=int, default=10,
                         help="set the timeout duration for running tests")
 
     # Submission Export
