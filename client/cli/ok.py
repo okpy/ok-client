@@ -77,6 +77,8 @@ def parse_input():
                         help="uses http instead of https")
     parser.add_argument('--no-update', action='store_true',
                         help="turns off software updating")
+    parser.add_argument('--update', action='store_true',
+                        help="checks and performs software update then exits")
 
     return parser.parse_args()
 
@@ -89,6 +91,11 @@ def main():
 
     if args.version:
         print("okpy=={}".format(client.__version__))
+        exit(0)
+    elif args.update:
+        print("Current version: {}".format(client.__version__))
+        software_update.check_version(args.server, client.__version__,
+                                      client.FILE_NAME, timeout=10)
         exit(0)
 
     assign = None
