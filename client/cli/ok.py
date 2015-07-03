@@ -56,6 +56,8 @@ def parse_input():
     # Submission Export
     parser.add_argument('--export', action='store_true',
                         help="Downloads all submissions for the current assignment")
+    parser.add_argument('--latest', action='store_true',
+                        help="When used with --export, downloads latest submissions instead of final submissions")
 
     # Debug information
     parser.add_argument('--version', action='store_true',
