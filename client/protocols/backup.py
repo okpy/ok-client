@@ -118,8 +118,8 @@ class BackupProtocol(models.Protocol):
             except socket.timeout as ex:
                 log.warning("socket.timeout: %s", str(ex))
                 retries -= 1
-                error_msg = 'Connection timed out after {} seconds. ' + \
-                            'Please check your network connection.'.format(self.TIMEOUT)
+                error_msg = 'Connection timed out after {} seconds. '.format(self.TIMEOUT) + \
+                            'Please check your network connection.'
             except (urllib.error.URLError, urllib.error.HTTPError) as ex:
                 log.warning('%s: %s', ex.__class__.__name__, str(ex))
                 if not hasattr(ex, 'read'):

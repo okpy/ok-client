@@ -61,7 +61,7 @@ def print_progress_bar(header, passed, failed, locked, verbose=True):
               'first failed test case'.format(passed))
         return
     else:
-        print('    {} test cases passed!'.format(passed))
+        print('    All {} test cases passed!'.format(passed))
         return
 
     # Print [oook.....] progress bar
