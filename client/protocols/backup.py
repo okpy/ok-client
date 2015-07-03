@@ -14,7 +14,7 @@ log = logging.getLogger(__name__)
 
 class BackupProtocol(models.Protocol):
 
-    TIMEOUT = 0.5
+    TIMEOUT = 2
     RETRY_LIMIT = 5
     BACKUP_FILE = ".ok_messages"
     SUBMISSION_ENDPOINT = '{prefix}://{server}/api/v1/submission?'
