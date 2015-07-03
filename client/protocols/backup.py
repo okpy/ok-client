@@ -14,7 +14,10 @@ log = logging.getLogger(__name__)
 
 class BackupProtocol(models.Protocol):
 
-    TIMEOUT = 0.5
+    # Timeouts are specified in seconds.
+    SHORT_TIMEOUT = 1
+    LONG_TIMEOUT = 15
+
     RETRY_LIMIT = 5
     BACKUP_FILE = ".ok_messages"
     SUBMISSION_ENDPOINT = '{prefix}://{server}/api/v1/submission?'
@@ -94,14 +97,15 @@ class BackupProtocol(models.Protocol):
         num_messages = len(message_list)
 
         send_all = self.args.submit or self.args.backup
+        timeout = self.LONG_TIMEOUT if send_all else self.SHORT_TIMEOUT
         retries = self.RETRY_LIMIT
-        stop_time = datetime.datetime.now() + datetime.timedelta(seconds=self.TIMEOUT)
+        stop_time = datetime.datetime.now() + datetime.timedelta(seconds=timeout)
+        log.info('Setting timeout to %d seconds', timeout)
 
         first_response = None
         error_msg = ''
 
-        while retries > 0 and message_list and \
-                (send_all or datetime.datetime.now() < stop_time):
+        while retries > 0 and message_list and datetime.datetime.now() < stop_time:
             log.info('Sending messages...%d left', len(message_list))
 
             print('{action}... {percent}% complete'.format(action=action,
@@ -114,11 +118,11 @@ class BackupProtocol(models.Protocol):
             message = message_list[-1]
 
             try:
-                response = self.send_messages(access_token, message)
+                response = self.send_messages(access_token, message, timeout)
             except socket.timeout as ex:
                 log.warning("socket.timeout: %s", str(ex))
                 retries -= 1
-                error_msg = 'Connection timed out after {} seconds. '.format(self.TIMEOUT) + \
+                error_msg = 'Connection timed out after {} seconds. '.format(timeout) + \
                             'Please check your network connection.'
             except (urllib.error.URLError, urllib.error.HTTPError) as ex:
                 log.warning('%s: %s', ex.__class__.__name__, str(ex))
@@ -144,21 +148,24 @@ class BackupProtocol(models.Protocol):
 
                 message_list.pop()
 
-        if not error_msg and message_list:
+        if not message_list:
+            print('{action}... 100% complete'.format(action=action))
+            return first_response
+        elif not send_all:
+            # Do not display any error messages if --backup or --submit are not
+            # used.
+            print()
+        elif not error_msg:
             # No errors occurred, but could not complete request within TIMEOUT.
             print()     # Preserve progress bar.
-            print('Could not {} within {} seconds.'.format(action.lower(), self.TIMEOUT))
-
-        elif message_list:
+            print('Could not {} within {} seconds.'.format(action.lower(), timeout))
+        else:
             # If not all messages could be backed up successfully.
             print()     # Preserve progress bar.
             print('Could not', action.lower() + ':', error_msg)
-        else:
-            print('{action}... 100% complete'.format(action=action))
-            return first_response
 
 
-    def send_messages(self, access_token, messages):
+    def send_messages(self, access_token, messages, timeout):
         """Send messages to server, along with user authentication."""
 
         data = {
@@ -181,7 +188,7 @@ class BackupProtocol(models.Protocol):
         request = urllib.request.Request(address)
         request.add_header("Content-Type", "application/json")
 
-        response = urllib.request.urlopen(request, serialized_data, self.TIMEOUT)
+        response = urllib.request.urlopen(request, serialized_data, timeout)
         return json.loads(response.read().decode('utf-8'))
 
 protocol = BackupProtocol

@@ -10,7 +10,7 @@ log = logging.getLogger(__name__)
 VERSION_ENDPOINT = 'https://{server}/api/v1/version'
 TIMEOUT = 1  # seconds
 
-def check_version(server, version, filename):
+def check_version(server, version, filename, timeout=TIMEOUT):
     """Check for the latest version of OK and update accordingly."""
 
     address = VERSION_ENDPOINT.format(server=server)
