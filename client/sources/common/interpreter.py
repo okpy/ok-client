@@ -72,7 +72,7 @@ class CodeCase(models.Case):
                             phase.
         """
         print(self.setup.strip())
-        prompt_num = 1
+        prompt_num = 0
         current_prompt = []
         try:
             for line in self.lines:
@@ -80,6 +80,7 @@ class CodeCase(models.Case):
                     print(line)
                     current_prompt.append(line)
                 elif isinstance(line, CodeAnswer):
+                    prompt_num += 1
                     if not line.locked:
                         print('\n'.join(line.output))
                         continue
@@ -91,7 +92,6 @@ class CodeCase(models.Case):
                                            line.output, line.choices)
                     line.locked = False
                     current_prompt = []
-                    prompt_num += 1
             self.locked = False
         finally:
             self._sync_code()
