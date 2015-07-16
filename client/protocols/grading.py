@@ -39,15 +39,29 @@ class GradingProtocol(models.Protocol):
         locked = 0
 
         analytics = {}
+        # check if analytics info is in messages
+        if 'analytics' in messages:
+            started = messages['analytics']['started']
+        else:
+            started = None
 
         for test in self.assignment.specified_tests:
-            log.info('Running tests for {}'.format(test.name))
-            results = test.run()
+            # run test if the question is not detected, or question detected and started
+            if (started is None
+                or test.name not in started
+                or started[test.name]):
 
-            passed += results['passed']
-            failed += results['failed']
-            locked += results['locked']
-            analytics[test.name] = results
+                log.info('Running tests for {}'.format(test.name))
+                results = test.run()
+                passed += results['passed']
+                failed += results['failed']
+                locked += results['locked']
+                analytics[test.name] = results
+            else:
+                print('It looks like you haven\'t started {}. Skipping the tests.'.format(test.name))
+
+            # print extra empty line to seperate messages for each test
+            print()
 
             if not self.args.verbose and (failed > 0 or locked > 0):
                 # Stop at the first failed test
