@@ -17,16 +17,16 @@ class AnalyticsProtocol(models.Protocol):
 
     RE_SNIPPET = re.compile(r"""
         \s*[\#\;]\s+BEGIN\s+(.*?)\n # \1 is question name
-        (.*)                        # \2 is the contents in between
+        (.*?)                       # \2 is the contents in between
         \s*[\#\;]\s+END\s+\1\n
         """, re.X | re.I | re.S)
 
     RE_DEFAULT_CODE = re.compile(r"""
-    ^\"\*\*\*\sREPLACE\sTHIS\sLINE\s\*\*\*\"$
+    ^\"\*\*\*\sREPLACE\sTHIS\sLINE\s\*\*\*\"
     """, re.X | re.I)
 
     RE_REPLACE_MARK = re.compile(r"""
-            [\#\;][ ]Replace[ ].+$
+            [\#\;][ ]Replace[ ]
             """, re.X | re.I | re.M)
 
     def run(self, messages):
@@ -77,7 +77,7 @@ class AnalyticsProtocol(models.Protocol):
         '\# Replace with your solution' at the end of each line.
         """
         line_num = len(contents.strip(' ').splitlines())
-        replace_marks = self.RE_REPLACE_MARK.findall(contents)
+        replace_marks = self.RE_REPLACE_MARK.findall(contents.strip())
         if len(replace_marks) == line_num:
             return False
         return True

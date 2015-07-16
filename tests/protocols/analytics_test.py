@@ -106,8 +106,6 @@ class TestAnalyticsProtocol(unittest.TestCase):
             self.Q1: False,
         }, self.call_check_start(files))
 
-     # TODO(Jack): add tests for multiple file support
-
     def testCheckStart_missingAllTags(self):
         files = {'test1': """
             def q1():
