@@ -1,6 +1,7 @@
 """This file is responsible for coordinating all of OK's protocols."""
 
 from client import exceptions as ex
+from client import extensions
 from client.cli.common import assignment
 from client.cli.common import messages
 from client.utils import auth
@@ -81,12 +82,17 @@ def parse_input():
                         help="turns off software updating")
     parser.add_argument('--update', action='store_true',
                         help="checks and performs software update then exits")
+    
+    # Extension commands
+    parser.add_argument('--extension', type=str,
+                        help="Issue command to extension.")
 
-    return parser.parse_args()
+    return parser, parser.parse_args()
+
 
 def main():
     """Run all relevant aspects of ok.py."""
-    args = parse_input()
+    parser, args = parse_input()
 
     log.setLevel(logging.DEBUG if args.debug else logging.ERROR)
     log.debug(args)
@@ -109,6 +115,14 @@ def main():
         assign = assignment.load_config(args.config, args)
         assign.load()
 
+        # Instantiating extension
+        if args.extension:
+            ext = extensions.load(args.extension)
+            ext.args = ext.parse_args(parser)
+            ext.load(assign)
+            if ext.terminate_after_load:
+                exit(0)
+
         if args.tests:
             print('Available tests:')
             for name in assign.test_map:
@@ -119,6 +133,9 @@ def main():
         for name, proto in assign.protocol_map.items():
             log.info('Execute {}.run()'.format(name))
             proto.run(msgs)
+            
+            if ext and ext.run(proto).terminate_after_run:
+                exit(0)
 
         msgs['timestamp'] = str(datetime.now())
 
@@ -136,6 +153,9 @@ def main():
                                           client.FILE_NAME)
         if assign:
             assign.dump_tests()
+            
+        if ext:
+            ext.teardown()
 
 
 if __name__ == '__main__':
