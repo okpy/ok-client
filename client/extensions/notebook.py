@@ -120,8 +120,8 @@ class NotebookExt(Extension):
 		book = '%s.ipynb' % name
 		py = '%s.py' % name
 		print('[Notebook] Extracting {book} from {py} ...'.format(**locals()))
-		cells = json.loads(open(book, 'r').read())['cells']
-		self.files[book] = cells
+		data = json.loads(open(book, 'r').read())
+		self.files[book], cells = data, data['cells']
 		scripts = [self.extract_lines(cell['source']) 
 		           for cell in cells if cell['cell_type'] == 'code']
 		script = '\n\n'.join(scripts)

@@ -90,12 +90,12 @@ def parse_input():
     parser.add_argument('--extargs', type=yaml.load,
                         help="dictionary of commands and args")
 
-    return parser, parser.parse_args()
+    return parser.parse_args()
 
 
 def main():
     """Run all relevant aspects of ok.py."""
-    parser, args = parse_input()
+    args = parse_input()
 
     log.setLevel(logging.DEBUG if args.debug else logging.ERROR)
     log.debug(args)
