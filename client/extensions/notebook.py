@@ -9,6 +9,7 @@ Extension for Jupyter Notebook
 """
 from io import StringIO
 import sys
+from client.exceptions import OkException
 
 from client.protocols.grading import GradingProtocol
 from . import Extension, extension
@@ -19,7 +20,7 @@ import subprocess
 
 MAKEFILE_TEMPLATE = """\
 {name}.py: {name}.ipynb
-	ok --extension notebook --extargs '{args}'
+	ok --extension notebook --extargs "{args}"
 """
 
 
@@ -39,6 +40,7 @@ class NotebookExt(Extension):
 	tests = []
 	results = {}
 	files = {}
+	methods = {}
 	
 	######################
 	# OBLIGATORY METHODS #
@@ -65,7 +67,8 @@ class NotebookExt(Extension):
 			output = self.capture_output(func, obj, messages)
 			self.inject(test, messages['grading'], output)
 		except IndexError:
-			print('[Notebook] Whoa, rogue test. Not sure what to do with this output: %s' % messages)
+			print('[Notebook] Whoa, rogue test. Not sure what to do with\
+this output: %s' % messages)
 		return self
 		
 	def teardown(self, assign):
@@ -122,7 +125,7 @@ class NotebookExt(Extension):
 		print('[Notebook] Extracting {book} from {py} ...'.format(**locals()))
 		data = json.loads(open(book, 'r').read())
 		self.files[book], cells = data, data['cells']
-		scripts = [self.extract_lines(cell['source']) 
+		scripts = [self.extract_lines(cell['source'])
 		           for cell in cells if cell['cell_type'] == 'code']
 		script = '\n\n'.join(scripts)
 		open(py, 'w').write(script)
@@ -130,14 +133,64 @@ class NotebookExt(Extension):
 		
 	def extract_lines(self, lines):
 		""" Extracts code segment from IPython source block """
-		return ''.join([line for line in lines if line[0] != '%'])
+		return ''.join(self.exclude_lines(lines))
+	
+	def exclude_lines(self, lines):
+		""" Filters out specific lines """
+		return [line for line in lines if line[0] != '%']
 	
 	def inject(self, test, grade, output):
 		""" Inject the test results back into the file. """
-		self.results[test] = {
-			'grading': grade,
-			'output': output
+		output_data = {
+			"name": "stdout",
+			"output_type": "stream",
+			"text": [l+'\n' for l in output]
 		}
+		data = self.get_data_with_method(test)
+		filename, cell = data['filename'], data['cell']
+		cell['outputs'].append(output_data)
+		cell['metadata']['collapsed'] = False
+		open(filename, 'w').write(json.dumps(data['file']))
+		
+	def get_data_with_method(self, method):
+		""" Returns filename, cell for method """
+		try:
+			if method not in self.methods:
+				self.reload_methods()
+			return self.methods[method]
+		except KeyError:
+			raise OkException('Cannot find method "%s". This shouldn\'t \
+happen. Please create a new issue at \
+https://github.com/Cal-CS-61A-Staff/ok-client.' % method)
 
+	def reload_methods(self):
+		""" Refresh methods dictionary with all Notebooks """
+		print('[Notebook] Examining all notebooks...')
+		books = [f for f in os.listdir('.') if f.endswith('.ipynb')]
+		self.books, methods = [f.split('.')[0] for f in books], []
+		files = {book: json.loads(open(book).read()) for book in books}
+		for filename, file in files.items():
+			print('[Notebook] Examining "%s"' % filename)
+			for cell in file['cells']:
+				methods += self.extract_methods(filename, file, self.exclude_lines(cell['source']), cell)
+		print('[Notebook] Found %d test cases: %s' % (len(methods), str(methods)))
+
+	def extract_methods(self, filename, file, lines, cell):
+		""" Extract all methods from cell text """
+		import re
+		template = re.compile('(def|class) (.+?)(\(|:)')
+		methods = []
+		for line in lines:
+			match = template.findall(line)
+			if len(match) > 0:
+				methods.append(match[0][1])
+		cell['outputs'] = []
+		for method in methods:
+			self.methods[method] = {
+				'cell': cell,
+			    'file': file,
+			    'filename': filename
+			}
+		return methods
 
 Extension = NotebookExt
