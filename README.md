@@ -40,6 +40,48 @@ directory. Every component of the client should have plenty of tests.
 To run all tests, use the following command:
 
     nosetests tests
+    
+## Extensions
+
+Extensions are invoked using a special ok flag.
+
+```
+python3 ok --extension [extension]
+```
+
+Each extension may have its own set of flags and arguments. Use the
+`--extargs` flag to pass these to the extension.
+
+```
+python3 ok --extension [extension] --extargs {flag:arg}
+```
+
+To create a new extension, create a new python module under the
+`client/extensions` directory. The extension must consist of the following,
+at the bare minimum:
+
+```
+from . import Extension, extension
+
+# all extensions must feature BOTH this decorator AND subclass Extension
+@extension
+class SampleExt(Extension):
+	
+	def setup(self, assign=None):
+		""" sets up the sample extension """
+		print('Setting up sample extension')
+		# all args loaded into the self.args dictionary
+		if assign and self.args.flag == 'arg':
+			# full control over the assignment object
+			assign.dump_tests = lambda: 'Tests hidden.'
+	    
+	def teardown(self, assign):
+	    """ run before the test results are dumped """
+	    print('Tearing down sample extension')
+
+# required
+Extension = SampleExt
+```
 
 ## Deployment
 

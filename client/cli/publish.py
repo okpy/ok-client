@@ -17,6 +17,7 @@ REQUIRED_FILES = [
 ]
 REQUIRED_FOLDERS = [
     'utils',
+    'extensions',
 ]
 COMMAND_LINE = [
     'ok',

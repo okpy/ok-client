@@ -1,6 +1,8 @@
 """This file is responsible for coordinating all of OK's protocols."""
+import yaml
 
 from client import exceptions as ex
+from client import extensions
 from client.cli.common import assignment
 from client.cli.common import messages
 from client.utils import auth
@@ -81,8 +83,15 @@ def parse_input():
                         help="turns off software updating")
     parser.add_argument('--update', action='store_true',
                         help="checks and performs software update then exits")
+    
+    # Extension commands
+    parser.add_argument('--extension', type=str,
+                        help="Specify extension.")
+    parser.add_argument('--extargs', type=yaml.load,
+                        help="dictionary of commands and args")
 
     return parser.parse_args()
+
 
 def main():
     """Run all relevant aspects of ok.py."""
@@ -100,14 +109,24 @@ def main():
                                       client.FILE_NAME, timeout=10)
         exit(0)
 
-    assign = None
+    assign = ext = None
     try:
         if args.authenticate:
             auth.authenticate(True)
 
+        # Instantiating extension
+        if args.extension:
+            ext = extensions.load(args.extension, args.extargs)
+            ext.setup()
+            if ext.terminate_after_setup:
+                exit(0)
+
         # Instantiating assignment
         assign = assignment.load_config(args.config, args)
         assign.load()
+        
+        if ext:
+            ext.setup(assign)
 
         if args.tests:
             print('Available tests:')
@@ -121,7 +140,6 @@ def main():
             proto.run(msgs)
 
         msgs['timestamp'] = str(datetime.now())
-
     except ex.LoadingException as e:
         log.warning('Assignment could not load', exc_info=True)
         print('Error loading assignment: ' + str(e))
@@ -134,6 +152,9 @@ def main():
         if not args.no_update:
             software_update.check_version(args.server, client.__version__,
                                           client.FILE_NAME)
+        if ext:
+            ext.teardown(assign)
+            
         if assign:
             assign.dump_tests()
 
