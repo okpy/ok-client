@@ -109,22 +109,24 @@ def main():
                                       client.FILE_NAME, timeout=10)
         exit(0)
 
-    assign = None
+    assign = ext = None
     try:
         if args.authenticate:
             auth.authenticate(True)
 
+        # Instantiating extension
+        if args.extension:
+            ext = extensions.load(args.extension, args.extargs)
+            ext.setup()
+            if ext.terminate_after_setup:
+                exit(0)
+
         # Instantiating assignment
         assign = assignment.load_config(args.config, args)
         assign.load()
-
-        # Instantiating extension
-        ext = None
-        if args.extension:
-            ext = extensions.load(args.extension, args.extargs)
+        
+        if ext:
             ext.setup(assign)
-            if ext.terminate_after_setup:
-                exit(0)
 
         if args.tests:
             print('Available tests:')
@@ -136,15 +138,8 @@ def main():
         for name, proto in assign.protocol_map.items():
             log.info('Execute {}.run()'.format(name))
             proto.run(msgs)
-            
-            if ext and ext.run(assign).terminate_after_run:
-                exit(0)
 
         msgs['timestamp'] = str(datetime.now())
-
-        if ext:
-            ext.teardown(assign)
-
     except ex.LoadingException as e:
         log.warning('Assignment could not load', exc_info=True)
         print('Error loading assignment: ' + str(e))
@@ -154,12 +149,12 @@ def main():
     except KeyboardInterrupt:
         log.info('KeyboardInterrupt received.')
     finally:
-        if args.extargs:
-            exit(0)
-        
         if not args.no_update:
             software_update.check_version(args.server, client.__version__,
                                           client.FILE_NAME)
+        if ext:
+            ext.teardown(assign)
+            
         if assign:
             assign.dump_tests()
 

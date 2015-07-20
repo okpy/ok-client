@@ -67,22 +67,20 @@ from . import Extension, extension
 @extension
 class SampleExt(Extension):
 	
-	def setup(self, assign):
+	def setup(self, assign=None):
 		""" sets up the sample extension """
 		print('Setting up sample extension')
 		# all args loaded into the self.args dictionary
-		if self.args.flag == 'arg':
-		    # full control over the assignment object
-            assign.dump_tests = lambda: 'Tests hidden.'
-
-	def run(self, assign):
-	    """ run after each test is run """
-	    print('Running sample extension')
+		if assign and self.args.flag == 'arg':
+			# full control over the assignment object
+			assign.dump_tests = lambda: 'Tests hidden.'
 	    
 	def teardown(self, assign):
 	    """ run before the test results are dumped """
 	    print('Tearing down sample extension')
-		
+
+# required
+Extension = SampleExt
 ```
 
 ## Deployment
