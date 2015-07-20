@@ -137,7 +137,9 @@ this output: %s' % messages)
 	
 	def exclude_lines(self, lines):
 		""" Filters out specific lines """
-		return [line for line in lines if line[0] != '%']
+		if lines[0].startswith('## ok'):
+			return [line for line in lines if line[0] != '%']
+		return []
 	
 	def inject(self, test, grade, output):
 		""" Inject the test results back into the file. """
@@ -184,7 +186,8 @@ https://github.com/Cal-CS-61A-Staff/ok-client.' % method)
 			match = template.findall(line)
 			if len(match) > 0:
 				methods.append(match[0][1])
-		cell['outputs'] = []
+		if 'outputs' in cell:
+			cell['outputs'] = []
 		for method in methods:
 			self.methods[method] = {
 				'cell': cell,
