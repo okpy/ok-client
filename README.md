@@ -49,8 +49,12 @@ Extensions are invoked using a special ok flag.
 python3 ok --extension [extension]
 ```
 
-Each extension may have its own set of arguments. Append `--help` to the
-above command to find out more.
+Each extension may have its own set of flags and arguments. Use the
+`--extargs` flag to pass these to the extension.
+
+```
+python3 ok --extension [extension] --extargs {flag:arg}
+```
 
 To create a new extension, create a new python module under the
 `client/extensions` directory. The extension must consist of the following,
@@ -66,8 +70,10 @@ class SampleExt(Extension):
 	def setup(self, assign):
 		""" sets up the sample extension """
 		print('Setting up sample extension')
-		# full control over the assignment object
-        assign.dump_tests = lambda: 'Tests hidden.'
+		# all args loaded into the self.args dictionary
+		if self.args.flag == 'arg':
+		    # full control over the assignment object
+            assign.dump_tests = lambda: 'Tests hidden.'
 
 	def run(self, assign):
 	    """ run after each test is run """

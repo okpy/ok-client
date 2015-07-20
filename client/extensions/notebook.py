@@ -14,6 +14,13 @@ import os
 import subprocess
 
 
+MAKEFILE_TEMPLATE = """\
+{name}.py: {name}.ipynb
+	@echo "[Notebook] Extracting {name}.py from {name}.ipynb"
+	ok --extension notebook --extargs '{args}'
+"""
+
+
 def shell(f):
 	""" Wraps all shell commands, prints command first """
 	def helper(*args, **kwargs):
@@ -66,16 +73,12 @@ class NotebookExt(Extension):
 	def setup_makefile(self):
 		""" Setup makefile, mapping python files to notebooks """
 		print('[Notebook] Generating makefile dependencies.')
-		template = """\
-{name}.py: {name}.ipynb
-	@echo "[Notebook] Extracting {name}.py from {name}.ipynb"
-	ok --extension notebook --extargs '{args}'
-		"""
-		books = [f.split('.')[0] for f in os.listdir('.') if f.endswith('.ipynb')]
-		deps = [template.format(name=f, args=str({"nb": f})) for f in books]
-		all = ['%s.py' % f for f in books]
-		content = 'all: %s\n\n' % ' '.join(all)
-		content += '\n'.join(deps)
+		books = [f.split('.')[0] for f in os.listdir('.') 
+		         if f.endswith('.ipynb')]
+		deps = '\n'.join([MAKEFILE_TEMPLATE.format(
+			name=f, args=str({"nb": f})) for f in books])
+		all = ' '.join(['%s.py' % f for f in books])
+		content = 'all: %s\n\n%s' % (all, deps)
 		open('makefile', 'w').write(content)
 		
 	def extract_book(self, name):
