@@ -166,11 +166,12 @@ class Assignment(core.Serializable):
             log.info('Loaded protocol "{}"'.format(proto))
 
     def _print_header(self):
-        format.print_line('=')
-        print('Assignment: {}'.format(self.name))
-        print('OK, version {}'.format(client.__version__))
-        format.print_line('=')
-        print()
+        if not self.cmd_args.extargs:
+            format.print_line('=')
+            print('Assignment: {}'.format(self.name))
+            print('OK, version {}'.format(client.__version__))
+            format.print_line('=')
+            print()
 
 def _has_subsequence(string, pattern):
     """Returns true if the pattern is a subsequence of string."""

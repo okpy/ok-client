@@ -5,12 +5,13 @@ Extensions Manager
 """
 
 import importlib
+import os
 
 
-def load(ext):
+def load(ext, extargs):
 	""" Loads the extension """
-	module = importlib.import_module(ext)
-	return module.Extension()
+	module = importlib.import_module('client.extensions.%s' % ext)
+	return module.Extension(extargs)
 
 
 def extension(cls):
@@ -20,16 +21,29 @@ def extension(cls):
 	return Extension
 
 
+class Namespace:
+	
+	vars = {}
+	
+	def __setattr__(self, key, value):
+		self.vars[key] = value
+		
+	def __getattr__(self, key):
+		if key not in self.vars:
+			return None
+		return self.vars[key]
+
+
 class Extension:
 	""" Base class for all extensions """
 	
 	_args = None
-	terminate_after_load = False
+	terminate_after_setup = False
 	terminate_after_run = False
 	
-	def parse_args(self, parser):
-		""" optionally add custom args and parse the results """
-		return parser.parse_args()
+	def __init__(self, args):
+		self.args = Namespace()
+		[setattr(self.args, k, v) for k, v in (args or {}).items()]
 	
 	def setup(self, assign):
 		""" setup extension """

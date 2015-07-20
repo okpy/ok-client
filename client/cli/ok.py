@@ -1,4 +1,5 @@
 """This file is responsible for coordinating all of OK's protocols."""
+import yaml
 
 from client import exceptions as ex
 from client import extensions
@@ -85,7 +86,9 @@ def parse_input():
     
     # Extension commands
     parser.add_argument('--extension', type=str,
-                        help="Issue command to extension.")
+                        help="Specify extension.")
+    parser.add_argument('--extargs', type=yaml.load,
+                        help="dictionary of commands and args")
 
     return parser, parser.parse_args()
 
@@ -116,11 +119,11 @@ def main():
         assign.load()
 
         # Instantiating extension
+        ext = None
         if args.extension:
-            ext = extensions.load(args.extension)
-            ext.args = ext.parse_args(parser)
-            ext.load(assign)
-            if ext.terminate_after_load:
+            ext = extensions.load(args.extension, args.extargs)
+            ext.setup(assign)
+            if ext.terminate_after_setup:
                 exit(0)
 
         if args.tests:
@@ -134,10 +137,13 @@ def main():
             log.info('Execute {}.run()'.format(name))
             proto.run(msgs)
             
-            if ext and ext.run(proto).terminate_after_run:
+            if ext and ext.run(assign).terminate_after_run:
                 exit(0)
 
         msgs['timestamp'] = str(datetime.now())
+
+        if ext:
+            ext.teardown(assign)
 
     except ex.LoadingException as e:
         log.warning('Assignment could not load', exc_info=True)
@@ -148,14 +154,14 @@ def main():
     except KeyboardInterrupt:
         log.info('KeyboardInterrupt received.')
     finally:
+        if args.extargs:
+            exit(0)
+        
         if not args.no_update:
             software_update.check_version(args.server, client.__version__,
                                           client.FILE_NAME)
         if assign:
             assign.dump_tests()
-            
-        if ext:
-            ext.teardown()
 
 
 if __name__ == '__main__':

@@ -62,26 +62,19 @@ from . import Extension, extension
 # all extensions must feature BOTH this decorator AND subclass Extension
 @extension
 class SampleExt(Extension):
-
-    def parse_args(parser):
-        """ Optionally add arguments - this method may be omitted """
-        parser.add_argument('--prepare', action='store_true',
-                            help='Prepare the plugin for action')
-        return parser.parse_args()
 	
 	def setup(self, assign):
 		""" sets up the sample extension """
 		print('Setting up sample extension')
 		# full control over the assignment object
-		if self.args.prepare:
-		    assign.dump_tests = lambda: 'Tests hidden.'
-		
+        assign.dump_tests = lambda: 'Tests hidden.'
+
 	def run(self, assign):
 	    """ run after each test is run """
 	    print('Running sample extension')
 	    
 	def teardown(self, assign):
-	    """ run after the test results are dumped """
+	    """ run before the test results are dumped """
 	    print('Tearing down sample extension')
 		
 ```
