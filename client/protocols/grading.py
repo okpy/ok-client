@@ -59,9 +59,7 @@ class GradingProtocol(models.Protocol):
                 analytics[test.name] = results
             else:
                 print('It looks like you haven\'t started {}. Skipping the tests.'.format(test.name))
-
-            # print extra empty line to seperate messages for each test
-            print()
+                print()
 
             if not self.args.verbose and (failed > 0 or locked > 0):
                 # Stop at the first failed test
