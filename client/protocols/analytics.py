@@ -50,6 +50,8 @@ class AnalyticsProtocol(models.Protocol):
         question_status = {}
 
         for lines in files.values():
+            if not isinstance(lines, str):
+                continue
             if len(lines) == 0:
                 log.warning("File {0} has no content".format(path))
 
