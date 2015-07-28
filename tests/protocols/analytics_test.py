@@ -221,3 +221,29 @@ class TestAnalyticsProtocol(unittest.TestCase):
             self.Q3: True,
             self.EC: True
         }, self.call_check_start(files))
+
+    def testCheckStart_schemeCode(self):
+        files = {'test1': """
+            (define (q1)
+                ; BEGIN Question 1
+                'REPLACE-THIS-LINE
+                ; END Question 1
+            )
+
+            (define (q2)
+                ; BEGIN Question 2
+                0 ; Replace this line
+                ; END Question 2
+            )
+
+            (define (q3)
+                ; BEGIN Question 3
+                'QUESTION-3
+                ; END Question 3
+            )
+            """}
+        self.assertEqual({
+            self.Q1: False,
+            self.Q2: False,
+            self.Q3: True
+        }, self.call_check_start(files))
