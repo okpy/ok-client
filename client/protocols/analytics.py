@@ -22,7 +22,11 @@ class AnalyticsProtocol(models.Protocol):
         """, re.X | re.I | re.S)
 
     RE_DEFAULT_CODE = re.compile(r"""
-    ^\"\*\*\*\sREPLACE\sTHIS\sLINE\s\*\*\*\"
+    ^\"\*\*\*\sREPLACE\sTHIS\sLINE\s\*\*\*\"$
+    """, re.X | re.I)
+
+    RE_SCHEME_DEFAULT_CODE = re.compile(r"""
+    ^\'REPLACE-THIS-LINE$
     """, re.X | re.I)
 
     RE_REPLACE_MARK = re.compile(r"""
@@ -63,8 +67,9 @@ class AnalyticsProtocol(models.Protocol):
                 started = True
 
                 if (contents != None
-                    and (self.RE_DEFAULT_CODE.match(contents.strip())
-                         or (not self.replaced(contents)))):
+                    and ((self.RE_DEFAULT_CODE.match(contents.strip())
+                         or self.RE_SCHEME_DEFAULT_CODE.match(contents.strip()))
+                    or (not self.replaced(contents)))):
                     started = False
 
                 if (question_name not in question_status
