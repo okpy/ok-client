@@ -17,6 +17,16 @@ def ubuntu_openssl_bug_965371_urllib(self, *args, **kwargs):
 
 urllib.request.ssl.SSLSocket.__init__ = ubuntu_openssl_bug_965371_urllib
 
+def sslwrap(func):
+    @wraps(func)
+    def bar(*args, **kw):
+        kw['ssl_version'] = ssl.PROTOCOL_TLSv1
+        return func(*args, **kw)
+    return bar
+
+urllib.request.ssl.wrap_socket = sslwrap(ssl.wrap_socket)
+ssl.wrap_socket = sslwrap(ssl.wrap_socket)
+
 try:
     from urllib import urlencode
     from urllib2 import Request, urlopen
