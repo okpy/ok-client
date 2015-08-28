@@ -16,11 +16,11 @@
         "restore",
         "export",
         "file_contents",
+        "analytics",
         "unlock",
         "lock",
         "grading",
         "scoring",
-        "analytics",
         "backup"
     ]
 }
