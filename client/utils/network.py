@@ -27,7 +27,7 @@ def api_request(access_token, server, route, insecure=False, arguments={}):
         log.info('Requesting data from %s', address)
         req = request.Request(address)
         arguments = []
-        response = request.urlopen(req, None, TIMEOUT, context=urlopen)
+        response = request.urlopen(req, None, TIMEOUT, context=SSL_CONTEXT)
         return json.loads(response.read().decode('utf-8'))
     except error.HTTPError as ex:
         log.warning('Error while requesting from server: %s', str(ex))

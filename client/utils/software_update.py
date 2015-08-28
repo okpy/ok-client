@@ -3,12 +3,17 @@ import logging
 import os
 import urllib.error
 import urllib.request
+import ssl
 
 log = logging.getLogger(__name__)
 
 # TODO(sumukh): does software update require ssl?
 VERSION_ENDPOINT = 'https://{server}/api/v1/version'
 TIMEOUT = 1  # seconds
+# Force TLSv1 to fix an longstanding Python/OpenSSL Bug
+# See: http://stackoverflow.com/q/32115607
+SSL_CONTEXT = ssl.SSLContext(ssl.PROTOCOL_TLSv1)
+
 
 def check_version(server, version, filename, timeout=TIMEOUT):
     """Check for the latest version of OK and update accordingly."""
@@ -21,7 +26,8 @@ def check_version(server, version, filename, timeout=TIMEOUT):
 
     try:
         request = urllib.request.Request(address)
-        response = urllib.request.urlopen(request, timeout=TIMEOUT)
+        response = urllib.request.urlopen(request, timeout=TIMEOUT,
+            context=SSL_CONTEXT)
     except (urllib.error.HTTPError, urllib.error.URLError) as e:
         print('Network error when checking for updates.')
         log.warning('Network error when checking version from %s: %s', address,
@@ -83,4 +89,3 @@ def _write_zip(zip_name, zip_contents):
     with open(zip_name, 'wb') as f:
         f.write(zip_contents)
         os.fsync(f)
-

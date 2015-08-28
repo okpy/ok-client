@@ -5,6 +5,18 @@ from json import loads
 from datetime import datetime, timedelta
 from time import mktime
 import ssl
+
+# Attempt to monkeypatch urllib ssl
+import urllib.request
+old_init_urllib = urllib.request.ssl.SSLSocket.__init__
+
+@wraps(old_init_urllib)
+def ubuntu_openssl_bug_965371_urllib(self, *args, **kwargs):
+  kwargs['ssl_version'] = ssl.PROTOCOL_TLSv1
+  old_init_urllib(self, *args, **kwargs)
+
+urllib.request.ssl.SSLSocket.__init__ = ubuntu_openssl_bug_965371_urllib
+
 try:
     from urllib import urlencode
     from urllib2 import Request, urlopen
@@ -30,6 +42,11 @@ except ImportError: # pragma: no cover
 # Force TLSv1 to fix an longstanding Python/OpenSSL Bug
 # See: http://stackoverflow.com/q/32115607
 SSL_CONTEXT = ssl.SSLContext(ssl.PROTOCOL_TLSv1)
+
+
+
+
+
 
 class Client(object):
     """ OAuth 2.0 client object
@@ -172,7 +189,7 @@ class Client(object):
         req = self.token_transport('{0}{1}'.format(self.resource_endpoint,
             url), self.access_token, data=data, method=method, headers=headers)
 
-        resp = urlopen(req, context=SSL_CONTEXT)
+        resp = urlopen(req)
         data = resp.read()
         try:
             return parser(data.decode(resp.info().get_content_charset() or
