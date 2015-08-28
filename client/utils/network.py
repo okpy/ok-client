@@ -3,10 +3,16 @@
 from urllib import request, error
 import json
 import logging
+import ssl
 
 log = logging.getLogger(__name__)
 
 TIMEOUT = 15
+
+# Force TLSv1 to fix an longstanding Python/OpenSSL Bug
+# See: http://stackoverflow.com/q/32115607
+SSL_CONTEXT = ssl.SSLContext(ssl.PROTOCOL_TLSv1)
+
 
 def api_request(access_token, server, route, insecure=False, arguments={}):
     """Makes a request to the server API and returns the result."""
@@ -21,7 +27,7 @@ def api_request(access_token, server, route, insecure=False, arguments={}):
         log.info('Requesting data from %s', address)
         req = request.Request(address)
         arguments = []
-        response = request.urlopen(req, None, TIMEOUT)
+        response = request.urlopen(req, None, TIMEOUT, context=urlopen)
         return json.loads(response.read().decode('utf-8'))
     except error.HTTPError as ex:
         log.warning('Error while requesting from server: %s', str(ex))
