@@ -4,6 +4,29 @@ from functools import wraps
 from json import loads
 from datetime import datetime, timedelta
 from time import mktime
+import ssl
+
+# Attempt to monkeypatch urllib ssl
+import urllib.request
+old_init_urllib = urllib.request.ssl.SSLSocket.__init__
+
+@wraps(old_init_urllib)
+def ubuntu_openssl_bug_965371_urllib(self, *args, **kwargs):
+  kwargs['ssl_version'] = ssl.PROTOCOL_TLSv1
+  old_init_urllib(self, *args, **kwargs)
+
+urllib.request.ssl.SSLSocket.__init__ = ubuntu_openssl_bug_965371_urllib
+
+def sslwrap(func):
+    @wraps(func)
+    def bar(*args, **kw):
+        kw['ssl_version'] = ssl.PROTOCOL_TLSv1
+        return func(*args, **kw)
+    return bar
+
+urllib.request.ssl.wrap_socket = sslwrap(ssl.wrap_socket)
+ssl.wrap_socket = sslwrap(ssl.wrap_socket)
+
 try:
     from urllib import urlencode
     from urllib2 import Request, urlopen
@@ -21,10 +44,18 @@ try:
             pass
 
         return 'utf-8'
-    HTTPMessage.get_content_charset = get_charset 
+    HTTPMessage.get_content_charset = get_charset
 except ImportError: # pragma: no cover
     from urllib.parse import urlencode, urlsplit, urlunsplit, parse_qsl
     from urllib.request import Request, urlopen
+
+# Force TLSv1 to fix an longstanding Python/OpenSSL Bug
+# See: http://stackoverflow.com/q/32115607
+SSL_CONTEXT = ssl.SSLContext(ssl.PROTOCOL_TLSv1)
+
+
+
+
 
 
 class Client(object):
@@ -60,7 +91,7 @@ class Client(object):
         self.token_expires = -1
         self.refresh_token = None
 
-    def auth_uri(self, redirect_uri=None, scope=None, scope_delim=None, 
+    def auth_uri(self, redirect_uri=None, scope=None, scope_delim=None,
         state=None, **kwargs):
 
         """  Builds the auth URI for the authorization endpoint
@@ -128,7 +159,7 @@ class Client(object):
 
         # TODO: maybe raise an exception here if status code isn't 200?
         msg = urlopen(self.token_endpoint, urlencode(kwargs).encode(
-            'utf-8'))
+            'utf-8'), context=SSL_CONTEXT)
         data = parser(msg.read().decode(msg.info().get_content_charset() or
             'utf-8'))
 
@@ -150,7 +181,7 @@ class Client(object):
         self.request_token(refresh_token=self.refresh_token,
             grant_type='refresh_token')
 
-    def request(self, url, method=None, data=None, headers=None, parser=None): 
+    def request(self, url, method=None, data=None, headers=None, parser=None):
         """ Request user data from the resource endpoint
         :param url: The path to the resource and querystring if required
         :param method: HTTP method. Defaults to ``GET`` unless data is not None
@@ -160,12 +191,12 @@ class Client(object):
                        to ``json.loads`.`
         """
         assert self.access_token is not None
-        parser = parser or loads 
+        parser = parser or loads
 
         if not method:
             method = 'GET' if not data else 'POST'
 
-        req = self.token_transport('{0}{1}'.format(self.resource_endpoint, 
+        req = self.token_transport('{0}{1}'.format(self.resource_endpoint,
             url), self.access_token, data=data, method=method, headers=headers)
 
         resp = urlopen(req)

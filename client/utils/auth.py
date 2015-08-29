@@ -7,7 +7,10 @@ import sys
 import time
 import webbrowser
 from urllib.request import urlopen
+import ssl
+import logging
 import json
+
 from .html import auth_html, partial_course_html, partial_nocourse_html, red_css
 
 CLIENT_ID = \
@@ -18,6 +21,9 @@ CLIENT_SECRET = 'zGY9okExIBnompFTWcBmOZo4'
 REFRESH_FILE = '.ok_refresh'
 REDIRECT_HOST = "localhost"
 TIMEOUT = 10
+# Force TLSv1 to fix an longstanding Python/OpenSSL Bug
+# See: http://stackoverflow.com/q/32115607
+SSL_CONTEXT = ssl.SSLContext(ssl.PROTOCOL_TLSv1)
 
 SERVER = 'http://ok-server.appspot.com'
 
@@ -33,7 +39,7 @@ def pick_free_port():
             continue
         finally:
             s.close()
-        
+
         return port_guess
 
 REDIRECT_PORT = pick_free_port()
@@ -63,11 +69,16 @@ def get_storage():
     return storage['access_token'], storage['expires_at'], storage['refresh_token']
 
 def update_storage(access_token, expires_in, refresh_token):
+    if access_token == None:
+        print('There was a problem during authentication')
+        raise TypeError('No Access Token')
+
     cur_time = int(time.time())
+    expires_at = cur_time + expires_in
     with open(REFRESH_FILE, 'wb') as fp:
         pickle.dump({
             'access_token': access_token,
-            'expires_at': cur_time + expires_in,
+            'expires_at': expires_at,
             'refresh_token': refresh_token
         }, fp)
 
@@ -137,7 +148,7 @@ def authenticate(force=False):
 def success_page(server, email):
     """Generate HTML for the auth page - fetch courses and plug into templates"""
     API = server + '/enrollment?email=%s' % email
-    data = urlopen(API).read().decode("utf-8")
+    data = urlopen(API, context=SSL_CONTEXT).read().decode("utf-8")
     return success_auth(success_courses(email, data, server))
 
 
