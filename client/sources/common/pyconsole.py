@@ -51,8 +51,9 @@ class PythonConsole(interpreter.Console):
             raise interpreter.ConsoleException(e)
         except Exception as e:
             stacktrace = traceback.format_exc()
-            token = '<module>\n'
-            index = stacktrace.rfind(token) + len(token)
+            token = '<string>'
+            token_start = stacktrace.rfind(token)
+            index = stacktrace.find('\n', token_start) + 1
             stacktrace = stacktrace[index:].rstrip('\n')
             if '\n' in stacktrace:
                 print('Traceback (most recent call last):')
