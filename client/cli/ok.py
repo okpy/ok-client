@@ -11,6 +11,7 @@ import argparse
 import client
 import logging
 import os
+import sys
 
 LOGGING_FORMAT = '%(levelname)s  | %(filename)s:%(lineno)d | %(message)s'
 logging.basicConfig(format=LOGGING_FORMAT)
@@ -48,6 +49,8 @@ def parse_input():
                         help="partial path to directory to lock")
     parser.add_argument('--score', action='store_true',
                         help="Scores the assignment")
+    parser.add_argument('--score-out', type=argparse.FileType('w'),
+                        default=sys.stdout, help="file to write scores to")
     parser.add_argument('--config', type=str,
                         help="Specify a configuration file")
     parser.add_argument('--timeout', type=int, default=10,

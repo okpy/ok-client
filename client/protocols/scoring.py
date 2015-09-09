@@ -50,11 +50,11 @@ class ScoringProtocol(protocol_models.Protocol):
             partner = test.partner if test.partner != core.NoValue else None
             raw_scores[test.name, partner] = (test.score(), test.points)
 
-        messages['scoring'] =  display_breakdown(raw_scores)
+        messages['scoring'] =  display_breakdown(raw_scores, self.args.score_out)
         print()
 
-def display_breakdown(scores):
-    """Prints the point breakdown given a dictionary of scores.
+def display_breakdown(scores, outfile):
+    """Writes the point breakdown to outfile given a dictionary of scores.
 
     RETURNS:
     dict; maps partner (str) -> finalized score (float)
@@ -62,25 +62,27 @@ def display_breakdown(scores):
     partner_totals = {}
 
     format.print_line('-')
-    print('Point breakdown')
+    print('Point breakdown', file=outfile)
     for (name, partner), (score, total) in scores.items():
-        print('    {}: {}/{}'.format(name, score, total))
+        print('    {}: {}/{}'.format(name, score, total), file=outfile)
         partner_totals[partner] = partner_totals.get(partner, 0) + score
-    print()
+    print(file=outfile)
 
     shared_points = partner_totals.get(None, 0)
     if None in partner_totals:
         del partner_totals[None]
 
     finalized_scores = {}
-    print('Score:')
+    print('Score:', file=outfile)
     if len(partner_totals) == 0:
-        print('    {}: {}'.format(NO_PARTNER_NAME, shared_points))
+        print('    {}: {}'.format(NO_PARTNER_NAME, shared_points), file=outfile)
         finalized_scores[NO_PARTNER_NAME] = shared_points
     else:
         for partner, score in sorted(partner_totals.items()):
-            print('    Partner {}: {}'.format(partner, score + shared_points))
+            print('    Partner {}: {}'.format(partner, score + shared_points),
+                  file=outfile)
             finalized_scores[partner] = score + shared_points
+    outfile.flush()
     return finalized_scores
 
 protocol = ScoringProtocol
