@@ -1,4 +1,4 @@
-__version__ = 'v1.4.3'
+__version__ = 'v1.4.4'
 FILE_NAME = 'ok'
 
 import os
