@@ -99,7 +99,7 @@ class SqliteConsole(interpreter.Console):
         try:
             cursor = self.evaluate(code)
         except interpreter.ConsoleException as e:
-            actual = [e.exception_type]
+            actual = str(e.exception_type)
         else:
             actual = self.format_rows(cursor)
         self._diff_output(expected, actual)
