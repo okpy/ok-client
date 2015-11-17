@@ -267,6 +267,7 @@ class SqliteConsole(interpreter.Console):
 
 class SqliteSuite(doctest.DoctestSuite):
     console_type = SqliteConsole
+    # TODO: Ordered should be a property of cases, not entire suites.
     ordered = core.Boolean(default=False)
 
     def __init__(self, verbose, interactive, timeout=None, **fields):
