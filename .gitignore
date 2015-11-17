@@ -19,7 +19,7 @@ tmp
 # pip-related files
 *.egg-info
 dist
-pip-selftest.json
+pip-selfcheck.json
 
 # ok-related files
 *.ok_refresh
