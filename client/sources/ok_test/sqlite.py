@@ -105,6 +105,13 @@ class SqliteConsole(interpreter.Console):
         self._diff_output(expected, actual)
 
     def _diff_output(self, expected, actual):
+        """Raises an interpreter.ConsoleException if expected and actual output
+        don't match.
+
+        PARAMETERS:
+        expected -- str; may be multiple lines
+        actual   -- str; may be multiple lines
+        """
         expected = expected.split('\n')
         actual = actual.split('\n')
 
@@ -198,14 +205,14 @@ class SqliteConsole(interpreter.Console):
         """Print rows from the given sqlite cursor, formatted with pipes "|".
 
         RETURNS:
-        set; set of rows (formatted as strings with pipes "|" to delimit columns)
+        str; sqlite output (formatted as strings with pipes "|" to delimit columns)
         """
-        rows = set()
+        rows = []
         for row in cursor:
             row = '|'.join(map(str, row))
-            rows.add(row)
+            rows.append(row)
             print(row)
-        return rows
+        return '\n'.join(rows)
 
     def evaluate_dot(self, code):
         """Performs dot-command expansion on the given code.
