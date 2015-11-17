@@ -46,7 +46,7 @@ class SqliteConsole(interpreter.Console):
                    PATH=os.getcwd() + os.pathsep + os.environ["PATH"])
         if self._has_sqlite_cli(env):
             test, expected, actual = self._use_sqlite_cli(env)
-            print(format.indent(test, 'sqlite> '))
+            print(format.indent(test, 'sqlite> '))  # TODO: show test with prompt
             print(actual)
             try:
                 self._diff_output(expected, actual)
