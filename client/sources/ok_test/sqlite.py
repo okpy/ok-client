@@ -45,19 +45,14 @@ class SqliteConsole(interpreter.Console):
         env = dict(os.environ,
                    PATH=os.getcwd() + os.pathsep + os.environ["PATH"])
         if self._has_sqlite_cli(env):
-            print('Unfortunately, OK is unable to use sqlite3 to test your code directly.')
-            print('Here is a transcript of what your code does in the sqlite3 interpreter.')
-            print()
-            test, expected, result = self._use_sqlite_cli(env)
-            print('TEST:')
-            print(format.indent(test, '    '))
-            print('EXPECTED (order does not matter):')
-            print(format.indent(expected, '    '))
-            print('OUTPUT:')
-            print(format.indent(result, '    '))
-            print()
-            print("Please manually check if your solution's output is correct.")
-            return False
+            test, expected, actual = self._use_sqlite_cli(env)
+            print(format.indent(test, 'sqlite> '))
+            print(actual)
+            try:
+                self._diff_output(expected, actual)
+                return True
+            except interpreter.ConsoleException:
+                return False
         else:
             print("ERROR: could not run sqlite3.")
             print("Tests will not pass, but you can still submit your assignment.")
@@ -105,7 +100,9 @@ class SqliteConsole(interpreter.Console):
             actual = [e.exception_type]
         else:
             actual = self.format_rows(cursor)
+        self._diff_output(expected, actual)
 
+    def _diff_output(self, expected, actual):
         if expected != 'Error':
             expected = set(expected.split('\n'))
         if expected != actual:
