@@ -115,11 +115,12 @@ class SqliteConsole(interpreter.Console):
         expected = expected.split('\n')
         actual = actual.split('\n')
 
-        if not self.ordered:
-            expected = set(expected)
-            actual = set(actual)
+        if self.ordered:
+            correct = expected == actual
+        else:
+            correct = sorted(expected) == sorted(actual)
 
-        if expected != actual:
+        if not correct:
             print()
             error_msg = '# Error: expected'
             if self.ordered:
