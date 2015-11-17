@@ -1,7 +1,7 @@
 """Console for interpreting sqlite."""
 
 from client import exceptions
-from client.sources.common import interpreter
+from client.sources.common import core, interpreter
 from client.sources.ok_test import doctest
 from client.utils import format
 from client.utils import timer
@@ -16,6 +16,8 @@ class SqliteConsole(interpreter.Console):
 
     MODULE = 'sqlite3'
     VERSION = (3, 8, 3)
+
+    ordered = False # will be set by SqliteSuite.__init__
 
     def load(self, code, setup='', teardown=''):
         """Prepares a set of setup, test, and teardown code to be
@@ -45,19 +47,14 @@ class SqliteConsole(interpreter.Console):
         env = dict(os.environ,
                    PATH=os.getcwd() + os.pathsep + os.environ["PATH"])
         if self._has_sqlite_cli(env):
-            print('Unfortunately, OK is unable to use sqlite3 to test your code directly.')
-            print('Here is a transcript of what your code does in the sqlite3 interpreter.')
-            print()
-            test, expected, result = self._use_sqlite_cli(env)
-            print('TEST:')
-            print(format.indent(test, '    '))
-            print('EXPECTED (order does not matter):')
-            print(format.indent(expected, '    '))
-            print('OUTPUT:')
-            print(format.indent(result, '    '))
-            print()
-            print("Please manually check if your solution's output is correct.")
-            return False
+            test, expected, actual = self._use_sqlite_cli(env)
+            print(format.indent(test, 'sqlite> '))  # TODO: show test with prompt
+            print(actual)
+            try:
+                self._diff_output(expected, actual)
+                return True
+            except interpreter.ConsoleException:
+                return False
         else:
             print("ERROR: could not run sqlite3.")
             print("Tests will not pass, but you can still submit your assignment.")
@@ -105,12 +102,30 @@ class SqliteConsole(interpreter.Console):
             actual = [e.exception_type]
         else:
             actual = self.format_rows(cursor)
+        self._diff_output(expected, actual)
 
-        if expected != 'Error':
-            expected = set(expected.split('\n'))
-        if expected != actual:
+    def _diff_output(self, expected, actual):
+        """Raises an interpreter.ConsoleException if expected and actual output
+        don't match.
+
+        PARAMETERS:
+        expected -- str; may be multiple lines
+        actual   -- str; may be multiple lines
+        """
+        expected = expected.split('\n')
+        actual = actual.split('\n')
+
+        if self.ordered:
+            correct = expected == actual
+        else:
+            correct = sorted(expected) == sorted(actual)
+
+        if not correct:
             print()
-            print('# Error: expected')
+            error_msg = '# Error: expected'
+            if self.ordered:
+                error_msg += ' ordered output'
+            print(error_msg)
             print('\n'.join('#     {}'.format(line)
                             for line in expected))
             print('# but got')
@@ -191,14 +206,14 @@ class SqliteConsole(interpreter.Console):
         """Print rows from the given sqlite cursor, formatted with pipes "|".
 
         RETURNS:
-        set; set of rows (formatted as strings with pipes "|" to delimit columns)
+        str; sqlite output (formatted as strings with pipes "|" to delimit columns)
         """
-        rows = set()
+        rows = []
         for row in cursor:
             row = '|'.join(map(str, row))
-            rows.add(row)
+            rows.append(row)
             print(row)
-        return rows
+        return '\n'.join(rows)
 
     def evaluate_dot(self, code):
         """Performs dot-command expansion on the given code.
@@ -252,4 +267,9 @@ class SqliteConsole(interpreter.Console):
 
 class SqliteSuite(doctest.DoctestSuite):
     console_type = SqliteConsole
+    # TODO: Ordered should be a property of cases, not entire suites.
+    ordered = core.Boolean(default=False)
 
+    def __init__(self, verbose, interactive, timeout=None, **fields):
+        super().__init__(verbose, interactive, timeout, **fields)
+        self.console.ordered = fields.get('ordered', False)

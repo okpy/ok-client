@@ -4,6 +4,7 @@ test = {
   'suites': [
     {
       'type': 'sqlite',
+      'ordered': False,
       'setup': r"""
       sqlite> .read hw1.sql
       """,
