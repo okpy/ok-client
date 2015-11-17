@@ -1,7 +1,7 @@
 """Console for interpreting sqlite."""
 
 from client import exceptions
-from client.sources.common import interpreter
+from client.sources.common import core, interpreter
 from client.sources.ok_test import doctest
 from client.utils import format
 from client.utils import timer
@@ -16,6 +16,8 @@ class SqliteConsole(interpreter.Console):
 
     MODULE = 'sqlite3'
     VERSION = (3, 8, 3)
+
+    ordered = False # will be set by SqliteSuite.__init__
 
     def load(self, code, setup='', teardown=''):
         """Prepares a set of setup, test, and teardown code to be
@@ -103,11 +105,19 @@ class SqliteConsole(interpreter.Console):
         self._diff_output(expected, actual)
 
     def _diff_output(self, expected, actual):
-        if expected != 'Error':
-            expected = set(expected.split('\n'))
+        expected = expected.split('\n')
+        actual = actual.split('\n')
+
+        if not self.ordered:
+            expected = set(expected)
+            actual = set(actual)
+
         if expected != actual:
             print()
-            print('# Error: expected')
+            error_msg = '# Error: expected'
+            if self.ordered:
+                error_msg += ' ordered output'
+            print(error_msg)
             print('\n'.join('#     {}'.format(line)
                             for line in expected))
             print('# but got')
@@ -249,4 +259,8 @@ class SqliteConsole(interpreter.Console):
 
 class SqliteSuite(doctest.DoctestSuite):
     console_type = SqliteConsole
+    ordered = core.Boolean(default=False)
 
+    def __init__(self, verbose, interactive, timeout=None, **fields):
+        super().__init__(verbose, interactive, timeout, **fields)
+        self.console.ordered = 'ordered' in fields and fields['ordered']
