@@ -263,4 +263,4 @@ class SqliteSuite(doctest.DoctestSuite):
 
     def __init__(self, verbose, interactive, timeout=None, **fields):
         super().__init__(verbose, interactive, timeout, **fields)
-        self.console.ordered = 'ordered' in fields and fields['ordered']
+        self.console.ordered = fields.get('ordered', False)
