@@ -3,6 +3,9 @@
 class OkException(BaseException):
     """Base exception class for OK."""
 
+class AuthenticationException(OkException):
+    """Exceptions related to authentication."""
+
 class ProtocolException(OkException):
     """Exceptions related to protocol errors."""
 
