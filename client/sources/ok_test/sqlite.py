@@ -198,7 +198,8 @@ class SqliteConsole(interpreter.Console):
                                     universal_newlines=True,
                                     stdin=subprocess.PIPE,
                                     stdout=subprocess.PIPE,
-                                    stderr=subprocess.PIPE)
+                                    stderr=subprocess.PIPE,
+                                    env=env)
         result, error = process.communicate(test)
         return test, '\n'.join(expected), (error + '\n' + result).strip()
 
