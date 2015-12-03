@@ -8,9 +8,9 @@ from socket import error as socket_error
 log = logging.getLogger(__name__)
 
 VERSION_ENDPOINT = 'https://{server}/api/v1/version'
-TIMEOUT = 5  # seconds
+SHORT_TIMEOUT = 3  # seconds
 
-def check_version(server, version, filename, timeout=TIMEOUT):
+def check_version(server, version, filename, timeout=SHORT_TIMEOUT):
     """Check for the latest version of OK and update accordingly."""
 
     address = VERSION_ENDPOINT.format(server=server)
@@ -21,10 +21,9 @@ def check_version(server, version, filename, timeout=TIMEOUT):
 
     try:
         request = urllib.request.Request(address)
-        response = urllib.request.urlopen(request, timeout=TIMEOUT)
+        response = urllib.request.urlopen(request, timeout=timeout)
     except (urllib.error.HTTPError, urllib.error.URLError, socket_error) as e:
         print('Network error when checking for updates.')
-        print('Current OK version: %s', version)
         log.warning('Network error when checking version from %s: %s', address,
                     str(e), stack_info=True)
         return False
@@ -46,8 +45,8 @@ def check_version(server, version, filename, timeout=TIMEOUT):
 
     try:
         request = urllib.request.Request(download_link)
-        response = urllib.request.urlopen(request, timeout=TIMEOUT)
-    except urllib.error.HTTPError as e:
+        response = urllib.request.urlopen(request, timeout=timeout)
+    except (urllib.error.HTTPError, urllib.error.URLError, socket_error) as e:
         print('Error when downloading new version of OK')
         log.warning('Error when downloading new version of OK: %s', str(e),
                     stack_info=True)

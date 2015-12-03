@@ -99,9 +99,9 @@ def main():
         exit(0)
     elif args.update:
         print("Current version: {}".format(client.__version__))
-        software_update.check_version(args.server, client.__version__,
-                                      client.FILE_NAME, timeout=10)
-        exit(0)
+        did_update = software_update.check_version(
+                args.server, client.__version__, client.FILE_NAME, timeout=10)
+        exit(not did_update) # exit with error if ok failed to update
 
     assign = None
     try:
