@@ -140,11 +140,12 @@ class SqliteConsole(interpreter.Console):
         bool; True if able to import the sqlite3 module and the binding version
         is at least self.VERSION; False otherwise.
         """
-        try:
-            self.sqlite3 = importlib.import_module(self.MODULE)
-        except ImportError:
-            return False
-        return self.sqlite3.sqlite_version_info >= self.VERSION
+        return False # Hotfix to prevent segfaults (See Issue 140)
+        # try:
+        #     self.sqlite3 = importlib.import_module(self.MODULE)
+        # except ImportError:
+        #     return False
+        # return self.sqlite3.sqlite_version_info >= self.VERSION
 
     def _has_sqlite_cli(self, env):
         """Checks if the command "sqlite3" is executable with the given

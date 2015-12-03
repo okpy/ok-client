@@ -15,7 +15,7 @@ log = logging.getLogger(__name__)
 class BackupProtocol(models.Protocol):
 
     # Timeouts are specified in seconds.
-    SHORT_TIMEOUT = 1
+    SHORT_TIMEOUT = 2
 
     RETRY_LIMIT = 5
     BACKUP_FILE = ".ok_messages"
