@@ -25,4 +25,4 @@ class TimedTest(unittest.TestCase):
     def testTimeout(self):
         def waits():
             time.sleep(1)
-        self.assertRaises(exceptions.Timeout, timer.timed, 0, waits)
+        self.assertRaises(exceptions.Timeout, timer.timed, 0.1, waits)
