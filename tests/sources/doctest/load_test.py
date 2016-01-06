@@ -4,8 +4,11 @@ from client.sources.doctest import models
 import mock
 import unittest
 
+import os.path
+
 class LoadTest(unittest.TestCase):
     VALID_FILE = 'valid.py'
+    VALID_MODULE = os.path.splitext(VALID_FILE)[0]
     INVALID_FILE = 'invalid.ext'
     FUNCTION = 'function'
 
@@ -75,6 +78,7 @@ class LoadTest(unittest.TestCase):
         >>> 1 + 2
         3
         """
+        self.mockModule.__name__ = self.mockFunction.__module__ = self.VALID_MODULE
         result = self.call_load()
 
         self.assertIsInstance(result, dict)
