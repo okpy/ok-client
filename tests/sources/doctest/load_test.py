@@ -4,8 +4,11 @@ from client.sources.doctest import models
 import mock
 import unittest
 
+import os.path
+
 class LoadTest(unittest.TestCase):
     VALID_FILE = 'valid.py'
+    VALID_MODULE = os.path.splitext(VALID_FILE)[0]
     INVALID_FILE = 'invalid.ext'
     FUNCTION = 'function'
     METHOD = 'cls.method'
@@ -77,6 +80,7 @@ class LoadTest(unittest.TestCase):
         >>> 1 + 2
         3
         """
+        self.mockModule.__name__ = self.mockFunction.__module__ = self.VALID_MODULE
         result = self.call_load()
 
         self.assertIsInstance(result, dict)
@@ -98,3 +102,46 @@ class LoadTest(unittest.TestCase):
         self.assertEqual(1, len(result))
         self.assertIn(self.METHOD, result)
         self.assertIsInstance(result[self.METHOD], models.Doctest)
+
+    def _testOnlyModuleFunctions(self, filter_fn):
+        fn_names = []
+        mock_fns = []
+        expected = []
+        for i in range(3):
+            fn_name = 'f{}'.format(i)
+            fn_names.append(fn_name)
+
+            mock_fn = mock.Mock()
+            mock_fn.__doc__ = """
+            >>> {0} + {1}
+            {2}
+            """.format(i, i*2, i*3)
+            mock_fns.append(mock_fn)
+
+            if filter_fn(i):
+                mock_fn.__module__ = self.VALID_MODULE
+                expected.append(fn_name)
+            else:
+                mock_fn.__module__ = 'other'
+
+        self.mockModule.__name__ = self.VALID_MODULE
+        self.mockModule.__dir__ = lambda *args: fn_names
+        for fn_name, mock_fn in zip(fn_names, mock_fns):
+            setattr(self.mockModule, fn_name, mock_fn)
+
+        result = self.call_load()
+
+        self.assertIsInstance(result, dict)
+        self.assertEqual(len(expected), len(result))
+        for fn_name in expected:
+            self.assertIn(fn_name, result)
+            self.assertIsInstance(result[fn_name], models.Doctest)
+
+    def testOnlyModuleFunctions_allModuleFunctions(self):
+        self._testOnlyModuleFunctions(lambda i: True)
+
+    def testOnlyModuleFunctions_someModuleFunctions(self):
+        self._testOnlyModuleFunctions(lambda i: i % 2 == 0)
+
+    def testOnlyModuleFunctions_noModuleFunctions(self):
+        self._testOnlyModuleFunctions(lambda i: False)

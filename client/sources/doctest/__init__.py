@@ -48,7 +48,8 @@ def load(file, name, assign):
 def _load_tests(file, module, assign):
     tests = {}
     for name in dir(module):
-        if callable(getattr(module, name)):
+        to_test = getattr(module, name)
+        if callable(to_test) and to_test.__module__ == module.__name__:
             tests[name] = _load_test(file, module, name, assign)
     return tests
 
