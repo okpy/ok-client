@@ -98,6 +98,7 @@ class SchemeTest(models.Test):
             timer.timed(self.timeout, self.scheme.read_eval_print_loop,
                         (next_line, self.scheme.create_global_frame()))
         except BaseException as e:
+            output.on()
             if reader:
                 print("Tests terminated due to unhandled exception "
                       "after line {}:\n"

@@ -5,7 +5,8 @@ import threading
 import traceback
 
 def timed(timeout, fn, args=(), kargs={}):
-    """Evaluates expr in the given frame.
+    """For a nonzero timeout, evaluates a call expression in a separate thread.
+    If the timeout is 0, the expression is evaluated in the main thread.
 
     PARAMETERS:
     fn      -- function; Python function to be evaluated
@@ -20,6 +21,9 @@ def timed(timeout, fn, args=(), kargs={}):
     Timeout -- if thread takes longer than timeout to execute
     Error   -- if calling fn raises an error, raise it
     """
+    if timeout == 0:
+        return fn(*args, **kargs)
+
     submission = __ReturningThread(fn, args, kargs)
     submission.start()
     submission.join(timeout)

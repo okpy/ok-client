@@ -15,8 +15,7 @@ log = logging.getLogger(__name__)
 class BackupProtocol(models.Protocol):
 
     # Timeouts are specified in seconds.
-    SHORT_TIMEOUT = 1
-    LONG_TIMEOUT = 15
+    SHORT_TIMEOUT = 2
 
     RETRY_LIMIT = 5
     BACKUP_FILE = ".ok_messages"
@@ -97,10 +96,14 @@ class BackupProtocol(models.Protocol):
         num_messages = len(message_list)
 
         send_all = self.args.submit or self.args.backup
-        timeout = self.LONG_TIMEOUT if send_all else self.SHORT_TIMEOUT
+        if send_all:
+            timeout = None
+            stop_time = datetime.datetime.max
+        else:
+            timeout = self.SHORT_TIMEOUT
+            stop_time = datetime.datetime.now() + datetime.timedelta(seconds=timeout)
+            log.info('Setting timeout to %d seconds', timeout)
         retries = self.RETRY_LIMIT
-        stop_time = datetime.datetime.now() + datetime.timedelta(seconds=timeout)
-        log.info('Setting timeout to %d seconds', timeout)
 
         first_response = None
         error_msg = ''

@@ -11,6 +11,7 @@ class LoadTest(unittest.TestCase):
     VALID_MODULE = os.path.splitext(VALID_FILE)[0]
     INVALID_FILE = 'invalid.ext'
     FUNCTION = 'function'
+    METHOD = 'cls.method'
 
     def setUp(self):
         self.patcherIsFile = mock.patch('os.path.isfile')
@@ -24,6 +25,7 @@ class LoadTest(unittest.TestCase):
         self.mockModule = mock.MagicMock()
         self.mockLoadModule.return_value = self.mockModule
 
+        self.cls = mock.Mock()
         self.mockFunction = mock.Mock()
 
         self.assign = mock.Mock()
@@ -85,6 +87,21 @@ class LoadTest(unittest.TestCase):
         self.assertEqual(1, len(result))
         self.assertIn(self.FUNCTION, result)
         self.assertIsInstance(result[self.FUNCTION], models.Doctest)
+
+    def testSpecificMethod(self):
+        self.mockFunction.__doc__ = """
+        >>> 1 + 2
+        3
+        """
+        setattr(self.cls, self.METHOD.split('.')[1], self.mockFunction)
+        setattr(self.mockModule, self.METHOD.split('.')[0], self.cls)
+
+        result = self.call_load(name=self.METHOD)
+
+        self.assertIsInstance(result, dict)
+        self.assertEqual(1, len(result))
+        self.assertIn(self.METHOD, result)
+        self.assertIsInstance(result[self.METHOD], models.Doctest)
 
     def _testOnlyModuleFunctions(self, filter_fn):
         fn_names = []

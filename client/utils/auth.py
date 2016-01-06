@@ -1,4 +1,7 @@
 #!/usr/bin/env python3
+
+from client import exceptions
+
 from .sanction import Client
 from urllib.parse import urlparse, parse_qs
 import http.server
@@ -23,18 +26,15 @@ SERVER = 'http://ok-server.appspot.com'
 
 def pick_free_port():
     import socket
-    port_guess = 7777
-    while port_guess < 65535:
-        try:
-            s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-            s.bind(('localhost', port_guess))
-        except Exception as e: # Something went wrong with the binding
-            port_guess += 1
-            continue
-        finally:
-            s.close()
-        
-        return port_guess
+    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    try:
+        s.bind(('localhost', 0)) # find an open port
+    except OSError as e:
+        print('Unable to find an open port for authentication.')
+        raise exceptions.AuthenticationException(e)
+    addr, port = s.getsockname()
+    s.close()
+    return port
 
 REDIRECT_PORT = pick_free_port()
 REDIRECT_URI = "http://%s:%u/" % (REDIRECT_HOST, REDIRECT_PORT)

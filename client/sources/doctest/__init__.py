@@ -54,10 +54,14 @@ def _load_tests(file, module, assign):
     return tests
 
 def _load_test(file, module, name, assign):
-    if not hasattr(module, name):
-        raise ex.LoadingException('Module {} has no function {}'.format(
-                                  module.__name__, name))
-    func = getattr(module, name)
+    namespace = module
+    for attr in name.split('.'):
+        if not hasattr(namespace, attr):
+            raise ex.LoadingException('Module {} has no attribute {}'.format(
+                module.__name__, name))
+        namespace = getattr(namespace, attr)
+    func = namespace
+
     if not callable(func):
         raise ex.LoadingException('Attribute {} is not a function'.format(name))
 
