@@ -28,8 +28,6 @@ class BackupProtocol(models.Protocol):
         message_list = self.load_unsent_messages()
         message_list.append(messages)
 
-        self.check_ssl()
-
         access_token = auth.authenticate(False)
         log.info('Authenticated with access token %s', access_token)
 
@@ -73,22 +71,6 @@ class BackupProtocol(models.Protocol):
 
             pickle.dump(message_list, f)
             os.fsync(f)
-
-
-    def check_ssl(self):
-        if self.args.insecure:
-            return
-        try:
-            import ssl
-        except:
-            log.warning('Error importing ssl', stack_info=True)
-            raise Exception(
-                    'SSL Bindings are not installed. '
-                    'You can install python3 SSL bindings or run OK locally:\n'
-                    '\tpython3 ok --local')
-        else:
-            log.info('SSL bindings are available.')
-
 
 
     def send_all_messages(self, access_token, message_list):

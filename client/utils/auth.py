@@ -71,6 +71,18 @@ def update_storage(access_token, expires_in, refresh_token):
             'refresh_token': refresh_token
         }, fp)
 
+def check_ssl():
+    try:
+        import ssl
+    except:
+        log.warning('Error importing ssl', stack_info=True)
+        raise Exception(
+                'SSL Bindings are not installed. '
+                'You can install python3 SSL bindings or run OK locally:\n'
+                '\tpython3 ok --local')
+    else:
+        log.info('SSL bindings are available.')
+
 def authenticate(force=False):
     """
     Returns an oauth token that can be passed to the server for identification.
@@ -88,6 +100,8 @@ def authenticate(force=False):
             print('Performing authentication')
         except Exception as _:
             print('Performing authentication')
+
+    check_ssl()
 
     print("Please enter your bCourses email.")
     email = input("bCourses email: ")
