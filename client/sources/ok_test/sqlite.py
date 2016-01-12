@@ -31,9 +31,9 @@ class SqliteConsole(interpreter.Console):
         okay), pipe the test case into sqlite3. Otherwise, report an error.
         """
         env = dict(os.environ,
-                   PATH=os.getcwd() + os.pathsep + os.environ["PATH"])
         if self._has_sqlite_cli(env):
             test, expected, actual = self._use_sqlite_cli(env)
+                   PATH=os.getcwd() + os.pathsep + os.environ['PATH'])
             print(format.indent(test, 'sqlite> '))  # TODO: show test with prompt
             print(actual)
             try:
@@ -42,10 +42,10 @@ class SqliteConsole(interpreter.Console):
             except interpreter.ConsoleException:
                 return False
         else:
-            print("ERROR: could not run sqlite3.")
-            print("Tests will not pass, but you can still submit your assignment.")
-            print("Please download the newest version of sqlite3 into this folder")
-            print("to run tests.")
+            print('ERROR: could not run sqlite3.')
+            print('Tests will not pass, but you can still submit your assignment.')
+            print('Please download the newest version of sqlite3 into this folder')
+            print('to run tests.')
             return False
 
     def interact(self):
@@ -98,7 +98,7 @@ class SqliteConsole(interpreter.Console):
         # Modify PATH in subprocess to check current directory first for sqlite3
         # executable.
         try:
-            version = subprocess.check_output(["sqlite3", "--version"],
+            version = subprocess.check_output(['sqlite3', '--version'],
                                               env=env).decode()
         except (subprocess.CalledProcessError, FileNotFoundError):
             return False
@@ -131,7 +131,7 @@ class SqliteConsole(interpreter.Console):
             elif line.startswith(self.PS2):
                 test.append(line[len(self.PS2):])
         test = '\n'.join(test)
-        process = subprocess.Popen(["sqlite3"],
+        process = subprocess.Popen(['sqlite3'],
                                     universal_newlines=True,
                                     stdin=subprocess.PIPE,
                                     stdout=subprocess.PIPE,
