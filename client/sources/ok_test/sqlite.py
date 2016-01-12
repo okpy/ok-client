@@ -31,9 +31,9 @@ class SqliteConsole(interpreter.Console):
         okay), pipe the test case into sqlite3. Otherwise, report an error.
         """
         env = dict(os.environ,
+                   PATH=os.getcwd() + os.pathsep + os.environ['PATH'])
         if self._has_sqlite_cli(env):
             test, expected, actual = self._use_sqlite_cli(env)
-                   PATH=os.getcwd() + os.pathsep + os.environ['PATH'])
             print(format.indent(test, 'sqlite> '))  # TODO: show test with prompt
             print(actual)
             try:
