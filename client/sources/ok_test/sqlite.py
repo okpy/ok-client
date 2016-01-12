@@ -137,7 +137,12 @@ class SqliteConsole(interpreter.Console):
                                     stdout=subprocess.PIPE,
                                     stderr=subprocess.PIPE,
                                     env=env)
-        result, error = process.communicate(test)
+        try:
+            result, error = process.communicate(test, timeout=self.timeout)
+        except subprocess.TimeoutExpired as e:
+            process.kill()
+            print('# Error: evaluation exceeded {} seconds.'.format(self.timeout))
+            raise interpreter.ConsoleException(exceptions.Timeout(self.timeout))
         return test, '\n'.join(expected), (error + '\n' + result).strip()
 
 class SqliteSuite(doctest.DoctestSuite):
