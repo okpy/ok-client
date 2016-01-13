@@ -4,25 +4,26 @@ test = {
   'suites': [
     {
       'type': 'sqlite',
+      'ordered': True,
       'setup': r"""
       sqlite> .open hw1.db
       """,
       'cases': [
         {
           'code': r"""
-          sqlite> select * from colors;
-          red|primary
+          sqlite> select * from colors order by color;
           blue|primary
           green|secondary
+          red|primary
           yellow|primary
           """,
         },
         {
           'code': r"""
-          sqlite> select color from colors;
-          red
+          sqlite> select color from colors order by color;
           blue
           green
+          red
           yellow
           """,
         },
