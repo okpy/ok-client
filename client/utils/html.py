@@ -52,7 +52,7 @@ partial_course_html = """
             <p class="blob-shiftcopy blob-copy ng-binding"><span class="icon-tag"></span>{institution}
                 &nbsp; {term}&nbsp;{year}</p>
         </div>
-        <a href="https://ok-server.appspot.com{url}">
+        <a href="https://okpy.org/{url}">
             <div class="blob-action">View Course
                 <span class="white arrow right"></span>
             </div>

@@ -22,7 +22,7 @@ REFRESH_FILE = '.ok_refresh'
 REDIRECT_HOST = "localhost"
 TIMEOUT = 10
 
-SERVER = 'http://ok-server.appspot.com'
+SERVER = 'https://okpy.org'
 
 def pick_free_port():
     import socket
@@ -150,7 +150,7 @@ def authenticate(force=False):
 
 def success_page(server, email):
     """Generate HTML for the auth page - fetch courses and plug into templates"""
-    API = server + '/enrollment?email=%s' % email
+    API = server + '/api/v3/enrollment?email=%s' % email
     data = urlopen(API).read().decode("utf-8")
     return success_auth(success_courses(email, data, server))
 

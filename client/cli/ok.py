@@ -74,7 +74,7 @@ def parse_input():
     parser.add_argument('--local', action='store_true',
                         help="disable any network activity")
     parser.add_argument('--server', type=str,
-                        default='ok-server.appspot.com',
+                        default='okpy.org',
                         help="server address")
     parser.add_argument('--authenticate', action='store_true',
                         help="authenticate, ignoring previous authentication")

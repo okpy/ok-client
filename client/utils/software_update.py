@@ -7,7 +7,7 @@ from socket import error as socket_error
 
 log = logging.getLogger(__name__)
 
-VERSION_ENDPOINT = 'https://{server}/api/v1/version'
+VERSION_ENDPOINT = 'https://{server}/api/v3/version'
 SHORT_TIMEOUT = 3  # seconds
 
 def check_version(server, version, filename, timeout=SHORT_TIMEOUT):

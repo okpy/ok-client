@@ -19,7 +19,7 @@ class BackupProtocol(models.Protocol):
 
     RETRY_LIMIT = 5
     BACKUP_FILE = ".ok_messages"
-    SUBMISSION_ENDPOINT = '{prefix}://{server}/api/v1/submission?'
+    SUBMISSION_ENDPOINT = '{prefix}://{server}/api/v3/submission?'
 
     def run(self, messages):
         if self.args.local or self.args.export or self.args.restore:
@@ -37,7 +37,7 @@ class BackupProtocol(models.Protocol):
             print('Backup successful for user: '
                   '{0}'.format(response['data']['email']))
             if self.args.submit or self.args.backup:
-                print('URL: https://ok-server.appspot.com/#/'
+                print('URL: https://okpy.org/course/'
                       '{0}/submission/{1}'.format(response['data']['course'],
                                                   response['data']['key']))
             if self.args.backup:
