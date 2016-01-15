@@ -1,6 +1,6 @@
 from client import exceptions as ex
 from client.cli import ok
-from client.cli.common import assignment
+from client.api import assignment
 from client.cli.common import messages
 from client.protocols import grading
 from client.protocols import scoring
@@ -23,7 +23,7 @@ def main():
     log.debug(args)
 
     try:
-        assign = assignment.load_config(args.config, args)
+        assign = assignment.load_assignment(args.config, args)
         assign.load()
 
         msgs = messages.Messages()

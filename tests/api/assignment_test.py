@@ -1,9 +1,104 @@
 from client import exceptions as ex
-from client.cli.common import assignment
+from client.api import assignment
 from client.sources.common import core
 import collections
 import mock
 import unittest
+
+class LoadAssignmentTest(unittest.TestCase):
+    VALID_CONFIG = """
+    {
+        "name": "Homework 1",
+        "endpoint": "https://okpy.org/path/to/endpoint",
+        "src": [
+            "hw1.py"
+        ],
+        "tests": {
+            "hw1.py": "doctest"
+        },
+        "default_tests": [
+            "square"
+        ],
+        "protocols": [
+            "restore",
+            "export",
+            "file_contents",
+            "analytics",
+            "unlock",
+            "lock",
+            "grading",
+            "scoring",
+            "backup"
+        ]
+    }
+    """
+
+    def setUp(self):
+        self.is_file_patcher = mock.patch('os.path.isfile')
+        self.mock_is_file = self.is_file_patcher.start()
+        self.mock_is_file.return_value = True
+
+        self.glob_patcher = mock.patch('glob.glob')
+        self.mock_glob = self.glob_patcher.start()
+
+        self.import_module_patcher = mock.patch('importlib.import_module')
+        self.mock_import_module = self.import_module_patcher.start()
+
+    def tearDown(self):
+        self.is_file_patcher.stop()
+        self.glob_patcher.stop()
+        self.import_module_patcher.stop()
+
+    def testFailOnNonexistentConfig(self):
+        self.mock_is_file.return_value = False
+        with self.assertRaises(ex.LoadingException) as cm:
+            assignment.load_assignment('does_not_exist.ok')
+        self.assertEquals(
+                'Could not find config file: does_not_exist.ok',
+                str(cm.exception))
+
+    def testFailOnMultipleFoundConfigs(self):
+        self.mock_glob.return_value = ['1.ok', '2.ok']
+        with self.assertRaises(ex.LoadingException) as cm:
+            assignment.load_assignment()
+        self.assertEquals(
+                '\n'.join([
+                    'Multiple .ok files found:',
+                    '    1.ok 2.ok',
+                    "Please specify a particular assignment's config file with",
+                    '    python3 ok --config <config file>'
+                ]),
+                str(cm.exception))
+
+    def testFailOnCorruptedConfig(self):
+        corrupted_config = '{not valid json}'
+        mock_open = mock.mock_open(read_data=corrupted_config)
+        with mock.patch('builtins.open', mock_open):
+            with self.assertRaises(ex.LoadingException) as cm:
+                assignment.load_assignment('corrupted.ok')
+        self.assertEquals(
+                'corrupted.ok is a malformed .ok configuration file. '
+                'Please re-download corrupted.ok.',
+                str(cm.exception))
+
+    def testSpecificConfig(self):
+        mock_open = mock.mock_open(read_data=self.VALID_CONFIG)
+        with mock.patch('builtins.open', mock_open):
+            with mock.patch('client.api.assignment.Assignment') as mock_assign:
+                assign = assignment.load_assignment('some_config.ok')
+        # Verify config file was actually opened.
+        mock_open.assert_called_with('some_config.ok', 'r')
+        mock_open().read.assert_called_once_with()
+
+    def testSearchForConfigInFilesystem(self):
+        self.mock_glob.return_value = ['some_config.ok']
+        mock_open = mock.mock_open(read_data=self.VALID_CONFIG)
+        with mock.patch('builtins.open', mock_open):
+            with mock.patch('client.api.assignment.Assignment') as mock_assign:
+                assign = assignment.load_assignment()
+        # Verify config file was actually opened.
+        mock_open.assert_called_with('some_config.ok', 'r')
+        mock_open().read.assert_called_once_with()
 
 class AssignmentTest(unittest.TestCase):
     NAME = 'Assignment'
@@ -61,9 +156,6 @@ class AssignmentTest(unittest.TestCase):
                                        endpoint=self.ENDPOINT, src=self.SRC,
                                        tests=tests, protocols=protocols,
                                        default_tests=default_tests)
-        assign._import_module = self.mockImportModule
-        assign._find_files = self.mockFindFiles
-        assign.load()
         return assign
 
     def testConstructor_noTestSources(self):
@@ -232,8 +324,7 @@ class AssignmentTest(unittest.TestCase):
         )), assign.test_map)
         self.assertEqual([self.mockTest], assign.specified_tests)
 
-    def testConstructor_allTests_defaultTests(self):
-        """The --all option should override default tests."""
+    def testConstructor_allTests_overrideDefaultTests(self):
         self.cmd_args.question = []
         self.cmd_args.all = True
         self.mockFindFiles.return_value = self.FILES
@@ -296,3 +387,90 @@ class AssignmentTest(unittest.TestCase):
             assign.dump_tests()
         except ex.SerializeException:
             self.fail('If one test fails to dump, continue dumping the rest.')
+
+class AssignmentGradeTest(unittest.TestCase):
+    CONFIG = """
+    {
+        "name": "Homework 1",
+        "endpoint": "",
+        "tests": {
+            "q1.py": "ok_test"
+        },
+        "protocols": []
+    }
+    """
+    def setUp(self):
+        self.is_file_patcher = mock.patch('os.path.isfile')
+        self.mock_is_file = self.is_file_patcher.start()
+        self.mock_is_file.return_value = True
+
+        self.glob_patcher = mock.patch('glob.glob')
+        self.mock_glob = self.glob_patcher.start()
+
+        self.load_module_patcher = mock.patch('client.sources.common.importing.load_module')
+        self.mock_load_module = self.load_module_patcher.start()
+
+    def tearDown(self):
+        self.is_file_patcher.stop()
+        self.glob_patcher.stop()
+        self.load_module_patcher.stop()
+
+    def testGrade_noSuchTest(self):
+        assign = self.makeAssignmentWithTestCode('')
+        with self.assertRaises(ex.LoadingException) as cm:
+            assign.grade('no_such_test')
+        self.assertEqual('Invalid test specified: no_such_test', str(cm.exception))
+
+    def testGrade_userSuppliedEnvironment(self):
+        assign = self.makeAssignmentWithTestCode("""
+        >>> square(4)
+        16
+        """)
+
+        # This should fail because square isn't defined in the empty environment.
+        results = assign.grade('q1', env={})
+        self.assertEqual(0, results['passed'])
+        self.assertEqual(1, results['failed'])
+
+        # This should pass now that square is defined.
+        results = assign.grade('q1', env={
+            'square': lambda x: x * x
+        })
+        self.assertEqual(1, results['passed'])
+        self.assertEqual(0, results['failed'])
+
+    def testGrade_defaultEnvironmentIsGlobal(self):
+        assign = self.makeAssignmentWithTestCode("""
+        >>> square(4)
+        16
+        """)
+
+        # This should fail because square isn't defined in the empty environment.
+        results = assign.grade('q1')
+        self.assertEqual(0, results['passed'])
+        self.assertEqual(1, results['failed'])
+
+        import __main__
+        __main__.square = lambda x: x * x
+
+        # This should pass now that square is defined.
+        results = assign.grade('q1')
+        self.assertEqual(1, results['passed'])
+        self.assertEqual(0, results['failed'])
+
+    def makeAssignmentWithTestCode(self, test_code):
+        self.mock_glob.return_value = ['q1.py']
+        self.mock_load_module.return_value.test = {
+            'name': 'Homework 1',
+            'points': 1,
+            'suites': [
+                {
+                    'type': 'doctest',
+                    'cases': [
+                        { 'code': test_code }
+                    ]
+                }
+            ]
+        }
+        with mock.patch('builtins.open', mock.mock_open(read_data=self.CONFIG)):
+            return assignment.load_assignment('some_config.ok')

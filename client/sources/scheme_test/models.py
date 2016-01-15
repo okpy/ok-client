@@ -36,8 +36,11 @@ class SchemeTest(models.Test):
         self.file_contents = file_contents
         self.timeout = timeout
 
-    def run(self):
+    def run(self, env):
         """Runs the suites associated with this doctest.
+
+        NOTE: env is intended only for use with the programmatic API to support
+        Python OK tests. It is not used here.
 
         RETURNS:
         bool; True if the doctest completely passes, False otherwise.

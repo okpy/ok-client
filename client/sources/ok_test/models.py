@@ -34,8 +34,11 @@ class OkTest(models.Test):
             self.suites[i] = self.suite_map[suite['type']](
                     self.verbose, self.interactive, self.timeout, **suite)
 
-    def run(self):
+    def run(self, env):
         """Runs the suites associated with this OK test.
+
+        NOTE: env is intended only for use with the programmatic API to support
+        Python OK tests. For that reason, it is only passed to DoctestSuites.
 
         RETURNS:
         dict; the results for this test, in the form
@@ -47,7 +50,12 @@ class OkTest(models.Test):
         """
         passed, failed, locked = 0, 0, 0
         for i, suite in enumerate(self.suites):
-            results = suite.run(self.name, i + 1)
+            if hasattr(suite, 'doctest_suite_flag'):
+                # A hack that allows programmatic API users to plumb a custom
+                # environment through to Python tests.
+                results = suite.run(self.name, i + 1, env)
+            else:
+                results = suite.run(self.name, i + 1)
 
             passed += results['passed']
             failed += results['failed']

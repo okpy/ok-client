@@ -1,5 +1,5 @@
 from client import exceptions as ex
-from client.cli.common import assignment
+from client.api import assignment
 from client.cli.common import messages
 from client.protocols import lock
 import argparse
@@ -28,7 +28,7 @@ def main():
     args.interactive = False
 
     try:
-        assign = assignment.load_config(args.config, args)
+        assign = assignment.load_assignment(args.config, args)
         assign.load()
 
         msgs = messages.Messages()

@@ -30,45 +30,49 @@ class GradingProtocol(models.Protocol):
         """
         if self.args.score or self.args.export or self.args.unlock or self.args.restore:
             return
+        grade(self.assignment.specified_tests, messages, verbose=self.args.verbose)
 
-        format.print_line('~')
-        print('Running tests')
-        print()
-        passed = 0
-        failed = 0
-        locked = 0
 
-        analytics = {}
-        # check if analytics info is in messages
-        if 'analytics' in messages:
-            started = messages['analytics']['started']
+def grade(questions, messages, env=None, verbose=True):
+    format.print_line('~')
+    print('Running tests')
+    print()
+    passed = 0
+    failed = 0
+    locked = 0
+
+    analytics = {}
+    # Check if analytics info is in messages.
+    if 'analytics' in messages:
+        started = messages['analytics']['started']
+    else:
+        started = None
+
+    # The environment in which to run the tests.
+    for test in questions:
+        # run test if the question is not detected, or question detected and started
+        if (started is None
+            or test.name not in started
+            or started[test.name]):
+
+            log.info('Running tests for {}'.format(test.name))
+            results = test.run(env)
+            passed += results['passed']
+            failed += results['failed']
+            locked += results['locked']
+            analytics[test.name] = results
         else:
-            started = None
+            print('It looks like you haven\'t started {}. Skipping the tests.'.format(test.name))
+            print()
 
-        for test in self.assignment.specified_tests:
-            # run test if the question is not detected, or question detected and started
-            if (started is None
-                or test.name not in started
-                or started[test.name]):
+        if not verbose and (failed > 0 or locked > 0):
+            # Stop at the first failed test
+            break
 
-                log.info('Running tests for {}'.format(test.name))
-                results = test.run()
-                passed += results['passed']
-                failed += results['failed']
-                locked += results['locked']
-                analytics[test.name] = results
-            else:
-                print('It looks like you haven\'t started {}. Skipping the tests.'.format(test.name))
-                print()
+    format.print_progress_bar('Test summary', passed, failed, locked,
+                              verbose=verbose)
+    print()
 
-            if not self.args.verbose and (failed > 0 or locked > 0):
-                # Stop at the first failed test
-                break
-
-        format.print_progress_bar('Test summary', passed, failed, locked,
-                                  verbose=self.args.verbose)
-        print()
-
-        messages['grading'] = analytics
+    messages['grading'] = analytics
 
 protocol = GradingProtocol
