@@ -5,15 +5,6 @@ from client.sources.common import models
 import re
 import textwrap
 
-# TODO(albert): come up with a better cross-platform readline solution.
-try:
-    import readline
-    assert hasattr(readline, 'clear_history')
-    assert hasattr(readline, 'add_history')
-    HAS_READLINE = True
-except (ImportError, AssertionError):
-    HAS_READLINE = False
-
 class CodeCase(models.Case):
     """TestCase for doctest-style Python tests."""
 
@@ -172,7 +163,6 @@ class Console(object):
         setup    -- str; raw setup code
         teardown -- str; raw teardown code
         """
-        self.clear_history()
         self._setup = textwrap.dedent(setup).split('\n')
         self._code = code
         self._teardown = textwrap.dedent(teardown).split('\n')
@@ -240,7 +230,6 @@ class Console(object):
                 if line:
                     print(line)
                 line = self._strip_prompt(line)
-                self.add_history(line)
                 current.append(line)
             elif isinstance(line, CodeAnswer):
                 assert len(current) > 0, 'Answer without a prompt'
@@ -281,17 +270,6 @@ class Console(object):
             return line[len(self.PS2):]
         return line
 
-    ######################
-    # History management #
-    ######################
-
-    def add_history(self, line):
-        if HAS_READLINE and line:
-            readline.add_history(line)
-
-    def clear_history(self):
-        if HAS_READLINE:
-            readline.clear_history()
 
 class CodeAnswer(object):
     status_re = re.compile(r'^#\s*(.+?):\s*(.*)\s*$')
