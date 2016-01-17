@@ -29,7 +29,6 @@ def main():
 
     try:
         assign = assignment.load_assignment(args.config, args)
-        assign.load()
 
         msgs = messages.Messages()
 
