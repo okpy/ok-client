@@ -12,6 +12,10 @@ class PythonConsole(interpreter.Console):
     PS1 = '>>> '
     PS2 = '... '
 
+    def __init__(self, verbose, interactive, timeout=None):
+        self._original_frame = {}
+        super().__init__(verbose, interactive, timeout)
+
     def load(self, code, setup='', teardown=''):
         """Prepares a set of setup, test, and teardown code to be
         run in the console.
@@ -23,7 +27,10 @@ class PythonConsole(interpreter.Console):
         teardown -- str; raw teardown code
         """
         super().load(code, setup, teardown)
-        self._frame = {}
+        self._frame = self._original_frame.copy()
+
+    def load_env(self, env):
+        self._original_frame = env
 
     def interact(self):
         """Opens up an interactive session with the current state of

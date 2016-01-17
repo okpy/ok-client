@@ -73,7 +73,7 @@ class DoctestTest(unittest.TestCase):
             'passed': 1,
             'failed': 0,
             'locked': 0,
-        }, test.run())
+        }, test.run(None))
 
     def testConstructor_printThenReturn(self):
         test = self.makeDoctest("""
@@ -88,7 +88,7 @@ class DoctestTest(unittest.TestCase):
             'passed': 1,
             'failed': 0,
             'locked': 0,
-        }, test.run())
+        }, test.run(None))
 
     def testConstructor_printNoEndCharThenReturn(self):
         test = self.makeDoctest("""
@@ -102,7 +102,7 @@ class DoctestTest(unittest.TestCase):
             'passed': 1,
             'failed': 0,
             'locked': 0,
-        }, test.run())
+        }, test.run(None))
 
     def testConstructor_invalidIndentationInconsistencies(self):
         # TODO(albert): test not passing
@@ -131,7 +131,7 @@ class DoctestTest(unittest.TestCase):
             'passed': 1,
             'failed': 0,
             'locked': 0,
-        }, test.run())
+        }, test.run(None))
 
     def testRun_partialFail(self):
         test = self.makeDoctest("""
@@ -144,7 +144,7 @@ class DoctestTest(unittest.TestCase):
             'passed': 0,
             'failed': 1,
             'locked': 0,
-        }, test.run())
+        }, test.run(None))
 
     def testRun_completeFail(self):
         test = self.makeDoctest("""
@@ -157,7 +157,7 @@ class DoctestTest(unittest.TestCase):
             'passed': 0,
             'failed': 1,
             'locked': 0,
-        }, test.run())
+        }, test.run(None))
 
     def testRun_solitaryPS1(self):
         test = self.makeDoctest("""
@@ -171,7 +171,7 @@ class DoctestTest(unittest.TestCase):
             'passed': 0,
             'failed': 1,
             'locked': 0,
-        }, test.run())
+        }, test.run(None))
 
     def testRun_solitaryPS2(self):
         test = self.makeDoctest("""
@@ -185,7 +185,7 @@ class DoctestTest(unittest.TestCase):
             'passed': 1,
             'failed': 0,
             'locked': 0,
-        }, test.run())
+        }, test.run(None))
 
 
     def testScore_completePass(self):

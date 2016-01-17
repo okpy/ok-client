@@ -17,6 +17,7 @@ REQUIRED_FILES = [
 ]
 REQUIRED_FOLDERS = [
     'utils',
+    'api'
 ]
 COMMAND_LINE = [
     'ok',

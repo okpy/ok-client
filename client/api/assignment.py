@@ -1,6 +1,7 @@
 from client import exceptions as ex
 from client.sources.common import core
 from client.utils import format
+from client.protocols.grading import grade
 import client
 import collections
 import glob
@@ -8,33 +9,36 @@ import importlib
 import json
 import logging
 import os
-import zipfile
 import textwrap
 
 log = logging.getLogger(__name__)
 
 CONFIG_EXTENSION = '*.ok'
 
-def load_config(filepath, args):
-    config = get_config(filepath)
+def load_assignment(filepath=None, cmd_args=None):
+    config = _get_config(filepath)
     if not isinstance(config, dict):
         raise ex.LoadingException('Config should be a dictionary')
-    return Assignment(args, **config)
+    if cmd_args is None:
+        cmd_args = _MockNamespace()
+    return Assignment(cmd_args, **config)
 
-def get_config(config):
+def _get_config(config):
     if config is None:
         configs = glob.glob(CONFIG_EXTENSION)
         if len(configs) > 1:
-            raise ex.LoadingException(textwrap.dedent("""
-            Multiple .ok files found:
-                {}
-
-            Please specify a particular assignment's config file with
-                python3 ok --config <config file>
-            """.format(' '.join(configs))))
+            raise ex.LoadingException('\n'.join([
+                'Multiple .ok files found:',
+                '    ' + ' '.join(configs),
+                "Please specify a particular assignment's config file with",
+                '    python3 ok --config <config file>'
+            ]))
         elif not configs:
             raise ex.LoadingException('No .ok configuration file found')
         config = configs[0]
+    elif not os.path.isfile(config):
+        raise ex.LoadingException(
+                'Could not find config file: {}'.format(config))
 
     try:
         with open(config, 'r') as f:
@@ -42,9 +46,9 @@ def get_config(config):
     except IOError:
         raise ex.LoadingException('Error loading config: {}'.format(config))
     except ValueError:
-        raise ex.LoadingException(textwrap.dedent("""
-        {0} is a malformed .ok configuration file. Please re-download {0}.
-        """.format(config)))
+        raise ex.LoadingException(
+            '{0} is a malformed .ok configuration file. '
+            'Please re-download {0}.'.format(config))
     else:
         log.info('Loaded config from {}'.format(config))
         return result
@@ -58,23 +62,54 @@ class Assignment(core.Serializable):
     default_tests = core.List(type=str, optional=True)
     protocols = core.List(type=str)
 
+    ####################
+    # Programmatic API #
+    ####################
+
+    def grade(self, question, env=None):
+        """Runs tests for a particular question. The setup and teardown will
+        always be executed.
+
+        question -- str; a question name (as would be entered at the command
+                    line
+        env      -- dict; an environment in which to execute the tests. If
+                    None, uses the environment of __main__. The original
+                    dictionary is never modified; each test is given a
+                    duplicate of env.
+
+        Returns: dict; maps question names (str) -> results (dict). The
+        results dictionary contains the following fields:
+        - "passed": int (number of test cases passed)
+        - "failed": int (number of test cases failed)
+        - "locked": int (number of test cases locked)
+        """
+        if env is None:
+            import __main__
+            env = __main__.__dict__
+        messages = {}
+        tests = self._resolve_specified_tests([question], all_tests=False)
+        test_name = tests[0].name
+        grade(tests, messages, env)
+        return messages['grading'][test_name]
+
+    ############
+    # Internal #
+    ############
+
     _TESTS_PACKAGE = 'client.sources'
     _PROTOCOL_PACKAGE = 'client.protocols'
 
-    def __init__(self, cmd_args, **fields):
-        self.cmd_args = cmd_args
+    def __init__(self, args, **fields):
+        self.cmd_args = args
         self.test_map = collections.OrderedDict()
         self.protocol_map = collections.OrderedDict()
-        self.specified_tests = []
 
     def post_instantiation(self):
         self._print_header()
-
-    def load(self):
-        """Load tests and protocols."""
         self._load_tests()
         self._load_protocols()
-        self._resolve_specified_tests()
+        self.specified_tests = self._resolve_specified_tests(
+            self.cmd_args.question, self.cmd_args.all)
 
     def _load_tests(self):
         """Loads all tests specified by test_map."""
@@ -117,7 +152,7 @@ class Assignment(core.Serializable):
             else:
                 log.info('Dumped {}'.format(test.name))
 
-    def _resolve_specified_tests(self):
+    def _resolve_specified_tests(self, questions, all_tests=False):
         """For each of the questions specified on the command line,
         find the test corresponding that question.
 
@@ -125,22 +160,21 @@ class Assignment(core.Serializable):
         command line. If no questions are specified, use the entire set of
         tests.
         """
-        if not self.cmd_args.question and not self.cmd_args.all \
+        if not questions and not all_tests \
                 and self.default_tests != core.NoValue \
                 and len(self.default_tests) > 0:
             log.info('Using default tests (no questions specified): '
                      '{}'.format(self.default_tests))
-            self.specified_tests = [self.test_map[test]
-                                    for test in self.default_tests]
-            return
-        elif not self.cmd_args.question:
+            return [self.test_map[test] for test in self.default_tests]
+        elif not questions:
             log.info('Using all tests (no questions specified and no default tests)')
-            self.specified_tests = list(self.test_map.values())
-            return
+            return list(self.test_map.values())
         elif not self.test_map:
             log.info('No tests loaded')
-            return
-        for question in self.cmd_args.question:
+            return []
+
+        specified_tests = []
+        for question in questions:
             if question not in self.test_map:
                 print('Test "{}" not found.'.format(question))
                 print('Did you mean one of the following? '
@@ -150,9 +184,9 @@ class Assignment(core.Serializable):
                 raise ex.LoadingException('Invalid test specified: {}'.format(question))
 
             log.info('Adding {} to specified tests'.format(question))
-            if question not in self.specified_tests:
-                self.specified_tests.append(self.test_map[question])
-
+            if question not in specified_tests:
+                specified_tests.append(self.test_map[question])
+        return specified_tests
 
     def _load_protocols(self):
         log.info('Loading protocols')
@@ -172,14 +206,25 @@ class Assignment(core.Serializable):
         format.print_line('=')
         print()
 
-def _has_subsequence(string, pattern):
-    """Returns true if the pattern is a subsequence of string."""
-    string_index, pattern_index = 0, 0
-    while string_index < len(string) and pattern_index < len(pattern):
-        if string[string_index] == pattern[pattern_index]:
-            string_index += 1
-            pattern_index += 1
-        else:
-            string_index += 1
-    return pattern_index == len(pattern)
+class _MockNamespace(object):
+    """A mock object that is meant to be a substitute for an argparse.Namespace
+    object. This object contains the minimal set of fields necessary for an
+    Assignment to be created.
 
+    Do NOT use this for any command-line related work. This object should only
+    be used for the programmatic API. This implies that if an Assignment is
+    created with a MockNamespace, any functionality not specified in the
+    programmatic API will not work.
+
+    Design note: In an ideal world, this object wouldn't even exist and the
+    Assignment and Protocol classes shouldn't take in an argparse.Namespace
+    object. Instead, the Assignment class should be part of the API and should
+    not be tied to command-line usage only. Making changes to this effect would
+    take a substantial rewrite, so I'm putting it off for now.
+    """
+    def __init__(self):
+        from client.cli.ok import parse_input
+        self.args = parse_input([])
+
+    def __getattr__(self, attr):
+        return getattr(self.args, attr)
