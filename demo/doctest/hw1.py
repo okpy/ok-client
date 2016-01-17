@@ -27,3 +27,11 @@ def double(x):
     """
     return x # Incorrect
 
+def forever():
+    """
+    >>> forever()
+    1
+    """
+    while True:
+        pass
+    return 1
