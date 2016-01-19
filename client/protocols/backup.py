@@ -19,6 +19,7 @@ class BackupProtocol(models.Protocol):
 
     RETRY_LIMIT = 5
     BACKUP_FILE = ".ok_messages"
+    BACKUP_ENDPOINT = '{prefix}://{server}/api/v3/backup?'
     SUBMISSION_ENDPOINT = '{prefix}://{server}/api/v3/submission?'
 
     def run(self, messages):
@@ -37,8 +38,9 @@ class BackupProtocol(models.Protocol):
             print('Backup successful for user: '
                   '{0}'.format(response['data']['email']))
             if self.args.submit or self.args.backup:
-                print('URL: https://okpy.org/course/'
-                      '{0}/submission/{1}'.format(response['data']['course'],
+                print('URL: https://okpy.org/student/course/{0}'
+                      'assignment/{1}/{2}'.format(response['data']['course'],
+                                                  response['data']['assign'],
                                                   response['data']['key']))
             if self.args.backup:
                 print('NOTE: this is only a backup. '
@@ -159,7 +161,11 @@ class BackupProtocol(models.Protocol):
         }
         serialized_data = json.dumps(data).encode(encoding='utf-8')
 
-        address = self.SUBMISSION_ENDPOINT.format(server=self.args.server,
+        endpoint = BACKUP_ENDPOINT
+        if self.args.submit:
+            endpoint = SUBMISSION_ENDPOINT
+
+        address = endpoint.format(server=self.args.server,
                 prefix='http' if self.args.insecure else 'https')
         address_params = {
             'access_token': access_token,

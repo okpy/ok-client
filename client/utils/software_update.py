@@ -7,7 +7,9 @@ from socket import error as socket_error
 
 log = logging.getLogger(__name__)
 
-VERSION_ENDPOINT = 'https://{server}/api/v3/version'
+VERSION_ENDPOINT = 'https://ok-server.appspot.com/api/v1/version'
+# TODO: Version/Autoupgrading will still be on the appspot server for a bit.
+
 SHORT_TIMEOUT = 3  # seconds
 
 def check_version(server, version, filename, timeout=SHORT_TIMEOUT):
