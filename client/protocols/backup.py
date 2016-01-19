@@ -33,12 +33,11 @@ class BackupProtocol(models.Protocol):
         log.info('Authenticated with access token %s', access_token)
 
         response = self.send_all_messages(access_token, message_list)
-
         if isinstance(response, dict):
             print('Backup successful for user: '
                   '{0}'.format(response['data']['email']))
             if self.args.submit or self.args.backup:
-                print('URL: https://okpy.org/student/course/{0}'
+                print('URL: https://okpy.org/student/course/{0}/'
                       'assignment/{1}/{2}'.format(response['data']['course'],
                                                   response['data']['assign'],
                                                   response['data']['key']))
@@ -161,11 +160,11 @@ class BackupProtocol(models.Protocol):
         }
         serialized_data = json.dumps(data).encode(encoding='utf-8')
 
-        endpoint = BACKUP_ENDPOINT
+        server_endpoint = self.BACKUP_ENDPOINT
         if self.args.submit:
-            endpoint = SUBMISSION_ENDPOINT
+            server_endpoint = self.SUBMISSION_ENDPOINT
 
-        address = endpoint.format(server=self.args.server,
+        address = server_endpoint.format(server=self.args.server,
                 prefix='http' if self.args.insecure else 'https')
         address_params = {
             'access_token': access_token,
@@ -180,6 +179,7 @@ class BackupProtocol(models.Protocol):
         request.add_header("Content-Type", "application/json")
 
         response = urllib.request.urlopen(request, serialized_data, timeout)
+
         return json.loads(response.read().decode('utf-8'))
 
 protocol = BackupProtocol

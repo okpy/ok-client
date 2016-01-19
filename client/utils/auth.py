@@ -13,6 +13,10 @@ from urllib.request import urlopen
 import json
 from .html import auth_html, partial_course_html, partial_nocourse_html, red_css
 
+import logging
+
+log = logging.getLogger(__name__)
+
 CLIENT_ID = \
     '931757735585-vb3p8g53a442iktc4nkv5q8cbjrtuonv.apps.googleusercontent.com'
 # The client secret in an installed application isn't a secret.
