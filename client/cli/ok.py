@@ -1,7 +1,7 @@
 """This file is responsible for coordinating all of OK's protocols."""
 
 from client import exceptions as ex
-from client.cli.common import assignment
+from client.api import assignment
 from client.cli.common import messages
 from client.utils import auth
 from client.utils import output
@@ -23,7 +23,7 @@ CLIENT_ROOT = os.path.dirname(client.__file__)
 # Command-line Interface #
 ##########################
 
-def parse_input():
+def parse_input(command_input=None):
     """Parses command line input."""
     parser = argparse.ArgumentParser(
         description=__doc__,
@@ -85,7 +85,10 @@ def parse_input():
     parser.add_argument('--update', action='store_true',
                         help="checks and performs software update then exits")
 
-    return parser.parse_args()
+    if command_input is None:
+        return parser.parse_args()
+    else:
+        return parser.parse_args(command_input)
 
 def main():
     """Run all relevant aspects of ok.py."""
@@ -109,8 +112,7 @@ def main():
             auth.authenticate(True)
 
         # Instantiating assignment
-        assign = assignment.load_config(args.config, args)
-        assign.load()
+        assign = assignment.load_assignment(args.config, args)
 
         if args.tests:
             print('Available tests:')

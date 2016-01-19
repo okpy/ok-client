@@ -14,6 +14,10 @@ class DoctestSuite(models.Suite):
 
     console_type = pyconsole.PythonConsole
 
+    # A hack that allows OkTest to identify DoctestSuites without circular
+    # imports.
+    doctest_suite_flag = True
+
     def __init__(self, verbose, interactive, timeout=None, **fields):
         super().__init__(verbose, interactive, timeout, **fields)
         self.console = self.console_type(verbose, interactive, timeout)
@@ -25,7 +29,7 @@ class DoctestSuite(models.Suite):
             self.cases[i] = interpreter.CodeCase(self.console, self.setup,
                                                  self.teardown, **case)
 
-    def run(self, test_name, suite_number):
+    def run(self, test_name, suite_number, env):
         """Runs test for the doctest suite.
 
         PARAMETERS:
@@ -33,6 +37,8 @@ class DoctestSuite(models.Suite):
                      purposes.
         suite_number -- int; the suite number in relation to the parent test.
                      Used for printing purposes.
+        env          -- dict; environment in which to run tests. If None, an
+                     empty dictionary is used instead.
 
         RETURNS:
         dict; results of the following form:
@@ -47,6 +53,12 @@ class DoctestSuite(models.Suite):
             'failed': 0,
             'locked': 0,
         }
+
+        if env is not None:
+            # env should be None in the command-line scenario. env should only
+            # be non-None in the programmatic API case.
+            self.console.load_env(env)
+
         for i, case in enumerate(self.cases):
             log.info('Running case {}'.format(i))
 

@@ -7,8 +7,12 @@ class Test(core.Serializable):
     points = core.Float()
     partner = core.String(optional=True)
 
-    def run(self):
-        """Subclasses should override this method to run tests."""
+    def run(self, env):
+        """Subclasses should override this method to run tests.
+
+        NOTE: env is intended only for use with the programmatic API for
+        Python OK tests.
+        """
         raise NotImplementedError
 
     def score(self):

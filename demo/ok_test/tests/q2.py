@@ -31,7 +31,7 @@ test = {
         {
           'code': r"""
           >>> double(-4)
-          8
+          -8
           # explanation: doubling a negative number
           """,
           'hidden': False

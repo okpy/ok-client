@@ -45,9 +45,9 @@ class OkTest(unittest.TestCase):
             'passed': passed,
             'failed': failed,
             'locked': locked,
-        }, test.run())
-        self.mockSuite1.return_value.run.assert_called_with(self.NAME, 1)
-        self.mockSuite2.return_value.run.assert_called_with(self.NAME, 2)
+        }, test.run(None))
+        self.mockSuite1.return_value.run.assert_called_with(self.NAME, 1, None)
+        self.mockSuite2.return_value.run.assert_called_with(self.NAME, 2, None)
 
     def callsScore(self, score):
         test = self.makeTest(suites=[
@@ -125,7 +125,7 @@ class OkTest(unittest.TestCase):
             'passed': 0,
             'failed': 0,
             'locked': 0,
-        }, test.run())
+        }, test.run(None))
 
     def testRun_correctResults(self):
         self.mockSuite1.return_value.run.return_value = {

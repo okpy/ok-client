@@ -21,7 +21,7 @@ class DoctestSuiteTest(unittest.TestCase):
             'passed': passed,
             'locked': locked,
             'failed': failed,
-        }, test.run(self.TEST_NAME, self.SUITE_NUMBER))
+        }, test.run(self.TEST_NAME, self.SUITE_NUMBER, None))
 
     def testConstructor_basicCases(self):
         try:
