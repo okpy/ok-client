@@ -6,6 +6,7 @@ from client.sources.ok_test import models
 from client.sources.ok_test import scheme
 from client.sources.ok_test import sqlite
 from client.sources.ok_test import wwpp
+import copy
 import logging
 import os
 
@@ -36,6 +37,7 @@ def load(file, parameter, assign):
 
     try:
         test = importing.load_module(file).test
+        test = copy.deepcopy(test)
     except Exception as e:
         raise ex.LoadingException('Error importing file {}: {}'.format(file, str(e)))
 
