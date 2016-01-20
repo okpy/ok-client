@@ -19,8 +19,7 @@ class BackupProtocol(models.Protocol):
 
     RETRY_LIMIT = 5
     BACKUP_FILE = ".ok_messages"
-    BACKUP_ENDPOINT = '{prefix}://{server}/api/v3/backup?'
-    SUBMISSION_ENDPOINT = '{prefix}://{server}/api/v3/submission?'
+    BACKUP_ENDPOINT = '{prefix}://{server}/api/v3/backups/'
 
     def run(self, messages):
         if self.args.local or self.args.export or self.args.restore:
@@ -157,19 +156,17 @@ class BackupProtocol(models.Protocol):
         data = {
             'assignment': self.assignment.endpoint,
             'messages': messages,
+            'submit': self.args.submit
         }
         serialized_data = json.dumps(data).encode(encoding='utf-8')
 
-        server_endpoint = self.BACKUP_ENDPOINT
-        if self.args.submit:
-            server_endpoint = self.SUBMISSION_ENDPOINT
-
-        address = server_endpoint.format(server=self.args.server,
+        address = self.BACKUP_ENDPOINT.format(server=self.args.server,
                 prefix='http' if self.args.insecure else 'https')
         address_params = {
             'access_token': access_token,
             'client_version': client.__version__,
         }
+        address += '?'
         address += '&'.join('{}={}'.format(param, value)
                             for param, value in address_params.items())
 
