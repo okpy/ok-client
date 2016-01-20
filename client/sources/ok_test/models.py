@@ -24,9 +24,7 @@ class OkTest(models.Test):
 
     def post_instantiation(self):
         for i, suite in enumerate(self.suites):
-            if isinstance(suite, Suite):
-                continue
-            elif not isinstance(suite, dict):
+            if not isinstance(suite, dict):
                 raise ex.SerializeException('Test cases must be dictionaries')
             elif 'type' not in suite:
                 raise ex.SerializeException('Suites must have field "type"')
