@@ -94,14 +94,14 @@ def parse_input(command_input=None):
 def main():
     """Run all relevant aspects of ok.py."""
 
-    #Checking user's Python bit version
-    bit_v = (8 * struct.calcsize("P"))
-    if (bit_v == 32):
-        print("32 bit Python is not supported. Please install the 64 bit version.")
-        log.debug("32 bit Python is detected.")
     args = parse_input()
 
     log.setLevel(logging.DEBUG if args.debug else logging.ERROR)
+    
+    #Checking user's Python bit version
+    bit_v = (8 * struct.calcsize("P"))
+    log.debug("Python bit version: {}".format(bit_v))
+    
     log.debug(args)
 
     if args.version:
