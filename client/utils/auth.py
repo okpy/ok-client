@@ -163,13 +163,13 @@ def authenticate(force=False):
                 code = qs['code'][0]
             except KeyError:
                 message = qs.get('error', 'Unknown')
-                log.info("No auth code provided {}".format(message))
+                log.warning("No auth code provided {}".format(message))
 
                 done = True
                 self.send_response(400)
                 self.send_header("Content-type", "text/html")
                 self.end_headers()
-                # TODO : Send error page HTML
+                self.wfile.write(bytes(failure_page(message), "utf-8"))
                 return
 
             access_token, refresh_token, expires_in = _make_code_post(code)
@@ -198,6 +198,19 @@ def success_page(server, email):
     data = urlopen(API).read().decode("utf-8")
     return success_auth(success_courses(email, data, server))
 
+def failure_page(error):
+    html = partial_nocourse_html
+    title = 'Authentication Error'
+    byline = 'Error: {}'.format(error)
+    status = 'We could not authenticate you.'
+    head = '<style>{0}</style>'.format(red_css)
+    return auth_html.format(
+        site=SERVER,
+        status=status,
+        courses=html,
+        byline=byline,
+        title=title,
+        head=head)
 
 def success_courses(email, response, server):
     """Generates HTML for individual courses"""
