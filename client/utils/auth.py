@@ -11,9 +11,9 @@ from urllib.request import urlopen
 import webbrowser
 
 from client.exceptions import AuthenticationException
-from .html import auth_html, partial_course_html, partial_nocourse_html, \
-                  red_css
-from .sanction import Client
+from client.utils.html import auth_html, partial_course_html, \
+                              partial_nocourse_html, red_css
+from client.utils.sanction import Client
 
 import logging
 
