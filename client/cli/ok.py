@@ -12,6 +12,7 @@ import client
 import logging
 import os
 import sys
+import struct
 
 LOGGING_FORMAT = '%(levelname)s  | %(filename)s:%(lineno)d | %(message)s'
 logging.basicConfig(format=LOGGING_FORMAT)
@@ -95,6 +96,11 @@ def main():
     args = parse_input()
 
     log.setLevel(logging.DEBUG if args.debug else logging.ERROR)
+    
+    # Checking user's Python bit version
+    bit_v = (8 * struct.calcsize("P"))
+    log.debug("Python bit version: {}".format(bit_v))
+    
     log.debug(args)
 
     if args.version:
