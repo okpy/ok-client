@@ -152,6 +152,12 @@ def authenticate(force=False):
     expires_in = None
 
     class CodeHandler(http.server.BaseHTTPRequestHandler):
+        def send_failure(self, message):
+            self.send_response(400)
+            self.send_header("Content-type", "text/html")
+            self.end_headers()
+            self.wfile.write(bytes(failure_page(message), "utf-8"))
+
         def do_GET(self):
             """Respond to the GET request made by the OAuth"""
             nonlocal access_token, refresh_token, expires_in, done
@@ -166,14 +172,13 @@ def authenticate(force=False):
                 message = qs.get('error', 'Unknown')
                 log.warning("No auth code provided {}".format(message))
                 done = True
-                send_failure("{}".format(message))
+                self.send_failure(message)
                 return
-            except Exception as e: # TODO : Catch just SSL errors
+            except Exception as e:  # TODO : Catch just SSL errors
                 log.warning("Could not obtain token", exc_info=True)
                 done = True
-                send_failure("{}".format(e.message))
+                self.send_failure(e.message)
                 return
-
 
             done = True
             self.send_response(200)
@@ -199,6 +204,7 @@ def success_page(server, email):
     data = urlopen(API).read().decode("utf-8")
     return success_auth(success_courses(email, data, server))
 
+
 def failure_page(error):
     html = partial_nocourse_html
     title = 'Authentication Error'
@@ -212,12 +218,6 @@ def failure_page(error):
         byline=byline,
         title=title,
         head=head)
-
-def send_failure(message):
-    self.send_response(400)
-    self.send_header("Content-type", "text/html")
-    self.end_headers()
-    self.wfile.write(bytes(failure_page(message), "utf-8"))
 
 
 def success_courses(email, response, server):
