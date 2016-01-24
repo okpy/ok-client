@@ -79,7 +79,7 @@ def get_storage():
 
 
 def update_storage(access_token, expires_in, refresh_token):
-    if not access_token and expires_in and refresh_token:
+    if not (access_token and expires_in and refresh_token):
         raise AuthenticationException(
             "Authentication failed and returned an empty token.")
 
@@ -156,14 +156,21 @@ def authenticate(force=False):
             """Respond to the GET request made by the OAuth"""
             nonlocal access_token, refresh_token, expires_in, done
 
+            path = urlparse(self.path)
+            qs = parse_qs(path.query)
+
             try:
-                path = urlparse(self.path)
-                qs = parse_qs(path.query)
                 code = qs['code'][0]
             except KeyError:
-                raise AuthenticationException(
-                    "The authentication server failed to send an "
-                    "authorization code.")
+                message = qs.get('error', 'Unknown')
+                log.info("No auth code provided {}".format(message))
+
+                done = True
+                self.send_response(400)
+                self.send_header("Content-type", "text/html")
+                self.end_headers()
+                # TODO : Send error page HTML
+                return
 
             access_token, refresh_token, expires_in = _make_code_post(code)
 
