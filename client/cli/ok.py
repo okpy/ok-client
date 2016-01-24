@@ -130,6 +130,9 @@ def main():
     except ex.LoadingException as e:
         log.warning('Assignment could not load', exc_info=True)
         print('Error loading assignment: ' + str(e))
+    except ex.AuthenticationException as e:
+        log.warning('Authentication exception occurred', exc_info=True)
+        print('Authentication error: {0}'.format(e))
     except ex.OkException as e:
         log.warning('General OK exception occurred', exc_info=True)
         print('Error: ' + str(e))

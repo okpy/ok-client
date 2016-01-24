@@ -10,7 +10,7 @@ from urllib.parse import urlparse, parse_qs
 from urllib.request import urlopen
 import webbrowser
 
-from client import exceptions
+from client.exceptions import AuthenticationException
 from .html import auth_html, partial_course_html, partial_nocourse_html, \
                   red_css
 from .sanction import Client
@@ -38,7 +38,7 @@ def pick_free_port():
         s.bind(('localhost', 0))  # find an open port
     except OSError as e:
         print('Unable to find an open port for authentication.')
-        raise exceptions.AuthenticationException(e)
+        raise AuthenticationException(e)
     addr, port = s.getsockname()
     s.close()
     return port
@@ -79,6 +79,10 @@ def get_storage():
 
 
 def update_storage(access_token, expires_in, refresh_token):
+    if not access_token and expires_in and refresh_token:
+        raise AuthenticationException(
+            "Authentication failed and returned an empty token.")
+
     cur_time = int(time.time())
     with open(REFRESH_FILE, 'wb') as fp:
         pickle.dump({
@@ -112,10 +116,17 @@ def authenticate(force=False):
             if cur_time < expires_at - 10:
                 return access_token
             access_token, expires_in = make_refresh_post(refresh_token)
+
+            if not access_token and expires_in:
+                raise AuthenticationException(
+                    "Authentication failed and returned an empty token.")
+
             update_storage(access_token, expires_in, refresh_token)
             return access_token
         except IOError as _:
             print('Performing authentication')
+        except AuthenticationException as e:
+            raise e  # Let the main script handle this error
         except Exception as _:
             print('Performing authentication')
 
@@ -145,9 +156,15 @@ def authenticate(force=False):
             """Respond to the GET request made by the OAuth"""
             nonlocal access_token, refresh_token, expires_in, done
 
-            path = urlparse(self.path)
-            qs = parse_qs(path.query)
-            code = qs['code'][0]
+            try:
+                path = urlparse(self.path)
+                qs = parse_qs(path.query)
+                code = qs['code'][0]
+            except KeyError:
+                raise AuthenticationException(
+                    "The authentication server failed to send an "
+                    "authorization code.")
+
             access_token, refresh_token, expires_in = _make_code_post(code)
 
             done = True
