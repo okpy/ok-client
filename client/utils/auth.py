@@ -1,17 +1,19 @@
 #!/usr/bin/env python3
 
-from client import exceptions
-
-from .sanction import Client
-from urllib.parse import urlparse, parse_qs
 import http.server
+import json
+import os
 import pickle
 import sys
 import time
-import webbrowser
+from urllib.parse import urlparse, parse_qs
 from urllib.request import urlopen
-import json
-from .html import auth_html, partial_course_html, partial_nocourse_html, red_css
+import webbrowser
+
+from client import exceptions
+from .html import auth_html, partial_course_html, partial_nocourse_html, \
+                  red_css
+from .sanction import Client
 
 import logging
 
@@ -28,11 +30,12 @@ TIMEOUT = 10
 
 SERVER = 'http://ok-server.appspot.com'
 
+
 def pick_free_port():
     import socket
     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     try:
-        s.bind(('localhost', 0)) # find an open port
+        s.bind(('localhost', 0))  # find an open port
     except OSError as e:
         print('Unable to find an open port for authentication.')
         raise exceptions.AuthenticationException(e)
@@ -41,7 +44,8 @@ def pick_free_port():
     return port
 
 REDIRECT_PORT = pick_free_port()
-REDIRECT_URI = "http://%s:%u/" % (REDIRECT_HOST, REDIRECT_PORT)
+REDIRECT_URI = "http://{0}:{1}/".format(REDIRECT_HOST, REDIRECT_PORT)
+
 
 def _make_code_post(code):
     client = Client(
@@ -52,6 +56,7 @@ def _make_code_post(code):
     client.request_token(code=code, **params)
     return client.access_token, client.refresh_token, client.expires_in
 
+
 def make_refresh_post(refresh_token):
     client = Client(
         token_endpoint='https://accounts.google.com/o/oauth2/token',
@@ -61,10 +66,17 @@ def make_refresh_post(refresh_token):
     client.request_token(refresh_token=refresh_token, **params)
     return client.access_token, client.expires_in
 
+
 def get_storage():
     with open(REFRESH_FILE, 'rb') as fp:
         storage = pickle.load(fp)
-    return storage['access_token'], storage['expires_at'], storage['refresh_token']
+
+    access_token = storage['access_token']
+    expires_at = storage['expires_at']
+    refresh_token = storage['refresh_token']
+
+    return access_token, expires_at, refresh_token
+
 
 def update_storage(access_token, expires_in, refresh_token):
     cur_time = int(time.time())
@@ -74,6 +86,7 @@ def update_storage(access_token, expires_in, refresh_token):
             'expires_at': cur_time + expires_in,
             'refresh_token': refresh_token
         }, fp)
+
 
 def check_ssl():
     try:
@@ -86,6 +99,7 @@ def check_ssl():
                 '\tpython3 ok --local')
     else:
         log.info('SSL bindings are available.')
+
 
 def authenticate(force=False):
     """
@@ -129,8 +143,9 @@ def authenticate(force=False):
     class CodeHandler(http.server.BaseHTTPRequestHandler):
         def do_GET(self):
             """Respond to the GET request made by the OAuth"""
-            path = urlparse(self.path)
             nonlocal access_token, refresh_token, expires_in, done
+
+            path = urlparse(self.path)
             qs = parse_qs(path.query)
             code = qs['code'][0]
             access_token, refresh_token, expires_in = _make_code_post(code)
@@ -153,7 +168,8 @@ def authenticate(force=False):
 
 
 def success_page(server, email):
-    """Generate HTML for the auth page - fetch courses and plug into templates"""
+    """Generate HTML for the auth page - fetch courses and plug into templates.
+    """
     API = server + '/enrollment?email=%s' % email
     data = urlopen(API).read().decode("utf-8")
     return success_auth(success_courses(email, data, server))
@@ -167,16 +183,19 @@ def success_courses(email, response, server):
         html = ''
         for course in courses:
             html += template_course.format(**course)
-        status = 'Scroll for more: '+', '.join([c['display_name'] for c in courses])
-        byline = '"%s" is currently enrolled in %s.' % (email, pluralize(len(courses), ' course'))
+
+        status = "Scroll for more: {0}".format(
+            ', '.join(course['display_name'] for course in courses))
+        byline = '"{}" is currently enrolled in {}.'.format(
+            email, pluralize(len(courses), ' course'))
         title = 'Ok!'
         head = ''
     else:
         html = partial_nocourse_html
-        byline = 'The email "%s" is not enrolled. Is it correct?' % email
+        byline = 'The email "{}" is not enrolled. Is it correct?'.format(email)
         status = 'No courses found'
         title = 'Uh oh'
-        head = '<style>%s</style>' % red_css
+        head = '<style>{0}</style>'.format(red_css)
     return html, status, byline, title, head, server
 
 
@@ -189,8 +208,6 @@ def success_auth(data):
         byline=data[2],
         title=data[3],
         head=data[4])
-
-import os
 
 
 def get_file(relative_path, purpose):
