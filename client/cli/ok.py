@@ -93,12 +93,11 @@ def parse_input(command_input=None):
 
 def main():
     """Run all relevant aspects of ok.py."""
-
     args = parse_input()
 
     log.setLevel(logging.DEBUG if args.debug else logging.ERROR)
     
-    #Checking user's Python bit version
+    # Checking user's Python bit version
     bit_v = (8 * struct.calcsize("P"))
     log.debug("Python bit version: {}".format(bit_v))
     
