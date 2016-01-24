@@ -161,18 +161,19 @@ def authenticate(force=False):
 
             try:
                 code = qs['code'][0]
+                access_token, refresh_token, expires_in = _make_code_post(code)
             except KeyError:
                 message = qs.get('error', 'Unknown')
                 log.warning("No auth code provided {}".format(message))
-
                 done = True
-                self.send_response(400)
-                self.send_header("Content-type", "text/html")
-                self.end_headers()
-                self.wfile.write(bytes(failure_page(message), "utf-8"))
+                send_failure("{}".format(message))
+                return
+            except Exception as e: # TODO : Catch just SSL errors
+                log.warning("Could not obtain token", exc_info=True)
+                done = True
+                send_failure("{}".format(e.message))
                 return
 
-            access_token, refresh_token, expires_in = _make_code_post(code)
 
             done = True
             self.send_response(200)
@@ -211,6 +212,13 @@ def failure_page(error):
         byline=byline,
         title=title,
         head=head)
+
+def send_failure(message):
+    self.send_response(400)
+    self.send_header("Content-type", "text/html")
+    self.end_headers()
+    self.wfile.write(bytes(failure_page(message), "utf-8"))
+
 
 def success_courses(email, response, server):
     """Generates HTML for individual courses"""
