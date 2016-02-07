@@ -66,7 +66,7 @@ class Assignment(core.Serializable):
     # Programmatic API #
     ####################
 
-    def grade(self, question, env=None, test_locked_cases=False):
+    def grade(self, question, env=None, skip_locked_cases=False):
         """Runs tests for a particular question. The setup and teardown will
         always be executed.
 
@@ -76,7 +76,7 @@ class Assignment(core.Serializable):
                     None, uses the environment of __main__. The original
                     dictionary is never modified; each test is given a
                     duplicate of env.
-        test_locked_cases -- bool; if True, locked cases will be tested
+        skip_locked_cases -- bool; if False, locked cases will be tested
 
         Returns: dict; maps question names (str) -> results (dict). The
         results dictionary contains the following fields:
@@ -92,8 +92,8 @@ class Assignment(core.Serializable):
         for test in tests:
             try:
                 for suite in test.suites:
-                    suite.test_locked_cases = test_locked_cases
-                    suite.console.test_locked_cases = test_locked_cases
+                    suite.skip_locked_cases = skip_locked_cases
+                    suite.console.skip_locked_cases = skip_locked_cases
                     suite.console.hash_key = self.name
             except AttributeError:
                 pass

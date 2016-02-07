@@ -152,7 +152,7 @@ class Console(object):
         self.verbose = verbose
         self.interactive = interactive
         self.timeout = timeout
-        self.test_locked_cases = False
+        self.skip_locked_cases = True
         self.load('')   # Initialize empty code.
 
     def load(self, code, setup='', teardown=''):
@@ -256,12 +256,12 @@ class Console(object):
         
         expected = expected.strip()
         
-        if self.test_locked_cases and expected != actual:
+        if not self.skip_locked_cases and expected != actual:
             actual = hmac.new(self.hash_key.encode('utf-8'),
                         actual.encode('utf-8')).hexdigest()
             if expected != actual:
                 print()
-                print("# Test Failed")
+                print("# Error: expected and actual results do not match")
                 raise ConsoleException
         elif expected != actual:
             print()
