@@ -20,6 +20,7 @@ class DoctestSuite(models.Suite):
 
     def __init__(self, verbose, interactive, timeout=None, **fields):
         super().__init__(verbose, interactive, timeout, **fields)
+        self.test_locked_cases = False
         self.console = self.console_type(verbose, interactive, timeout)
 
     def post_instantiation(self):
@@ -62,7 +63,7 @@ class DoctestSuite(models.Suite):
         for i, case in enumerate(self.cases):
             log.info('Running case {}'.format(i))
 
-            if case.locked == True or results['locked'] > 0:
+            if (case.locked == True or results['locked'] > 0) and not self.test_locked_cases:
                 # If a test case is locked, refuse to run any of the subsequent
                 # test cases
                 log.info('Case {} is locked'.format(i))

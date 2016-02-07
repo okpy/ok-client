@@ -4,6 +4,7 @@ from client.sources.common import core
 from client.sources.common import models
 import re
 import textwrap
+import hmac
 
 class CodeCase(models.Case):
     """TestCase for doctest-style Python tests."""
@@ -151,6 +152,7 @@ class Console(object):
         self.verbose = verbose
         self.interactive = interactive
         self.timeout = timeout
+        self.test_locked_cases = False
         self.load('')   # Initialize empty code.
 
     def load(self, code, setup='', teardown=''):
@@ -251,9 +253,17 @@ class Console(object):
                 actual = (printed + self._output_fn(value)).strip()
             else:
                 actual = printed.strip()
-
+        
         expected = expected.strip()
-        if expected != actual:
+        
+        if self.test_locked_cases and expected != actual:
+            actual = hmac.new(self.hash_key.encode('utf-8'),
+                        actual.encode('utf-8')).hexdigest()
+            if expected != actual:
+                print()
+                print("# Test Failed")
+                raise ConsoleException
+        elif expected != actual:
             print()
             print('# Error: expected')
             print('\n'.join('#     {}'.format(line)
