@@ -253,7 +253,7 @@ class Console(object):
                 actual = (printed + self._output_fn(value)).strip()
             else:
                 actual = printed.strip()
-        
+
         expected = expected.strip()
         
         if not self.skip_locked_cases and expected != actual:
