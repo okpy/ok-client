@@ -3,7 +3,9 @@ import os
 
 def load_module(filepath):
     module_name = path_to_module_string(filepath)
-    return importlib.import_module(module_name)
+    module = importlib.import_module(module_name)
+    importlib.reload(module)
+    return module
 
 def path_to_module_string(filepath):
     filepath = filepath.replace('.py', '')
