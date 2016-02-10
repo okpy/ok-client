@@ -1,5 +1,6 @@
 from client.sources.common import interpreter
 from client.sources.common import pyconsole
+from client.utils import locking
 import client
 import unittest
 
@@ -8,8 +9,10 @@ class PythonConsoleTest(unittest.TestCase):
         return pyconsole.PythonConsole(
                 verbose, interactive, timeout)
 
-    def calls_interpret(self, success, code, setup='', teardown=''):
+    def calls_interpret(self, success, code, setup='', teardown='', skip_locked_cases=True, hash_key=None):
         self.console = self.createConsole()
+        self.console.skip_locked_cases = skip_locked_cases
+        self.console.hash_key = hash_key
         lines = interpreter.CodeCase.split_code(code, self.console.PS1,
                                                 self.console.PS2)
         self.console.load(lines, setup, teardown)
@@ -156,4 +159,29 @@ class PythonConsoleTest(unittest.TestCase):
             teardown="""
             >>> 1 / 0
             """)
-
+            
+    
+        
+    def testPass_locked(self):
+        key = "testKey"
+        hashedAnswer = locking.lock(key, "4")
+        self.calls_interpret(True, """
+        >>> 2 + 2
+        %s
+        """ % hashedAnswer, skip_locked_cases=False, hash_key=key)
+        
+    def testError_locked(self):
+        key = "testKey"
+        hashedAnswer = locking.lock(key, "5")
+        self.calls_interpret(False, """
+        >>> 2 + 2
+        %s
+        """ % hashedAnswer, skip_locked_cases=False, hash_key=key)
+        
+    def testError_skipLocked(self):
+        key = "testKey"
+        hashedAnswer = locking.lock(key, "4")
+        self.calls_interpret(False, """
+        >>> 2 + 2
+        %s
+        """ % hashedAnswer)

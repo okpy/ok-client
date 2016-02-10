@@ -1,6 +1,6 @@
 from client.protocols.common import models
 from client.utils import format
-import hmac
+from client.utils import locking
 import logging
 
 log = logging.getLogger(__name__)
@@ -25,7 +25,6 @@ class LockProtocol(models.Protocol):
 
     def _hash_fn(self, text):
         text = format.normalize(text)
-        return hmac.new(self.assignment.name.encode('utf-8'),
-                        text.encode('utf-8')).hexdigest()
+        return locking.lock(self.assignment.name, text)
 
 protocol = LockProtocol
