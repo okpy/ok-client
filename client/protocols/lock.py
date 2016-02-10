@@ -1,5 +1,6 @@
 from client.protocols.common import models
-from client.utils import format, locking
+from client.utils import format
+from client.utils import locking
 import logging
 
 log = logging.getLogger(__name__)

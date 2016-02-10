@@ -6,7 +6,8 @@ compatible with the UnlockProtocol.
 """
 
 from client.protocols.common import models
-from client.utils import format, locking
+from client.utils import format
+from client.utils import locking
 from datetime import datetime
 import logging
 import random
@@ -172,7 +173,7 @@ class UnlockProtocol(models.Protocol):
     ###################
 
     def _verify(self, guess, locked):
-        return locking.lock(self.hash_key, guess).hexdigest() == locked
+        return locking.lock(self.hash_key, guess) == locked
 
     def _input(self, prompt):
         """Retrieves user input from stdin."""
