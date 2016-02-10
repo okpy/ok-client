@@ -2,9 +2,9 @@
 
 from client.sources.common import core
 from client.sources.common import models
+from client.utils import locking
 import re
 import textwrap
-import hmac
 
 class CodeCase(models.Case):
     """TestCase for doctest-style Python tests."""
@@ -257,8 +257,7 @@ class Console(object):
         expected = expected.strip()
         
         if not self.skip_locked_cases and expected != actual:
-            actual = hmac.new(self.hash_key.encode('utf-8'),
-                        actual.encode('utf-8')).hexdigest()
+            actual = locking.lock(self.hash_key, actual)
             if expected != actual:
                 print()
                 print("# Error: expected and actual results do not match")

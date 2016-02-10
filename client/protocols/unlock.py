@@ -6,9 +6,8 @@ compatible with the UnlockProtocol.
 """
 
 from client.protocols.common import models
-from client.utils import format
+from client.utils import format, locking
 from datetime import datetime
-import hmac
 import logging
 import random
 import string
@@ -173,8 +172,7 @@ class UnlockProtocol(models.Protocol):
     ###################
 
     def _verify(self, guess, locked):
-        return hmac.new(self.hash_key.encode('utf-8'),
-                        guess.encode('utf-8')).hexdigest() == locked
+        return locking.lock(self.hash_key, guess).hexdigest() == locked
 
     def _input(self, prompt):
         """Retrieves user input from stdin."""

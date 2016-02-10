@@ -35,6 +35,15 @@ test = {
           # explanation: doubling a negative number
           """,
           'hidden': False
+        },
+        {
+          'code': r"""
+          >>> print("hello world") # doctest:+ELLIPSIS
+          [...] world
+          >>> double(3)
+          6
+          """,
+          'hidden': False
         }
       ],
       'scored': True,
