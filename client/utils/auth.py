@@ -26,6 +26,7 @@ CLIENT_ID = \
 # See: https://developers.google.com/accounts/docs/OAuth2InstalledApp
 CLIENT_SECRET = 'zGY9okExIBnompFTWcBmOZo4'
 
+
 def get_config_directory():
     if sys.platform == 'win32':
         return os.path.expanduser('~') + '\\AppData\\Local\\ok\\'
@@ -35,13 +36,14 @@ def create_config_directory():
     cfg_dir = get_config_directory()
     if not os.path.exists(cfg_dir):
         os.makedirs(cfg_dir)
-    
+
     
 REFRESH_FILE = get_config_directory() + "auth_refresh"
 REDIRECT_HOST = "localhost"
 TIMEOUT = 10
 
 SERVER = 'http://ok-server.appspot.com'
+
 
 def pick_free_port():
     import socket
@@ -95,7 +97,7 @@ def update_storage(access_token, expires_in, refresh_token):
     if not (access_token and expires_in and refresh_token):
         raise AuthenticationException(
             "Authentication failed and returned an empty token.")
-    
+
     cur_time = int(time.time())
     create_config_directory()
     with open(REFRESH_FILE, 'wb') as fp:
