@@ -19,7 +19,6 @@ import logging
 
 log = logging.getLogger(__name__)
 
-
 CLIENT_ID = \
     '931757735585-vb3p8g53a442iktc4nkv5q8cbjrtuonv.apps.googleusercontent.com'
 # The client secret in an installed application isn't a secret.
@@ -28,8 +27,6 @@ CLIENT_SECRET = 'zGY9okExIBnompFTWcBmOZo4'
 
 
 def get_config_directory():
-    if sys.platform == 'win32':
-        return os.path.expanduser('~') + '\\AppData\\Local\\ok\\'
     return os.path.expanduser('~') + '/.config/ok/'
     
 def create_config_directory():
