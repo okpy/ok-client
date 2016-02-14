@@ -7,8 +7,7 @@ from socket import error as socket_error
 
 log = logging.getLogger(__name__)
 
-VERSION_ENDPOINT = 'https://ok-server.appspot.com/api/v1/version'
-# TODO: Version/Autoupgrading will still be on the appspot server for a bit.
+VERSION_ENDPOINT = 'http://{server}/api/v3/version/ok'
 
 SHORT_TIMEOUT = 3  # seconds
 
@@ -42,7 +41,7 @@ def check_version(server, version, filename, timeout=SHORT_TIMEOUT):
         print('OK is up to date')
         return True
 
-    download_link = response_json['data']['results'][0]['current_download_link']
+    download_link = response_json['data']['results'][0]['download_link']
     log.info('Downloading version %s from %s', current_version, download_link)
 
     try:
@@ -77,7 +76,7 @@ def _validate_api_response(data):
            len(data['data']['results']) > 0 and \
            isinstance(data['data']['results'][0], dict) and \
            'current_version' in data['data']['results'][0] and \
-           'current_download_link' in data['data']['results'][0]
+           'download_link' in data['data']['results'][0]
 
 
 
