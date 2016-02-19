@@ -25,17 +25,9 @@ CLIENT_ID = \
 # See: https://developers.google.com/accounts/docs/OAuth2InstalledApp
 CLIENT_SECRET = 'zGY9okExIBnompFTWcBmOZo4'
 
-
-def get_config_directory():
-    return os.path.expanduser('~') + '/.config/ok/'
+CONFIG_DIRECTORY = os.path.join(os.path.expanduser('~'), '.config', 'ok')
     
-def create_config_directory():
-    cfg_dir = get_config_directory()
-    if not os.path.exists(cfg_dir):
-        os.makedirs(cfg_dir)
-
-    
-REFRESH_FILE = get_config_directory() + "auth_refresh"
+REFRESH_FILE = os.path.join(CONFIG_DIRECTORY, "auth_refresh")
 REDIRECT_HOST = "localhost"
 TIMEOUT = 10
 
@@ -76,6 +68,12 @@ def make_refresh_post(refresh_token):
     params = {"grant_type": "refresh_token"}
     client.request_token(refresh_token=refresh_token, **params)
     return client.access_token, client.expires_in
+
+
+def create_config_directory():
+    cfg_dir = get_config_directory()
+    if not os.path.exists(cfg_dir):
+        os.makedirs(cfg_dir)
 
 
 def get_storage():
