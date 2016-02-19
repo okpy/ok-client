@@ -71,9 +71,8 @@ def make_refresh_post(refresh_token):
 
 
 def create_config_directory():
-    cfg_dir = get_config_directory()
-    if not os.path.exists(cfg_dir):
-        os.makedirs(cfg_dir)
+    if not os.path.exists(CONFIG_DIRECTORY):
+        os.makedirs(CONFIG_DIRECTORY)
 
 
 def get_storage():
