@@ -24,7 +24,10 @@ CLIENT_ID = \
 # The client secret in an installed application isn't a secret.
 # See: https://developers.google.com/accounts/docs/OAuth2InstalledApp
 CLIENT_SECRET = 'zGY9okExIBnompFTWcBmOZo4'
-REFRESH_FILE = '.ok_refresh'
+
+CONFIG_DIRECTORY = os.path.join(os.path.expanduser('~'), '.config', 'ok')
+    
+REFRESH_FILE = os.path.join(CONFIG_DIRECTORY, "auth_refresh")
 REDIRECT_HOST = "localhost"
 TIMEOUT = 10
 
@@ -67,7 +70,13 @@ def make_refresh_post(refresh_token):
     return client.access_token, client.expires_in
 
 
+def create_config_directory():
+    if not os.path.exists(CONFIG_DIRECTORY):
+        os.makedirs(CONFIG_DIRECTORY)
+
+
 def get_storage():
+    create_config_directory()
     with open(REFRESH_FILE, 'rb') as fp:
         storage = pickle.load(fp)
 
@@ -84,6 +93,7 @@ def update_storage(access_token, expires_in, refresh_token):
             "Authentication failed and returned an empty token.")
 
     cur_time = int(time.time())
+    create_config_directory()
     with open(REFRESH_FILE, 'wb') as fp:
         pickle.dump({
             'access_token': access_token,
