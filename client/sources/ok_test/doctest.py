@@ -30,7 +30,7 @@ class DoctestSuite(models.Suite):
             self.cases[i] = interpreter.CodeCase(self.console, self.setup,
                                                  self.teardown, **case)
 
-    def run(self, test_name, suite_number, env):
+    def run(self, test_name, suite_number, env=None):
         """Runs test for the doctest suite.
 
         PARAMETERS:
