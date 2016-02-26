@@ -9,7 +9,6 @@ import pickle
 import socket
 import urllib.error
 import urllib.request
-from pyperclip import copy as cp
 
 log = logging.getLogger(__name__)
 
@@ -47,10 +46,16 @@ class BackupProtocol(models.Protocol):
                       'To submit your assignment, use:\n'
                       '\tpython3 ok --submit')
             if self.args.bug_submit:
-                cp(URL)
-                print('The URL of your bug submission is copied to the '
-                      'clipboard.\nYou should make a piazza post that '
+                copy_failed = self.cp(URL)
+                if copy_failed:
+                    print('The URL of your bug submission is: \n\n', \
+                           URL, '\n')
+                else:
+                    print('The URL of your bug submission is copied to the '
+                          'clipboard.' )
+                print('You should make a piazza post that '
                       'includes this URL so we can debug your code.')
+
 
         self.dump_unsent_messages(message_list)
         print()
@@ -182,5 +187,18 @@ class BackupProtocol(models.Protocol):
 
         response = urllib.request.urlopen(request, serialized_data, timeout)
         return json.loads(response.read().decode('utf-8'))
+
+    @staticmethod
+    def cp(msg):
+        # windows
+        if os.name == 'nt':
+            res = os.system('echo ' + msg.strip() + '| clip')
+        # unix
+        elif os.name == 'posix':
+            res = os.system('echo ' + msg + ' | tr -d "\n" | pbcopy')
+        # other
+        else:
+            res = 1
+        return res
 
 protocol = BackupProtocol
