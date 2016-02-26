@@ -9,6 +9,7 @@ import pickle
 import socket
 import urllib.error
 import urllib.request
+from pyperclip import copy as cp
 
 log = logging.getLogger(__name__)
 
@@ -34,16 +35,22 @@ class BackupProtocol(models.Protocol):
         response = self.send_all_messages(access_token, message_list)
 
         if isinstance(response, dict):
-            print('Backup successful for user: '
+            print('Upload successful for user: '
                   '{0}'.format(response['data']['email']))
+            URL = 'https://ok-server.appspot.com/#/' + \
+                  '{0}/submission/{1}'.format(response['data']['course'],
+                                                  response['data']['key'])
             if self.args.submit or self.args.backup:
-                print('URL: https://ok-server.appspot.com/#/'
-                      '{0}/submission/{1}'.format(response['data']['course'],
-                                                  response['data']['key']))
+                print('URL: ' + URL)
             if self.args.backup:
                 print('NOTE: this is only a backup. '
                       'To submit your assignment, use:\n'
                       '\tpython3 ok --submit')
+            if self.args.bug_submit:
+                cp(URL)
+                print('The URL of your bug submission is copied to the '
+                      'clipboard.\nYou should make a piazza post that '
+                      'includes this URL so we can debug your code.')
 
         self.dump_unsent_messages(message_list)
         print()
