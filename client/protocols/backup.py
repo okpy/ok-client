@@ -190,14 +190,18 @@ class BackupProtocol(models.Protocol):
 
     @staticmethod
     def cp(msg):
-        # windows
-        if os.name == 'nt':
-            res = os.system('echo ' + msg.strip() + '| clip')
-        # unix
-        elif os.name == 'posix':
-            res = os.system('echo ' + msg + ' | tr -d "\n" | pbcopy')
-        # other
-        else:
+        try:
+            # windows
+            if os.name == 'nt':
+                res = os.system('echo ' + msg.strip() + '| clip')
+            # unix
+            elif os.name == 'posix':
+                res = os.system('echo ' + msg + \
+                                ' | tr -d "\n" > /dev/null 2>&1' + \
+                                ' | pbcopy > /dev/null 2>&1')
+            else:
+                raise NotImplementedError('Unsupporeted OS')
+        except:
             res = 1
         return res
 
