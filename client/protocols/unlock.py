@@ -212,7 +212,6 @@ class UnlockProtocol(models.Protocol):
         # print("Unqiue ID starts Here: \n")
         # print(shorten_unique_id)
         # print("\n Unqiue ID ends")
-
         try:
             # print('about to open')
             # print(json_dict_file)
@@ -279,6 +278,7 @@ class UnlockProtocol(models.Protocol):
             return ({}, -1)
 
     def update_misUcounts(self,hashkey,misU, wrongAnswer,shorten_unique_id):
+        print(misU,"misU")
         if not os.path.isdir("tests/" + countDir):
             os.makedirs("tests/" + countDir)
 
