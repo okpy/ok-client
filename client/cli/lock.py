@@ -4,7 +4,10 @@ from client.cli.common import messages
 from client.protocols import lock
 import argparse
 import client
+import logging
 import os.path
+
+log = logging.getLogger(__name__)
 
 CLIENT_ROOT = os.path.dirname(client.__file__)
 
