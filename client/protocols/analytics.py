@@ -98,7 +98,7 @@ class AnalyticsProtocol(models.Protocol):
 
     @classmethod
     def read_history(cls):
-        history = {'questions': {}, 'attempts': 0}
+        history = {'questions': {}, 'all_attempts': 0}
         try:
             with open(cls.ANALYTICS_FILE, 'rb') as fp:
                 history = pickle.load(fp)
@@ -113,23 +113,67 @@ class AnalyticsProtocol(models.Protocol):
         """Record this run of the autograder to a local file.
         """
         history = self.read_history()
-        history['attempts'] += 1
-        print(messages)
-
+        history['all_attempts'] += 1
         analytics = messages['analytics']
         questions = analytics.get('question', [])
+        grading = 'grading' in messages and messages['grading']
+
+        # Attempt to figure out what question is being worked on
+        if not questions and grading:
+            failed = first_failed_test(self.assignment.specified_tests,
+                                       grading)
+            logging.info('First failed test: %s', failed)
+            if failed:
+                questions = [failed]
+
+            # Update earlier question correctness status
+            for saved_q, details in history['questions'].items():
+                finished = details['solved']
+                if not finished and saved_q in grading:
+                    score = grading[saved_q]
+                    details['solved'] = is_correct(score)
 
         for question in questions:
-            if question in history['questions']:
-                history['questions'] += 1
+            detail = history['questions']
+            if grading and question in grading:
+                score = is_correct(grading[question])
             else:
-                history['questions'] = 1
-            logging.info('Attempt %d for Question %s',
-                         history['questions'], question)
+                score = True
+
+            if question in history['questions']:
+                q_info = detail[question]
+                if grading and question in grading:
+                    if not q_info['solved']:
+                        q_info['solved'] = score
+                    else:
+                        continue # Already solved. Do not change total
+                q_info['attempts'] += 1
+            else:
+                detail[question] = {
+                    'attempts': 1,
+                    'solved': score
+                }
+            logging.info('Attempt %d for Question %s : %r',
+                         history['questions'], question, score)
 
         with open(self.ANALYTICS_FILE, 'wb') as f:
             log.info('Saving history to %s', self.ANALYTICS_FILE)
             pickle.dump(history, f)
             os.fsync(f)
+
+        messages['analytics']['history'] = history
+
+def is_correct(score):
+    """Given a score from the grading protocol, see if no failed cases
+    and no locked cases.
+    """
+    return sum(score.values()) == score['passed']
+
+def first_failed_test(tests, scores):
+    names = [t.name for t in tests]
+    for test in names:
+        if test in scores and scores[test]['failed']:
+            return test
+    return None
 
 protocol = AnalyticsProtocol
