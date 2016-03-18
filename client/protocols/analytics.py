@@ -2,6 +2,8 @@
 for the ok grading session.
 """
 import logging
+import os
+import pickle
 import re
 
 from client.protocols.common import models
@@ -12,8 +14,11 @@ from datetime import datetime
 
 log = logging.getLogger(__name__)
 
+
 class AnalyticsProtocol(models.Protocol):
     """A Protocol that analyzes how much students are using the autograder."""
+
+    ANALYTICS_FILE = ".ok_history"
 
     RE_SNIPPET = re.compile(r"""
         \s*[\#\;]\s+BEGIN\s+(.*?)\n # \1 is question name
@@ -46,6 +51,8 @@ class AnalyticsProtocol(models.Protocol):
         statistics['started'] = self.check_start(messages['file_contents'])
 
         messages['analytics'] = statistics
+
+        self.log_run(messages)
 
     def check_start(self, files):
         """returns a dictionary where the key is question name, and the value
@@ -89,5 +96,40 @@ class AnalyticsProtocol(models.Protocol):
             return False
         return True
 
+    @classmethod
+    def read_history(cls):
+        history = {'questions': {}, 'attempts': 0}
+        try:
+            with open(cls.ANALYTICS_FILE, 'rb') as fp:
+                history = pickle.load(fp)
+            log.info('Loaded %d history from %s',
+                     len(history), cls.ANALYTICS_FILE)
+        except (IOError, EOFError) as e:
+            log.info('Error reading from ' + cls.ANALYTICS_FILE + \
+                     ', assume no history')
+        return history
+
+    def log_run(self, messages):
+        """Record this run of the autograder to a local file.
+        """
+        history = self.read_history()
+        history['attempts'] += 1
+        print(messages)
+
+        analytics = messages['analytics']
+        questions = analytics.get('question', [])
+
+        for question in questions:
+            if question in history['questions']:
+                history['questions'] += 1
+            else:
+                history['questions'] = 1
+            logging.info('Attempt %d for Question %s',
+                         history['questions'], question)
+
+        with open(self.ANALYTICS_FILE, 'wb') as f:
+            log.info('Saving history to %s', self.ANALYTICS_FILE)
+            pickle.dump(history, f)
+            os.fsync(f)
 
 protocol = AnalyticsProtocol
