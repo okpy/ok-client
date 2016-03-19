@@ -57,6 +57,8 @@ def parse_input(command_input=None):
     parser.add_argument('--timeout', type=int, default=10,
                         help="set the timeout duration for running tests")
 
+    parser.add_argument('--guidance', action='store_true',
+                        help="display guidance messages")
     # Submission Export
     parser.add_argument('--export', action='store_true',
                         help="Downloads all submissions for the current assignment")
@@ -85,6 +87,7 @@ def parse_input(command_input=None):
                         help="turns off software updating")
     parser.add_argument('--update', action='store_true',
                         help="checks and performs software update then exits")
+
 
     if command_input is None:
         return parser.parse_args()

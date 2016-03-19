@@ -6,28 +6,15 @@ compatible with the UnlockProtocol.
 """
 
 from client.protocols.common import models
+from client.protocols import guidance
 from client.utils import format
 from client.utils import locking, auth
 from datetime import datetime
 import logging
 import random
 import string
-from urllib.request import urlopen
-import json
-import os
-import sys
 
 log = logging.getLogger(__name__)
-countDir = "countDir"
-TGSERVER = "http://127.0.0.1:5000/"
-
-try:
-    with open("tests/.ok_guidance","r") as f:
-        json_dict_file = json.load(f)
-        f.close()
-    error = False
-except:
-    error = True
 
 try:
     import readline
@@ -48,6 +35,9 @@ class UnlockProtocol(models.Protocol):
         super().__init__(cmd_args, assignment)
         self.hash_key = assignment.name
         self.analytics = []
+        self.access_token = -1
+        self.guidance_proto = guidance.protocol("")
+        self.printed_msg = ""
 
     def run(self, messages):
         """Responsible for unlocking each test.
@@ -61,7 +51,8 @@ class UnlockProtocol(models.Protocol):
         """
         if self.args.export or not self.args.unlock:
             return
-        access_token = auth.authenticate(False)
+        if not self.args.local:
+            self.access_token = auth.authenticate(False)
         format.print_line('~')
         print('Unlocking tests')
         print()
@@ -122,11 +113,9 @@ class UnlockProtocol(models.Protocol):
         list; the correct solution (that the student supplied). Each element
         in the list is a line of the correct output.
         """
-        access_token = auth.authenticate(False)
 
         if randomize and choices:
             choices = random.sample(choices, len(choices))
-
         correct = False
         while not correct:
             if choices:
@@ -167,17 +156,19 @@ class UnlockProtocol(models.Protocol):
             else:
                 correct = True
             tg_id = -1
-            msg_id = -1
-            spen_dict = {}
+            misU_count = {}
 
-            if not correct and error:
-                print("-- Not quite. Try again! --")
-
-            elif not correct:
-                spen_dict, tg_id = self.error_handling(unique_id,input_lines,access_token)
+            if not correct:
+                try:
+                    misU_count, tg_id, msg = self.guidance_proto.guidance_msg(unique_id,input_lines,
+                        self.access_token,self.hash_key,self.args.guidance)
+                    self.printed_msg += msg
+                except:
+                    print ("-- Not quite. Try again! --")
 
             else:
                 print("-- OK! --")
+                self.printed_msg = "-- OK! --"
 
             self.analytics.append({
                 'id': unique_id,
@@ -188,151 +179,15 @@ class UnlockProtocol(models.Protocol):
                 'answer': input_lines,
                 'correct': correct,
                 'treatment group id': tg_id,
-                'misU count': spen_dict,
+                'misU count': misU_count,
+                'printed msg': self.printed_msg 
             })
-
-            """:if not correct:
-                print("-- Not quite. Try again! --")
-
-            else:
-                print("-- OK! --")"""
             print()
         return input_lines
 
     ###################
     # Private Methods #
     ###################
-
-    # Displaying the correct messages depending on students' wrong answers and treatment group ID
-    def error_handling(self, unique_id, input_lines,access_token):
-
-        shorten_unique_id = unique_id[unique_id.index('\n')+1:]
-
-        # Try to get th info dictionary for this question
-        wa_2_dict_info = json_dict_file['dictAssessId2WA2DictInfo'].get(shorten_unique_id)
-
-        if not wa_2_dict_info: # get returns None if wa_2_dict_info doesn't have shorten_unique_id in dictionary
-            print ("-- Not quite. Try again! --")
-            return ({}, -1)
-
-        dict_info = wa_2_dict_info.get(repr(input_lines))
-
-        # If this wrong answer is not in the JSON file, display default message
-        if not dict_info:            
-            print ("-- Not quite. Try again! --")
-            return ({}, -1)
-
-        # Checks to see the student currently has a treatment group number. If not, calls helper function in auth.py
-        if not os.path.isfile("tests/tg.ok_tg"):
-            cur_email = auth.get_student_email(access_token)
-            if not cur_email:
-                print ("--Not quite. Try again! --")
-                return ({}, -1)
-            lab_assignment = "".join(("".join(self.hash_key.split())).split(":"))
-            try:
-                data = json.loads(urlopen(TGSERVER + cur_email +"/"+lab_assignment+ "/unlock_tg",timeout =1).read().decode("utf-8"))
-            except IOError as e:
-                data = {"tg":-1}
-            fd = open("tests/tg.ok_tg","w")
-            fd.write(str(data["tg"]))
-            fd.close()
-
-        tg_file = open("tests/tg.ok_tg", 'r')
-        tg_id = int(tg_file.read())
-
-        if tg_id == -1: 
-            # If tg_id == -1, some errors happen when trying to access server
-            print ("-- Not quite. Try again! --")
-            return ({}, -1)
-
-        #Get the string that corresponds to this treatment group ID
-        lambda_string = json_dict_file['dictTg2Func'].get(str(tg_id))
-
-        if not lambda_string:
-            print ("-- Not quite. Try again! --")
-            return ({}, -1)
-
-        lambda_info_misu = eval(lambda_string)
-
-        lst_mis_u = dict_info.get('lstMisU')
-
-        # No list of misunderstandings for this wrong answer, default message
-        if not lst_mis_u:
-            print ("-- Not quite. Try again! --")
-            return ({}, -1)
-
-        spen_dict = self.update_misUcounts(self.hash_key, lst_mis_u, repr(input_lines),shorten_unique_id)
-
-        thresold = json_dict_file['wrongAnsThresh']
-
-        """
-        Update Spenser's count file by each misunderstanding in lst_mis_u
-        Get the updated counts from Spenser as a dictionary: mis_u -> counts.
-        Called that dictionary spen_dict
-        """
-
-        msg_id_set = set()
-
-        # If the count is higher than the thresold, we need to display the message
-        for mis_u in spen_dict:
-            if spen_dict[mis_u] >= thresold:
-                # Print each associated unique message for each miunderstanding
-                msg_id = lambda_info_misu(dict_info, mis_u)
-                msg_id_set.add(msg_id)
-
-        if len(msg_id_set) == 0 or None in msg_id_set:
-            # if student is in control group, just print the default message
-            print ("-- Not quite. Try again! --")
-            return (spen_dict, tg_id)
-
-        for mid in msg_id_set:
-            msg = json_dict_file['dictId2Msg'][str(mid)]
-            print("-- " + msg + " --")
-
-        return (spen_dict, tg_id)
-
-    # Looks at the locally saved file for number of misU and returns the current count
-    def update_misUcounts(self, hashkey, misU, wrongAnswer, shorten_unique_id):
-        if not os.path.isdir("tests/" + countDir):
-            os.makedirs("tests/" + countDir)
-
-        #Creates a new folder inside tests that stores the number of misU per assignment
-        count_file_path = "tests/" + countDir +"/" + "misUcount" + ".json"
-        if os.path.isfile(count_file_path):
-            with open(count_file_path,'r') as f:
-                jsonDic = json.load(f)
-                answerDict = jsonDic["answerDict"]
-                countData = jsonDic["countData"] 
-                f.close()
-        else:
-            countData = {}
-            answerDict = {}
-        newjsonDic = {}
-
-        # Checks to see if the question is already stored and whether the student's answer is there
-        # It does not update misU count if same answer was seen before
-        if shorten_unique_id in answerDict and wrongAnswer in answerDict[shorten_unique_id]:
-            return countData
-        if not shorten_unique_id in answerDict:
-            answerDict[shorten_unique_id] = []
-
-        # Updates misU count
-        for x in misU: 
-            if x in countData:
-                countData[x] += 1
-            else:
-                countData[x] = 1
-
-        # Stores the updated count back into the same file and overrides it
-        answerDict[shorten_unique_id].append(wrongAnswer)
-        newjsonDic["countData"] = countData
-        newjsonDic["answerDict"] = answerDict
-        with open(count_file_path,"w") as f:
-            json.dump(newjsonDic,f)
-            f.close()
-
-        # Returns a dictionary containing how many times each misU has been seen.
-        return countData
 
     def _verify(self, guess, locked):
         return locking.lock(self.hash_key, guess) == locked
