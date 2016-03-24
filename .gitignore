@@ -22,6 +22,7 @@ dist
 pip-selfcheck.json
 
 # ok-related files
+ok
 *.ok_refresh
 *.ok_messages
 
