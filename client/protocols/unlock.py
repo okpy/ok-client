@@ -6,9 +6,10 @@ compatible with the UnlockProtocol.
 """
 
 from client.protocols.common import models
-from client.protocols import guidance
+from client.utils import guidance
 from client.utils import format
-from client.utils import locking, auth
+from client.utils import locking
+from client.utils import auth
 from datetime import datetime
 import logging
 import random
@@ -35,9 +36,8 @@ class UnlockProtocol(models.Protocol):
         super().__init__(cmd_args, assignment)
         self.hash_key = assignment.name
         self.analytics = []
-        self.access_token = -1
-        self.guidance_proto = guidance.protocol("")
-        self.printed_msg = ""
+        self.access_token = None
+        self.GuidanceUtil = guidance.util("")
 
     def run(self, messages):
         """Responsible for unlocking each test.
@@ -113,7 +113,7 @@ class UnlockProtocol(models.Protocol):
         list; the correct solution (that the student supplied). Each element
         in the list is a line of the correct output.
         """
-
+        
         if randomize and choices:
             choices = random.sample(choices, len(choices))
         correct = False
@@ -157,18 +157,16 @@ class UnlockProtocol(models.Protocol):
                 correct = True
             tg_id = -1
             misU_count = {}
+            printed_msg = ""
 
             if not correct:
-                try:
-                    misU_count, tg_id, msg = self.guidance_proto.guidance_msg(unique_id,input_lines,
-                        self.access_token,self.hash_key,self.args.guidance)
-                    self.printed_msg += msg
-                except:
-                    print ("-- Not quite. Try again! --")
+                misU_count, tg_id, msg = self.GuidanceUtil.guidance_msg(unique_id,input_lines,
+                    self.access_token,self.hash_key,self.args.guidance)
+                printed_msg += msg
 
             else:
                 print("-- OK! --")
-                self.printed_msg = "-- OK! --"
+                printed_msg = "-- OK! --"
 
             self.analytics.append({
                 'id': unique_id,
@@ -180,7 +178,7 @@ class UnlockProtocol(models.Protocol):
                 'correct': correct,
                 'treatment group id': tg_id,
                 'misU count': misU_count,
-                'printed msg': self.printed_msg 
+                'printed msg': printed_msg 
             })
             print()
         return input_lines

@@ -87,8 +87,6 @@ def parse_input(command_input=None):
                         help="turns off software updating")
     parser.add_argument('--update', action='store_true',
                         help="checks and performs software update then exits")
-
-
     if command_input is None:
         return parser.parse_args()
     else:

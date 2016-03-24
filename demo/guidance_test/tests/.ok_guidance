@@ -1,8 +1,8 @@
 {
   "dictAssessId2WA2DictInfo": {
-    "Test\n\n>>> 1 + 1 # OK will accept 'black' as right answer\ne74918d4310bb6cbc896676f20dc20de\n# locked\n>>> 2 + 2 # OK will accept 'black' as right answer\ne74918d4310bb6cbc896676f20dc20de\n# locked\n": {
+    ">>> 1 + 1\nLOCKED_ANSWER\n>>> 2 + 2\nLOCKED_ANSWER\n": {
       "['-2']": {
-        "dictMisU2ReteachMsg": {
+        "dictMisU2Msg": {
           "negation": 3
         },
         "ki": 1,
@@ -11,7 +11,7 @@
         ]
       },
       "['0']": {
-        "dictMisU2ReteachMsg": {
+        "dictMisU2Msg": {
           "negation": 3,
           "offbytwo": 2
         },
@@ -22,7 +22,7 @@
         ]
       },
       "['1']": {
-        "dictMisU2ReteachMsg": {
+        "dictMisU2Msg": {
           "offbyone": 2
         },
         "ki": 1,
@@ -31,7 +31,7 @@
         ]
       },
       "['100']": {
-        "dictMisU2ReteachMsg": {
+        "dictMisU2Msg": {
           "offbyone": 2,
           "offbytwo": 2
         },
@@ -42,7 +42,7 @@
         ]
       },
       "['3']": {
-        "dictMisU2ReteachMsg": {
+        "dictMisU2Msg": {
           "offbyone": 2
         },
         "ki": 1,
@@ -51,7 +51,7 @@
         ]
       },
       "['4']": {
-        "dictMisU2ReteachMsg": {
+        "dictMisU2Msg": {
           "offbytwo": 2
         },
         "ki": 1,
@@ -69,7 +69,7 @@
   "dictTg2Func": {
     "0": "none",
     "1": "ki",
-    "2": "reteach"
+    "2": "misU2Msg"
   },
   "url": "TODO",
   "wrongAnsThresh": 2

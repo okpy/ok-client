@@ -280,6 +280,8 @@ def pluralize(num, string):
 
 # Grabs the student's email through the access_token and returns it. 
 def get_student_email(access_token):
+    if access_token == None:
+        return None
     try:
         user_dic = json.loads(urlopen("https://www.googleapis.com/oauth2/v1/userinfo?access_token=" + \
             access_token,timeout = 1).read().decode("utf-8"))
