@@ -1,5 +1,8 @@
-"""Implements the HintProtocol, which determines if a hint should
-be given and obtains them from the hint generation server.
+"""Implements the HintProtocol, which generates hints for students
+that are stuck on a coding question. The protocol uses analytics
+to determine whether a hint should be given and then
+obtains them from the hint generation server. Free response questions
+are posed before and after hints are provided.
 """
 
 from client.sources.common import core
@@ -45,6 +48,10 @@ class HintingProtocol(protocol_models.Protocol):
         if 'file_contents' not in messages:
             log.info('File Contents needed to generate hints')
             return
+
+        if not confirm("Check for hints?"):
+            return
+
 
 
     def query_server(self, messages, test):
