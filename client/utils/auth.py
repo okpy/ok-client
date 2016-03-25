@@ -279,6 +279,7 @@ def pluralize(num, string):
     return str(num)+string+('s' if num != 1 else '')
 
 # Grabs the student's email through the access_token and returns it. 
+
 def get_student_email(access_token):
     if access_token == None:
         return None

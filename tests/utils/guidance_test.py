@@ -32,8 +32,8 @@ class GuidanceProtocolTest(unittest.TestCase):
         self.cmd_args = mock.Mock()
         self.assignment = mock.Mock()
         self.proto = unlock.protocol(self.cmd_args, self.assignment)
-        self.proto.GuidanceUtil = guidance.util(self.GUIDANCE_DIRECTORY)
-        self.proto.GuidanceUtil.set_tg = self.mockSet_TG
+        self.proto.guidance_util = guidance.Guidance(self.GUIDANCE_DIRECTORY)
+        self.proto.guidance_util.set_tg = self.mockSet_TG
         self.proto.current_test = self.TEST
         self.proto._verify = self.mockVerify
         self.proto._input = self.mockInput
@@ -122,7 +122,7 @@ class GuidanceProtocolTest(unittest.TestCase):
             cur_expect_msg = self.ALLMSG[tg]
             for x in range(0,len(cur_input)):
                 self.setUp()
-                self.proto.GuidanceUtil.tg_id = tg
+                self.proto.guidance_util.tg_id = tg
                 try:
                     os.remove(self.GUIDANCE_DIRECTORY + self.MISUCOUNT_FILE)
                 except:

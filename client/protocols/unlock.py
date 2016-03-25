@@ -37,7 +37,7 @@ class UnlockProtocol(models.Protocol):
         self.hash_key = assignment.name
         self.analytics = []
         self.access_token = None
-        self.GuidanceUtil = guidance.util("")
+        self.guidance_util = guidance.Guidance("")
 
     def run(self, messages):
         """Responsible for unlocking each test.
@@ -53,6 +53,7 @@ class UnlockProtocol(models.Protocol):
             return
         if not self.args.local:
             self.access_token = auth.authenticate(False)
+
         format.print_line('~')
         print('Unlocking tests')
         print()
@@ -116,6 +117,7 @@ class UnlockProtocol(models.Protocol):
         
         if randomize and choices:
             choices = random.sample(choices, len(choices))
+
         correct = False
         while not correct:
             if choices:
@@ -156,13 +158,11 @@ class UnlockProtocol(models.Protocol):
             else:
                 correct = True
             tg_id = -1
-            misU_count = {}
-            printed_msg = ""
+            misU_count_dict = {}
 
             if not correct:
-                misU_count, tg_id, msg = self.GuidanceUtil.guidance_msg(unique_id,input_lines,
-                    self.access_token,self.hash_key,self.args.guidance)
-                printed_msg += msg
+                misU_count_dict, tg_id, printed_msg = self.guidance_util.show_guidance_msg(unique_id,input_lines,
+                    self.access_token, self.hash_key, self.args.guidance)
 
             else:
                 print("-- OK! --")
@@ -177,7 +177,7 @@ class UnlockProtocol(models.Protocol):
                 'answer': input_lines,
                 'correct': correct,
                 'treatment group id': tg_id,
-                'misU count': misU_count,
+                'misU count': misU_count_dict,
                 'printed msg': printed_msg 
             })
             print()
