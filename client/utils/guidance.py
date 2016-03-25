@@ -13,21 +13,21 @@ log = logging.getLogger(__name__)
 This utility is called by unlock.py. This guidance utility changes the message that students see
 after they input in wrong answers. If a student guesses a certain amount of wrong answers
 that shows a certain type of confusion about the problem, this utility will instead of showing
-the default "Not Quite Try Again" message will show some kind of message that will target 
-that type of misunderstanding. 
+the default "Not Quite Try Again" message will show some kind of message that will target
+that type of misunderstanding.
 
-This utility object requires internet access to determine what treatmeng group they are assigned
+This utility object requires internet access to determine what treatment group they are assigned
 to. The different treatment groups will have varying threshold level of answers as well as different
 messages and other differences. It will contact the server defined below in the variable TGSERVER with
-the user's email and lab assignment to get the treatment group number. 
+the user's email and lab assignment to get the treatment group number.
 
-Commonly used acronyms: 
+Commonly used acronyms:
 TG = treatment group number
 KI = Type of targeted understanding
 misU = Type of misunderstanding the student is showing
 wa
 
-The LOCAL_TG_FILE will hold what treatment group number the student is part of. 
+The LOCAL_TG_FILE will hold what treatment group number the student is part of.
 The OK_GUIDANCE_FILE will facilitate the generation of guided messages. It will hold the necessary info
 to know what type of misunderstanding an answer has as well as what guidance message to show.
 """
@@ -46,18 +46,18 @@ GUIDANCE_FLAG_TG_NUMBER = 1
 #If set_tg() fails, we will default to this treatment group number
 TG_ERROR_VALUE = -1
 
-#These lambda functions allow us to map from a certain type of misunderstanding to 
-#the desired targeted guidance message we want to show. 
+#These lambda functions allow us to map from a certain type of misunderstanding to
+#the desired targeted guidance message we want to show.
 # lambda for control or treatment group where we want nothing to happen
 # Knowledge integration treatment group lambda that is answer specific
 # lambda for returning an answer + misunderstanding specific message
 
 lambda_string_key_to_func = {
-    'none': lambda info, strMisU: None, 
+    'none': lambda info, strMisU: None,
     'ki': lambda info, strMisU: info['ki'],
     'misU2Msg': lambda info, strMisU: info['dictMisU2Msg'].get(strMisU)
 }
-  
+
 class Guidance:
     def __init__(self, current_working_dir):
         """
@@ -80,10 +80,10 @@ class Guidance:
 
 
     def show_guidance_msg(self,unique_id, input_lines,access_token,hash_key,guidance_flag):
-        """ 
+        """
         Based on the student's answer (input_lines), we grab each associated
         message if its corresponding misunderstanding's count is above the threshold
-        """    
+        """
         if self.load_error:
             print (GUIDANCE_DEFAULT_MSG)
             return EMPTY_MISUCOUNT_TGID_PRNTEDMSG
@@ -99,12 +99,12 @@ class Guidance:
         dict_info = Wrong_Answer_2_dict_info.get(repr(input_lines))
 
         # If this wrong answer is not in the JSON file, display default message
-        if not dict_info:            
+        if not dict_info:
             print (GUIDANCE_DEFAULT_MSG)
             return EMPTY_MISUCOUNT_TGID_PRNTEDMSG
 
         self.set_tg(access_token,guidance_flag)
-        if self.tg_id == TG_ERROR_VALUE: 
+        if self.tg_id == TG_ERROR_VALUE:
             # If self.tg_id == -1, some errors happen when trying to access server
             print (GUIDANCE_DEFAULT_MSG)
             return EMPTY_MISUCOUNT_TGID_PRNTEDMSG
@@ -163,14 +163,14 @@ class Guidance:
         """
         Looks at the locally saved file for number of misU and returns the current count
         for each misunderstanding. Also updates the count with the most recent user input
-        """    
+        """
 
         #Creates a new folder inside tests that stores the number of misU per assignment
         if os.path.isfile(self.current_working_dir + COUNT_FILE_PATH):
             with open(self.current_working_dir + COUNT_FILE_PATH,'r') as f:
                 jsonDic = json.load(f)
                 answerDict = jsonDic["answerDict"]
-                countData = jsonDic["countData"] 
+                countData = jsonDic["countData"]
         else:
             countData = {}
             answerDict = {}
@@ -183,7 +183,7 @@ class Guidance:
             answerDict[shorten_unique_id] = []
 
         # Updates misU count
-        for answer_MisU in lst_misU: 
+        for answer_MisU in lst_misU:
             if answer_MisU in countData:
                 countData[answer_MisU] += 1
             else:
@@ -201,7 +201,7 @@ class Guidance:
 
     def set_tg(self,access_token,guidance_flag):
         """
-        Try to grab the treatment group number for the student. If there is no treatment 
+        Try to grab the treatment group number for the student. If there is no treatment
         group number available, we request it from the server.
         """
         if guidance_flag:

@@ -6,10 +6,10 @@ compatible with the UnlockProtocol.
 """
 
 from client.protocols.common import models
-from client.utils import guidance
-from client.utils import format
-from client.utils import locking
 from client.utils import auth
+from client.utils import format
+from client.utils import guidance
+from client.utils import locking
 from datetime import datetime
 import logging
 import random
@@ -114,7 +114,7 @@ class UnlockProtocol(models.Protocol):
         list; the correct solution (that the student supplied). Each element
         in the list is a line of the correct output.
         """
-        
+
         if randomize and choices:
             choices = random.sample(choices, len(choices))
 
@@ -178,7 +178,7 @@ class UnlockProtocol(models.Protocol):
                 'correct': correct,
                 'treatment group id': tg_id,
                 'misU count': misU_count_dict,
-                'printed msg': printed_msg 
+                'printed msg': printed_msg
             })
             print()
         return input_lines
