@@ -6,7 +6,9 @@ compatible with the UnlockProtocol.
 """
 
 from client.protocols.common import models
+from client.utils import auth
 from client.utils import format
+from client.utils import guidance
 from client.utils import locking
 from datetime import datetime
 import logging
@@ -34,6 +36,8 @@ class UnlockProtocol(models.Protocol):
         super().__init__(cmd_args, assignment)
         self.hash_key = assignment.name
         self.analytics = []
+        self.access_token = None
+        self.guidance_util = guidance.Guidance("")
 
     def run(self, messages):
         """Responsible for unlocking each test.
@@ -47,6 +51,8 @@ class UnlockProtocol(models.Protocol):
         """
         if self.args.export or not self.args.unlock:
             return
+        if not self.args.local:
+            self.access_token = auth.authenticate(False)
 
         format.print_line('~')
         print('Unlocking tests')
@@ -108,6 +114,7 @@ class UnlockProtocol(models.Protocol):
         list; the correct solution (that the student supplied). Each element
         in the list is a line of the correct output.
         """
+
         if randomize and choices:
             choices = random.sample(choices, len(choices))
 
@@ -150,6 +157,16 @@ class UnlockProtocol(models.Protocol):
 
             else:
                 correct = True
+            tg_id = -1
+            misU_count_dict = {}
+
+            if not correct:
+                misU_count_dict, tg_id, printed_msg = self.guidance_util.show_guidance_msg(unique_id,input_lines,
+                    self.access_token, self.hash_key, self.args.guidance)
+
+            else:
+                print("-- OK! --")
+                printed_msg = "-- OK! --"
 
             self.analytics.append({
                 'id': unique_id,
@@ -159,12 +176,10 @@ class UnlockProtocol(models.Protocol):
                 'prompt': question_prompt,
                 'answer': input_lines,
                 'correct': correct,
+                'treatment group id': tg_id,
+                'misU count': misU_count_dict,
+                'printed msg': printed_msg
             })
-
-            if not correct:
-                print("-- Not quite. Try again! --")
-            else:
-                print("-- OK! --")
             print()
         return input_lines
 
