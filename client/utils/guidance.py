@@ -16,7 +16,7 @@ that shows a certain type of confusion about the problem, this utility will inst
 the default "Not Quite Try Again" message will show some kind of message that will target 
 that type of misunderstanding. 
 
-This utility object requires internet access to determine what treatmeng group they are assigned
+This utility object requires internet access to determine what treatment group they are assigned
 to. The different treatment groups will have varying threshold level of answers as well as different
 messages and other differences. It will contact the server defined below in the variable TGSERVER with
 the user's email and lab assignment to get the treatment group number. 

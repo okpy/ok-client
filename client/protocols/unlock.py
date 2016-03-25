@@ -6,10 +6,10 @@ compatible with the UnlockProtocol.
 """
 
 from client.protocols.common import models
-from client.utils import guidance
-from client.utils import format
-from client.utils import locking
 from client.utils import auth
+from client.utils import format
+from client.utils import guidance
+from client.utils import locking
 from datetime import datetime
 import logging
 import random
