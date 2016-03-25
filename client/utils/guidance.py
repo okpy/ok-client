@@ -12,7 +12,7 @@ log = logging.getLogger(__name__)
 """
 This utility is called by unlock.py. This guidance utility changes the message that students see
 after they input in wrong answers. If a student guesses a certain amount of wrong answers
-that all show a certain type of confusion about the problem, this utility will instead of showing
+that shows a certain type of confusion about the problem, this utility will instead of showing
 the default "Not Quite Try Again" message will show some kind of message that will target 
 that type of misunderstanding. 
 
@@ -162,7 +162,7 @@ class Guidance:
     def update_misUcounts(self, hashkey, lst_misU, wrongAnswer, shorten_unique_id):
         """
         Looks at the locally saved file for number of misU and returns the current count
-        for each misunderstanding.
+        for each misunderstanding. Also updates the count with the most recent user input
         """    
 
         #Creates a new folder inside tests that stores the number of misU per assignment

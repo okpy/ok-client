@@ -285,7 +285,7 @@ def get_student_email(access_token):
         return None
     try:
         user_dic = json.loads(urlopen("https://www.googleapis.com/oauth2/v1/userinfo?access_token=" + \
-            access_token,timeout = 1).read().decode("utf-8"))
+            access_token, timeout = 1).read().decode("utf-8"))
         user_email = user_dic["email"]
     except IOError as e:
         user_email = None
