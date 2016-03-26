@@ -8,8 +8,10 @@ are posed before and after hints are provided.
 from client.sources.common import core
 from client.sources.common import models as sources_models
 from client.protocols.common import models as protocol_models
+from client.utils import auth
 from client.utils import format
 
+import json
 import logging
 import os
 import pickle
@@ -27,7 +29,8 @@ class HintingProtocol(protocol_models.Protocol):
     """A protocol that provides rubber duck debugging and hints if applicable.
     """
 
-    HINT_SERVER = "https://hintgen.cs61a.org/"
+    HINT_SERVER = "http://146.148.59.194:5000/"
+    HINT_ENDPOINT = 'api/hints'
 
     def run(self, messages):
         """Determine if a student is elgible to recieve a hint. Based on their
@@ -38,9 +41,6 @@ class HintingProtocol(protocol_models.Protocol):
         """
         if self.args.local:
             return
-        # TODO: Handle cases when no questions are specified
-        if not self.args.question:
-            return
 
         if 'analytics' not in messages:
             log.info('Analytics Protocol is required for hint generation')
@@ -49,25 +49,94 @@ class HintingProtocol(protocol_models.Protocol):
             log.info('File Contents needed to generate hints')
             return
 
-        if not confirm("Check for hints?"):
-            return
+        messages['hinting'] = {}
+        history = messages['analytics']['history']
+        questions = history['questions']
+        current_q = history['question']
 
+        for question in current_q:
+            if question not in questions:
+                continue
+            stats = questions[question]
+            messages['hinting'][question] = {'prompts': {}}
+            hint_info = messages['hinting'][question]
 
+            if (stats['solved'] or stats['attempts'] < 5):
+                log.info("Question %s is not elgible: Attempts: %s, Solved: %s",
+                         question, stats['attempts'], stats['solved'])
+                hint_info['elgible'] = False
+                continue
+            else:
+                hint_info['elgible'] = True
+
+            log.info('Prompting for hint on %s', question)
+            if confirm("Check for hints on {}?".format(question)):
+                hint_info['accept'] = True
+                try:
+                    response = self.query_server(messages, question)
+                    hint_info['response'] = response
+
+                    hint = response['message']
+                    pre_prompt = response['pre-prompt']
+                    post_prompt = response['post-prompt']
+                    if not hint and not pre_prompt:
+                        print("No hints found for {}".format(question))
+                        continue
+
+                    if pre_prompt:
+                        print("-- While the computer fetches a hint --")
+                        if not prompt_user(pre_prompt, hint_info):
+                            continue
+
+                    print(hint)
+                    print()
+
+                    if post_prompt:
+                        prompt_user(post_prompt, hint_info)
+
+                except urllib.error.URLError:
+                    log.debug("Network error while fetching hint")
+                    hint_info['fetch_error'] = True
+                    print("Could not get a hint.")
+            else:
+                log.info('Declined Hints for %s', question)
+                hint_info['accept'] = False
 
     def query_server(self, messages, test):
+        access_token, _, _ = auth.get_storage()
+        user = auth.get_student_email(access_token) or access_token
+        if user:
+            user = hash(user)
         data = {
             'assignment': self.assignment.endpoint,
             'test': test,
             'messages': messages,
+            'user': user
         }
         serialized_data = json.dumps(data).encode(encoding='utf-8')
 
-        address = self.HINT_SERVER
+        address = self.HINT_SERVER + self.HINT_ENDPOINT
 
         log.info('Sending hint request to %s', address)
         request = urllib.request.Request(address)
+        request.add_header("Content-Type", "application/json")
 
+        response = urllib.request.urlopen(request, serialized_data, 5)
+        return json.loads(response.read().decode('utf-8'))
 
+def prompt_user(query, results):
+    try:
+        response = input("{} :".format(query))
+        results['prompts'][query] = response
+        return response
+    except KeyboardInterrupt:
+        # Hack for windows:
+        results['prompts'][query] = 'KeyboardInterrupt'
+        try:
+            print("Exiting Hint") # Second I/O will get KeyboardInterrupt
+            return ''
+        except KeyboardInterrupt:
+            return ''
 
 def confirm(message):
     response = input("{} [yes/no]: ".format(message))

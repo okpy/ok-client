@@ -125,6 +125,7 @@ class AnalyticsProtocol(models.Protocol):
             logging.info('First failed test: %s', failed)
             if failed:
                 questions = [failed]
+            history['question'] = questions
 
             # Update earlier question correctness status
             for saved_q, details in history['questions'].items():
@@ -132,18 +133,20 @@ class AnalyticsProtocol(models.Protocol):
                 if not finished and saved_q in grading:
                     score = grading[saved_q]
                     details['solved'] = is_correct(score)
+        else:
+            history['question'] = questions
 
         for question in questions:
             detail = history['questions']
             if grading and question in grading:
                 score = is_correct(grading[question])
             else:
-                score = True
+                score = 'Unknown'
 
             if question in history['questions']:
                 q_info = detail[question]
                 if grading and question in grading:
-                    if not q_info['solved']:
+                    if q_info['solved'] != True:
                         q_info['solved'] = score
                     else:
                         continue # Already solved. Do not change total
