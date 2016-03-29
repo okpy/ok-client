@@ -70,11 +70,13 @@ class HintingProtocol(protocol_models.Protocol):
                     # Only prompt for reflection with question specified.
                     log.info('Giving reflection response on %s', question)
                     reflection = random.choice(SOLVE_SUCCESS_MSG)
-                    if not confirm("Nice work! Mind answering a quick question"
-                                   "about how you approached this question?"):
-                        hint_info['reflection']['declined'] = True
+                    if not confirm("Nice work! Could you answer a quick question"
+                                   " about how you approached this question?"):
+                        hint_info['reflection']['accept'] = False
                         continue
-                    prompt_user(reflection, hint_info['reflection'])
+                    else:
+                        hint_info['reflection']['accept'] = True
+                    prompt_user(reflection, hint_info)
             elif (stats['attempts'] < 5):
                 log.info("Question %s is not elgible: Attempts: %s, Solved: %s",
                          question, stats['attempts'], stats['solved'])
