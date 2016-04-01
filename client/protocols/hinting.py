@@ -63,17 +63,15 @@ class HintingProtocol(protocol_models.Protocol):
             hint_info = messages['hinting'][question]
 
             # Only prompt
-            if (stats['solved'] and stats['attempts'] > 15):
-                if not self.args.question:
-                    hint_info['elgible'] = False
-                else:
+            if (stats['solved'] and stats['attempts'] > 6):
+                hint_info['elgible'] = False
+                if self.args.question:
                     # Only prompt for reflection with question specified.
                     log.info('Giving reflection response on %s', question)
                     reflection = random.choice(SOLVE_SUCCESS_MSG)
                     if not confirm("Nice work! Could you answer a quick question"
                                    " about how you approached this question?"):
                         hint_info['reflection']['accept'] = False
-                        continue
                     else:
                         hint_info['reflection']['accept'] = True
                     prompt_user(reflection, hint_info)
@@ -81,10 +79,11 @@ class HintingProtocol(protocol_models.Protocol):
                 log.info("Question %s is not elgible: Attempts: %s, Solved: %s",
                          question, stats['attempts'], stats['solved'])
                 hint_info['elgible'] = False
-                continue
             else:
-                hint_info['elgible'] = True
+                hint_info['elgible'] = not stats['solved']
 
+            if not hint_info['elgible']:
+                continue
             log.info('Prompting for hint on %s', question)
 
             if confirm("Check for hints on {}?".format(question)):
@@ -97,13 +96,14 @@ class HintingProtocol(protocol_models.Protocol):
                     hint = response['message']
                     pre_prompt = response['pre-prompt']
                     post_prompt = response['post-prompt']
-                    log.info("Hint response: {}".format(hint))
+                    log.info("Hint server response: {}".format(response))
                     if not hint and not pre_prompt:
-                        print("Sorry. No hints found for {}".format(question))
+                        print("\nSorry. No hints found for {}".format(question))
                         continue
 
                     if pre_prompt:
-                        print("\r-- While we wait, respond to this question. When you are done typing, press Enter.",)
+                        print("\r-- While we wait, respond to this question."
+                              " When you are done typing, press Enter.")
                         if not prompt_user(pre_prompt, hint_info):
                             # Do not provide hint, if no response from user
                             continue
@@ -117,7 +117,7 @@ class HintingProtocol(protocol_models.Protocol):
                 except urllib.error.URLError:
                     log.debug("Network error while fetching hint")
                     hint_info['fetch_error'] = True
-                    print("Could not get a hint.")
+                    print("\r\nCould not get a hint.")
             else:
                 log.info('Declined Hints for %s', question)
                 hint_info['accept'] = False
