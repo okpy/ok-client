@@ -154,7 +154,7 @@ class Guidance:
             msg = self.guidance_json['dictId2Msg'][str(message_id)]
             printed_out_msgs = printed_out_msgs + msg
             print (msg)
-
+        print(GUIDANCE_DEFAULT_MSG)
         print ()
 
         return (self.misU_count_dict, self.tg_id,printed_out_msgs)
