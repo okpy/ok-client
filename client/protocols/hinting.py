@@ -30,8 +30,10 @@ class HintingProtocol(protocol_models.Protocol):
     """A protocol that provides rubber duck debugging and hints if applicable.
     """
 
-    HINT_SERVER = "http://146.148.59.194:5000/"
+    HINT_SERVER = "https://hinting.cs61a.org/"
     HINT_ENDPOINT = 'api/hints'
+    SMALL_EFFORT = 5
+    LARGE_EFFORT = 8
 
     def run(self, messages):
         """Determine if a student is elgible to recieve a hint. Based on their
@@ -62,8 +64,10 @@ class HintingProtocol(protocol_models.Protocol):
             messages['hinting'][question] = {'prompts': {}, 'reflection': {}}
             hint_info = messages['hinting'][question]
 
-            # Only prompt
-            if (stats['solved'] and stats['attempts'] > 6):
+            # Determine a users elgibility for a prompt
+
+            # If the user just solved this question, provide a reflection prompt
+            if stats['solved'] and stats['attempts'] > self.SMALL_EFFORT:
                 hint_info['elgible'] = False
                 if self.args.question:
                     # Only prompt for reflection with question specified.
@@ -74,8 +78,8 @@ class HintingProtocol(protocol_models.Protocol):
                         hint_info['reflection']['accept'] = False
                     else:
                         hint_info['reflection']['accept'] = True
-                    prompt_user(reflection, hint_info)
-            elif (stats['attempts'] < 5):
+                        prompt_user(reflection, hint_info)
+            elif stats['attempts'] < self.SMALL_EFFORT:
                 log.info("Question %s is not elgible: Attempts: %s, Solved: %s",
                          question, stats['attempts'], stats['solved'])
                 hint_info['elgible'] = False
@@ -84,11 +88,12 @@ class HintingProtocol(protocol_models.Protocol):
 
             if not hint_info['elgible']:
                 continue
+
             log.info('Prompting for hint on %s', question)
 
             if confirm("Check for hints on {}?".format(question)):
                 hint_info['accept'] = True
-                print("Thinking... (could take upto 15 seconds)", end='')
+                print("Thinking... (could take up to 15 seconds)")
                 try:
                     response = self.query_server(messages, question)
                     hint_info['response'] = response
@@ -98,12 +103,12 @@ class HintingProtocol(protocol_models.Protocol):
                     post_prompt = response['post-prompt']
                     log.info("Hint server response: {}".format(response))
                     if not hint and not pre_prompt:
-                        print("\nSorry. No hints found for {}".format(question))
+                        print("Sorry. No hints found for {}".format(question))
                         continue
 
                     if pre_prompt:
-                        print("\r-- While we wait, respond to this question."
-                              " When you are done typing, press Enter.")
+                        print("-- Before the hint, respond to this question."
+                              " When you are done typing, press Enter. --")
                         if not prompt_user(pre_prompt, hint_info):
                             # Do not provide hint, if no response from user
                             continue
@@ -126,6 +131,7 @@ class HintingProtocol(protocol_models.Protocol):
         access_token, _, _ = auth.get_storage()
         user = auth.get_student_email(access_token) or access_token
         if user:
+            # The hinting server should not recieve identifying information
             user = hash(user)
         data = {
             'assignment': self.assignment.endpoint,
@@ -148,16 +154,16 @@ class HintingProtocol(protocol_models.Protocol):
 def prompt_user(query, results):
     try:
         response = None
-        short_resps = 0
-        while not response or response == '':
+        short_respones = 0
+        while not response:
             response = input("{}\nYour Response: ".format(query))
-            if not response or response == '':
-                short_resps += 1
-                if short_resps > 2:
+            if not response or len(response) < 5:
+                short_respones += 1
+                # Do not ask more than twice to avoid annoying the user
+                if short_respones > 2:
                     break
                 print("Please enter at least a sentence.")
         results['prompts'][query] = response
-
         return response
     except KeyboardInterrupt:
         # Hack for windows:
@@ -172,14 +178,11 @@ def confirm(message):
     response = input("{} [yes/no]: ".format(message))
     return response.lower() == "yes" or response.lower() == "y"
 
-
-
 SOLVE_SUCCESS_MSG = [
     "If another student had the same error on this question, what advice would you give them?",
     "What did you learn from writing this program about things that you'll continue to do in the future?",
     "What difficulties did you encounter in understanding the problem?",
     "What difficulties did you encounter in designing the program?",
 ]
-
 
 protocol = HintingProtocol
