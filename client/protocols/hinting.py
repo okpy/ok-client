@@ -53,9 +53,9 @@ class HintingProtocol(protocol_models.Protocol):
             return
 
         messages['hinting'] = {}
-        history = messages['analytics']['history']
-        questions = history['questions']
-        current_q = history['question']
+        history = messages['analytics'].get('history', {})
+        questions = history.get('questions', [])
+        current_q = history.get('question', {})
 
         for question in current_q:
             if question not in questions:

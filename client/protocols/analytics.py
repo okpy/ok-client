@@ -186,8 +186,8 @@ def is_correct(grading_results):
 def first_failed_test(tests, scores):
     test_names = [t.name for t in tests]
     for test_name in test_names:
-        scoring = scores[test_name]
-        if test_name in scores and scoring['failed']:
+        scoring = scores.get(test_name, {})
+        if test_name in scores and scoring.get('failed'):
             return test_name
     return None
 
