@@ -34,6 +34,7 @@ class HintingProtocol(protocol_models.Protocol):
     HINT_ENDPOINT = 'api/hints'
     SMALL_EFFORT = 5
     LARGE_EFFORT = 8
+    WAIT_ATTEMPTS = 5
 
     def run(self, messages):
         """Determine if a student is elgible to recieve a hint. Based on their
@@ -52,10 +53,15 @@ class HintingProtocol(protocol_models.Protocol):
             log.info('File Contents needed to generate hints')
             return
 
+        if self.args.no_hints:
+            messages['hinting'] = {'disabled': 'user'}
+            return
+
         messages['hinting'] = {}
         history = messages['analytics'].get('history', {})
         questions = history.get('questions', [])
         current_q = history.get('question', {})
+
 
         for question in current_q:
             if question not in questions:
@@ -84,7 +90,14 @@ class HintingProtocol(protocol_models.Protocol):
                          question, stats['attempts'], stats['solved'])
                 hint_info['elgible'] = False
             else:
-                hint_info['elgible'] = not stats['solved']
+                # Only prompt every WAIT_ATTEMPTS attempts to avoid annoying user
+                if stats['attempts'] % self.WAIT_ATTEMPTS != 0:
+                    hint_info['disabled'] = 'timer'
+                    hint_info['elgible'] = False
+                    log.info('Waiting for more %d attempts before prompting',
+                             stats['attempts'] % self.WAIT_ATTEMPTS)
+                else:
+                    hint_info['elgible'] = not stats['solved']
 
             if not hint_info['elgible']:
                 continue
