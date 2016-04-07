@@ -170,7 +170,7 @@ class OkTest(models.Test):
         # Use an atomic rename operation to prevent test corruption
 
         with open(test_tmp, 'w', encoding='utf-8') as f:
-            f.write('test = ' + json)
+            f.write('test = {}\n'.format(json))
 
         # Should silently replace the file if the tests are in the right format
 
