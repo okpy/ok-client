@@ -3,10 +3,12 @@ from client.sources.common import core
 from client.sources.common import models
 from client.utils import format
 from client.utils import output
+import os
 
 ##########
 # Models #
 ##########
+
 
 class OkTest(models.Test):
     suites = core.List()
@@ -111,7 +113,7 @@ class OkTest(models.Test):
 
     def unlock(self, interact):
         total_cases = len([case for suite in self.suites
-                                for case in suite.cases])
+                           for case in suite.cases])
         for suite_num, suite in enumerate(self.suites):
             for case_num, case in enumerate(suite.cases):
                 case_id = '{} > Suite {} > Case {}'.format(
@@ -123,7 +125,7 @@ class OkTest(models.Test):
                 print()
                 total_cases -= 1
 
-                if case.locked != True:
+                if case.locked is not True:
                     print('-- Already unlocked --')
                     print()
                     continue
@@ -148,9 +150,9 @@ class OkTest(models.Test):
                 elif case.locked == core.NoValue:
                     case.lock(hash_fn)
                     print(message + 'locking')
-                elif case.locked == False:
+                elif case.locked is False:
                     print(message + 'leaving unlocked')
-                elif case.locked == True:
+                elif case.locked is True:
                     print(message + 'already unlocked')
             if not suite.cases:
                 self.suites.remove(suite)
@@ -163,12 +165,18 @@ class OkTest(models.Test):
         # directory may be left in a corrupted state.
         # TODO(albert): might need to delete obsolete test files too.
         json = format.prettyjson(self.to_json())
-        with open(self.file, 'w', encoding='utf-8') as f:
-            f.write('test = ' + json)
+        test_tmp = "{}.tmp".format(self.file)
+
+        with open(test_tmp, 'w', encoding='utf-8') as f:
+            f.write('test = {}\n'.format(json))
+
+        # Use an atomic rename operation to prevent test corruption
+        os.replace(test_tmp, self.file)
 
     @property
     def unique_id_prefix(self):
         return self.assignment_name + '\n' + self.name
+
 
 class Suite(core.Serializable):
     type = core.String()
@@ -222,4 +230,3 @@ class Suite(core.Serializable):
         output.remove_log(log_id)
 
         return success, output_log
-

@@ -94,7 +94,7 @@ class HintingProtocol(protocol_models.Protocol):
                 if stats['attempts'] % self.WAIT_ATTEMPTS != 0:
                     hint_info['disabled'] = 'timer'
                     hint_info['elgible'] = False
-                    log.info('Waiting for more %d attempts before prompting',
+                    log.info('Waiting for %d more attempts before prompting',
                              stats['attempts'] % self.WAIT_ATTEMPTS)
                 else:
                     hint_info['elgible'] = not stats['solved']

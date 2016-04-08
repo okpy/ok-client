@@ -57,7 +57,7 @@ def parse_input(command_input=None):
     parser.add_argument('--timeout', type=int, default=10,
                         help="set the timeout duration for running tests")
 
-    # Gudiance and hinting
+    # Guidance and hinting
     parser.add_argument('--guidance', action='store_true',
                         help="display guidance messages")
     parser.add_argument('--no-hints', action='store_true',
