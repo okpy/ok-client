@@ -138,7 +138,7 @@ class Guidance:
             if self.misU_count_dict[mis_u] >= Wrong_Answer_threshold:
                 # Add each associated misunderstanding ID to the set
                 msg_id = lambda_info_misu(dict_info, mis_u)
-                
+
                 if msg_id is not None:
                     msg_id_set.add(msg_id)
 
