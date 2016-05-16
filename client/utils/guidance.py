@@ -54,7 +54,9 @@ TG_ERROR_VALUE = -1
 lambda_string_key_to_func = {
     'none': lambda info, strMisU: None,
     'ki': lambda info, strMisU: info['ki'],
-    'misU2Msg': lambda info, strMisU: info['dictMisU2Msg'].get(strMisU)
+    'misU2Msg': lambda info, strMisU: info['dictMisU2Msg'].get(strMisU),
+    'tag2KIMsg': lambda info, strMisU: info['dictTag2KIMsg'].get(strMisu),
+    'tag2ConceptMsg': lambda info, strMisU: info['dictTag2ConceptMsg'].get(strMisU)
 }
 
 class Guidance:
