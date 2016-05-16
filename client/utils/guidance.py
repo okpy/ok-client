@@ -76,11 +76,12 @@ class Guidance:
             with open(current_working_dir + OK_GUIDANCE_FILE,"r") as f:
                 self.guidance_json = json.load(f)
             self.load_error = False
+
         except IOError as e:
-            log.error("Failed to read .ok_guidance file in guidance.py. IOError")
+            log.warning("Failed to read .ok_guidance file in guidance.py. Error: %s",str(e))
             self.load_error = True
         except ValueError as e:
-            log.error("Failed to read .ok_guidance file in guidance.py. ValueError")
+            log.warning("Failed to read .ok_guidance file in guidance.py. Error: %s",str(e))
             self.load_error = True
 
 
@@ -238,8 +239,9 @@ class Guidance:
                 data = json.loads(urlopen(TGSERVER + cur_email +"/" + self.assignment + TG_SERVER_ENDING,timeout =1).read().decode("utf-8"))
             except IOError as e:
                 data = {"tg":-1}
-                log.warning("Failed to communicate to server.")
+                log.error("Failed to communicate to server. Error: %s", str(e))
             if(data.get("tg") == None):
+                log.error("Server returned back a bad treatmeng group ID. Error: %s", str(e))
                 data = {"tg":-1}
             with open(self.current_working_dir + LOCAL_TG_FILE,"w") as fd:
                 fd.write(str(data["tg"]))
