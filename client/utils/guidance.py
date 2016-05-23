@@ -60,7 +60,7 @@ lambda_string_key_to_func = {
 }
 
 class Guidance:
-    def __init__(self, current_working_dir,assignment = None):
+    def __init__(self,current_working_dir,assignment=None):
         """
         Initializing everything we need to the default values. If we catch
         an error when opening the JSON file, we flagged it as error.
@@ -76,16 +76,12 @@ class Guidance:
             with open(current_working_dir + OK_GUIDANCE_FILE,"r") as f:
                 self.guidance_json = json.load(f)
             self.load_error = False
-
-        except IOError as e:
-            log.warning("Failed to read .ok_guidance file in guidance.py. Error: %s",str(e))
-            self.load_error = True
-        except ValueError as e:
-            log.warning("Failed to read .ok_guidance file in guidance.py. Error: %s",str(e))
+        except (IOError, ValueError) as e:
+            log.warning("Failed to read .ok_guidance file.", exc_info=True)
             self.load_error = True
 
 
-    def show_guidance_msg(self,unique_id, input_lines,access_token,hash_key,guidance_flag):
+    def show_guidance_msg(self,unique_id,input_lines,access_token,hash_key,guidance_flag):
         """
         Based on the student's answer (input_lines), we grab each associated
         message if its corresponding misunderstanding's count is above the threshold
@@ -98,7 +94,8 @@ class Guidance:
         # Try to get the info dictionary for this question. Maps wrong answer to dictionary
         Wrong_Answer_2_dict_info = self.guidance_json['dictAssessId2WA2DictInfo'].get(shorten_unique_id)
 
-        if not Wrong_Answer_2_dict_info: # get returns None if Wrong_Answer_2_dict_info doesn't have shorten_unique_id in dictionary
+        # get returns None if Wrong_Answer_2_dict_info doesn't have shorten_unique_id in dictionary
+        if not Wrong_Answer_2_dict_info:
             log.info("shorten_unique_id is not in Wrong_Answer_2_dict_info")
             print (GUIDANCE_DEFAULT_MSG)
             return EMPTY_MISUCOUNT_TGID_PRNTEDMSG
@@ -139,7 +136,8 @@ class Guidance:
             print (GUIDANCE_DEFAULT_MSG)
             return EMPTY_MISUCOUNT_TGID_PRNTEDMSG
 
-        self.misU_count_dict = self.update_misUcounts(hash_key, lst_mis_u, repr(input_lines),shorten_unique_id)
+        self.misU_count_dict = self.update_misUcounts(hash_key, lst_mis_u,
+            repr(input_lines),shorten_unique_id)
 
         Wrong_Answer_threshold = self.guidance_json['wrongAnsThresh']
 
@@ -156,7 +154,7 @@ class Guidance:
 
         if self.tg_id == TG_CONTROL:
             # if student is in control group, just print the default message
-            log.info("Student is in control group.") 
+            log.info("Student is in control group.")
             print (GUIDANCE_DEFAULT_MSG)
             return (self.misU_count_dict, self.tg_id,"")
 
@@ -236,12 +234,14 @@ class Guidance:
                 return EMPTY_MISUCOUNT_TGID_PRNTEDMSG
 
             try:
-                data = json.loads(urlopen(TGSERVER + cur_email +"/" + self.assignment + TG_SERVER_ENDING,timeout =1).read().decode("utf-8"))
+                data = json.loads(urlopen(TGSERVER + cur_email +"/" +
+                    self.assignment +
+                        TG_SERVER_ENDING,timeout =1).read().decode("utf-8"))
             except IOError as e:
                 data = {"tg":-1}
-                log.error("Failed to communicate to server. Error: %s", str(e))
+                log.error("Failed to communicate to server", exc_info=True)
             if(data.get("tg") == None):
-                log.error("Server returned back a bad treatmeng group ID. Error: %s", str(e))
+                log.error("Server returned back a bad treatment group ID.")
                 data = {"tg":-1}
             with open(self.current_working_dir + LOCAL_TG_FILE,"w") as fd:
                 fd.write(str(data["tg"]))
