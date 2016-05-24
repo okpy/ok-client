@@ -25,7 +25,7 @@ Commonly used acronyms:
 TG = treatment group number
 KI = Type of targeted understanding
 misU = Type of misunderstanding the student is showing
-wa
+wa = wrong answer
 
 The LOCAL_TG_FILE will hold what treatment group number the student is part of.
 The OK_GUIDANCE_FILE will facilitate the generation of guided messages. It will hold the necessary info
@@ -80,7 +80,7 @@ class Guidance:
             with open(current_working_dir + OK_GUIDANCE_FILE, "r") as f:
                 self.guidance_json = json.load(f)
             self.load_error = False
-        except (IOError, ValueError) as e:
+        except (IOError, ValueError):
             log.warning("Failed to read .ok_guidance file.", exc_info=True)
             self.load_error = True
 
@@ -247,16 +247,18 @@ class Guidance:
                 return EMPTY_MISUCOUNT_TGID_PRNTEDMSG
 
             try:
-                data = json.loads(urlopen(TGSERVER + cur_email + "/" +
-                                          self.assignment +
+                data = json.loads(urlopen(TGSERVER + cur_email + "/" + self.assignment +
                                           TG_SERVER_ENDING, timeout=1).read().decode("utf-8"))
-            except IOError as e:
+            except IOError:
                 data = {"tg": -1}
                 log.error("Failed to communicate to server", exc_info=True)
+
             if(data.get("tg") == None):
                 log.error("Server returned back a bad treatmen group ID.")
                 data = {"tg": -1}
+
             with open(self.current_working_dir + LOCAL_TG_FILE, "w") as fd:
                 fd.write(str(data["tg"]))
+
         tg_file = open(self.current_working_dir + LOCAL_TG_FILE, 'r')
         self.tg_id = int(tg_file.read())
