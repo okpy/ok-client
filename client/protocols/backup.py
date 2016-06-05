@@ -172,6 +172,7 @@ class BackupProtocol(models.Protocol):
                 prefix='http' if self.args.insecure else 'https')
         address_params = {
             'access_token': access_token,
+            'client_name': 'ok-client',
             'client_version': client.__version__,
         }
         address += '?'

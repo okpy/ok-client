@@ -7,7 +7,7 @@ from socket import error as socket_error
 
 log = logging.getLogger(__name__)
 
-VERSION_ENDPOINT = 'http://{server}/api/v3/version/ok'
+VERSION_ENDPOINT = 'http://{server}/api/v3/version/ok-client'
 
 SHORT_TIMEOUT = 3  # seconds
 
