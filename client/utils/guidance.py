@@ -84,7 +84,7 @@ class Guidance:
             log.warning("Failed to read .ok_guidance file.", exc_info=True)
             self.load_error = True
 
-    def show_guidance_msg(self, unique_id, input_lines, access_token, hash_key, guidance_flag):
+    def show_guidance_msg(self, unique_id, input_lines, access_token, hash_key, guidance_flag=False):
         """
         Based on the student's answer (input_lines), we grab each associated
         message if its corresponding misunderstanding's count is above the threshold

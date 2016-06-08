@@ -162,7 +162,7 @@ class UnlockProtocol(models.Protocol):
 
             if not correct:
                 misU_count_dict, tg_id, printed_msg = self.guidance_util.show_guidance_msg(unique_id,input_lines,
-                    self.access_token, self.hash_key, self.args.guidance)
+                    self.access_token, self.hash_key)
 
             else:
                 print("-- OK! --")
