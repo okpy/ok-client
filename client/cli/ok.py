@@ -100,12 +100,11 @@ def main():
     args = parse_input()
 
     log.setLevel(logging.DEBUG if args.debug else logging.ERROR)
+    log.debug(args)
 
     # Checking user's Python bit version
     bit_v = (8 * struct.calcsize("P"))
-    log.debug("Python bit version: {}".format(bit_v))
-
-    log.debug(args)
+    log.debug("Python {}bit".format(bit_v))
 
     if args.version:
         print("okpy=={}".format(client.__version__))
