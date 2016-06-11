@@ -123,27 +123,7 @@ class Guidance:
             print(GUIDANCE_DEFAULT_MSG)
             return EMPTY_MISUCOUNT_TGID_PRNTEDMSG
 
-        shorten_unique_id = assess_id_util.canonicalize(unique_id)
-        # Try to get the info dictionary for this question. Maps wrong answer
-        # to dictionary
-        Wrong_Answer_2_dict_info = self.guidance_json[
-            'dictAssessId2WA2DictInfo'].get(shorten_unique_id)
-
-        # get returns None if Wrong_Answer_2_dict_info doesn't have
-        # shorten_unique_id in dictionary
-        if not Wrong_Answer_2_dict_info:
-            log.info("shorten_unique_id is not in Wrong_Answer_2_dict_info")
-            print(GUIDANCE_DEFAULT_MSG)
-            return EMPTY_MISUCOUNT_TGID_PRNTEDMSG
-
-        dict_info = Wrong_Answer_2_dict_info.get(repr(input_lines))
-
-        # If this wrong answer is not in the JSON file, display default message
-        if not dict_info:
-            log.info("Answer not in the JSON file.")
-            print(GUIDANCE_DEFAULT_MSG)
-            return EMPTY_MISUCOUNT_TGID_PRNTEDMSG
-
+        response = repr(input_lines)
         self.set_tg(access_token, guidance_flag)
         if self.tg_id == TG_ERROR_VALUE:
             # If self.tg_id == -1, some errors happen when trying to access
@@ -166,42 +146,132 @@ class Guidance:
             print(GUIDANCE_DEFAULT_MSG)
             return EMPTY_MISUCOUNT_TGID_PRNTEDMSG
 
-        lst_mis_u = dict_info.get('lstMisU')
+        shorten_unique_id = assess_id_util.canonicalize(unique_id)
+        # Try to get the info dictionary for this question. Maps wrong answer
+        # to dictionary
+        Assesment_2_dict_info = self.guidance_json[
+            'dictAssessId2Info'].get(shorten_unique_id)
+
+        if not Assesment_2_dict_info:
+            log.info("shorten_unique_id is not in dictAssessId2Info")
+            print(GUIDANCE_DEFAULT_MSG)
+            return EMPTY_MISUCOUNT_TGID_PRNTEDMSG
+
+        dict_info = Assesment_2_dict_info.get(response)
+
+        # If this wrong answer is not in the JSON file, display default message
+        if not dict_info:
+            log.info("Answer %s not in dictAssessId2Info.", response)
+            print(GUIDANCE_DEFAULT_MSG)
+            return EMPTY_MISUCOUNT_TGID_PRNTEDMSG
+
+        wrong_answer_2_dict_info = dict_info['dictWA2DictInfo'].get(shorten_unique_id)
+
+        if not wrong_answer_2_dict_info:
+            log.info("shorten_unique_id is not in wrong_answer_2_dict_info")
+            print(GUIDANCE_DEFAULT_MSG)
+            return EMPTY_MISUCOUNT_TGID_PRNTEDMSG
+
+        wa_assesment_detail = wrong_answer_2_dict_info.get(shorten_unique_id)
+
+        if not wa_assesment_detail:
+            log.info("Cannot find unique assesment in wrong_answer_2_dict_info.")
+            print(GUIDANCE_DEFAULT_MSG)
+            return EMPTY_MISUCOUNT_TGID_PRNTEDMSG
+
+        wa_details = wa_assesment_detail.get(response)
+
+        if not wa_details:
+            log.info("Cannot find the wrong answer in the WA2Dict for this assesment.")
+            lst_mis_u = None
+        else:
+            lst_mis_u = wa_details.get('lisMisU')
 
         # No list of misunderstandings for this wrong answer, default message
         if not lst_mis_u:
             log.info("Cannot find the list of misunderstandings.")
-            print(GUIDANCE_DEFAULT_MSG)
-            return EMPTY_MISUCOUNT_TGID_PRNTEDMSG
 
-        self.misU_count_dict = self.update_misUcounts(hash_key, lst_mis_u,
-                                                      repr(input_lines), shorten_unique_id)
-
-        Wrong_Answer_threshold = self.guidance_json['wrongAnsThresh']
-
+        wa_count_threshold = self.guidance_json['wrongAnsThresh']
+        wa_lst_assess_num = wrong_answer_2_dict_info['dictWA2LstAssessNum_WA']
         msg_id_set = set()
 
-        # If the count is higher than the threshold, we need to display the
-        # message
-        for mis_u in self.misU_count_dict:
-            if self.misU_count_dict[mis_u] >= Wrong_Answer_threshold:
-                # Add each associated misunderstanding ID to the set
-                msg_id = lambda_info_misu(dict_info, mis_u)
+        answerDict, countData = self.get_misUdata()
+        prev_responses = self.answer_dict.get(shorten_unique_id, [])
 
-                if msg_id is not None:
-                    msg_id_set.add(msg_id)
+        # Confirm that this WA has not been given before
+        seen_before = any(wa in prev_responses for wa in prev_responses)
 
-        if self.tg_id == TG_CONTROL:
-            # if student is in control group, just print the default message
-            log.info("Student is in control group.")
-            print(GUIDANCE_DEFAULT_MSG)
-            return (self.misU_count_dict, self.tg_id, "")
+        if not seen_before:
+            # Lookup the list of assessNum and WA related to this wrong answer
+            # in the question's dictWA2LstAssessNum_WA
+            lst_assess_num = wa_lst_assess_num.get(response)
+            if not lst_assess_num:
+                log.info("Cannot get the lst of assess nums given this reponse.")
+                print(GUIDANCE_DEFAULT_MSG)
+                return EMPTY_MISUCOUNT_TGID_PRNTEDMSG
+
+            # Check in answerDict to see if the student has ever given
+            # any of these wrong answers (sourced from dictWA2LstAssessNum_WA)
+            has_given_resp = any(other_resp in prev_responses for
+                                 _, other_resp in lst_assess_num)
+
+            if not has_given_resp:
+                log.info("Student has not given a response in dictWA2LstAssessNum_WA.")
+                print(GUIDANCE_DEFAULT_MSG)
+                return EMPTY_MISUCOUNT_TGID_PRNTEDMSG
+
+            # Check if the current wrong answer is in the question's dictWA2DictInfo
+            if not wa_details:
+                # Increment countDict by the number of wrong answers seen
+                # for each tag assoicated with this wrong answer
+                for misu in lst_mis_u:
+                    countData[misu] += min(len(prev_responses), 1)
+            else:
+                # Lookup the lst_mis_u of each wrong answer in the list of wrong
+                # answers related to the current wrong answer (lst_assess_num),
+                # using dictAssessNum2AssessId
+                assess_num_to_aid = self.guidance_json['dictAssessNum2AssessId']
+
+                # misu -> list of wrong answers for that
+                related_misu_tags_dict = {}
+
+                for related_num, related_resp in lst_assess_num:
+                    related_aid = assess_num_to_aid[related_num]
+                    # Get the lst_misu for this asssigmment
+                    related_info= self.guidance_json['dictAssessId2Info'].get(related_aid)
+                    if not related_info:
+                        log.info("Could not find related id: %s in info dict",
+                                 related_aid)
+                        continue
+                    related_wa_info = related_info['dictWA2DictInfo'].get(related_resp)
+                    if not related_info:
+                        log.info("Could not find response %s in %s info dict",
+                                 related_resp, related_aid)
+                        continue
+                    related_misu_list = related_wa_info['lstMisU']
+                    for misu in related_misu_list:
+                        existing_resps = related_misu_tags_dict.get(misu, [])
+                        # Add dictWA2DictInfo to list of responses for this misunderstanding.
+                        related_misu_tags_dict[misu] = existing_resps + [related_wa_info]
+
+                for misu, wa_info in related_misu_tags_dict.values():
+                    # Increment countDict for each tag in the set of tags for each related resp
+                    countData[misu] += 1
+
+                    # For each mis_u above threshold go through each related wrong answer
+                    # Add the msg_id that is given from lambda_info_misu to msg_id_set
+                    if countData[misu] > wa_count_threshold:
+                        msg_id_set.add(lambda_info_misu(wa_info, misu))
+
+        answerDict.get(shorten_unique_id, []).append(response)
+        self.save_misUdata(countData, answerDict)
+
+        log.info("Lambda Group: %s", lambda_string_key)
 
         if len(msg_id_set) == 0:
-            log.info(
-                "No messages to display. Most likely hasn't hit the wrong answer threshold")
+            log.info("No messages to display. Most likely hasn't hit the wrong answer threshold")
             print(GUIDANCE_DEFAULT_MSG)
-            return (self.misU_count_dict, self.tg_id, "")
+            return (countData, self.tg_id, "")
 
         print("-- Helpful Hint --\n")
 
@@ -213,14 +283,9 @@ class Guidance:
         print()
         print(GUIDANCE_DEFAULT_MSG)
 
-        return (self.misU_count_dict, self.tg_id, printed_out_msgs)
+        return (countData, self.tg_id, printed_out_msgs)
 
-    def update_misUcounts(self, hashkey, lst_misU, wrongAnswer, shorten_unique_id):
-        """
-        Looks at the locally saved file for number of misU and returns the current count
-        for each misunderstanding. Also updates the count with the most recent user input
-        """
-
+    def get_misUdata(self):
         # Creates a new folder inside tests that stores the number of misU per
         # assignment
         if os.path.isfile(self.current_working_dir + COUNT_FILE_PATH):
@@ -232,35 +297,21 @@ class Guidance:
             countData = {}
             answerDict = {}
 
-        # Checks to see if the question is already stored and whether the student's answer is there
-        # It does not update misU count if same answer was seen before
-        if shorten_unique_id in answerDict and wrongAnswer in answerDict[shorten_unique_id]:
-            return countData
-        if not shorten_unique_id in answerDict:
-            answerDict[shorten_unique_id] = []
+        return answerDict, countData
 
-        # Updates misU count
-        for answer_MisU in lst_misU:
-            if answer_MisU in countData:
-                countData[answer_MisU] += 1
-            else:
-                countData[answer_MisU] = 1
-
-        # Stores the updated count back into the same file and overrides it
-        newjsonDic = {}
-        answerDict[shorten_unique_id].append(wrongAnswer)
-        newjsonDic["countData"] = countData
-        newjsonDic["answerDict"] = answerDict
+    def save_misUdata(self, countData, answerDict):
+        data = {
+            "countData": countData,
+            "answerDict": answerDict
+        }
         with open(self.current_working_dir + COUNT_FILE_PATH, "w") as f:
-            json.dump(newjsonDic, f)
-        # Returns a dictionary containing how many times each misU has been
-        # seen.
-        return countData
+            json.dump(data, f)
+        return data
 
     def set_tg(self, access_token, guidance_flag):
-        """
-        Try to grab the treatment group number for the student. If there is no treatment
-        group number available, we request it from the server.
+        """ Try to grab the treatment group number for the student.
+        If there is no treatment group number available, request it
+        from the server.
         """
         if guidance_flag:
             with open(self.current_working_dir + LOCAL_TG_FILE, "w") as f:
