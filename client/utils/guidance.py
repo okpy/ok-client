@@ -1,4 +1,3 @@
-from client.protocols.common import models
 from client.utils import auth
 from client.utils import assess_id_util
 
@@ -6,7 +5,6 @@ import hashlib
 import json
 import logging
 import os
-import sys
 from urllib.request import urlopen
 
 log = logging.getLogger(__name__)
@@ -58,7 +56,7 @@ lambda_string_key_to_func = {
     'none': lambda info, strMisU: None,
     'ki': lambda info, strMisU: info['ki'],
     'misU2Msg': lambda info, strMisU: info['dictMisU2Msg'].get(strMisU),
-    'tag2KIMsg': lambda info, strMisU: info['dictTag2KIMsg'].get(strMisu),
+    'tag2KIMsg': lambda info, strMisU: info['dictTag2KIMsg'].get(strMisU),
     'tag2ConceptMsg': lambda info, strMisU: info['dictTag2ConceptMsg'].get(strMisU)
 }
 
@@ -126,8 +124,7 @@ class Guidance:
         response = repr(input_lines)
         self.set_tg(access_token, guidance_flag)
         if self.tg_id == TG_ERROR_VALUE:
-            # If self.tg_id == -1, some errors happen when trying to access
-            # server
+            # If self.tg_id == -1, there was an error when trying to access the server
             log.warning("Error when trying to access server.")
             print(GUIDANCE_DEFAULT_MSG)
             return EMPTY_MISUCOUNT_TGID_PRNTEDMSG
@@ -327,15 +324,17 @@ class Guidance:
                 self.tg_id = -1
                 return EMPTY_MISUCOUNT_TGID_PRNTEDMSG
 
+            tg_url = "{}{}/{}".format(TGSERVER, cur_email,
+                                      self.assignment_name, TG_SERVER_ENDING)
             try:
-                data = json.loads(urlopen(TGSERVER + cur_email + "/" + self.assignment +
-                                          TG_SERVER_ENDING, timeout=1).read().decode("utf-8"))
+                data = json.loads((urlopen(tg_url, timeout=1).read()
+                                                             .decode("utf-8")))
             except IOError:
                 data = {"tg": -1}
                 log.error("Failed to communicate to server", exc_info=True)
 
-            if(data.get("tg") == None):
-                log.error("Server returned back a bad treatmen group ID.")
+            if data.get("tg") is None:
+                log.error("Server returned back a bad treatment group ID.")
                 data = {"tg": -1}
 
             with open(self.current_working_dir + LOCAL_TG_FILE, "w") as fd:
