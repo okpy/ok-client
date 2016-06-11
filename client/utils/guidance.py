@@ -1,6 +1,8 @@
 from client.protocols.common import models
 from client.utils import auth
 from client.utils import assess_id_util
+
+import hashlib
 import json
 import logging
 import os
@@ -69,22 +71,50 @@ class Guidance:
         an error when opening the JSON file, we flagged it as error.
         """
         self.tg_id = -1
+
+        self.assignment = assignment
         if assignment:
-            self.assignment = assignment.name.replace(" ", "")
+            self.assignment_name = assignment.name.replace(" ", "")
         else:
-            self.assignment = ""
-        # Maps the type of misunderstanding seen to the number of times seen
-        self.misU_count_dict = {}
+            self.assignment_name = ""
+
         self.current_working_dir = current_working_dir
+
         try:
             with open(current_working_dir + OK_GUIDANCE_FILE, "r") as f:
                 self.guidance_json = json.load(f)
             self.load_error = False
+            if not self.validate_json():
+                raise ValueError("JSON did not validate")
         except (IOError, ValueError):
             log.warning("Failed to read .ok_guidance file.", exc_info=True)
             self.load_error = True
 
-    def show_guidance_msg(self, unique_id, input_lines, access_token, hash_key, guidance_flag=False):
+        self.guidance_json = self.guidance_json['db']
+
+    def validate_json(self):
+        """ Ensure that the checksum matches. """
+        if not hasattr(self, 'guidance_json'):
+            return False
+
+        checksum = self.guidance_json.get('checksum')
+        contents = self.guidance_json.get('db')
+
+        if not checksum:
+            log.warning("Checksum on guidance not found. Invalidating file")
+            return False
+
+        hash_key = "{}{}".format(repr(contents), self.assignment_name)
+        digest = hashlib.md5(hash_key).hexdigest()
+        if checksum != digest:
+            log.warning("Checksum %s did not match digest %s", checksum, digest)
+            return False
+
+        return True
+
+
+    def show_guidance_msg(self, unique_id, input_lines, access_token, hash_key,
+                          guidance_flag=False):
         """
         Based on the student's answer (input_lines), we grab each associated
         message if its corresponding misunderstanding's count is above the threshold
