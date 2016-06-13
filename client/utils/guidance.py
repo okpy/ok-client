@@ -125,14 +125,10 @@ class Guidance:
         log.info("Guidance TG is %d", self.tg_id)
 
         if self.tg_id == TG_ERROR_VALUE:
-            # For testing
-            self.tg_id = 1
-            log.info("Setting guidance TG to %d for testing", self.tg_id)
-
             # If self.tg_id == -1, there was an error when trying to access the server
-            # log.warning("Error when trying to access server. TG == -1")
-            # print(GUIDANCE_DEFAULT_MSG)
-            # return EMPTY_MISUCOUNT_TGID_PRNTEDMSG
+            log.warning("Error when trying to access server. TG == -1")
+            print(GUIDANCE_DEFAULT_MSG)
+            return EMPTY_MISUCOUNT_TGID_PRNTEDMSG
 
         lambda_string_key = self.guidance_json[
             'dictTg2Func'].get(str(self.tg_id))
