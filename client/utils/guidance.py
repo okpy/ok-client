@@ -61,8 +61,12 @@ lambda_string_key_to_func = {
 }
 
 
-class Guidance:
+def hash_dict(contents, expected):
+    """ <Fill in hashing function here - order is not constant. > """
+    return True
 
+
+class Guidance:
     def __init__(self, current_working_dir, assignment=None):
         """
         Initializing everything we need to the default values. If we catch
@@ -77,18 +81,17 @@ class Guidance:
             self.assignment_name = ""
 
         self.current_working_dir = current_working_dir
-
         try:
             with open(current_working_dir + OK_GUIDANCE_FILE, "r") as f:
                 self.guidance_json = json.load(f)
             self.load_error = False
             if not self.validate_json():
                 raise ValueError("JSON did not validate")
+            self.guidance_json = self.guidance_json['db']
         except (IOError, ValueError):
             log.warning("Failed to read .ok_guidance file.", exc_info=True)
             self.load_error = True
-
-        self.guidance_json = self.guidance_json['db']
+        log.debug("Guidance loaded with status: %s", not self.load_error)
 
     def validate_json(self):
         """ Ensure that the checksum matches. """
@@ -102,14 +105,10 @@ class Guidance:
             log.warning("Checksum on guidance not found. Invalidating file")
             return False
 
-        hash_key = "{}{}".format(repr(contents), self.assignment_name)
-        digest = hashlib.md5(hash_key).hexdigest()
-        if checksum != digest:
-            log.warning("Checksum %s did not match digest %s", checksum, digest)
+        if not hash_dict(contents, checksum):
+            log.warning("Checksum did not match digest")
             return False
-
         return True
-
 
     def show_guidance_msg(self, unique_id, input_lines, access_token, hash_key,
                           guidance_flag=False):
@@ -122,12 +121,18 @@ class Guidance:
             return EMPTY_MISUCOUNT_TGID_PRNTEDMSG
 
         response = repr(input_lines)
-        self.set_tg(access_token, guidance_flag)
+        self.set_tg(access_token)
+        log.info("Guidance TG is %d", self.tg_id)
+
         if self.tg_id == TG_ERROR_VALUE:
+            # For testing
+            self.tg_id = 1
+            log.info("Setting guidance TG to %d for testing", self.tg_id)
+
             # If self.tg_id == -1, there was an error when trying to access the server
-            log.warning("Error when trying to access server.")
-            print(GUIDANCE_DEFAULT_MSG)
-            return EMPTY_MISUCOUNT_TGID_PRNTEDMSG
+            # log.warning("Error when trying to access server. TG == -1")
+            # print(GUIDANCE_DEFAULT_MSG)
+            # return EMPTY_MISUCOUNT_TGID_PRNTEDMSG
 
         lambda_string_key = self.guidance_json[
             'dictTg2Func'].get(str(self.tg_id))
@@ -146,57 +151,36 @@ class Guidance:
         shorten_unique_id = assess_id_util.canonicalize(unique_id)
         # Try to get the info dictionary for this question. Maps wrong answer
         # to dictionary
-        Assesment_2_dict_info = self.guidance_json[
+        assess_dict_info = self.guidance_json[
             'dictAssessId2Info'].get(shorten_unique_id)
-
-        if not Assesment_2_dict_info:
+        if not assess_dict_info:
             log.info("shorten_unique_id is not in dictAssessId2Info")
             print(GUIDANCE_DEFAULT_MSG)
             return EMPTY_MISUCOUNT_TGID_PRNTEDMSG
 
-        dict_info = Assesment_2_dict_info.get(response)
-
-        # If this wrong answer is not in the JSON file, display default message
-        if not dict_info:
-            log.info("Answer %s not in dictAssessId2Info.", response)
-            print(GUIDANCE_DEFAULT_MSG)
-            return EMPTY_MISUCOUNT_TGID_PRNTEDMSG
-
-        wrong_answer_2_dict_info = dict_info['dictWA2DictInfo'].get(shorten_unique_id)
-
-        if not wrong_answer_2_dict_info:
-            log.info("shorten_unique_id is not in wrong_answer_2_dict_info")
-            print(GUIDANCE_DEFAULT_MSG)
-            return EMPTY_MISUCOUNT_TGID_PRNTEDMSG
-
-        wa_assesment_detail = wrong_answer_2_dict_info.get(shorten_unique_id)
-
-        if not wa_assesment_detail:
-            log.info("Cannot find unique assesment in wrong_answer_2_dict_info.")
-            print(GUIDANCE_DEFAULT_MSG)
-            return EMPTY_MISUCOUNT_TGID_PRNTEDMSG
-
-        wa_details = wa_assesment_detail.get(response)
-
+        wa_details = assess_dict_info['dictWA2DictInfo'].get(response)
         if not wa_details:
             log.info("Cannot find the wrong answer in the WA2Dict for this assesment.")
             lst_mis_u = None
         else:
-            lst_mis_u = wa_details.get('lisMisU')
+            lst_mis_u = wa_details.get('lstMisU')
 
         # No list of misunderstandings for this wrong answer, default message
         if not lst_mis_u:
             log.info("Cannot find the list of misunderstandings.")
 
         wa_count_threshold = self.guidance_json['wrongAnsThresh']
-        wa_lst_assess_num = wrong_answer_2_dict_info['dictWA2LstAssessNum_WA']
+        wa_lst_assess_num = assess_dict_info['dictWA2LstAssessNum_WA']
         msg_id_set = set()
 
         answerDict, countData = self.get_misUdata()
-        prev_responses = self.answer_dict.get(shorten_unique_id, [])
+        prev_responses = answerDict.get(shorten_unique_id, [])
 
         # Confirm that this WA has not been given before
         seen_before = any(wa in prev_responses for wa in prev_responses)
+
+        answerDict[shorten_unique_id] = prev_responses + [response]
+        self.save_misUdata(countData, answerDict)
 
         if not seen_before:
             # Lookup the list of assessNum and WA related to this wrong answer
@@ -235,7 +219,7 @@ class Guidance:
                 for related_num, related_resp in lst_assess_num:
                     related_aid = assess_num_to_aid[related_num]
                     # Get the lst_misu for this asssigmment
-                    related_info= self.guidance_json['dictAssessId2Info'].get(related_aid)
+                    related_info = self.guidance_json['dictAssessId2Info'].get(related_aid)
                     if not related_info:
                         log.info("Could not find related id: %s in info dict",
                                  related_aid)
@@ -259,9 +243,6 @@ class Guidance:
                     # Add the msg_id that is given from lambda_info_misu to msg_id_set
                     if countData[misu] > wa_count_threshold:
                         msg_id_set.add(lambda_info_misu(wa_info, misu))
-
-        answerDict.get(shorten_unique_id, []).append(response)
-        self.save_misUdata(countData, answerDict)
 
         log.info("Lambda Group: %s", lambda_string_key)
 
@@ -301,21 +282,16 @@ class Guidance:
             "countData": countData,
             "answerDict": answerDict
         }
+        log.info("Attempting to save response/count dict")
         with open(self.current_working_dir + COUNT_FILE_PATH, "w") as f:
             json.dump(data, f)
         return data
 
-    def set_tg(self, access_token, guidance_flag):
+    def set_tg(self, access_token):
         """ Try to grab the treatment group number for the student.
         If there is no treatment group number available, request it
         from the server.
         """
-        if guidance_flag:
-            with open(self.current_working_dir + LOCAL_TG_FILE, "w") as f:
-                f.write(str(GUIDANCE_FLAG_TG_NUMBER))
-            self.tg_id = GUIDANCE_FLAG_TG_NUMBER
-            return
-
         # Checks to see the student currently has a treatment group number. If
         # not, calls helper function in auth.py
         if not os.path.isfile(self.current_working_dir + LOCAL_TG_FILE):
@@ -324,9 +300,11 @@ class Guidance:
                 self.tg_id = -1
                 return EMPTY_MISUCOUNT_TGID_PRNTEDMSG
 
-            tg_url = "{}{}/{}".format(TGSERVER, cur_email,
-                                      self.assignment_name, TG_SERVER_ENDING)
+            tg_url = ("{}{}/{}{}"
+                      .format(TGSERVER, cur_email, self.assignment_name,
+                              TG_SERVER_ENDING))
             try:
+                log.info("Accessing treatment server at %s", tg_url)
                 data = json.loads((urlopen(tg_url, timeout=1).read()
                                                              .decode("utf-8")))
             except IOError:
