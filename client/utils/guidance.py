@@ -195,7 +195,7 @@ class Guidance:
                 log.info("The current wrong answer (%s) is in dictWA2DictInfo", response)
                 # Check in answerDict to see if the student has ever given
                 # any of these wrong answers (sourced from dictWA2LstAssessNum_WA)
-                num_prev_responses = 0
+                num_prev_responses = 1
 
                 for other_num, other_resp in lst_assess_num:
                     # Get assess_id
@@ -209,10 +209,17 @@ class Guidance:
 
                 # Increment countDict by the number of wrong answers seen
                 # for each tag assoicated with this wrong answer
+                increment = num_prev_responses
                 for misu in lst_mis_u:
-                    increment = max(num_prev_responses, 1)
-                    log.info("Updating the count of %s by", increment)
+                    log.info("Updating the count of misu: %s by %s", misu, increment)
                     countData[misu] = countData.get(misu, 0) + increment
+
+                for misu in lst_mis_u:
+                    log.debug("Misu: %s has count %s", misu, countData[misu])
+                    if countData[misu] >= wa_count_threshold:
+                        msg_info = lambda_info_misu(wa_details, misu)
+                        if msg_info:
+                            msg_id_set.add(msg_info)
             else:
                 # Lookup the lst_mis_u of each wrong answer in the list of wrong
                 # answers related to the current wrong answer (lst_assess_num),
