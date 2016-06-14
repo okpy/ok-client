@@ -6,7 +6,6 @@ import json
 import logging
 import os
 from urllib.request import urlopen
-
 log = logging.getLogger(__name__)
 
 """
@@ -60,12 +59,6 @@ lambda_string_key_to_func = {
     'tag2ConceptMsg': lambda info, strMisU: info['dictTag2ConceptMsg'].get(strMisU)
 }
 
-
-def hash_dict(contents, expected):
-    """ <Fill in hashing function here - order is not constant. > """
-    return True
-
-
 class Guidance:
     def __init__(self, current_working_dir, assignment=None):
         """
@@ -101,14 +94,23 @@ class Guidance:
         checksum = self.guidance_json.get('checksum')
         contents = self.guidance_json.get('db')
 
+        hash_key = ("{}{}".format(json.dumps(contents, sort_keys=True),
+                                  self.assignment.endpoint).encode())
+
+        digest = hashlib.md5(hash_key).hexdigest()
+
         if not checksum:
             log.warning("Checksum on guidance not found. Invalidating file")
             return False
-
-        if not hash_dict(contents, checksum):
-            log.warning("Checksum did not match digest")
+        # TODO Fix
+        if digest != checksum:
+            log.warning("Checksum %s did not match digest %s", checksum, digest)
             return False
         return True
+
+    def get_aid_from_anum(self, num):
+        """ Return the unique id (str) from the assesment id number. """
+        return self.guidance_json['dictAssessNum2AssessId'].get(num)
 
     def show_guidance_msg(self, unique_id, input_lines, access_token, hash_key,
                           guidance_flag=False):
@@ -137,6 +139,7 @@ class Guidance:
             log.info("Cannot find the correct lambda in the dictionary.")
             print(GUIDANCE_DEFAULT_MSG)
             return EMPTY_MISUCOUNT_TGID_PRNTEDMSG
+        log.info("Lambda Group: %s", lambda_string_key)
 
         lambda_info_misu = lambda_string_key_to_func.get(lambda_string_key)
         if not lambda_info_misu:
@@ -157,9 +160,9 @@ class Guidance:
         wa_details = assess_dict_info['dictWA2DictInfo'].get(response)
         if not wa_details:
             log.info("Cannot find the wrong answer in the WA2Dict for this assesment.")
-            lst_mis_u = None
+            lst_mis_u = []
         else:
-            lst_mis_u = wa_details.get('lstMisU')
+            lst_mis_u = wa_details.get('lstMisU', [])
 
         # No list of misunderstandings for this wrong answer, default message
         if not lst_mis_u:
@@ -176,31 +179,40 @@ class Guidance:
         seen_before = response in prev_responses
 
         answerDict[shorten_unique_id] = prev_responses + [response]
-        self.save_misUdata(countData, answerDict)
+        self.save_misUdata(answerDict, countData)
 
-        if not seen_before:
+        if seen_before:
+            log.info("Answer has been seen before: {}".format(response))
+        else:
             # Lookup the list of assessNum and WA related to this wrong answer
             # in the question's dictWA2LstAssessNum_WA
             lst_assess_num = wa_lst_assess_num.get(response, [])
             if not lst_assess_num:
                 log.info("Cannot get the lst of assess nums given this reponse.")
 
-            # Check in answerDict to see if the student has ever given
-            # any of these wrong answers (sourced from dictWA2LstAssessNum_WA)
-            has_given_resp = any(other_resp in prev_responses for
-                                 _, other_resp in lst_assess_num)
-
-            if not has_given_resp:
-                log.info("Student has not given a response in dictWA2LstAssessNum_WA.")
-                print(GUIDANCE_DEFAULT_MSG)
-                return EMPTY_MISUCOUNT_TGID_PRNTEDMSG
-
             # Check if the current wrong answer is in the question's dictWA2DictInfo
-            if not wa_details:
+            if wa_details:
+                log.info("The current wrong answer (%s) is in dictWA2DictInfo", response)
+                # Check in answerDict to see if the student has ever given
+                # any of these wrong answers (sourced from dictWA2LstAssessNum_WA)
+                num_prev_responses = 0
+
+                for other_num, other_resp in lst_assess_num:
+                    # Get assess_id
+                    other_id = self.get_aid_from_anum(other_num)
+                    log.info("Checking if %s is in answerDict[%s]", other_resp, repr(other_id))
+                    if other_resp in answerDict.get(other_id, []):
+                        log.debug("%s is in answerDict[%s]", other_resp, repr(other_id))
+                        num_prev_responses += 1
+
+                log.info("Has given %d previous responses in lst_assess_num", num_prev_responses)
+
                 # Increment countDict by the number of wrong answers seen
                 # for each tag assoicated with this wrong answer
                 for misu in lst_mis_u:
-                    countData[misu] += min(len(prev_responses), 1)
+                    increment = max(num_prev_responses, 1)
+                    log.info("Updating the count of %s by", increment)
+                    countData[misu] = countData.get(misu, 0) + increment
             else:
                 # Lookup the lst_mis_u of each wrong answer in the list of wrong
                 # answers related to the current wrong answer (lst_assess_num),
@@ -219,27 +231,27 @@ class Guidance:
                                  related_aid)
                         continue
                     related_wa_info = related_info['dictWA2DictInfo'].get(related_resp)
+
                     if not related_info:
                         log.info("Could not find response %s in %s info dict",
                                  related_resp, related_aid)
                         continue
+
                     related_misu_list = related_wa_info['lstMisU']
                     for misu in related_misu_list:
                         existing_resps = related_misu_tags_dict.get(misu, [])
                         # Add dictWA2DictInfo to list of responses for this misunderstanding.
                         related_misu_tags_dict[misu] = existing_resps + [related_wa_info]
+                        # Increment countDict for each tag in the set of tags for each related resp
+                        countData[misu] = countData.get(misu, 0) + 1
 
-                for misu, wa_info in related_misu_tags_dict.values():
-                    # Increment countDict for each tag in the set of tags for each related resp
-                    countData[misu] += 1
+                    for misu, lst_wa_info in related_misu_tags_dict.items():
+                        if countData[misu] > wa_count_threshold:
+                            for wa_info in lst_wa_info:
+                                print(wa_info)
+                                msg_id_set.add(lambda_info_misu(wa_info, misu))
 
-                    # For each mis_u above threshold go through each related wrong answer
-                    # Add the msg_id that is given from lambda_info_misu to msg_id_set
-                    if countData[misu] > wa_count_threshold:
-                        msg_id_set.add(lambda_info_misu(wa_info, misu))
-
-        log.info("Lambda Group: %s", lambda_string_key)
-        self.save_misUdata(countData, answerDict)
+        self.save_misUdata(answerDict, countData)
 
         if len(msg_id_set) == 0:
             log.info("No messages to display. Most likely hasn't hit the wrong answer threshold")
@@ -272,7 +284,7 @@ class Guidance:
 
         return answerDict, countData
 
-    def save_misUdata(self, countData, answerDict):
+    def save_misUdata(self, answerDict, countData):
         data = {
             "countData": countData,
             "answerDict": answerDict
