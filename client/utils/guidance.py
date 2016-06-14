@@ -173,7 +173,7 @@ class Guidance:
         prev_responses = answerDict.get(shorten_unique_id, [])
 
         # Confirm that this WA has not been given before
-        seen_before = any(wa in prev_responses for wa in prev_responses)
+        seen_before = response in prev_responses
 
         answerDict[shorten_unique_id] = prev_responses + [response]
         self.save_misUdata(countData, answerDict)
