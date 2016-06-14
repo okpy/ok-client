@@ -181,11 +181,9 @@ class Guidance:
         if not seen_before:
             # Lookup the list of assessNum and WA related to this wrong answer
             # in the question's dictWA2LstAssessNum_WA
-            lst_assess_num = wa_lst_assess_num.get(response)
+            lst_assess_num = wa_lst_assess_num.get(response, [])
             if not lst_assess_num:
                 log.info("Cannot get the lst of assess nums given this reponse.")
-                print(GUIDANCE_DEFAULT_MSG)
-                return EMPTY_MISUCOUNT_TGID_PRNTEDMSG
 
             # Check in answerDict to see if the student has ever given
             # any of these wrong answers (sourced from dictWA2LstAssessNum_WA)
@@ -241,6 +239,7 @@ class Guidance:
                         msg_id_set.add(lambda_info_misu(wa_info, misu))
 
         log.info("Lambda Group: %s", lambda_string_key)
+        self.save_misUdata(countData, answerDict)
 
         if len(msg_id_set) == 0:
             log.info("No messages to display. Most likely hasn't hit the wrong answer threshold")
