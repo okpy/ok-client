@@ -178,12 +178,12 @@ class Guidance:
         # Confirm that this WA has not been given before
         seen_before = response in prev_responses
 
-        answerDict[shorten_unique_id] = prev_responses + [response]
-        self.save_misUdata(answerDict, countData)
-
         if seen_before:
             log.info("Answer has been seen before: {}".format(response))
         else:
+            answerDict[shorten_unique_id] = prev_responses + [response]
+            self.save_misUdata(answerDict, countData)
+
             # Lookup the list of assessNum and WA related to this wrong answer
             # in the question's dictWA2LstAssessNum_WA
             lst_assess_num = wa_lst_assess_num.get(response, [])
