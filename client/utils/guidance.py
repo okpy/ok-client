@@ -153,7 +153,7 @@ class Guidance:
         assess_dict_info = self.guidance_json[
             'dictAssessId2Info'].get(shorten_unique_id)
         if not assess_dict_info:
-            log.info("shorten_unique_id is not in dictAssessId2Info")
+            log.info("shorten_unique_id %s is not in dictAssessId2Info", repr(shorten_unique_id))
             print(GUIDANCE_DEFAULT_MSG)
             return EMPTY_MISUCOUNT_TGID_PRNTEDMSG
 
@@ -177,7 +177,6 @@ class Guidance:
 
         # Confirm that this WA has not been given before
         seen_before = response in prev_responses
-
         if seen_before:
             log.info("Answer has been seen before: {}".format(response))
         else:
@@ -189,6 +188,7 @@ class Guidance:
             lst_assess_num = wa_lst_assess_num.get(response, [])
             if not lst_assess_num:
                 log.info("Cannot get the lst of assess nums given this reponse.")
+            log.debug("Related LST_ASSESS_NUM: %s", lst_assess_num)
 
             # Check if the current wrong answer is in the question's dictWA2DictInfo
             if wa_details:
@@ -225,12 +225,15 @@ class Guidance:
                 # answers related to the current wrong answer (lst_assess_num),
                 # using dictAssessNum2AssessId
                 assess_num_to_aid = self.guidance_json['dictAssessNum2AssessId']
+                log.debug("Looking up the lst_misu_u of all related WA")
 
                 # misu -> list of wrong answers for that
                 related_misu_tags_dict = {}
 
                 for related_num, related_resp in lst_assess_num:
-                    related_aid = assess_num_to_aid[related_num]
+                    related_aid = assess_num_to_aid.get(related_num)
+                    log.info("Getting related resp %s for AID %s", repr(related_aid), related_resp)
+
                     # Get the lst_misu for this asssigmment
                     related_info = self.guidance_json['dictAssessId2Info'].get(related_aid)
                     if not related_info:
@@ -244,7 +247,9 @@ class Guidance:
                                  related_resp, related_aid)
                         continue
 
-                    related_misu_list = related_wa_info['lstMisU']
+                    related_misu_list = related_wa_info.get('lstMisU', [])
+                    log.info("The related MISU list is %s", related_misu_list)
+
                     for misu in related_misu_list:
                         existing_resps = related_misu_tags_dict.get(misu, [])
                         # Add dictWA2DictInfo to list of responses for this misunderstanding.
@@ -253,10 +258,14 @@ class Guidance:
                         countData[misu] = countData.get(misu, 0) + 1
 
                     for misu, lst_wa_info in related_misu_tags_dict.items():
-                        if countData[misu] > wa_count_threshold:
+                        if countData[misu] >= wa_count_threshold:
                             for wa_info in lst_wa_info:
                                 print(wa_info)
                                 msg_id_set.add(lambda_info_misu(wa_info, misu))
+                        else:
+                            log.info("misu %s seen %s/%s times",
+                                     misu, countData[misu], wa_count_threshold)
+
 
         self.save_misUdata(answerDict, countData)
 
