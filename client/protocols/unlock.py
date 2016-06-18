@@ -166,7 +166,7 @@ class UnlockProtocol(models.Protocol):
 
             else:
                 print("-- OK! --")
-                printed_msg = "-- OK! --"
+                printed_msg = ["-- OK! --"]
 
             self.analytics.append({
                 'id': unique_id,

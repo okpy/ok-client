@@ -36,7 +36,7 @@ TG_SERVER_ENDING = "/unlock_tg"
 LOCAL_TG_FILE = "tests/tg.ok_tg"
 OK_GUIDANCE_FILE = "tests/.ok_guidance"
 GUIDANCE_DEFAULT_MSG = "-- Not quite. Try again! --"
-EMPTY_MISUCOUNT_TGID_PRNTEDMSG = ({}, -1, "")
+EMPTY_MISUCOUNT_TGID_PRNTEDMSG = ({}, -1, [])
 COUNT_FILE_PATH = "tests/misUcount.json"
 TG_CONTROL = 0
 # If student forces guidance messages to show, we will assign treatment
@@ -102,9 +102,8 @@ class Guidance:
         if not checksum:
             log.warning("Checksum on guidance not found. Invalidating file")
             return False
-        # TODO Fix
         if digest != checksum:
-            log.warning("Checksum %s did not match digest %s", checksum, digest)
+            log.warning("Checksum %s did not match digest", checksum)
             return False
         return True
 
@@ -272,14 +271,14 @@ class Guidance:
         if len(msg_id_set) == 0:
             log.info("No messages to display. Most likely hasn't hit the wrong answer threshold")
             print(GUIDANCE_DEFAULT_MSG)
-            return (countData, self.tg_id, "")
+            return (countData, self.tg_id, [])
 
         print("-- Helpful Hint --\n")
 
-        printed_out_msgs = ""
+        printed_out_msgs = []
         for message_id in msg_id_set:
             msg = self.guidance_json['dictId2Msg'][str(message_id)]
-            printed_out_msgs = printed_out_msgs + msg
+            printed_out_msgs.append(msg)
             print(msg)
         print()
         print(GUIDANCE_DEFAULT_MSG)
@@ -319,6 +318,7 @@ class Guidance:
         # not, calls helper function in auth.py
         if not os.path.isfile(self.current_working_dir + LOCAL_TG_FILE):
             cur_email = auth.get_student_email(access_token)
+            log.info("Current email is %s", cur_email)
             if not cur_email:
                 self.tg_id = -1
                 return EMPTY_MISUCOUNT_TGID_PRNTEDMSG
