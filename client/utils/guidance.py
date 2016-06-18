@@ -273,13 +273,14 @@ class Guidance:
             print(GUIDANCE_DEFAULT_MSG)
             return (countData, self.tg_id, [])
 
-        print("-- Helpful Hint --\n")
+        print("\n-- Helpful Hint --")
 
         printed_out_msgs = []
         for message_id in msg_id_set:
             msg = self.guidance_json['dictId2Msg'][str(message_id)]
             printed_out_msgs.append(msg)
             print(msg)
+            print("-"*18)
         print()
         print(GUIDANCE_DEFAULT_MSG)
 
