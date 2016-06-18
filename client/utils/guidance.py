@@ -232,6 +232,7 @@ class Guidance:
                 for related_num, related_resp in lst_assess_num:
                     related_aid = assess_num_to_aid.get(related_num)
                     log.info("Getting related resp %s for AID %s", repr(related_aid), related_resp)
+                    resp_seen_before = related_resp in answerDict.get(related_aid, [])
 
                     # Get the lst_misu for this asssigmment
                     related_info = self.guidance_json['dictAssessId2Info'].get(related_aid)
@@ -253,8 +254,9 @@ class Guidance:
                         existing_resps = related_misu_tags_dict.get(misu, [])
                         # Add dictWA2DictInfo to list of responses for this misunderstanding.
                         related_misu_tags_dict[misu] = existing_resps + [related_wa_info]
-                        # Increment countDict for each tag in the set of tags for each related resp
-                        countData[misu] = countData.get(misu, 0) + 1
+                        if resp_seen_before:
+                            # Increment countDict for each tag in the set of tags for each related resp
+                            countData[misu] = countData.get(misu, 0) + 1
 
                     for misu, lst_wa_info in related_misu_tags_dict.items():
                         if countData[misu] >= wa_count_threshold:
@@ -269,7 +271,7 @@ class Guidance:
         self.save_misUdata(answerDict, countData)
 
         if len(msg_id_set) == 0:
-            log.info("No messages to display. Most likely hasn't hit the wrong answer threshold")
+            log.info("No messages to display.")
             print(GUIDANCE_DEFAULT_MSG)
             return (countData, self.tg_id, [])
 
