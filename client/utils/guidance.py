@@ -234,6 +234,9 @@ class Guidance:
                     log.info("Getting related resp %s for AID %s", repr(related_aid), related_resp)
                     resp_seen_before = related_resp in answerDict.get(related_aid, [])
 
+                    if not resp_seen_before:
+                      continue
+
                     # Get the lst_misu for this asssigmment
                     related_info = self.guidance_json['dictAssessId2Info'].get(related_aid)
                     if not related_info:
@@ -254,9 +257,8 @@ class Guidance:
                         existing_resps = related_misu_tags_dict.get(misu, [])
                         # Add dictWA2DictInfo to list of responses for this misunderstanding.
                         related_misu_tags_dict[misu] = existing_resps + [related_wa_info]
-                        if resp_seen_before:
-                            # Increment countDict for each tag in the set of tags for each related resp
-                            countData[misu] = countData.get(misu, 0) + 1
+                        # Increment countDict for each tag in the set of tags for each related resp
+                        countData[misu] = countData.get(misu, 0) + 1
 
                     for misu, lst_wa_info in related_misu_tags_dict.items():
                         if countData[misu] >= wa_count_threshold:
