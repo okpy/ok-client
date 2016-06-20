@@ -1,76 +1,140 @@
 {
-  "dictAssessId2WA2DictInfo": {
-    ">>> 1 + 1\nLOCKED_ANSWER\n>>> 2 + 2\nLOCKED_ANSWER\n": {
-      "['-2']": {
-        "dictMisU2Msg": {
-          "negation": 3
+  "checksum": "fa2dffe0f8cfa1b7ec352ff0f4664220",
+  "db": {
+    "dictAssessId2Info": {
+      ">>> 1 + 1\n'black'\n>>> 2 + 2\nLOCKED_ANSWER\n": {
+        "assessNum": "1",
+        "dictWA2DictInfo": {
+          "['-4']": {
+            "dictTag2ConceptMsg": {
+              "negation": "5"
+            },
+            "dictTag2KIMsg": {
+              "negation": "3"
+            },
+            "lstMisU": [
+              "negation"
+            ]
+          },
+          "['2']": {
+            "dictTag2ConceptMsg": {
+              "offbytwo": "4"
+            },
+            "dictTag2KIMsg": {
+              "offbytwo": "2"
+            },
+            "lstMisU": [
+              "offbytwo"
+            ]
+          }
         },
-        "ki": 1,
-        "lstMisU": [
-          "negation"
-        ]
+        "dictWA2LstAssessNum_WA": {
+          "['-2']": [
+            [
+              "1",
+              "['2']"
+            ],
+            [
+              "1",
+              "['-4']"
+            ]
+          ],
+          "['-4']": [
+            [
+              "1",
+              "['-2']"
+            ]
+          ],
+          "['2']": [
+            [
+              "1",
+              "['-2']"
+            ]
+          ],
+          "['5']": [
+            [
+              "0",
+              "['1']"
+            ]
+          ]
+        }
       },
-      "['0']": {
-        "dictMisU2Msg": {
-          "negation": 3,
-          "offbytwo": 2
+      ">>> 1 + 1\nLOCKED_ANSWER\n>>> 2 + 2\nLOCKED_ANSWER\n": {
+        "assessNum": "0",
+        "dictWA2DictInfo": {
+          "['-2']": {
+            "dictTag2ConceptMsg": {
+              "negation": "5"
+            },
+            "dictTag2KIMsg": {
+              "negation": "3"
+            },
+            "lstMisU": [
+              "negation"
+            ]
+          },
+          "['0']": {
+            "dictTag2ConceptMsg": {
+              "negation": "5",
+              "offbytwo": "4"
+            },
+            "dictTag2KIMsg": {
+              "negation": "3",
+              "offbytwo": "2"
+            },
+            "lstMisU": [
+              "offbytwo",
+              "negation"
+            ]
+          },
+          "['1']": {
+            "dictTag2ConceptMsg": {
+              "offbyone": "4"
+            },
+            "dictTag2KIMsg": {
+              "offbyone": "1"
+            },
+            "lstMisU": [
+              "offbyone"
+            ]
+          }
         },
-        "ki": 1,
-        "lstMisU": [
-          "offbytwo",
-          "negation"
-        ]
-      },
-      "['1']": {
-        "dictMisU2Msg": {
-          "offbyone": 2
-        },
-        "ki": 1,
-        "lstMisU": [
-          "offbyone"
-        ]
-      },
-      "['100']": {
-        "dictMisU2Msg": {
-          "offbyone": 2,
-          "offbytwo": 2
-        },
-        "ki": 1,
-        "lstMisU": [
-          "offbyone",
-          "offbytwo"
-        ]
-      },
-      "['3']": {
-        "dictMisU2Msg": {
-          "offbyone": 2
-        },
-        "ki": 1,
-        "lstMisU": [
-          "offbyone"
-        ]
-      },
-      "['4']": {
-        "dictMisU2Msg": {
-          "offbytwo": 2
-        },
-        "ki": 1,
-        "lstMisU": [
-          "offbytwo"
-        ]
+        "dictWA2LstAssessNum_WA": {
+          "['1']": [
+            [
+              "0",
+              "['3']"
+            ],
+            [
+              "1",
+              "['5']"
+            ]
+          ],
+          "['3']": [
+            [
+              "0",
+              "['1']"
+            ]
+          ]
+        }
       }
-    }
-  },
-  "dictId2Msg": {
-    "1": "KI: Try using your fingers to add",
-    "2": "Reteach: Addition",
-    "3": "Reteach: Negation"
-  },
-  "dictTg2Func": {
-    "0": "none",
-    "1": "ki",
-    "2": "misU2Msg"
-  },
-  "url": "TODO",
-  "wrongAnsThresh": 2
+    },
+    "dictAssessNum2AssessId": {
+      "0": ">>> 1 + 1\nLOCKED_ANSWER\n>>> 2 + 2\nLOCKED_ANSWER\n",
+      "1": ">>> 1 + 1\n'black'\n>>> 2 + 2\nLOCKED_ANSWER\n"
+    },
+    "dictId2Msg": {
+      "1": "KI: Offbyone",
+      "2": "KI: Offbytwo",
+      "3": "KI: Negation",
+      "4": "Reteach: Offbysomething",
+      "5": "Reteach: Negation"
+    },
+    "dictTg2Func": {
+      "0": "none",
+      "1": "tag2ConceptMsg",
+      "2": "tag2KIMsg"
+    },
+    "wrongAnsThresh": 2
+  }
 }

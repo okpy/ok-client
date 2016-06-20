@@ -279,10 +279,13 @@ class Guidance:
 
         printed_out_msgs = []
         for message_id in msg_id_set:
-            msg = self.guidance_json['dictId2Msg'][str(message_id)]
-            printed_out_msgs.append(msg)
-            print(msg)
-            print("-"*18)
+            msg = self.guidance_json['dictId2Msg'].get(str(message_id))
+            if msg:
+                printed_out_msgs.append(msg)
+                print(msg)
+                print("-"*18)
+            else:
+                log.info("{} did not have a message".format(message_id))
         print()
         print(GUIDANCE_DEFAULT_MSG)
 
