@@ -7,7 +7,7 @@ from socket import error as socket_error
 
 log = logging.getLogger(__name__)
 
-VERSION_ENDPOINT = 'http://{server}/api/v3/version/ok-client'
+VERSION_ENDPOINT = 'https://{server}/api/v3/version/ok-client'
 
 SHORT_TIMEOUT = 3  # seconds
 
@@ -42,6 +42,7 @@ def check_version(server, version, filename, timeout=SHORT_TIMEOUT):
         return True
 
     download_link = response_json['data']['results'][0]['download_link']
+
     log.info('Downloading version %s from %s', current_version, download_link)
 
     try:

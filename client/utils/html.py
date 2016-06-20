@@ -24,11 +24,11 @@ auth_html = """
         <h2 class="subtitle">{byline}</h2>
         <span class="break">
         <a href="{site}" class="button">Dashboard</a>
-        <p class="copy">or <a href="{site}/static/student/tour.html">take a tour</a></p>
+        <p class="copy">or <a href="http://cs61a.org/articles/using-ok.html">Read the FAQ</a></p>
         </span>
     </div>
 </section>
-<div class="rise status">{status}</div>
+<!-- <div class="rise status">{status}</div> -->
 <section class="courses">
     <div class="wrap row" style="width:100%">
         {courses}

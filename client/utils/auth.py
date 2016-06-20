@@ -5,6 +5,7 @@ from client import exceptions
 from .sanction import Client
 from urllib.parse import urlparse, parse_qs
 import http.server
+import os
 import pickle
 import sys
 import time
@@ -17,6 +18,8 @@ import logging
 
 log = logging.getLogger(__name__)
 
+OK_SERVER = 'https://ok.cs61a.org'
+
 CLIENT_ID = \
     '931757735585-vb3p8g53a442iktc4nkv5q8cbjrtuonv.apps.googleusercontent.com'
 # The client secret in an installed application isn't a secret.
@@ -25,8 +28,6 @@ CLIENT_SECRET = 'zGY9okExIBnompFTWcBmOZo4'
 REFRESH_FILE = '.ok_refresh'
 REDIRECT_HOST = "localhost"
 TIMEOUT = 10
-
-SERVER = 'http://localhost:5000'
 
 def pick_free_port():
     import socket
@@ -139,7 +140,7 @@ def authenticate(force=False):
             self.send_response(200)
             self.send_header("Content-type", "text/html")
             self.end_headers()
-            reponse = success_page(SERVER, email, access_token)
+            reponse = success_page(OK_SERVER, email, access_token)
             self.wfile.write(bytes(reponse, "utf-8"))
 
         def log_message(self, format, *args):
@@ -159,16 +160,19 @@ def success_page(server, email, access_token):
         email, access_token)
     try:
         data = urlopen(API).read().decode("utf-8")
+        success_data = success_courses(email, data, server)
     except:
         log.debug("Enrollment for {} failed".format(email), exc_info=True)
         return success_auth(success_courses(email, '[]', server))
-    return success_auth(success_courses(email, data, server))
+    return success_auth(success_data)
 
 
 def success_courses(email, response, server):
     """Generates HTML for individual courses"""
-    courses = json.loads(response)['data']['courses']
-    if len(courses) > 0:
+    response = json.loads(response)
+
+    if response and response['data'].get('courses', []):
+        courses = response['data']['courses']
         template_course = partial_course_html
         html = ''
         for course in courses:
@@ -195,9 +199,6 @@ def success_auth(data):
         byline=data[2],
         title=data[3],
         head=data[4])
-
-import os
-
 
 def get_file(relative_path, purpose):
     dir = os.path.dirname(__file__)

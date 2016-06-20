@@ -29,6 +29,6 @@ def api_request(access_token, server, route, insecure=False, arguments={}):
         response_json = json.loads(response)
         log.warning('Server error message: %s', response_json['message'])
         if ex.code == 401:
-            print("Only members of the course staff can export submissions.")
+            print("Only members of the course staff can access this feature.")
             return
         return response_json
