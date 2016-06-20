@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 import http.server
+
 import json
 import os
 import pickle
@@ -19,6 +20,10 @@ import logging
 
 log = logging.getLogger(__name__)
 
+import logging
+
+log = logging.getLogger(__name__)
+
 CLIENT_ID = \
     '931757735585-vb3p8g53a442iktc4nkv5q8cbjrtuonv.apps.googleusercontent.com'
 # The client secret in an installed application isn't a secret.
@@ -26,12 +31,12 @@ CLIENT_ID = \
 CLIENT_SECRET = 'zGY9okExIBnompFTWcBmOZo4'
 
 CONFIG_DIRECTORY = os.path.join(os.path.expanduser('~'), '.config', 'ok')
-    
+
 REFRESH_FILE = os.path.join(CONFIG_DIRECTORY, "auth_refresh")
 REDIRECT_HOST = "localhost"
 TIMEOUT = 10
 
-SERVER = 'http://ok-server.appspot.com'
+SERVER = 'https://ok.cs61a.org'
 
 
 def pick_free_port():
@@ -194,7 +199,17 @@ def authenticate(force=False):
             self.send_response(200)
             self.send_header("Content-type", "text/html")
             self.end_headers()
-            self.wfile.write(bytes(success_page(SERVER, email), "utf-8"))
+
+            try:
+                email_resp = get_student_email(access_token)
+                if email_resp:
+                    actual_email = email_resp
+            except Exception as e:  # TODO : Catch just SSL errors
+                actual_email = email
+                log.warning("Could not get email from token", exc_info=True)
+
+            reponse = success_page(SERVER, actual_email, access_token)
+            self.wfile.write(bytes(reponse, "utf-8"))
 
         def log_message(self, format, *args):
             return
@@ -207,13 +222,18 @@ def authenticate(force=False):
     return access_token
 
 
-def success_page(server, email):
-    """Generate HTML for the auth page - fetch courses and plug into templates.
-    """
-    API = server + '/enrollment?email=%s' % email
-    data = urlopen(API).read().decode("utf-8")
-    return success_auth(success_courses(email, data, server))
-
+def success_page(server, email, access_token):
+    """Generate HTML for the auth page - fetch courses and plug into templates"""
+    API = server + '/api/v3/enrollment/{0}/?access_token={1}'.format(
+        email, access_token)
+    try:
+        data = urlopen(API).read().decode("utf-8")
+        log.debug("Enrollment API {} resp: {}".format(API, data))
+        success_data = success_courses(email, data, server)
+    except:
+        log.debug("Enrollment for {} failed".format(email), exc_info=True)
+        return success_auth(success_courses(email, '[]', server))
+    return success_auth(success_data)
 
 def failure_page(error):
     html = partial_nocourse_html
@@ -232,15 +252,17 @@ def failure_page(error):
 
 def success_courses(email, response, server):
     """Generates HTML for individual courses"""
-    courses = json.loads(response)
-    if len(courses) > 0:
+    response = json.loads(response)
+
+    if response and response['data'].get('courses', []):
+        courses = response['data']['courses']
         template_course = partial_course_html
         html = ''
         for course in courses:
-            html += template_course.format(**course)
+            html += template_course.format(**course['course'])
 
         status = "Scroll for more: {0}".format(
-            ', '.join(course['display_name'] for course in courses))
+            ', '.join(course['course']['display_name'] for course in courses))
         byline = '"{}" is currently enrolled in {}.'.format(
             email, pluralize(len(courses), ' course'))
         title = 'Ok!'
@@ -264,21 +286,18 @@ def success_auth(data):
         title=data[3],
         head=data[4])
 
-
 def get_file(relative_path, purpose):
     dir = os.path.dirname(__file__)
     filename = os.path.join(dir, relative_path)
     return open(filename, purpose)
 
-
 def get_contents(relative_path, purpose='r'):
     return get_file(relative_path, purpose).read()
-
 
 def pluralize(num, string):
     return str(num)+string+('s' if num != 1 else '')
 
-# Grabs the student's email through the access_token and returns it. 
+# Grabs the student's email through the access_token and returns it.
 
 def get_student_email(access_token):
     if access_token == None:

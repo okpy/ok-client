@@ -12,7 +12,7 @@ def api_request(access_token, server, route, insecure=False, arguments={}):
     """Makes a request to the server API and returns the result."""
     try:
         prefix = "http" if insecure else "https"
-        address = prefix + "://" + server + '/api/v1'
+        address = prefix + "://" + server + '/api/v3'
         address += route if route.startswith('/') else '/' + route
         address += "?access_token={0}".format(
             access_token)
@@ -29,6 +29,6 @@ def api_request(access_token, server, route, insecure=False, arguments={}):
         response_json = json.loads(response)
         log.warning('Server error message: %s', response_json['message'])
         if ex.code == 401:
-            print("Only members of the course staff can export submissions.")
+            print("Only members of the course staff can access this feature.")
             return
         return response_json

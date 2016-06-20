@@ -19,7 +19,7 @@ class BackupProtocol(models.Protocol):
 
     RETRY_LIMIT = 5
     BACKUP_FILE = ".ok_messages"
-    SUBMISSION_ENDPOINT = '{prefix}://{server}/api/v1/submission?'
+    BACKUP_ENDPOINT = '{prefix}://{server}/api/v3/backups/'
 
     def run(self, messages):
         if self.args.local or self.args.export or self.args.restore:
@@ -32,14 +32,22 @@ class BackupProtocol(models.Protocol):
         log.info('Authenticated with access token %s', access_token)
 
         response = self.send_all_messages(access_token, message_list)
+        prefix='http' if self.args.insecure else 'https'
+        base_url = '{0}://{1}'.format(prefix, self.args.server) + '/{}/{}/{}'
+        action = 'Submission' if self.args.submit else 'Backup'
 
         if isinstance(response, dict):
-            print('Backup successful for user: '
-                  '{0}'.format(response['data']['email']))
+            print('{action} successful for user: {email}'.format(action=action,
+                        email=response['data']['email']))
+
+            submission_type = 'submissions' if self.args.submit else 'backups'
+            url = base_url.format(response['data']['assignment'],
+                        submission_type,
+                        response['data']['key'])
+
             if self.args.submit or self.args.backup:
-                print('URL: https://ok-server.appspot.com/#/'
-                      '{0}/submission/{1}'.format(response['data']['course'],
-                                                  response['data']['key']))
+                print('URL: {0}'.format(url))
+
             if self.args.backup:
                 print('NOTE: this is only a backup. '
                       'To submit your assignment, use:\n'
@@ -156,15 +164,18 @@ class BackupProtocol(models.Protocol):
         data = {
             'assignment': self.assignment.endpoint,
             'messages': messages,
+            'submit': self.args.submit
         }
         serialized_data = json.dumps(data).encode(encoding='utf-8')
 
-        address = self.SUBMISSION_ENDPOINT.format(server=self.args.server,
+        address = self.BACKUP_ENDPOINT.format(server=self.args.server,
                 prefix='http' if self.args.insecure else 'https')
         address_params = {
             'access_token': access_token,
+            'client_name': 'ok-client',
             'client_version': client.__version__,
         }
+        address += '?'
         address += '&'.join('{}={}'.format(param, value)
                             for param, value in address_params.items())
 
@@ -174,6 +185,7 @@ class BackupProtocol(models.Protocol):
         request.add_header("Content-Type", "application/json")
 
         response = urllib.request.urlopen(request, serialized_data, timeout)
+
         return json.loads(response.read().decode('utf-8'))
 
 protocol = BackupProtocol
