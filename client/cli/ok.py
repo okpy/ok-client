@@ -57,9 +57,7 @@ def parse_input(command_input=None):
     parser.add_argument('--timeout', type=int, default=10,
                         help="set the timeout duration for running tests")
 
-    # Guidance and hinting
-    parser.add_argument('--guidance', action='store_true',
-                        help="display guidance messages")
+    # Hinting
     parser.add_argument('--no-hints', action='store_true',
                         help="do not prompt for hints")
 
@@ -102,12 +100,11 @@ def main():
     args = parse_input()
 
     log.setLevel(logging.DEBUG if args.debug else logging.ERROR)
+    log.debug(args)
 
     # Checking user's Python bit version
     bit_v = (8 * struct.calcsize("P"))
-    log.debug("Python bit version: {}".format(bit_v))
-
-    log.debug(args)
+    log.debug("Python {}bit".format(bit_v))
 
     if args.version:
         print("okpy=={}".format(client.__version__))
