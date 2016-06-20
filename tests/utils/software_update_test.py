@@ -33,8 +33,9 @@ class CheckVersionTest(unittest.TestCase):
             'data': {
                 'results': [
                     {
+                        'name': 'ok-client',
                         'current_version': current_version,
-                        'current_download_link': current_download_link,
+                        'download_link': current_download_link,
                     }
                 ]
             }
