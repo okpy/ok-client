@@ -1,0 +1,76 @@
+{
+  "dictAssessId2WA2DictInfo": {
+    ">>> 1 + 1\nLOCKED_ANSWER\n>>> 2 + 2\nLOCKED_ANSWER\n": {
+      "['-2']": {
+        "dictMisU2Msg": {
+          "negation": 3
+        },
+        "ki": 1,
+        "lstMisU": [
+          "negation"
+        ]
+      },
+      "['0']": {
+        "dictMisU2Msg": {
+          "negation": 3,
+          "offbytwo": 2
+        },
+        "ki": 1,
+        "lstMisU": [
+          "offbytwo",
+          "negation"
+        ]
+      },
+      "['1']": {
+        "dictMisU2Msg": {
+          "offbyone": 2
+        },
+        "ki": 1,
+        "lstMisU": [
+          "offbyone"
+        ]
+      },
+      "['100']": {
+        "dictMisU2Msg": {
+          "offbyone": 2,
+          "offbytwo": 2
+        },
+        "ki": 1,
+        "lstMisU": [
+          "offbyone",
+          "offbytwo"
+        ]
+      },
+      "['3']": {
+        "dictMisU2Msg": {
+          "offbyone": 2
+        },
+        "ki": 1,
+        "lstMisU": [
+          "offbyone"
+        ]
+      },
+      "['4']": {
+        "dictMisU2Msg": {
+          "offbytwo": 2
+        },
+        "ki": 1,
+        "lstMisU": [
+          "offbytwo"
+        ]
+      }
+    }
+  },
+  "dictId2Msg": {
+    "1": "KI: Try using your fingers to add",
+    "2": "Reteach: Addition",
+    "3": "Reteach: Negation"
+  },
+  "dictTg2Func": {
+    "0": "none",
+    "1": "ki",
+    "2": "misU2Msg"
+  },
+  "url": "TODO",
+  "wrongAnsThresh": 2
+}

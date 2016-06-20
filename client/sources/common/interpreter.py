@@ -2,6 +2,7 @@
 
 from client.sources.common import core
 from client.sources.common import models
+from client.utils import locking
 import re
 import textwrap
 
@@ -151,6 +152,7 @@ class Console(object):
         self.verbose = verbose
         self.interactive = interactive
         self.timeout = timeout
+        self.skip_locked_cases = True
         self.load('')   # Initialize empty code.
 
     def load(self, code, setup='', teardown=''):
@@ -253,7 +255,14 @@ class Console(object):
                 actual = printed.strip()
 
         expected = expected.strip()
-        if expected != actual:
+        
+        if not self.skip_locked_cases and expected != actual:
+            actual = locking.lock(self.hash_key, actual)
+            if expected != actual:
+                print()
+                print("# Error: expected and actual results do not match")
+                raise ConsoleException
+        elif expected != actual:
             print()
             print('# Error: expected')
             print('\n'.join('#     {}'.format(line)

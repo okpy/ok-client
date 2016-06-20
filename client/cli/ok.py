@@ -12,6 +12,7 @@ import client
 import logging
 import os
 import sys
+import struct
 
 LOGGING_FORMAT = '%(levelname)s  | %(filename)s:%(lineno)d | %(message)s'
 logging.basicConfig(format=LOGGING_FORMAT)
@@ -56,6 +57,12 @@ def parse_input(command_input=None):
     parser.add_argument('--timeout', type=int, default=10,
                         help="set the timeout duration for running tests")
 
+    # Guidance and hinting
+    parser.add_argument('--guidance', action='store_true',
+                        help="display guidance messages")
+    parser.add_argument('--no-hints', action='store_true',
+                        help="do not prompt for hints")
+
     # Submission Export
     parser.add_argument('--export', action='store_true',
                         help="Downloads all submissions for the current assignment")
@@ -95,6 +102,11 @@ def main():
     args = parse_input()
 
     log.setLevel(logging.DEBUG if args.debug else logging.ERROR)
+
+    # Checking user's Python bit version
+    bit_v = (8 * struct.calcsize("P"))
+    log.debug("Python bit version: {}".format(bit_v))
+
     log.debug(args)
 
     if args.version:
@@ -130,6 +142,9 @@ def main():
     except ex.LoadingException as e:
         log.warning('Assignment could not load', exc_info=True)
         print('Error loading assignment: ' + str(e))
+    except ex.AuthenticationException as e:
+        log.warning('Authentication exception occurred', exc_info=True)
+        print('Authentication error: {0}'.format(e))
     except ex.OkException as e:
         log.warning('General OK exception occurred', exc_info=True)
         print('Error: ' + str(e))

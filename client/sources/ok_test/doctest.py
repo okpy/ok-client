@@ -20,6 +20,7 @@ class DoctestSuite(models.Suite):
 
     def __init__(self, verbose, interactive, timeout=None, **fields):
         super().__init__(verbose, interactive, timeout, **fields)
+        self.skip_locked_cases = True
         self.console = self.console_type(verbose, interactive, timeout)
 
     def post_instantiation(self):
@@ -29,7 +30,7 @@ class DoctestSuite(models.Suite):
             self.cases[i] = interpreter.CodeCase(self.console, self.setup,
                                                  self.teardown, **case)
 
-    def run(self, test_name, suite_number, env):
+    def run(self, test_name, suite_number, env=None):
         """Runs test for the doctest suite.
 
         PARAMETERS:
@@ -62,7 +63,7 @@ class DoctestSuite(models.Suite):
         for i, case in enumerate(self.cases):
             log.info('Running case {}'.format(i))
 
-            if case.locked == True or results['locked'] > 0:
+            if (case.locked == True or results['locked'] > 0) and self.skip_locked_cases:
                 # If a test case is locked, refuse to run any of the subsequent
                 # test cases
                 log.info('Case {} is locked'.format(i))

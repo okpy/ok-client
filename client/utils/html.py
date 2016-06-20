@@ -28,7 +28,7 @@ auth_html = """
         </span>
     </div>
 </section>
-<!-- <div class="rise status">{status}</div> -->
+<div class="rise status">{status}</div>
 <section class="courses">
     <div class="wrap row" style="width:100%">
         {courses}

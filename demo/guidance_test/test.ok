@@ -1,0 +1,18 @@
+{
+    "name": "Lab 6",
+    "endpoint": "cal/cs61a/sp16/test",
+    "src": [
+        "empty.py"
+    ],
+    "tests": {
+        "tests/test.py": "ok_test"
+    },
+    "protocols": [
+        "restore",
+        "file_contents",
+        "unlock",
+        "grading",
+        "analytics",
+        "backup"
+    ]
+}

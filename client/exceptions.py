@@ -1,13 +1,17 @@
 """Client exceptions."""
 
+
 class OkException(BaseException):
     """Base exception class for OK."""
+
 
 class AuthenticationException(OkException):
     """Exceptions related to authentication."""
 
+
 class ProtocolException(OkException):
     """Exceptions related to protocol errors."""
+
 
 # TODO(albert): extend from a base class designed for student bugs.
 class Timeout(OkException):
@@ -24,9 +28,10 @@ class Timeout(OkException):
         self.timeout = timeout
         self.message = self._message
 
+
 class LoadingException(OkException):
     """Exception related to loading assignments."""
 
+
 class SerializeException(LoadingException):
     """Exceptions related to de/serialization."""
-

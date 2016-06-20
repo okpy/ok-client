@@ -1,48 +1,59 @@
 #!/usr/bin/env python3
 
-from client import exceptions
-
-from .sanction import Client
-from urllib.parse import urlparse, parse_qs
 import http.server
+
+import json
 import os
 import pickle
 import sys
 import time
-import webbrowser
+from urllib.parse import urlparse, parse_qs
 from urllib.request import urlopen
-import json
-from .html import auth_html, partial_course_html, partial_nocourse_html, red_css
+import webbrowser
+
+from client.exceptions import AuthenticationException
+from client.utils.html import auth_html, partial_course_html, \
+                              partial_nocourse_html, red_css
+from client.utils.sanction import Client
 
 import logging
 
 log = logging.getLogger(__name__)
 
-OK_SERVER = 'https://ok.cs61a.org'
+import logging
+
+log = logging.getLogger(__name__)
 
 CLIENT_ID = \
     '931757735585-vb3p8g53a442iktc4nkv5q8cbjrtuonv.apps.googleusercontent.com'
 # The client secret in an installed application isn't a secret.
 # See: https://developers.google.com/accounts/docs/OAuth2InstalledApp
 CLIENT_SECRET = 'zGY9okExIBnompFTWcBmOZo4'
-REFRESH_FILE = '.ok_refresh'
+
+CONFIG_DIRECTORY = os.path.join(os.path.expanduser('~'), '.config', 'ok')
+
+REFRESH_FILE = os.path.join(CONFIG_DIRECTORY, "auth_refresh")
 REDIRECT_HOST = "localhost"
 TIMEOUT = 10
+
+SERVER = 'https://ok.cs61a.org'
+
 
 def pick_free_port():
     import socket
     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     try:
-        s.bind(('localhost', 0)) # find an open port
+        s.bind(('localhost', 0))  # find an open port
     except OSError as e:
         print('Unable to find an open port for authentication.')
-        raise exceptions.AuthenticationException(e)
+        raise AuthenticationException(e)
     addr, port = s.getsockname()
     s.close()
     return port
 
 REDIRECT_PORT = pick_free_port()
-REDIRECT_URI = "http://%s:%u/" % (REDIRECT_HOST, REDIRECT_PORT)
+REDIRECT_URI = "http://{0}:{1}/".format(REDIRECT_HOST, REDIRECT_PORT)
+
 
 def _make_code_post(code):
     client = Client(
@@ -53,6 +64,7 @@ def _make_code_post(code):
     client.request_token(code=code, **params)
     return client.access_token, client.refresh_token, client.expires_in
 
+
 def make_refresh_post(refresh_token):
     client = Client(
         token_endpoint='https://accounts.google.com/o/oauth2/token',
@@ -62,19 +74,38 @@ def make_refresh_post(refresh_token):
     client.request_token(refresh_token=refresh_token, **params)
     return client.access_token, client.expires_in
 
+
+def create_config_directory():
+    if not os.path.exists(CONFIG_DIRECTORY):
+        os.makedirs(CONFIG_DIRECTORY)
+
+
 def get_storage():
+    create_config_directory()
     with open(REFRESH_FILE, 'rb') as fp:
         storage = pickle.load(fp)
-    return storage['access_token'], storage['expires_at'], storage['refresh_token']
+
+    access_token = storage['access_token']
+    expires_at = storage['expires_at']
+    refresh_token = storage['refresh_token']
+
+    return access_token, expires_at, refresh_token
+
 
 def update_storage(access_token, expires_in, refresh_token):
+    if not (access_token and expires_in and refresh_token):
+        raise AuthenticationException(
+            "Authentication failed and returned an empty token.")
+
     cur_time = int(time.time())
+    create_config_directory()
     with open(REFRESH_FILE, 'wb') as fp:
         pickle.dump({
             'access_token': access_token,
             'expires_at': cur_time + expires_in,
             'refresh_token': refresh_token
         }, fp)
+
 
 def check_ssl():
     try:
@@ -88,6 +119,7 @@ def check_ssl():
     else:
         log.info('SSL bindings are available.')
 
+
 def authenticate(force=False):
     """
     Returns an oauth token that can be passed to the server for identification.
@@ -99,10 +131,17 @@ def authenticate(force=False):
             if cur_time < expires_at - 10:
                 return access_token
             access_token, expires_in = make_refresh_post(refresh_token)
+
+            if not access_token and expires_in:
+                raise AuthenticationException(
+                    "Authentication failed and returned an empty token.")
+
             update_storage(access_token, expires_in, refresh_token)
             return access_token
         except IOError as _:
             print('Performing authentication')
+        except AuthenticationException as e:
+            raise e  # Let the main script handle this error
         except Exception as _:
             print('Performing authentication')
 
@@ -128,19 +167,48 @@ def authenticate(force=False):
     expires_in = None
 
     class CodeHandler(http.server.BaseHTTPRequestHandler):
+        def send_failure(self, message):
+            self.send_response(400)
+            self.send_header("Content-type", "text/html")
+            self.end_headers()
+            self.wfile.write(bytes(failure_page(message), "utf-8"))
+
         def do_GET(self):
             """Respond to the GET request made by the OAuth"""
-            path = urlparse(self.path)
             nonlocal access_token, refresh_token, expires_in, done
+
+            path = urlparse(self.path)
             qs = parse_qs(path.query)
-            code = qs['code'][0]
-            access_token, refresh_token, expires_in = _make_code_post(code)
+
+            try:
+                code = qs['code'][0]
+                access_token, refresh_token, expires_in = _make_code_post(code)
+            except KeyError:
+                message = qs.get('error', 'Unknown')
+                log.warning("No auth code provided {}".format(message))
+                done = True
+                self.send_failure(message)
+                return
+            except Exception as e:  # TODO : Catch just SSL errors
+                log.warning("Could not obtain token", exc_info=True)
+                done = True
+                self.send_failure(e.message)
+                return
 
             done = True
             self.send_response(200)
             self.send_header("Content-type", "text/html")
             self.end_headers()
-            reponse = success_page(OK_SERVER, email, access_token)
+
+            try:
+                email_resp = get_student_email(access_token)
+                if email_resp:
+                    actual_email = email_resp
+            except Exception as e:  # TODO : Catch just SSL errors
+                actual_email = email
+                log.warning("Could not get email from token", exc_info=True)
+
+            reponse = success_page(SERVER, actual_email, access_token)
             self.wfile.write(bytes(reponse, "utf-8"))
 
         def log_message(self, format, *args):
@@ -160,11 +228,26 @@ def success_page(server, email, access_token):
         email, access_token)
     try:
         data = urlopen(API).read().decode("utf-8")
+        log.debug("Enrollment API {} resp: {}".format(API, data))
         success_data = success_courses(email, data, server)
     except:
         log.debug("Enrollment for {} failed".format(email), exc_info=True)
         return success_auth(success_courses(email, '[]', server))
     return success_auth(success_data)
+
+def failure_page(error):
+    html = partial_nocourse_html
+    title = 'Authentication Error'
+    byline = 'Error: {}'.format(error)
+    status = 'We could not authenticate you.'
+    head = '<style>{0}</style>'.format(red_css)
+    return auth_html.format(
+        site=SERVER,
+        status=status,
+        courses=html,
+        byline=byline,
+        title=title,
+        head=head)
 
 
 def success_courses(email, response, server):
@@ -177,16 +260,19 @@ def success_courses(email, response, server):
         html = ''
         for course in courses:
             html += template_course.format(**course['course'])
-        status = 'Enrolled in: '+', '.join([c['course']['display_name'] for c in courses])
-        byline = '"%s" is currently enrolled in %s.' % (email, pluralize(len(courses), ' course'))
+
+        status = "Scroll for more: {0}".format(
+            ', '.join(course['course']['display_name'] for course in courses))
+        byline = '"{}" is currently enrolled in {}.'.format(
+            email, pluralize(len(courses), ' course'))
         title = 'Ok!'
         head = ''
     else:
         html = partial_nocourse_html
-        byline = 'The email "%s" is not enrolled. Is it correct?' % email
+        byline = 'The email "{}" is not enrolled. Is it correct?'.format(email)
         status = 'No courses found'
         title = 'Uh oh'
-        head = '<style>%s</style>' % red_css
+        head = '<style>{0}</style>'.format(red_css)
     return html, status, byline, title, head, server
 
 
@@ -205,13 +291,24 @@ def get_file(relative_path, purpose):
     filename = os.path.join(dir, relative_path)
     return open(filename, purpose)
 
-
 def get_contents(relative_path, purpose='r'):
     return get_file(relative_path, purpose).read()
 
-
 def pluralize(num, string):
     return str(num)+string+('s' if num != 1 else '')
+
+# Grabs the student's email through the access_token and returns it.
+
+def get_student_email(access_token):
+    if access_token == None:
+        return None
+    try:
+        user_dic = json.loads(urlopen("https://www.googleapis.com/oauth2/v1/userinfo?access_token=" + \
+            access_token, timeout = 1).read().decode("utf-8"))
+        user_email = user_dic["email"]
+    except IOError as e:
+        user_email = None
+    return user_email
 
 if __name__ == "__main__":
     print(authenticate())
