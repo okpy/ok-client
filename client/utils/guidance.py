@@ -340,10 +340,10 @@ class Guidance:
                                                              .decode("utf-8")))
             except IOError:
                 data = {"tg": -1}
-                log.error("Failed to communicate to server", exc_info=True)
+                log.warning("Failed to communicate to server", exc_info=True)
 
             if data.get("tg") is None:
-                log.error("Server returned back a bad treatment group ID.")
+                log.warning("Server returned back a bad treatment group ID.")
                 data = {"tg": -1}
 
             with open(self.current_working_dir + LOCAL_TG_FILE, "w") as fd:
