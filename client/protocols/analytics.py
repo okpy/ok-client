@@ -60,7 +60,7 @@ class AnalyticsProtocol(models.Protocol):
         """
         question_status = {}
 
-        for lines in files.values():
+        for path, lines in files.items():
             if not isinstance(lines, str):
                 continue
             if len(lines) == 0:
