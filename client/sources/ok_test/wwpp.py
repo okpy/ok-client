@@ -64,7 +64,7 @@ class WwppCase(interpreter.CodeCase):
         return True
 
     def unlock(self, unique_id_prefix, case_id, interact):
-        print('What would Python print? If you get stuck, try it out in the '
+        print('What would Python display? If you get stuck, try it out in the '
               'Python\ninterpreter!')
         super().unlock(unique_id_prefix, case_id, interact)
 
