@@ -7,11 +7,14 @@ python:
   - "3.5"
 
 install:
-  - pip install -U wheel
   - pip install -r requirements.txt
 
 cache:
   directories:
   - "$HOME/.cache/pip"
+  - lib/python3.2/site-packages
+  - lib/python3.3/site-packages
+  - lib/python3.4/site-packages
+  - lib/python3.5/site-packages
 
 script: nosetests --with-coverage tests
