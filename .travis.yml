@@ -6,6 +6,12 @@ python:
   - "3.4"
   - "3.5"
 
-install: "pip install -r requirements.txt"
+install:
+  - pip install -U pip wheel
+  - pip install -r requirements.txt
+
+cache:
+  directories:
+  - "$HOME/.cache/pip"
 
 script: nosetests --with-coverage tests
