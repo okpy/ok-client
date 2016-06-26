@@ -2,6 +2,7 @@
 
 import http.server
 
+import errno
 import json
 import os
 import pickle
@@ -33,34 +34,35 @@ CLIENT_SECRET = 'zGY9okExIBnompFTWcBmOZo4'
 CONFIG_DIRECTORY = os.path.join(os.path.expanduser('~'), '.config', 'ok')
 
 REFRESH_FILE = os.path.join(CONFIG_DIRECTORY, "auth_refresh")
-REDIRECT_HOST = "localhost"
+REDIRECT_HOST = "127.0.0.1"
 TIMEOUT = 10
 
 SERVER = 'https://ok.cs61a.org'
+DEFAULT_PORT = 6165
 
-
-def pick_free_port():
+def pick_free_port(hostname=REDIRECT_HOST, port=0):
+    """ Try to bind a port. Default=0 selects a free port. """
     import socket
     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     try:
-        s.bind(('localhost', 0))  # find an open port
+        s.bind((hostname, port))  # port=0 finds an open port
     except OSError as e:
-        print('Unable to find an open port for authentication.')
-        raise AuthenticationException(e)
+        log.warning("Could not bind to %s:%s %s", hostname, port, e)
+        if port == 0:
+            print('Unable to find an open port for authentication.')
+            raise AuthenticationException(e)
+        else:
+            return pick_free_port(hostname, 0)
     addr, port = s.getsockname()
     s.close()
     return port
 
-REDIRECT_PORT = pick_free_port()
-REDIRECT_URI = "http://{0}:{1}/".format(REDIRECT_HOST, REDIRECT_PORT)
-
-
-def _make_code_post(code):
+def _make_code_post(code, redirect_uri):
     client = Client(
         token_endpoint='https://accounts.google.com/o/oauth2/token',
         resource_endpoint='https://www.googleapis.com/oauth2/v1',
         client_id=CLIENT_ID, client_secret=CLIENT_SECRET)
-    params = {"redirect_uri": REDIRECT_URI}
+    params = {"redirect_uri": redirect_uri}
     client.request_token(code=code, **params)
     return client.access_token, client.refresh_token, client.expires_in
 
@@ -150,16 +152,24 @@ def authenticate(force=False):
     print("Please enter your bCourses email.")
     email = input("bCourses email: ")
 
+    host_name = REDIRECT_HOST
+    try:
+        port_number = pick_free_port(port=DEFAULT_PORT)
+    except AuthenticationException as e:
+        # Could not bind to REDIRECT_HOST:0, try localhost instead
+        host_name = 'localhost'
+        port_number = pick_free_port(host_name, 0)
+
+    redirect_uri = "http://{0}:{1}/".format(host_name, port_number)
+    log.info("Authentication server running on {}".format(redirect_uri))
+
     c = Client(auth_endpoint='https://accounts.google.com/o/oauth2/auth',
                client_id=CLIENT_ID)
     url = c.auth_uri(scope="profile email", access_type='offline',
-                     name='ok-server', redirect_uri=REDIRECT_URI,
+                     name='ok-server', redirect_uri=redirect_uri,
                      login_hint=email)
 
     webbrowser.open_new(url)
-
-    host_name = REDIRECT_HOST
-    port_number = REDIRECT_PORT
 
     done = False
     access_token = None
@@ -182,7 +192,8 @@ def authenticate(force=False):
 
             try:
                 code = qs['code'][0]
-                access_token, refresh_token, expires_in = _make_code_post(code)
+                code_response = _make_code_post(code, redirect_uri)
+                access_token, refresh_token, expires_in = code_response
             except KeyError:
                 message = qs.get('error', 'Unknown')
                 log.warning("No auth code provided {}".format(message))
@@ -199,13 +210,13 @@ def authenticate(force=False):
             self.send_response(200)
             self.send_header("Content-type", "text/html")
             self.end_headers()
+            actual_email = email
 
             try:
                 email_resp = get_student_email(access_token)
                 if email_resp:
                     actual_email = email_resp
             except Exception as e:  # TODO : Catch just SSL errors
-                actual_email = email
                 log.warning("Could not get email from token", exc_info=True)
 
             reponse = success_page(SERVER, actual_email, access_token)
@@ -215,8 +226,6 @@ def authenticate(force=False):
             return
 
     server_address = (host_name, port_number)
-    httpd = http.server.HTTPServer(server_address, CodeHandler)
-    httpd.handle_request()
 
     update_storage(access_token, expires_in, refresh_token)
     return access_token
