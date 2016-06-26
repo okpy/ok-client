@@ -82,7 +82,7 @@ class Guidance:
                 raise ValueError("JSON did not validate")
             self.guidance_json = self.guidance_json['db']
         except (OSError, IOError, ValueError):
-            log.warning("Failed to read .ok_guidance file.", exc_info=True)
+            log.warning("Failed to read .ok_guidance file. It may not exist")
             self.load_error = True
         log.debug("Guidance loaded with status: %s", not self.load_error)
 

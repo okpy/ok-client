@@ -21,10 +21,6 @@ import logging
 
 log = logging.getLogger(__name__)
 
-import logging
-
-log = logging.getLogger(__name__)
-
 CLIENT_ID = \
     '931757735585-vb3p8g53a442iktc4nkv5q8cbjrtuonv.apps.googleusercontent.com'
 # The client secret in an installed application isn't a secret.
@@ -245,7 +241,9 @@ def authenticate(force=False):
 
 
 def success_page(server, email, access_token):
-    """Generate HTML for the auth page - fetch courses and plug into templates"""
+    """ Generate HTML for the auth page.
+        Fetchs courses and plug into templates.
+    """
     API = server + '/api/v3/enrollment/{0}/?access_token={1}'.format(
         email, access_token)
     try:
@@ -256,6 +254,7 @@ def success_page(server, email, access_token):
         log.debug("Enrollment for {} failed".format(email), exc_info=True)
         return success_auth(success_courses(email, '[]', server))
     return success_auth(success_data)
+
 
 def failure_page(error):
     html = partial_nocourse_html
@@ -322,11 +321,11 @@ def pluralize(num, string):
 # Grabs the student's email through the access_token and returns it.
 
 def get_student_email(access_token):
-    if access_token == None:
+    if access_token is None:
         return None
     try:
         user_dic = json.loads(urlopen("https://www.googleapis.com/oauth2/v1/userinfo?access_token=" + \
-            access_token, timeout = 1).read().decode("utf-8"))
+            access_token, timeout=1).read().decode("utf-8"))
         user_email = user_dic["email"]
     except IOError as e:
         user_email = None
