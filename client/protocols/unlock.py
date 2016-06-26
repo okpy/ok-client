@@ -13,7 +13,6 @@ from client.utils import locking
 from datetime import datetime
 import logging
 import random
-import string
 
 log = logging.getLogger(__name__)
 
