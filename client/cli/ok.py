@@ -83,6 +83,8 @@ def parse_input(command_input=None):
                         help="server address")
     parser.add_argument('--authenticate', action='store_true',
                         help="authenticate, ignoring previous authentication")
+    parser.add_argument('--get-token', action='store_true',
+                        help="gets ok access token")
     parser.add_argument('--insecure', action='store_true',
                         help="uses http instead of https")
     parser.add_argument('--no-update', action='store_true',
@@ -113,12 +115,19 @@ def main():
         print("Current version: {}".format(client.__version__))
         did_update = software_update.check_version(
                 args.server, client.__version__, client.FILE_NAME, timeout=10)
-        exit(not did_update) # exit with error if ok failed to update
+        exit(not did_update)  # exit with error if ok failed to update
+
+    if args.get_token:
+        access_token = auth.authenticate(True)
+        print("Token: {}".format(access_token))
+        exit(not access_token)  # exit with error if no access_token
 
     assign = None
     try:
         if args.authenticate:
-            auth.authenticate(True)
+            # Authenticate and check for success
+            if not auth.authenticate(True):
+                exit(1)
 
         # Instantiating assignment
         assign = assignment.load_assignment(args.config, args)

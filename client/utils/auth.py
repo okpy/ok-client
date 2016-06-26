@@ -175,6 +175,7 @@ def authenticate(force=False):
     access_token = None
     refresh_token = None
     expires_in = None
+    auth_error = None
 
     class CodeHandler(http.server.BaseHTTPRequestHandler):
         def send_failure(self, message):
@@ -185,11 +186,10 @@ def authenticate(force=False):
 
         def do_GET(self):
             """Respond to the GET request made by the OAuth"""
-            nonlocal access_token, refresh_token, expires_in, done
+            nonlocal access_token, refresh_token, expires_in, auth_error, done
 
             path = urlparse(self.path)
             qs = parse_qs(path.query)
-
             try:
                 code = qs['code'][0]
                 code_response = _make_code_post(code, redirect_uri)
@@ -197,11 +197,13 @@ def authenticate(force=False):
             except KeyError:
                 message = qs.get('error', 'Unknown')
                 log.warning("No auth code provided {}".format(message))
+                auth_error = message
                 done = True
                 self.send_failure(message)
                 return
             except Exception as e:  # TODO : Catch just SSL errors
                 log.warning("Could not obtain token", exc_info=True)
+                auth_error = e.message
                 done = True
                 self.send_failure(e.message)
                 return
@@ -227,8 +229,19 @@ def authenticate(force=False):
 
     server_address = (host_name, port_number)
 
-    update_storage(access_token, expires_in, refresh_token)
-    return access_token
+    try:
+        httpd = http.server.HTTPServer(server_address, CodeHandler)
+        httpd.handle_request()
+    except OSError as e:
+        log.warning("HTTP Server Err {}".format(server_address), exc_info=True)
+        raise
+
+    if not auth_error:
+        update_storage(access_token, expires_in, refresh_token)
+        return access_token
+    else:
+        print("Authentication error: {}".format(auth_error))
+        return None
 
 
 def success_page(server, email, access_token):
