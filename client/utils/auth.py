@@ -244,7 +244,7 @@ def authenticate(force=False):
 
 def success_page(server, email, access_token):
     """ Generate HTML for the auth page.
-        Fetchs courses and plug into templates.
+        Fetches courses and plug into templates.
     """
     API = server + '/api/v3/enrollment/{0}/?access_token={1}'.format(
         email, access_token)

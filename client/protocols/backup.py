@@ -36,10 +36,10 @@ class BackupProtocol(models.Protocol):
         if not access_token:
             print("Not authenticated. Cannot send {} to server".format(action))
             self.dump_unsent_messages(message_list)
-
+            return
 
         response = self.send_all_messages(access_token, message_list)
-        prefix='http' if self.args.insecure else 'https'
+        prefix = 'http' if self.args.insecure else 'https'
         base_url = '{0}://{1}'.format(prefix, self.args.server) + '/{}/{}/{}'
 
         if isinstance(response, dict):
@@ -48,8 +48,8 @@ class BackupProtocol(models.Protocol):
 
             submission_type = 'submissions' if self.args.submit else 'backups'
             url = base_url.format(response['data']['assignment'],
-                        submission_type,
-                        response['data']['key'])
+                                  submission_type,
+                                  response['data']['key'])
 
             if self.args.submit or self.args.backup:
                 print('URL: {0}'.format(url))
