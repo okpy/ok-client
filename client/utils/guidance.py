@@ -263,7 +263,6 @@ class Guidance:
                     for misu, lst_wa_info in related_misu_tags_dict.items():
                         if countData[misu] >= wa_count_threshold:
                             for wa_info in lst_wa_info:
-                                print(wa_info)
                                 msg_id_set.add(lambda_info_misu(wa_info, misu))
                         else:
                             log.info("misu %s seen %s/%s times",
