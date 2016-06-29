@@ -118,7 +118,8 @@ def main():
     elif args.update:
         print("Current version: {}".format(client.__version__))
         did_update = software_update.check_version(
-                args.server, client.__version__, client.FILE_NAME, timeout=10)
+                args.server, client.__version__, client.FILE_NAME, timeout=10,
+                insecure=args.insecure)
         exit(not did_update)  # exit with error if ok failed to update
 
     if args.get_token:
@@ -164,7 +165,8 @@ def main():
         if not args.no_update:
             try:
                 software_update.check_version(args.server, client.__version__,
-                                              client.FILE_NAME)
+                                              client.FILE_NAME,
+                                              insecure=args.insecure)
             except KeyboardInterrupt:
                 pass
 

@@ -7,14 +7,16 @@ from socket import error as socket_error
 
 log = logging.getLogger(__name__)
 
-VERSION_ENDPOINT = 'https://{server}/api/v3/version/ok-client'
+VERSION_ENDPOINT = '{protocol}://{server}/api/v3/version/ok-client'
 
 SHORT_TIMEOUT = 3  # seconds
 
-def check_version(server, version, filename, timeout=SHORT_TIMEOUT):
+def check_version(server, version, filename, timeout=SHORT_TIMEOUT,
+                  insecure=False):
     """Check for the latest version of OK and update accordingly."""
 
-    address = VERSION_ENDPOINT.format(server=server)
+    protocol = "http" if insecure else "https"
+    address = VERSION_ENDPOINT.format(protocol=protocol, server=server)
 
     print('Checking for software updates...')
     log.info('Existing OK version: %s', version)
