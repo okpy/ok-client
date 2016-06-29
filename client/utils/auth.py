@@ -4,6 +4,7 @@ import http.server
 
 import errno
 import json
+import hashlib
 import os
 import pickle
 import sys
@@ -319,7 +320,6 @@ def pluralize(num, string):
     return str(num)+string+('s' if num != 1 else '')
 
 # Grabs the student's email through the access_token and returns it.
-
 def get_student_email(access_token):
     if access_token is None:
         return None
@@ -330,6 +330,15 @@ def get_student_email(access_token):
     except IOError as e:
         user_email = None
     return user_email
+
+def get_identifier():
+    """ Obtain anonmyzied identifier.
+    """
+    token = authenticate(False)
+    student_email = get_student_email(token)
+    if not student_email:
+        return "Unknown"
+    return hashlib.md5(student_email.encode()).hexdigest()
 
 if __name__ == "__main__":
     print(authenticate())

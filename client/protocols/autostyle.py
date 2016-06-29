@@ -1,7 +1,7 @@
 from client.protocols.common import models
 from client.utils import auth
-
 import client
+
 import json
 import logging
 import urllib.error
@@ -29,14 +29,18 @@ class AutoStyleProtocol(models.Protocol):
             log.warning("Autostyle needs to be after analytics")
             return
 
+        messages['analytics']['identifier'] = auth.get_identifier()
+
         # Send data to autostyle
         response = self.send_messages(messages, self.SHORT_TIMEOUT)
         # Parse response
-
-        # Get url to open
-        url = "https://ok.cs61a.org?autostyle_url_here"
-        # Open web browser
-        webbrowser.open_new(url)
+        if response:
+            # Get url to open
+            url = "https://ok.cs61a.org?autostyle_url_here"
+            # Open web browser
+            webbrowser.open_new(url)
+        else:
+            log.info("Invalid response from autostyle")
 
     def send_messages(self, messages, timeout):
         """Send messages to server, along with user authentication."""
