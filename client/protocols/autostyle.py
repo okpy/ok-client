@@ -52,7 +52,7 @@ class AutoStyleProtocol(models.Protocol):
         }
         serialized_data = json.dumps(data).encode(encoding='utf-8')
 
-        server = "okpy.org"
+        server = "localhost:5000/ok_launch/"
         address = self.API_ENDPOINT.format(server=server,
                 prefix='http' if self.args.insecure else 'https')
         address_params = {
