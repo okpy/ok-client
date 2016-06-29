@@ -32,13 +32,11 @@ class AutoStyleProtocol(models.Protocol):
         messages['analytics']['identifier'] = auth.get_identifier()
 
         # Send data to autostyle
-        response = self.send_messages(messages, self.SHORT_TIMEOUT)
-        # Parse response
-        if response:
-            # Get url to open
-            url = "https://ok.cs61a.org?autostyle_url_here"
-            # Open web browser
-            webbrowser.open_new(url)
+        response_url = self.send_messages(messages, self.SHORT_TIMEOUT)
+        # Parse response_url
+        if response_url:
+            print(response_url)
+            webbrowser.open_new(response_url)
         else:
             log.info("Invalid response from autostyle")
 
@@ -69,11 +67,11 @@ class AutoStyleProtocol(models.Protocol):
             request.add_header("Content-Type", "application/json")
 
             response = urllib.request.urlopen(request, serialized_data, timeout)
-            return json.loads(response.read().decode('utf-8'))
+            response_dict = json.loads(response.read().decode('utf-8'))
+            return response_dict['url']
         except (urllib.error.URLError, urllib.error.HTTPError,
                 json.decoder.JSONDecodeError) as ex:
             log.warning('%s: %s', ex.__class__.__name__, str(ex))
-
         return
 
 protocol = AutoStyleProtocol
