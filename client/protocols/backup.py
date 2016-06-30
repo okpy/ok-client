@@ -7,6 +7,7 @@ import logging
 import os
 import pickle
 import socket
+import ssl
 import urllib.error
 import urllib.request
 
@@ -103,14 +104,16 @@ class BackupProtocol(models.Protocol):
         num_messages = len(message_list)
 
         send_all = self.args.submit or self.args.backup
+        retries = self.RETRY_LIMIT
+
         if send_all:
             timeout = None
             stop_time = datetime.datetime.max
+            retries = self.RETRY_LIMIT * 5
         else:
             timeout = self.SHORT_TIMEOUT
             stop_time = datetime.datetime.now() + datetime.timedelta(seconds=timeout)
             log.info('Setting timeout to %d seconds', timeout)
-        retries = self.RETRY_LIMIT
 
         first_response = None
         error_msg = ''
@@ -134,13 +137,26 @@ class BackupProtocol(models.Protocol):
                 retries -= 1
                 error_msg = 'Connection timed out after {} seconds. '.format(timeout) + \
                             'Please check your network connection.'
+            except ssl.CertificateError as ex:
+                log.warning("SSL Error: %s", str(ex))
+                retries -= 1
+                error_msg = 'SSL Verification Error: {}\n'.format(ex) + \
+                            'Please check your network connection and SSL configuration.'
             except (urllib.error.URLError, urllib.error.HTTPError) as ex:
                 log.warning('%s: %s', ex.__class__.__name__, str(ex))
+                retries -= 1
                 if not hasattr(ex, 'read'):
-                    error_msg = 'Please check your network connection'
+                    error_msg = 'Please check your network connection:\n{}'.format(ex)
                     continue
 
-                response_json = json.loads(ex.read().decode('utf-8'))
+                try:
+                    response_json = json.loads(ex.read().decode('utf-8'))
+                except json.decoder.JSONDecodeError as ex:
+                    log.warning("Invalid JSON Response", exc_info=True)
+                    retries -= 1
+                    error_msg = 'Invalid Server Error Response: {} \n'.format(ex) + \
+                                'The server did not provide a valid response. Try again soon.'
+                    continue
 
                 log.warning('%s: %s', ex.__class__.__name__, str(ex))
                 log.warning('%s error message: %s', ex.__class__.__name__,
