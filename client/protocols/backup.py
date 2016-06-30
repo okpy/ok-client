@@ -109,7 +109,7 @@ class BackupProtocol(models.Protocol):
         if send_all:
             timeout = None
             stop_time = datetime.datetime.max
-            retries = self.RETRY_LIMIT * 5
+            retries = self.RETRY_LIMIT * 2
         else:
             timeout = self.SHORT_TIMEOUT
             stop_time = datetime.datetime.now() + datetime.timedelta(seconds=timeout)
