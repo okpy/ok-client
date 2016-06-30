@@ -27,21 +27,22 @@ class BackupProtocol(models.Protocol):
 
         message_list = self.load_unsent_messages()
 
-        # Messages from the current backup to send first
-        if self.args.submit:
-            subm_messages = [messages]
-        else:
-            subm_messages = []
-
         access_token = auth.authenticate(False)
         log.info('Authenticated with access token %s', access_token)
         log.info('Sending unsent messages %s', access_token)
 
-        # Send submission
-        response = self.send_all_messages(access_token, subm_messages, current=True)
+        # Messages from the current backup to send first
+        subm_messages = [messages] if self.args.submit else []
 
-        # Send all backups (saved and current)
-        self.send_all_messages(access_token, message_list, current=False)
+        if self.args.submit:
+            response = self.send_all_messages(access_token, subm_messages,
+                                          current=True)
+            self.send_all_messages(access_token, message_list,
+                                   current=False)
+        else:
+            response = self.send_all_messages(access_token, message_list,
+                                   current=False)
+
 
         prefix = 'http' if self.args.insecure else 'https'
         base_url = '{0}://{1}'.format(prefix, self.args.server) + '/{}/{}/{}'
