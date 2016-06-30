@@ -2,27 +2,26 @@
 
 import http.server
 
-import errno
 import json
 import os
 import pickle
-import sys
 import time
 from urllib.parse import urlparse, parse_qs
 from urllib.request import urlopen
 import webbrowser
 
 from client.exceptions import AuthenticationException
-from client.utils.html import auth_html, partial_course_html, \
-                              partial_nocourse_html, red_css
+from client.utils.html import (auth_html, partial_course_html,
+                               partial_nocourse_html, red_css)
 from client.utils.sanction import Client
 
 import logging
 
 log = logging.getLogger(__name__)
 
-CLIENT_ID = \
-    '931757735585-vb3p8g53a442iktc4nkv5q8cbjrtuonv.apps.googleusercontent.com'
+CLIENT_ID = ('931757735585-vb3p8g53a442iktc4nkv5q8cbjrtuonv'
+             '.apps.googleusercontent.com')
+
 # The client secret in an installed application isn't a secret.
 # See: https://developers.google.com/accounts/docs/OAuth2InstalledApp
 CLIENT_SECRET = 'zGY9okExIBnompFTWcBmOZo4'
@@ -30,11 +29,14 @@ CLIENT_SECRET = 'zGY9okExIBnompFTWcBmOZo4'
 CONFIG_DIRECTORY = os.path.join(os.path.expanduser('~'), '.config', 'ok')
 
 REFRESH_FILE = os.path.join(CONFIG_DIRECTORY, "auth_refresh")
-REDIRECT_HOST = "127.0.0.1"
-TIMEOUT = 10
 
+REDIRECT_HOST = "127.0.0.1"
+REDIRECT_PORT = 6165
+
+TIMEOUT = 10
 SERVER = 'https://ok.cs61a.org'
-DEFAULT_PORT = 6165
+INFO_ENDPOINT = "https://www.googleapis.com/oauth2/v1/userinfo?access_token={}"
+
 
 def pick_free_port(hostname=REDIRECT_HOST, port=0):
     """ Try to bind a port. Default=0 selects a free port. """
@@ -150,7 +152,7 @@ def authenticate(force=False):
 
     host_name = REDIRECT_HOST
     try:
-        port_number = pick_free_port(port=DEFAULT_PORT)
+        port_number = pick_free_port(port=REDIRECT_PORT)
     except AuthenticationException as e:
         # Could not bind to REDIRECT_HOST:0, try localhost instead
         host_name = 'localhost'
@@ -242,7 +244,7 @@ def authenticate(force=False):
 
 def success_page(server, email, access_token):
     """ Generate HTML for the auth page.
-        Fetchs courses and plug into templates.
+        Fetches courses and plug into templates.
     """
     API = server + '/api/v3/enrollment/{0}/?access_token={1}'.format(
         email, access_token)
@@ -319,14 +321,13 @@ def pluralize(num, string):
     return str(num)+string+('s' if num != 1 else '')
 
 # Grabs the student's email through the access_token and returns it.
-
 def get_student_email(access_token):
     if access_token is None:
         return None
     try:
-        user_dic = json.loads(urlopen("https://www.googleapis.com/oauth2/v1/userinfo?access_token=" + \
-            access_token, timeout=1).read().decode("utf-8"))
-        user_email = user_dic["email"]
+        request = urlopen(INFO_ENDPOINT.format(access_token), timeout=3)
+        user_data = json.loads(request.read().decode("utf-8"))
+        user_email = user_data["email"]
     except IOError as e:
         user_email = None
     return user_email
