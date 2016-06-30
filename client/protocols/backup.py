@@ -97,7 +97,7 @@ class BackupProtocol(models.Protocol):
 
     def send_all_messages(self, access_token, message_list, current=False):
         if not current or not self.args.submit:
-            action = 'Back up'
+            action = 'Backup'
         else:
             action = 'Submit'
 
