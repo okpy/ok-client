@@ -40,6 +40,7 @@ class BackupProtocol(models.Protocol):
             self.send_all_messages(access_token, message_list,
                                    current=False)
         else:
+            message_list.append(messages)
             response = self.send_all_messages(access_token, message_list,
                                    current=False)
 
