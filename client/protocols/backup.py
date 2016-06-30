@@ -26,13 +26,24 @@ class BackupProtocol(models.Protocol):
             return
 
         message_list = self.load_unsent_messages()
-        message_list.append(messages)
+
+        # Messages from the current backup to send first
+        if self.args.submit:
+            subm_messages = [messages]
+        else:
+            subm_messages = []
 
         access_token = auth.authenticate(False)
         log.info('Authenticated with access token %s', access_token)
+        log.info('Sending unsent messages %s', access_token)
 
-        response = self.send_all_messages(access_token, message_list)
-        prefix='http' if self.args.insecure else 'https'
+        # Send submission
+        response = self.send_all_messages(access_token, subm_messages, current=True)
+
+        # Send all backups (saved and current)
+        self.send_all_messages(access_token, message_list, current=False)
+
+        prefix = 'http' if self.args.insecure else 'https'
         base_url = '{0}://{1}'.format(prefix, self.args.server) + '/{}/{}/{}'
         action = 'Submission' if self.args.submit else 'Backup'
 
@@ -42,8 +53,8 @@ class BackupProtocol(models.Protocol):
 
             submission_type = 'submissions' if self.args.submit else 'backups'
             url = base_url.format(response['data']['assignment'],
-                        submission_type,
-                        response['data']['key'])
+                                  submission_type,
+                                  response['data']['key'])
 
             if self.args.submit or self.args.backup:
                 print('URL: {0}'.format(url))
@@ -53,7 +64,7 @@ class BackupProtocol(models.Protocol):
                       'To submit your assignment, use:\n'
                       '\tpython3 ok --submit')
 
-        self.dump_unsent_messages(message_list)
+        self.dump_unsent_messages(message_list + subm_messages)
         print()
 
 
@@ -81,8 +92,12 @@ class BackupProtocol(models.Protocol):
             os.fsync(f)
 
 
-    def send_all_messages(self, access_token, message_list):
-        action = 'Submit' if self.args.submit else 'Back up'
+    def send_all_messages(self, access_token, message_list, current=False):
+        if not current or not self.args.submit:
+            action = 'Back up'
+        else:
+            action = 'Submit'
+
         num_messages = len(message_list)
 
         send_all = self.args.submit or self.args.backup
@@ -111,7 +126,7 @@ class BackupProtocol(models.Protocol):
             message = message_list[-1]
 
             try:
-                response = self.send_messages(access_token, message, timeout)
+                response = self.send_messages(access_token, message, timeout, current)
             except socket.timeout as ex:
                 log.warning("socket.timeout: %s", str(ex))
                 retries -= 1
@@ -158,13 +173,14 @@ class BackupProtocol(models.Protocol):
             print('Could not', action.lower() + ':', error_msg)
 
 
-    def send_messages(self, access_token, messages, timeout):
+    def send_messages(self, access_token, messages, timeout, current):
         """Send messages to server, along with user authentication."""
+        is_submit = current and self.args.submit
 
         data = {
             'assignment': self.assignment.endpoint,
             'messages': messages,
-            'submit': self.args.submit
+            'submit': is_submit
         }
         serialized_data = json.dumps(data).encode(encoding='utf-8')
 
