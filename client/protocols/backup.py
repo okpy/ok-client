@@ -7,6 +7,7 @@ import logging
 import os
 import pickle
 import socket
+import ssl
 import urllib.error
 import urllib.request
 
@@ -28,17 +29,29 @@ class BackupProtocol(models.Protocol):
         action = 'Submission' if self.args.submit else 'Backup'
 
         message_list = self.load_unsent_messages()
-        message_list.append(messages)
 
         access_token = auth.authenticate(False)
         log.info('Authenticated with access token %s', access_token)
+        log.info('Sending unsent messages %s', access_token)
 
         if not access_token:
             print("Not authenticated. Cannot send {} to server".format(action))
             self.dump_unsent_messages(message_list)
             return
 
-        response = self.send_all_messages(access_token, message_list)
+        # Messages from the current backup to send first
+        subm_messages = [messages] if self.args.submit else []
+
+        if self.args.submit:
+            response = self.send_all_messages(access_token, subm_messages,
+                                          current=True)
+            self.send_all_messages(access_token, message_list,
+                                   current=False)
+        else:
+            message_list.append(messages)
+            response = self.send_all_messages(access_token, message_list,
+                                   current=False)
+
         prefix = 'http' if self.args.insecure else 'https'
         base_url = '{0}://{1}'.format(prefix, self.args.server) + '/{}/{}/{}'
 
@@ -59,7 +72,7 @@ class BackupProtocol(models.Protocol):
                       'To submit your assignment, use:\n'
                       '\tpython3 ok --submit')
 
-        self.dump_unsent_messages(message_list)
+        self.dump_unsent_messages(message_list + subm_messages)
         print()
 
 
@@ -87,19 +100,25 @@ class BackupProtocol(models.Protocol):
             os.fsync(f)
 
 
-    def send_all_messages(self, access_token, message_list):
-        action = 'Submit' if self.args.submit else 'Back up'
+    def send_all_messages(self, access_token, message_list, current=False):
+        if not current or not self.args.submit:
+            action = 'Backup'
+        else:
+            action = 'Submit'
+
         num_messages = len(message_list)
 
         send_all = self.args.submit or self.args.backup
+        retries = self.RETRY_LIMIT
+
         if send_all:
             timeout = None
             stop_time = datetime.datetime.max
+            retries = self.RETRY_LIMIT * 2
         else:
             timeout = self.SHORT_TIMEOUT
             stop_time = datetime.datetime.now() + datetime.timedelta(seconds=timeout)
             log.info('Setting timeout to %d seconds', timeout)
-        retries = self.RETRY_LIMIT
 
         first_response = None
         error_msg = ''
@@ -117,19 +136,32 @@ class BackupProtocol(models.Protocol):
             message = message_list[-1]
 
             try:
-                response = self.send_messages(access_token, message, timeout)
+                response = self.send_messages(access_token, message, timeout, current)
             except socket.timeout as ex:
                 log.warning("socket.timeout: %s", str(ex))
                 retries -= 1
                 error_msg = 'Connection timed out after {} seconds. '.format(timeout) + \
                             'Please check your network connection.'
+            except ssl.CertificateError as ex:
+                log.warning("SSL Error: %s", str(ex))
+                retries -= 1
+                error_msg = 'SSL Verification Error: {}\n'.format(ex) + \
+                            'Please check your network connection and SSL configuration.'
             except (urllib.error.URLError, urllib.error.HTTPError) as ex:
                 log.warning('%s: %s', ex.__class__.__name__, str(ex))
+                retries -= 1
                 if not hasattr(ex, 'read'):
-                    error_msg = 'Please check your network connection'
+                    error_msg = 'Please check your network connection:\n{}'.format(ex)
                     continue
 
-                response_json = json.loads(ex.read().decode('utf-8'))
+                try:
+                    response_json = json.loads(ex.read().decode('utf-8'))
+                except json.decoder.JSONDecodeError as ex:
+                    log.warning("Invalid JSON Response", exc_info=True)
+                    retries -= 1
+                    error_msg = 'Invalid Server Error Response: {} \n'.format(ex) + \
+                                'The server did not provide a valid response. Try again soon.'
+                    continue
 
                 log.warning('%s: %s', ex.__class__.__name__, str(ex))
                 log.warning('%s error message: %s', ex.__class__.__name__,
@@ -164,13 +196,14 @@ class BackupProtocol(models.Protocol):
             print('Could not', action.lower() + ':', error_msg)
 
 
-    def send_messages(self, access_token, messages, timeout):
+    def send_messages(self, access_token, messages, timeout, current):
         """Send messages to server, along with user authentication."""
+        is_submit = current and self.args.submit
 
         data = {
             'assignment': self.assignment.endpoint,
             'messages': messages,
-            'submit': self.args.submit
+            'submit': is_submit
         }
         serialized_data = json.dumps(data).encode(encoding='utf-8')
 
