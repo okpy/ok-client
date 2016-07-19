@@ -21,12 +21,18 @@ class BackupProtocol(models.Protocol):
     RETRY_LIMIT = 5
     BACKUP_FILE = ".ok_messages"
     BACKUP_ENDPOINT = '{prefix}://{server}/api/v3/backups/'
+    REVISION_ENDPOINT = '{prefix}://{server}/api/v3/revision/'
 
     def run(self, messages):
         if self.args.local or self.args.export or self.args.restore:
             return
 
-        action = 'Submission' if self.args.submit else 'Backup'
+        if self.args.revise:
+            action = 'Revise'
+        elif self.args.submit:
+            action = 'Submission'
+        else:
+            action = 'Backup'
 
         message_list = self.load_unsent_messages()
 
@@ -40,17 +46,19 @@ class BackupProtocol(models.Protocol):
             return
 
         # Messages from the current backup to send first
-        subm_messages = [messages] if self.args.submit else []
+        is_send_first = self.args.submit or self.args.revise
+        subm_messages = [messages] if is_send_first else []
 
-        if self.args.submit:
+        if is_send_first:
             response = self.send_all_messages(access_token, subm_messages,
-                                          current=True)
-            self.send_all_messages(access_token, message_list,
-                                   current=False)
+                                              current=True)
+            if message_list:
+                self.send_all_messages(access_token, message_list,
+                                       current=False)
         else:
             message_list.append(messages)
             response = self.send_all_messages(access_token, message_list,
-                                   current=False)
+                                              current=False)
 
         prefix = 'http' if self.args.insecure else 'https'
         base_url = '{0}://{1}'.format(prefix, self.args.server) + '/{}/{}/{}'
@@ -101,13 +109,14 @@ class BackupProtocol(models.Protocol):
 
 
     def send_all_messages(self, access_token, message_list, current=False):
-        if not current or not self.args.submit:
-            action = 'Backup'
+        if current and self.args.revise:
+            action = "Revise"
+        elif current and self.args.submit:
+            action = "Submit"
         else:
-            action = 'Submit'
+            action = "Backup"
 
         num_messages = len(message_list)
-
         send_all = self.args.submit or self.args.backup
         retries = self.RETRY_LIMIT
 
@@ -122,6 +131,7 @@ class BackupProtocol(models.Protocol):
 
         first_response = None
         error_msg = ''
+        log.info("Sending {0} messages".format(num_messages))
 
         while retries > 0 and message_list and datetime.datetime.now() < stop_time:
             log.info('Sending messages...%d left', len(message_list))
@@ -176,10 +186,12 @@ class BackupProtocol(models.Protocol):
             else:
                 if not first_response:
                     first_response = response
-
                 message_list.pop()
 
-        if not message_list:
+        if current and error_msg:
+            print()     # Preserve progress bar.
+            print('Could not', action.lower() + ':', error_msg)
+        elif not message_list:
             print('{action}... 100% complete'.format(action=action))
             return first_response
         elif not send_all:
@@ -195,10 +207,10 @@ class BackupProtocol(models.Protocol):
             print()     # Preserve progress bar.
             print('Could not', action.lower() + ':', error_msg)
 
-
     def send_messages(self, access_token, messages, timeout, current):
         """Send messages to server, along with user authentication."""
-        is_submit = current and self.args.submit
+        is_submit = current and self.args.submit and not self.args.revise
+        is_revision = current and self.args.revise
 
         data = {
             'assignment': self.assignment.endpoint,
@@ -207,8 +219,12 @@ class BackupProtocol(models.Protocol):
         }
         serialized_data = json.dumps(data).encode(encoding='utf-8')
 
-        address = self.BACKUP_ENDPOINT.format(server=self.args.server,
-                prefix='http' if self.args.insecure else 'https')
+        if is_revision:
+            address = self.REVISION_ENDPOINT.format(server=self.args.server,
+                        prefix='http' if self.args.insecure else 'https')
+        else:
+            address = self.BACKUP_ENDPOINT.format(server=self.args.server,
+                        prefix='http' if self.args.insecure else 'https')
         address_params = {
             'access_token': access_token,
             'client_name': 'ok-client',
