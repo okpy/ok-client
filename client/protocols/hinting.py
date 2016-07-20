@@ -35,6 +35,7 @@ class HintingProtocol(protocol_models.Protocol):
     SMALL_EFFORT = 5
     LARGE_EFFORT = 8
     WAIT_ATTEMPTS = 5
+    SUPPORTED_ASSIGNMENTS = []
 
     def run(self, messages):
         """Determine if a student is elgible to recieve a hint. Based on their
@@ -44,6 +45,11 @@ class HintingProtocol(protocol_models.Protocol):
         the server.
         """
         if self.args.local:
+            return
+
+        # Only run hinting protocol on supported assignments.
+        if self.assignment.endpoint not in self.SUPPORTED_ASSIGNMENTS:
+            log.info("{0} does not support hinting".format(self.assignment.endpoint))
             return
 
         if 'analytics' not in messages:

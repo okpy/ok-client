@@ -1,4 +1,3 @@
-import pdb
 from client.protocols.common import models
 from client.utils import auth
 import client
@@ -105,4 +104,5 @@ class AutoStyleProtocol(models.Protocol):
                 json.decoder.JSONDecodeError) as ex:
             log.warning('%s: %s', ex.__class__.__name__, str(ex))
         return
+
 protocol = AutoStyleProtocol
