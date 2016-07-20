@@ -15,7 +15,7 @@ log = logging.getLogger(__name__)
 class AutoStyleProtocol(models.Protocol):
 
     # Timeouts are specified in seconds.
-    SHORT_TIMEOUT = 2
+    SHORT_TIMEOUT = 10
     RETRY_LIMIT = 5
     API_ENDPOINT = '{prefix}://{server}'
     ALLOW_QUESTIONS = ['flatten', 'add_up', 'permutations']
@@ -85,8 +85,6 @@ class AutoStyleProtocol(models.Protocol):
             'submit': self.args.submit
         }
         serialized_data = json.dumps(data).encode(encoding='utf-8')
-
-        # server = "localhost:5000/ok_launch/"
         server = 'codestyle.herokuapp.com/ok_launch/'
         address = self.API_ENDPOINT.format(server=server, prefix='http' if self.args.insecure else 'https')
         address_params = {
