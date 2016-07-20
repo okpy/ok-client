@@ -15,7 +15,6 @@ class AutoStyleProtocol(models.Protocol):
 
     # Timeouts are specified in seconds.
     SHORT_TIMEOUT = 10
-    RETRY_LIMIT = 5
     API_ENDPOINT = '{prefix}://{server}'
     ALLOW_QUESTIONS = ['flatten', 'add_up', 'permutations']
 
