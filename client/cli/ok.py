@@ -44,6 +44,8 @@ def parse_input(command_input=None):
                         help="Submit assignment")
     parser.add_argument('--backup', action='store_true',
                         help="Backup assignment reliably")
+    parser.add_argument('--revise', action='store_true',
+                        help="Submit composition revision")
     parser.add_argument('--restore', action='store_true',
                         help="Restore assignment from an earlier backup")
     parser.add_argument('--lock', action='store_true',
@@ -63,7 +65,12 @@ def parse_input(command_input=None):
 
     # Autostyle
     parser.add_argument('--style', action='store_true',
+<<<<<<< HEAD
                         help="run autostyle procedure")
+=======
+                        help="Run AutoStyle Feedback System")
+
+>>>>>>> d37fce33ba5bbd105b0706d8105c4d0e132b04d5
     # Submission Export
     parser.add_argument('--export', action='store_true',
                         help="Downloads all submissions for the current assignment")

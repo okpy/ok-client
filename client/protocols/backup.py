@@ -7,6 +7,7 @@ import logging
 import os
 import pickle
 import socket
+import ssl
 import urllib.error
 import urllib.request
 
@@ -20,21 +21,47 @@ class BackupProtocol(models.Protocol):
     RETRY_LIMIT = 5
     BACKUP_FILE = ".ok_messages"
     BACKUP_ENDPOINT = '{prefix}://{server}/api/v3/backups/'
+    REVISION_ENDPOINT = '{prefix}://{server}/api/v3/revision/'
 
     def run(self, messages):
         if self.args.local or self.args.export or self.args.restore:
             return
 
+        if self.args.revise:
+            action = 'Revise'
+        elif self.args.submit:
+            action = 'Submission'
+        else:
+            action = 'Backup'
+
         message_list = self.load_unsent_messages()
-        message_list.append(messages)
 
         access_token = auth.authenticate(False)
         log.info('Authenticated with access token %s', access_token)
+        log.info('Sending unsent messages %s', access_token)
 
-        response = self.send_all_messages(access_token, message_list)
-        prefix='http' if self.args.insecure else 'https'
+        if not access_token:
+            print("Not authenticated. Cannot send {} to server".format(action))
+            self.dump_unsent_messages(message_list)
+            return
+
+        # Messages from the current backup to send first
+        is_send_first = self.args.submit or self.args.revise
+        subm_messages = [messages] if is_send_first else []
+
+        if is_send_first:
+            response = self.send_all_messages(access_token, subm_messages,
+                                              current=True)
+            if message_list:
+                self.send_all_messages(access_token, message_list,
+                                       current=False)
+        else:
+            message_list.append(messages)
+            response = self.send_all_messages(access_token, message_list,
+                                              current=False)
+
+        prefix = 'http' if self.args.insecure else 'https'
         base_url = '{0}://{1}'.format(prefix, self.args.server) + '/{}/{}/{}'
-        action = 'Submission' if self.args.submit else 'Backup'
 
         if isinstance(response, dict):
             print('{action} successful for user: {email}'.format(action=action,
@@ -42,8 +69,8 @@ class BackupProtocol(models.Protocol):
 
             submission_type = 'submissions' if self.args.submit else 'backups'
             url = base_url.format(response['data']['assignment'],
-                        submission_type,
-                        response['data']['key'])
+                                  submission_type,
+                                  response['data']['key'])
 
             if self.args.submit or self.args.backup:
                 print('URL: {0}'.format(url))
@@ -53,7 +80,7 @@ class BackupProtocol(models.Protocol):
                       'To submit your assignment, use:\n'
                       '\tpython3 ok --submit')
 
-        self.dump_unsent_messages(message_list)
+        self.dump_unsent_messages(message_list + subm_messages)
         print()
 
 
@@ -81,22 +108,30 @@ class BackupProtocol(models.Protocol):
             os.fsync(f)
 
 
-    def send_all_messages(self, access_token, message_list):
-        action = 'Submit' if self.args.submit else 'Back up'
-        num_messages = len(message_list)
+    def send_all_messages(self, access_token, message_list, current=False):
+        if current and self.args.revise:
+            action = "Revise"
+        elif current and self.args.submit:
+            action = "Submit"
+        else:
+            action = "Backup"
 
+        num_messages = len(message_list)
         send_all = self.args.submit or self.args.backup
+        retries = self.RETRY_LIMIT
+
         if send_all:
             timeout = None
             stop_time = datetime.datetime.max
+            retries = self.RETRY_LIMIT * 2
         else:
             timeout = self.SHORT_TIMEOUT
             stop_time = datetime.datetime.now() + datetime.timedelta(seconds=timeout)
             log.info('Setting timeout to %d seconds', timeout)
-        retries = self.RETRY_LIMIT
 
         first_response = None
         error_msg = ''
+        log.info("Sending {0} messages".format(num_messages))
 
         while retries > 0 and message_list and datetime.datetime.now() < stop_time:
             log.info('Sending messages...%d left', len(message_list))
@@ -111,19 +146,32 @@ class BackupProtocol(models.Protocol):
             message = message_list[-1]
 
             try:
-                response = self.send_messages(access_token, message, timeout)
+                response = self.send_messages(access_token, message, timeout, current)
             except socket.timeout as ex:
                 log.warning("socket.timeout: %s", str(ex))
                 retries -= 1
                 error_msg = 'Connection timed out after {} seconds. '.format(timeout) + \
                             'Please check your network connection.'
+            except ssl.CertificateError as ex:
+                log.warning("SSL Error: %s", str(ex))
+                retries -= 1
+                error_msg = 'SSL Verification Error: {}\n'.format(ex) + \
+                            'Please check your network connection and SSL configuration.'
             except (urllib.error.URLError, urllib.error.HTTPError) as ex:
                 log.warning('%s: %s', ex.__class__.__name__, str(ex))
+                retries -= 1
                 if not hasattr(ex, 'read'):
-                    error_msg = 'Please check your network connection'
+                    error_msg = 'Please check your network connection:\n{}'.format(ex)
                     continue
 
-                response_json = json.loads(ex.read().decode('utf-8'))
+                try:
+                    response_json = json.loads(ex.read().decode('utf-8'))
+                except json.decoder.JSONDecodeError as ex:
+                    log.warning("Invalid JSON Response", exc_info=True)
+                    retries -= 1
+                    error_msg = 'Invalid Server Error Response: {} \n'.format(ex) + \
+                                'The server did not provide a valid response. Try again soon.'
+                    continue
 
                 log.warning('%s: %s', ex.__class__.__name__, str(ex))
                 log.warning('%s error message: %s', ex.__class__.__name__,
@@ -138,10 +186,12 @@ class BackupProtocol(models.Protocol):
             else:
                 if not first_response:
                     first_response = response
-
                 message_list.pop()
 
-        if not message_list:
+        if current and error_msg:
+            print()     # Preserve progress bar.
+            print('Could not', action.lower() + ':', error_msg)
+        elif not message_list:
             print('{action}... 100% complete'.format(action=action))
             return first_response
         elif not send_all:
@@ -157,19 +207,24 @@ class BackupProtocol(models.Protocol):
             print()     # Preserve progress bar.
             print('Could not', action.lower() + ':', error_msg)
 
-
-    def send_messages(self, access_token, messages, timeout):
+    def send_messages(self, access_token, messages, timeout, current):
         """Send messages to server, along with user authentication."""
+        is_submit = current and self.args.submit and not self.args.revise
+        is_revision = current and self.args.revise
 
         data = {
             'assignment': self.assignment.endpoint,
             'messages': messages,
-            'submit': self.args.submit
+            'submit': is_submit
         }
         serialized_data = json.dumps(data).encode(encoding='utf-8')
 
-        address = self.BACKUP_ENDPOINT.format(server=self.args.server,
-                prefix='http' if self.args.insecure else 'https')
+        if is_revision:
+            address = self.REVISION_ENDPOINT.format(server=self.args.server,
+                        prefix='http' if self.args.insecure else 'https')
+        else:
+            address = self.BACKUP_ENDPOINT.format(server=self.args.server,
+                        prefix='http' if self.args.insecure else 'https')
         address_params = {
             'access_token': access_token,
             'client_name': 'ok-client',
