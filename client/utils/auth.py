@@ -3,6 +3,7 @@
 import http.server
 
 import json
+import hashlib
 import os
 import pickle
 import time
@@ -331,6 +332,14 @@ def get_student_email(access_token):
     except IOError as e:
         user_email = None
     return user_email
+
+def get_identifier():
+    """ Obtain anonmyzied identifier."""
+    token = authenticate(False)
+    student_email = get_student_email(token)
+    if not student_email:
+        return "Unknown"
+    return hashlib.md5(student_email.encode()).hexdigest()
 
 if __name__ == "__main__":
     print(authenticate())
