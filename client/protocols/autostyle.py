@@ -1,4 +1,3 @@
-import pdb
 from client.protocols.common import models
 from client.utils import auth
 import client
@@ -78,7 +77,6 @@ class AutoStyleProtocol(models.Protocol):
 
     def send_messages(self, messages, timeout):
         """Send messages to server, along with user authentication."""
-
         data = {
             'assignment': self.assignment.endpoint,
             'messages': messages,
@@ -86,6 +84,7 @@ class AutoStyleProtocol(models.Protocol):
         }
         serialized_data = json.dumps(data).encode(encoding='utf-8')
         server = 'codestyle.herokuapp.com/ok_launch/'
+
         address = self.API_ENDPOINT.format(server=server, prefix='http' if self.args.insecure else 'https')
         address_params = {
             'client_name': 'ok-client',
@@ -105,4 +104,5 @@ class AutoStyleProtocol(models.Protocol):
                 json.decoder.JSONDecodeError) as ex:
             log.warning('%s: %s', ex.__class__.__name__, str(ex))
         return
+
 protocol = AutoStyleProtocol
