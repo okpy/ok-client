@@ -15,7 +15,6 @@ class AutoStyleProtocol(models.Protocol):
 
     # Timeouts are specified in seconds.
     SHORT_TIMEOUT = 10
-    RETRY_LIMIT = 5
     API_ENDPOINT = '{prefix}://{server}'
     ALLOW_QUESTIONS = ['flatten', 'add_up', 'permutations']
 
@@ -41,7 +40,7 @@ class AutoStyleProtocol(models.Protocol):
         grading = messages['grading']
 
         if not self.args.question:
-            log.info("Not an autostyle question")
+            log.info("-q flag was not specified")
             print("*" * 69)
             print("To use AutoStyle you must specify the -q flag!")
             print("*" * 69)
