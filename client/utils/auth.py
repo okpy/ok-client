@@ -334,8 +334,7 @@ def get_student_email(access_token):
     return user_email
 
 def get_identifier():
-    """ Obtain anonmyzied identifier.
-    """
+    """ Obtain anonmyzied identifier."""
     token = authenticate(False)
     student_email = get_student_email(token)
     if not student_email:

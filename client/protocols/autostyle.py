@@ -39,6 +39,7 @@ class AutoStyleProtocol(models.Protocol):
         messages['autostyle'] = {}
 
         grading = messages['grading']
+
         if not self.args.question:
             log.info("Not an autostyle question")
             print("*" * 69)
@@ -82,7 +83,6 @@ class AutoStyleProtocol(models.Protocol):
 
     def send_messages(self, messages, timeout):
         """Send messages to server, along with user authentication."""
-
         data = {
             'assignment': self.assignment.endpoint,
             'messages': messages,
