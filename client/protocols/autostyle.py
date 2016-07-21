@@ -39,6 +39,12 @@ class AutoStyleProtocol(models.Protocol):
 
         grading = messages['grading']
 
+        if not self.args.question:
+            log.info("-q flag was not specified")
+            print("*" * 69)
+            print("To use AutoStyle you must specify the -q flag!")
+            print("*" * 69)
+            return
         for question in self.args.question:
             if question in AutoStyleProtocol.ALLOW_QUESTIONS:
                 # Ensure that all tests have passed
@@ -56,7 +62,7 @@ class AutoStyleProtocol(models.Protocol):
             else:
                 log.info("Not an autostyle question")
                 print("*" * 69)
-                print("Make sure to specify -q for a proper AutoStyle-enabled question!")
+                print("Make sure the question you are using is an AutoStyle question!")
                 print("*" * 69)
                 return
 
@@ -83,7 +89,6 @@ class AutoStyleProtocol(models.Protocol):
         }
         serialized_data = json.dumps(data).encode(encoding='utf-8')
         server = 'codestyle.herokuapp.com/ok_launch/'
-
         address = self.API_ENDPOINT.format(server=server, prefix='http' if self.args.insecure else 'https')
         address_params = {
             'client_name': 'ok-client',

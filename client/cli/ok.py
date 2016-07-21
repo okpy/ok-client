@@ -62,11 +62,9 @@ def parse_input(command_input=None):
     # Hinting
     parser.add_argument('--no-hints', action='store_true',
                         help="do not prompt for hints")
-
     # Autostyle
     parser.add_argument('--style', action='store_true',
                         help="Run AutoStyle Feedback System")
-
     # Submission Export
     parser.add_argument('--export', action='store_true',
                         help="Downloads all submissions for the current assignment")
