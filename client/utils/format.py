@@ -2,6 +2,7 @@
 
 from client import exceptions
 import textwrap
+from contextlib import contextmanager
 
 #############
 # Whtespace #
@@ -47,6 +48,17 @@ def print_line(style, length=69):
               for doctest lines.
     """
     print(style * length)
+
+@contextmanager
+def block(style, length=69):
+    """Print a block with the specified style.
+    USAGE:
+    with block('-'):
+        print("Hello")
+    """
+    print_line(style, length)
+    yield
+    print_line(style, length)
 
 def print_progress_bar(header, passed, failed, locked, verbose=True):
     print_line('-')
