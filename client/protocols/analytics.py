@@ -141,7 +141,6 @@ class AnalyticsProtocol(models.Protocol):
                 if not finished and saved_q in grading:
                     scoring = grading[saved_q]
                     details['solved'] = is_correct(scoring)
-                    details['scoring'] = scoring
         else:
             history['question'] = questions
 

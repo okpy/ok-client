@@ -172,7 +172,7 @@ class HintingProtocol(protocol_models.Protocol):
         request = urllib.request.Request(address)
         request.add_header("Content-Type", "application/json")
 
-        response = urllib.request.urlopen(request, serialized_data, 60)
+        response = urllib.request.urlopen(request, serialized_data, 35)
         return json.loads(response.read().decode('utf-8'))
 
 def prompt_user(query, results):
