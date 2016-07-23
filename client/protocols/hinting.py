@@ -79,20 +79,12 @@ class HintingProtocol(protocol_models.Protocol):
             # Determine a users elgibility for a prompt
 
             # If the user just solved this question, provide a reflection prompt
-            if is_solved and stats['attempts'] > self.SMALL_EFFORT:
+            if is_solved:
                 hint_info['elgible'] = False
                 hint_info['disabled'] = 'solved'
-                if self.args.question:
-                    # Only prompt for reflection with question specified.
-                    log.info('Giving reflection response on %s', question)
-                    reflection = random.choice(SOLVE_SUCCESS_MSG)
-                    if not confirm("Nice work! Could you answer a quick question"
-                                   " about how you approached this question?"):
-                        hint_info['reflection']['accept'] = False
-                    else:
-                        hint_info['reflection']['accept'] = True
-                        prompt_user(reflection, hint_info)
-                    continue
+                if self.args.hint:
+                    print("This question has already been solved.")
+                continue
             elif stats['attempts'] < self.SMALL_EFFORT:
                 log.info("Question %s is not elgible: Attempts: %s, Solved: %s",
                          question, stats['attempts'], is_solved)
