@@ -139,7 +139,7 @@ class HintingProtocol(protocol_models.Protocol):
                     log.info("Hint server response: {}".format(response))
                     if not hint:
                         if system_error:
-                            print("Sorry. No hints found for the current response ({})".format(system_error))
+                            print("{}".format(system_error))
                         else:
                             print("Sorry. No hints found for the current code. Try again making after some changes")
                         continue
