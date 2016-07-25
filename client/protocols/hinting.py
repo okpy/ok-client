@@ -122,7 +122,7 @@ class HintingProtocol(protocol_models.Protocol):
                 log.info('Prompting for hint on %s', question)
                 try:
                     response = self.query_server(messages, question)
-                except (urllib.error.URLError, socket.timeout):
+                except (urllib.error.URLError, urllib.error.HTTPError, socket.timeout):
                     log.debug("Network error while fetching hint", exc_info=True)
                     hint_info['fetch_error'] = True
                     print("\r\nNetwork Error while generating hint. Try again later")
