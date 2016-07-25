@@ -150,7 +150,7 @@ class AnalyticsProtocol(models.Protocol):
             if grading and question in grading:
                 scoring = is_correct(grading[question])
             else:
-                scoring = 'Unknown'
+                scoring = False
 
             if question in history['questions']:
                 q_info = detail[question]
@@ -181,6 +181,8 @@ def is_correct(grading_results):
     provides the count of tests passed, failed or locked for a single
     question. Return True if all tests have passed.
     """
+    if grading_results['locked'] > 0:
+        return False
     return sum(grading_results.values()) == grading_results['passed']
 
 def first_failed_test(tests, scores):

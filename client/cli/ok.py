@@ -59,9 +59,12 @@ def parse_input(command_input=None):
     parser.add_argument('--timeout', type=int, default=10,
                         help="set the timeout duration for running tests")
 
-    # Hinting
+    # Hinting Protocol
     parser.add_argument('--no-hints', action='store_true',
-                        help="do not prompt for hints")
+                        help="Do not run Hinting Protocol")
+    parser.add_argument('--hint', action='store_true',
+                        help="Run hinting protocol and compute hint (if available)")
+
     # Autostyle
     parser.add_argument('--style', action='store_true',
                         help="Run AutoStyle Feedback System")
