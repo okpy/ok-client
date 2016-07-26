@@ -234,7 +234,8 @@ class BackupProtocol(models.Protocol):
         address += '&'.join('{}={}'.format(param, value)
                             for param, value in address_params.items())
 
-        log.info('Sending messages to %s', address)
+        redacted_address = address.replace(access_token, '*******')
+        log.info('Sending messages to %s', redacted_address)
 
         request = urllib.request.Request(address)
         request.add_header("Content-Type", "application/json")
