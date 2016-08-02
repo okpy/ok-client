@@ -8,6 +8,7 @@ the following interface:
     logic.buffer_input()
     logic.read_line(code)
     logic.process_input(exp, env)
+    logic.facts
 """
 
 from client import exceptions
@@ -84,6 +85,15 @@ class LogicConsole(interpreter.Console):
         except ImportError as e:
             raise exceptions.ProtocolException('Could not import logic')
 
+    def _reset_logic(self):
+        """The Logic interpreter needs to be reset before running a suite.
+        All mutable global variables should be reset.
+        """
+        self.logic.facts[:] = []
+
 class LogicSuite(doctest.DoctestSuite):
     console_type = LogicConsole
 
+    def run(self, test_name, suite_number, env=None):
+        self.console._reset_logic()
+        return super().run(test_name, suite_number, env)
