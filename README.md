@@ -24,9 +24,10 @@ The ok client software was developed for CS 61A at UC Berkeley.
 4. Activate the virtual environment:
 
         source bin/activate
-5. Install requirements:
+5. Install requirements and set up development environment:
 
         pip install -r requirements.txt
+        python3 setup.py develop
 
 ## Contributing
 
@@ -35,6 +36,13 @@ Every time you begin, you should activate the virtual environment:
     source bin/activate
 
 All code for the client is found in the `client/` directory.
+
+There is an executable called `ok` in the virtualenv path that will run your
+code locally. You can use the example assignments in the `demo/` directory to
+play around:
+
+    cd demo/ok_test
+    ok -q q2
 
 The `tests/` directory mirrors the directory structure of the `client/`
 directory. Every component of the client should have plenty of tests.
