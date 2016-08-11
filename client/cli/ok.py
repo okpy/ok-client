@@ -1,4 +1,48 @@
-"""This file is responsible for coordinating all of OK's protocols."""
+"""ok is an autograder that you can use to run tests, back up your work, and
+submit assignments.
+
+You can run all tests with
+
+    python3 ok
+
+There are several "options" you can give ok to modify its behavior. These
+options generally have both a short form (preceded by a single dash, like -q)
+or a long form (preceded by two dashes, like --question). This is similar to how
+many other command line applications accept options. These options can be mixed
+and matched in any order. The options are listed in full below, but we'll
+describe some of the more common ones here.
+
+To test a specific question, use the -q (or --question) option with the name of
+the question:
+
+    python3 ok -q foo
+    python3 ok -q 12
+
+By default, only tests that fail will appear. If you want to see the results
+from all tests, you can use the -v (or --verbose) option:
+
+    python3 ok -q foo -v
+
+To start an interactive interpreter after a failed test for debugging, use the
+-i (or --interactive) option:
+
+    python3 ok -q foo -i
+
+By default, after each test run ok will attempt to back up your work to the
+server. To run the tests without any network access, use the --local option:
+
+    python3 ok -q foo --local
+
+To submit the assignment after you're done, use the --submit option:
+
+    python3 ok --submit
+
+Finally, to log out and log in under a different email, use --authenticate:
+
+    python3 ok --authenticate
+
+Visit https://okpy.org to view your backups and submissions.
+"""
 
 from client import exceptions as ex
 from client.api import assignment
