@@ -71,7 +71,9 @@ CLIENT_ROOT = os.path.dirname(client.__file__)
 def parse_input(command_input=None):
     """Parses command line input."""
     parser = argparse.ArgumentParser(
+        prog='python3 ok',
         description=__doc__,
+        usage='%(prog)s [--help] [options]',
         formatter_class=argparse.RawDescriptionHelpFormatter)
     # Protocol parameters
     parser.add_argument('-q', '--question', type=str, action='append',
