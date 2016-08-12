@@ -20,12 +20,6 @@ class AnalyticsProtocol(models.Protocol):
 
     ANALYTICS_FILE = ".ok_history"
 
-    RE_SNIPPET = re.compile(r"""
-        \s*[\#\;]\s+BEGIN\s+(.*?)\n # \1 is question name
-        (.*?)                       # \2 is the contents in between
-        \s*[\#\;]\s+END\s+\1\n
-        """, re.X | re.I | re.S)
-
     RE_DEFAULT_CODE = re.compile(r"""
     ^\"\*\*\*\sREPLACE\sTHIS\sLINE\s\*\*\*\"$
     """, re.X | re.I)
@@ -48,42 +42,9 @@ class AnalyticsProtocol(models.Protocol):
             # TODO(denero) Get the canonical name of the question
             statistics['question'] = self.args.question
 
-        statistics['started'] = self.check_start(messages['file_contents'])
-
         messages['analytics'] = statistics
 
         self.log_run(messages)
-
-    def check_start(self, files):
-        """Returns a dictionary where the key is question name, and the value
-        signals whether the question has been started.
-        """
-        question_status = {}
-
-        for path, lines in files.items():
-            if not isinstance(lines, str):
-                continue
-            if len(lines) == 0:
-                log.warning("File {0} has no content".format(path))
-
-            snippets = self.RE_SNIPPET.findall(lines)
-
-            for snippet in snippets:
-                question_name = snippet[0]
-                contents = snippet[1] if len(snippet) > 1 else None
-                started = True
-
-                if (contents != None
-                    and ((self.RE_DEFAULT_CODE.match(contents.strip())
-                         or self.RE_SCHEME_DEFAULT_CODE.match(contents.strip()))
-                    or (not self.replaced(contents)))):
-                    started = False
-
-                if (question_name not in question_status
-                    or (not question_status[question_name])):
-                    question_status[question_name] = started
-
-        return question_status
 
     def replaced(self, contents):
         """For a question snippet containing some default code, return True if the
