@@ -6,7 +6,6 @@ class TestFileContentsProtocol(unittest.TestCase):
     def setUp(self):
         self.cmd_args = mock.Mock()
         self.cmd_args.submit = True
-        self.cmd_args.export = False
         self.cmd_args.restore = False
         self.assignment = mock.MagicMock()
         self.files = {}
@@ -82,4 +81,3 @@ class TestFileContentsProtocol(unittest.TestCase):
 
     def mockReadFile(self, filepath):
         return self.files[filepath]
-
