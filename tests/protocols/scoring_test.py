@@ -17,7 +17,6 @@ class ScoringProtocolTest(unittest.TestCase):
     def setUp(self):
         self.cmd_args = mock.Mock()
         self.cmd_args.score = True
-        self.cmd_args.export = False
         self.assignment = mock.MagicMock()
         self.proto = scoring.protocol(self.cmd_args, self.assignment)
 
@@ -77,4 +76,3 @@ class ScoringProtocolTest(unittest.TestCase):
             self.PARTNER1: self.SCORE0 + self.SCORE2,
             self.PARTNER2: self.SCORE1 + self.SCORE2
         }, self.callRun())
-

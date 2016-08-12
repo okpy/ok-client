@@ -48,7 +48,7 @@ class UnlockProtocol(models.Protocol):
         dict; mapping of test name (str) -> JSON-serializable object. It is up
         to each test to determine what information is significant for analytics.
         """
-        if self.args.export or not self.args.unlock:
+        if not self.args.unlock:
             return
         if not self.args.local:
             self.access_token = auth.authenticate(False)

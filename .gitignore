@@ -25,6 +25,7 @@ pip-selfcheck.json
 ok
 *.ok_refresh
 *.ok_messages
+*.ok_history
 misUcount.json
 
 # IDE

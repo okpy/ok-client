@@ -18,9 +18,9 @@ class FileContentsProtocol(models.Protocol):
         RETURNS:
         dict; a mapping of source filepath -> contents as strings.
         """
-        if self.args.export or self.args.restore:
+        if self.args.restore:
             return
-        
+
         files = {}
         # TODO(albert): move this to AnalyticsProtocol
         if self.args.submit:

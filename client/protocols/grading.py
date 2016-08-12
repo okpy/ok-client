@@ -28,7 +28,7 @@ class GradingProtocol(models.Protocol):
         significant for analytics. However, all tests must include the number
         passed, the number of locked tests and the number of failed tests.
         """
-        if self.args.score or self.args.export or self.args.unlock or self.args.restore:
+        if self.args.score or self.args.unlock or self.args.restore:
             return
         grade(self.assignment.specified_tests, messages, verbose=self.args.verbose)
 

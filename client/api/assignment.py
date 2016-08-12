@@ -202,11 +202,10 @@ class Assignment(core.Serializable):
         for proto in self.protocols:
             try:
                 module = importlib.import_module(self._PROTOCOL_PACKAGE + '.' + proto)
+                self.protocol_map[proto] = module.protocol(self.cmd_args, self)
+                log.info('Loaded protocol "{}"'.format(proto))
             except ImportError:
-                raise ex.LoadingException('Invalid protocol: {}'.format(proto))
-
-            self.protocol_map[proto] = module.protocol(self.cmd_args, self)
-            log.info('Loaded protocol "{}"'.format(proto))
+                log.debug('Skipping unknown protocol "{}"'.format(proto))
 
     def _print_header(self):
         format.print_line('=')

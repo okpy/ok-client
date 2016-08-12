@@ -10,7 +10,6 @@ class UnlockProtocolTest(unittest.TestCase):
 
     def setUp(self):
         self.cmd_args = mock.Mock()
-        self.cmd_args.export = False
         self.assignment = mock.Mock()
         self.proto = unlock.protocol(self.cmd_args, self.assignment)
 
@@ -226,4 +225,3 @@ class InteractTest(unittest.TestCase):
                                     correct=False)
             else:
                 self.validateRecord(attempt, answer=self.SHORT_ANSWER, correct=True)
-
