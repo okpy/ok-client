@@ -126,10 +126,6 @@ def parse_input(command_input=None):
                         default=sys.stdout, help="write scores to a file")
     grading.add_argument('--config', type=str,
                         help="use a specific configuration file")
-    grading.add_argument('--export', action='store_true',
-                        help="download all submissions for the current assignment")
-    grading.add_argument('--latest', action='store_true',
-                        help="when used with --export, download latest submissions instead of final submissions")
 
     # Server parameters
     server = parser.add_argument_group('server options')
