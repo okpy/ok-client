@@ -106,6 +106,10 @@ def parse_input(command_input=None):
                         help="give a hint (if available)")
     experiment.add_argument('--style', action='store_true',
                         help="run AutoStyle feedback system")
+    experiment.add_argument('--collab', action='store_true',
+                        help="Launch collaborative programming environment")
+    experiment.add_argument('--email', type=str, default=None,
+                        help="[Staff only] Run certain actions as user")
 
     # Debug information
     debug = parser.add_argument_group('debugging options')
