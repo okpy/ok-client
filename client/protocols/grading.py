@@ -7,6 +7,7 @@ are compatible with the GradingProtocol.
 
 from client.protocols.common import models
 from client.utils import format
+from client.sources.common.interpreter import ConsoleException
 import logging
 
 log = logging.getLogger(__name__)
@@ -49,30 +50,33 @@ def grade(questions, messages, env=None, verbose=True):
         started = None
 
     # The environment in which to run the tests.
-    for test in questions:
-        # run test if the question is not detected, or question detected and started
-        if (started is None
-            or test.name not in started
-            or started[test.name]):
+    try:
+        for test in questions:
+            # run test if the question is not detected, or question detected and started
+            if (started is None
+                or test.name not in started
+                or started[test.name]):
 
-            log.info('Running tests for {}'.format(test.name))
-            results = test.run(env)
-            passed += results['passed']
-            failed += results['failed']
-            locked += results['locked']
-            analytics[test.name] = results
-        else:
-            print('It looks like you haven\'t started {}. Skipping the tests.'.format(test.name))
-            print()
+                log.info('Running tests for {}'.format(test.name))
+                results = test.run(env)
+                passed += results['passed']
+                failed += results['failed']
+                locked += results['locked']
+                analytics[test.name] = results
+            else:
+                print('It looks like you haven\'t started {}. Skipping the tests.'.format(test.name))
+                print()
 
-        if not verbose and (failed > 0 or locked > 0):
-            # Stop at the first failed test
-            break
+            if not verbose and (failed > 0 or locked > 0):
+                # Stop at the first failed test
+                break
 
-    format.print_progress_bar('Test summary', passed, failed, locked,
-                              verbose=verbose)
-    print()
+        format.print_progress_bar('Test summary', passed, failed, locked,
+                                  verbose=verbose)
+        print()
 
-    messages['grading'] = analytics
+        messages['grading'] = analytics
+    except ConsoleException as e:
+        messages['analytics']['error'] = e.exception_type
 
 protocol = GradingProtocol
