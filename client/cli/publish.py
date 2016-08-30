@@ -2,89 +2,39 @@
 
 import argparse
 import client
-import json
 import os
 import shutil
 import zipfile
 
 OK_ROOT = os.path.normpath(os.path.dirname(client.__file__))
-STAGING_DIR = os.path.join(os.getcwd(), 'staging')
 CONFIG_NAME = 'config.ok'
 
-REQUIRED_FILES = [
-    '__init__',
-    'exceptions',
-]
-REQUIRED_FOLDERS = [
-    'utils',
-    'api'
-]
-COMMAND_LINE = [
-    'ok',
-]
-
-def populate_staging(staging_dir):
-    """Populates the staging directory with files for ok.py."""
-    # Command line tools.
-    os.mkdir(os.path.join(staging_dir, 'cli'))
-    for filename in ['__init__'] + COMMAND_LINE:
-        filename += '.py'
-        fullname = os.path.join(OK_ROOT, 'cli', filename)
-        shutil.copy(fullname, os.path.join(staging_dir, 'cli'))
-    shutil.copytree(os.path.join(OK_ROOT, 'cli', 'common'),
-                    os.path.join(staging_dir, 'cli', 'common'))
-
-    # Top-level files.
-    for filename in REQUIRED_FILES:
-        filename += '.py'
-        fullname = os.path.join(OK_ROOT, filename)
-        shutil.copyfile(fullname, os.path.join(staging_dir, filename))
-
-    for folder in REQUIRED_FOLDERS:
-        shutil.copytree(os.path.join(OK_ROOT, folder),
-                        os.path.join(staging_dir, folder))
-
-    populate_protocols(staging_dir)
-    populate_sources(staging_dir)
-
-def populate_protocols(staging_dir):
-    """Populates the protocols/ directory in the staging directory with
-    relevant protocols.
+def write_tree(zipf, src_directory, dst_directory):
+    """Write all .py files in a source directory to a destination directory
+    inside a zip archive.
     """
-    shutil.copytree(os.path.join(OK_ROOT, 'protocols'),
-                    os.path.join(staging_dir, 'protocols'))
-
-def populate_sources(staging_dir):
-    """Populates the sources/ directory in the staging directory with
-    relevant sources.
-    """
-    shutil.copytree(os.path.join(OK_ROOT, 'sources'),
-                    os.path.join(staging_dir, 'sources'))
-
-def create_zip(staging_dir, destination):
-    if not os.path.isdir(destination):
-        os.mkdir(destination)
-
-    dest = os.path.join(destination, client.FILE_NAME)
-    zipf = zipfile.ZipFile(dest, 'w')
-    zipf.write(os.path.join(OK_ROOT, '__main__.py'), './__main__.py')
-    for root, _, files in os.walk(staging_dir):
-        if '__pycache__' in root:
-            continue
+    for root, _, files in os.walk(src_directory):
         for filename in files:
-            if filename.endswith('.pyc'):
+            if not filename.endswith('.py'):
                 continue
             fullname = os.path.join(root, filename)
-            # Replace 'staging' with './client' in the zip archive.
-            arcname = fullname.replace(staging_dir, './client')
+            arcname = fullname.replace(src_directory, dst_directory)
             zipf.write(fullname, arcname=arcname)
     zipf.close()
+
+def package_client(destination):
+    if not os.path.isdir(destination):
+        os.mkdir(destination)
+    dest = os.path.join(destination, client.FILE_NAME)
+
+    with zipfile.ZipFile(dest, 'w') as zipf:
+        zipf.write(os.path.join(OK_ROOT, '__main__.py'), '__main__.py')
+        write_tree(zipf, OK_ROOT, 'client')
 
 def new_config():
     """Creates a new config file in the current directory."""
     shutil.copyfile(os.path.join(OK_ROOT, CONFIG_NAME),
                     CONFIG_NAME)
-
 
 def parse_args():
     parser = argparse.ArgumentParser(description=__doc__)
@@ -98,24 +48,8 @@ def parse_args():
 def publish(args):
     if args.new_config:
         new_config()
-        exit(0)
-
-    if os.path.exists(STAGING_DIR):
-        answer = input('{} already exists. Delete it? [y/n]: '.format(
-            STAGING_DIR))
-        if answer.lower() in ('yes', 'y'):
-            shutil.rmtree(STAGING_DIR)
-        else:
-            print('Aborting publishing.')
-            exit(1)
-
-    os.mkdir(STAGING_DIR)
-    try:
-        populate_staging(STAGING_DIR)
-        create_zip(STAGING_DIR, args.destination)
-    finally:
-        shutil.rmtree(STAGING_DIR)
-
+    else:
+        package_client(args.destination)
 
 def main():
     publish(parse_args())
