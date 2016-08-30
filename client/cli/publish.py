@@ -4,10 +4,26 @@ import argparse
 import client
 import os
 import shutil
+import sys
 import zipfile
 
 OK_ROOT = os.path.normpath(os.path.dirname(client.__file__))
 CONFIG_NAME = 'config.ok'
+
+def abort(message):
+    print(message + ' Aborting', file=sys.stderr)
+    sys.exit(1)
+
+def find_site_packages_directory():
+    virtualenv = os.getenv('VIRTUAL_ENV')
+    if not virtualenv:
+        abort('You must activate your virtualenv to publish.')
+
+    for path in sys.path:
+        if path.startswith(virtualenv) and 'site-packages' in path:
+            return path
+
+    abort('No site packages directory found.')
 
 def write_tree(zipf, src_directory, dst_directory):
     """Write all .py files in a source directory to a destination directory
@@ -20,9 +36,10 @@ def write_tree(zipf, src_directory, dst_directory):
             fullname = os.path.join(root, filename)
             arcname = fullname.replace(src_directory, dst_directory)
             zipf.write(fullname, arcname=arcname)
-    zipf.close()
 
 def package_client(destination):
+    package_dir = find_site_packages_directory()
+
     if not os.path.isdir(destination):
         os.mkdir(destination)
     dest = os.path.join(destination, client.FILE_NAME)
