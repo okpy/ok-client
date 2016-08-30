@@ -9,6 +9,7 @@ import zipfile
 
 OK_ROOT = os.path.normpath(os.path.dirname(client.__file__))
 CONFIG_NAME = 'config.ok'
+EXTRA_PACKAGES = ['sanction']
 
 def abort(message):
     print(message + ' Aborting', file=sys.stderr)
@@ -47,6 +48,9 @@ def package_client(destination):
     with zipfile.ZipFile(dest, 'w') as zipf:
         zipf.write(os.path.join(OK_ROOT, '__main__.py'), '__main__.py')
         write_tree(zipf, OK_ROOT, 'client')
+        for package in EXTRA_PACKAGES:
+            src_directory = os.path.join(package_dir, package)
+            write_tree(zipf, src_directory, package)
 
 def new_config():
     """Creates a new config file in the current directory."""

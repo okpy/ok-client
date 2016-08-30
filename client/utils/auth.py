@@ -11,10 +11,11 @@ from urllib.parse import urlparse, parse_qs
 from urllib.request import urlopen
 import webbrowser
 
+from sanction import Client
+
 from client.exceptions import AuthenticationException
 from client.utils.html import (auth_html, partial_course_html,
                                partial_nocourse_html, red_css)
-from client.utils.sanction import Client
 
 import logging
 
