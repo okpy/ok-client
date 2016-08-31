@@ -35,7 +35,7 @@ REDIRECT_HOST = "127.0.0.1"
 REDIRECT_PORT = 6165
 
 TIMEOUT = 10
-SERVER = 'https://ok.cs61a.org'
+SERVER = 'https://okpy.org'
 INFO_ENDPOINT = "https://www.googleapis.com/oauth2/v1/userinfo?access_token={}"
 
 
