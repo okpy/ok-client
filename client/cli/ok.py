@@ -157,6 +157,10 @@ def main():
     # Checking user's Python bit version
     bit_v = (8 * struct.calcsize("P"))
     log.debug("Python {}bit".format(bit_v))
+    if not args.local and bit_v == 32:
+        #If they aren't running --local and on 32 warn and quit
+        print("OK does not support 32 bit version of Python, exiting...")
+        exit(0)
 
     if args.version:
         print("okpy=={}".format(client.__version__))
