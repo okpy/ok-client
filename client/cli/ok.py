@@ -160,7 +160,7 @@ def main():
     if not args.local and bit_v == 32:
         #If they aren't running --local and on 32 warn and quit
         print("We can't authenticate you with a 32 bit version of Python. To
-                run locally use --local")
+                run locally use local flag")
         exit(0)
 
     if args.version:
