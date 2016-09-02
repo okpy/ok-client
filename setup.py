@@ -5,7 +5,7 @@ VERSION = client.__version__
 
 setup(
     name='okpy',
-    version=VERSION,
+    version='1.6.14-1',  # version=VERSION,
     author='John Denero, Soumya Basu, Stephen Martinis, Sharad Vikram, Albert Wu',
     # author_email='',
     description=('ok.py supports programming projects by running tests, '
