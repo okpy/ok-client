@@ -11,6 +11,7 @@ from client.utils import format
 from client.utils import guidance
 from client.utils import locking
 from datetime import datetime
+import ast
 import logging
 import random
 
@@ -145,7 +146,7 @@ class UnlockProtocol(models.Protocol):
                     # Try to evaluate student answer as Python expression and
                     # use the result as the answer.
                     try:
-                        eval_input = repr(eval(student_input, {}, {}))
+                        eval_input = repr(ast.literal_eval(student_input))
                         if not self._verify(eval_input, answer[line_number]):
                             break
                         # Replace student_input with evaluated input.
