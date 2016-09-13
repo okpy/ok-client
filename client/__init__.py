@@ -1,4 +1,4 @@
-__version__ = 'v1.6.14'
+__version__ = 'v1.7.0'
 
 FILE_NAME = 'ok'
 
