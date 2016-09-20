@@ -58,7 +58,6 @@ class Assignment(core.Serializable):
     name = core.String()
     endpoint = core.String()
     src = core.List(type=str, optional=True)
-    reload = core.List(type=str, optional=True)
     tests = core.Dict(keys=str, values=str, ordered=True)
     default_tests = core.List(type=str, optional=True)
     protocols = core.List(type=str)
