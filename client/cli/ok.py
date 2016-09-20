@@ -107,7 +107,7 @@ def parse_input(command_input=None):
     experiment.add_argument('--style', action='store_true',
                         help="run AutoStyle feedback system")
     experiment.add_argument('--collab', action='store_true',
-                        help="Launch collaborative programming environment")
+                        help="launch collaborative programming environment")
 
     # Debug information
     debug = parser.add_argument_group('debugging options')
