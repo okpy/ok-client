@@ -15,7 +15,7 @@ log = logging.getLogger(__name__)
 try:
     import ssl
 except ImportError:
-    print("Python SSL module not available. Make sure OpenSSL is installed when installing Python.")
+    print("Python SSL module not available. Make sure OpenSSL is available when installing Python.")
     log.debug('SSL module not found')
     exit(0)
 
