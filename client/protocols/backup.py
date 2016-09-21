@@ -7,11 +7,17 @@ import logging
 import os
 import pickle
 import socket
-import ssl
 import urllib.error
 import urllib.request
 
 log = logging.getLogger(__name__)
+
+try:
+    import ssl
+except ImportError:
+    print("Python SSL module not available. Make sure OpenSSL is installed when installing Python.")
+    log.debug('SSL module not found')
+    exit(0)
 
 class BackupProtocol(models.Protocol):
 
