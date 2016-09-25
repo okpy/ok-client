@@ -14,6 +14,8 @@ import webbrowser
 from sanction import Client
 
 from client.exceptions import AuthenticationException
+from client.utils.config import (CONFIG_DIRECTORY, REFRESH_FILE,
+                                 create_config_directory)
 from client.utils.html import (auth_html, partial_course_html,
                                partial_nocourse_html, red_css)
 
@@ -75,12 +77,6 @@ def make_refresh_post(refresh_token):
     params = {"grant_type": "refresh_token"}
     client.request_token(refresh_token=refresh_token, **params)
     return client.access_token, client.expires_in
-
-
-def create_config_directory():
-    if not os.path.exists(CONFIG_DIRECTORY):
-        os.makedirs(CONFIG_DIRECTORY)
-
 
 def get_storage():
     create_config_directory()
