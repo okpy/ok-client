@@ -2,10 +2,10 @@ from client.protocols.common import models
 from client.protocols.grading import grade
 from client.utils import output
 from client.utils import auth
-from client.utils import format
 from client.utils.firebase import pyrebase
 
 import client
+import requests
 
 import os
 import sys
@@ -107,7 +107,8 @@ class CollaborateProtocol(models.Protocol):
         # Send data to collaborate server
         response_data = self.send_messages(data, self.LONG_TIMEOUT)
         if 'error' in response_data or 'session' not in response_data:
-            print("There was an error while starting the session: {} Try again later".format(response_data.get('error')))
+            print("There was an error while starting the session: {} Try again later"
+                  .format(response_data.get('error')))
             log.warning("Error: {}".format(response_data.get('error')))
             return
 
@@ -150,7 +151,8 @@ class CollaborateProtocol(models.Protocol):
             log.error("There was an error with the server. Please try again later!")
             return
 
-        print("Tell your group members or course staff to go to {}".format(self.short_url))
+        print("Tell your group members or course staff to go to {}"
+              .format(self.short_url))
 
         while True:
             data = input("[{}] Type exit to disconnect: ".format(self.short_url))
@@ -168,7 +170,8 @@ class CollaborateProtocol(models.Protocol):
             print(("{id} : {creator} started at {timestamp} ({hashid})"
                    .format(id=index+1, creator=session.get('creator'),
                            timestamp=session.get('created'), hashid=session.get('id'))))
-        print("{new_id} : Create a new session with the current files?".format(new_id=len(sessions)+1))
+        print("{new_id} : Create a new session with the current files?"
+              .format(new_id=len(sessions)+1))
         desired = input("Type the number of the session you'd like to join: ")
         try:
             outcome = int(desired.strip())
@@ -191,26 +194,24 @@ class CollaborateProtocol(models.Protocol):
         prefix = 'http' if self.args.insecure else 'https'
         address = self.API_ENDPOINT.format(server=server, prefix=prefix)
 
-        address_params = {
+        params = {
             'client_name': 'ok-client',
             'client_version': client.__version__,
         }
-        address += '?'
-        address += '&'.join('{}={}'.format(param, value) for param, value
-                            in address_params.items())
+        headers = {"Content-Type": "application/json"}
 
         log.info('Sending messages to %s', address)
         try:
-            request = urllib.request.Request(address)
-            request.add_header("Content-Type", "application/json")
-            response = urllib.request.urlopen(request, serialized_data, timeout)
-            response_dict = json.loads(response.read().decode('utf-8'))
-            return response_dict
-        except (urllib.error.URLError, urllib.error.HTTPError,
+            r = requests.post(address, params=params, data=serialized_data,
+                              headers=headers, timeout=timeout)
+            r.raise_for_status()
+            return r.json()
+        except (requests.exceptions.RequestException, urllib.error.HTTPError,
                 json.decoder.JSONDecodeError) as ex:
             message = '{}: {}'.format(ex.__class__.__name__, str(ex))
             log.warning(message)
-            print("There was an error connecting to the server. Run with --debug for more details")
+            print("There was an error connecting to the server."
+                  "Run with --debug for more details")
         return
 
     def log_event(self, name, data):
@@ -247,8 +248,8 @@ class CollaborateProtocol(models.Protocol):
         file_name = data.get('fileName')
 
         if action == "save":
-            print("Saving {} locally (initiated by {})".format(file_name,
-                                                               data.get('user')))
+            print("Saving {} locally (initiated by {})"
+                  .format(file_name, data.get('user')))
             self.log_event('save', data)
             return self.save(data)
         elif action == "grade":
