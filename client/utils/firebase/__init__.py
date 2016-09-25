@@ -1,1 +1,3 @@
-# A custom build of pyrebase and sseclient that only depends on requests
+""" A custom build of pyrebase and sseclient
+for use in the collaboration protocol.
+"""

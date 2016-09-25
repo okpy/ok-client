@@ -1,4 +1,7 @@
-# External libraries
+""" Modified version of pyrebase (https://github.com/thisbejim/Pyrebase)
+to remove as many external libraries as possible.
+Depends on requests and sseclient
+"""
 import requests
 from client.utils.firebase.sseclient import SSEClient
 from requests.exceptions import HTTPError
