@@ -12,8 +12,8 @@ def patch_requests():
     """ Customize the cacerts.pem file that requests uses.
     Automatically updates the cert file if the contents are different.
     """
-    config_dir = config.create_config_directory()
-    ca_certs_file = "{}/cacerts.pem".format(config_dir)
+    config.create_config_directory()
+    ca_certs_file = config.CERT_FILE
     ca_certs_contents = requests.__loader__.get_data('ok/requests/cacert.pem')
 
     should_write_certs = True
