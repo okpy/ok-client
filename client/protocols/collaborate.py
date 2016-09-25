@@ -2,6 +2,7 @@ from client.protocols.common import models
 from client.protocols.grading import grade
 from client.utils import output
 from client.utils import auth
+from client.utils import format
 
 import client
 
@@ -17,6 +18,8 @@ import platform
 import time
 
 import webbrowser
+
+import logging
 
 log = logging.getLogger(__name__)
 

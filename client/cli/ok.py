@@ -107,7 +107,7 @@ def parse_input(command_input=None):
     experiment.add_argument('--style', action='store_true',
                         help="run AutoStyle feedback system")
     experiment.add_argument('--collab', action='store_true',
-                        help="Launch collaborative programming environment")
+                        help="launch collaborative programming environment")
     experiment.add_argument('--email', type=str, default=None,
                         help="[Staff only] Run certain actions as user")
 
@@ -136,7 +136,7 @@ def parse_input(command_input=None):
     server.add_argument('--local', action='store_true',
                         help="disable any network activity")
     server.add_argument('--server', type=str,
-                        default='ok.cs61a.org',
+                        default='okpy.org',
                         help="set the server address")
     server.add_argument('--authenticate', action='store_true',
                         help="authenticate, ignoring previous authentication")

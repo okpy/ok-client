@@ -37,8 +37,8 @@ class BackupProtocol(models.Protocol):
         message_list = self.load_unsent_messages()
 
         access_token = auth.authenticate(False)
-        log.info('Authenticated with access token %s', access_token)
-        log.info('Sending unsent messages %s', access_token)
+        log.info('Authenticated with access token')
+        log.info('Sending unsent messages')
 
         if not access_token:
             print("Not authenticated. Cannot send {} to server".format(action))
