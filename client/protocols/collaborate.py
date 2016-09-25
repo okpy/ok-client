@@ -3,6 +3,7 @@ from client.protocols.grading import grade
 from client.utils import output
 from client.utils import auth
 from client.utils import format
+from client.utils.firebase import pyrebase
 
 import client
 
@@ -61,7 +62,9 @@ class CollaborateProtocol(models.Protocol):
 
         try:
             print("Starting collaboration mode.")
-            self.start_firebase(messages)
+            exit_val = self.start_firebase(messages)
+            if exit_val is None:
+                return
         except (Exception, KeyboardInterrupt, AttributeError, RuntimeError) as e:
             print("Exiting collaboration mode (Run with --debug if this was unexpected)")
             self.log_event('exit',  {'method': str(e)})
@@ -79,7 +82,6 @@ class CollaborateProtocol(models.Protocol):
         email = auth.get_student_email(access_token)
         identifier = auth.get_identifier(token=access_token, email=email)
 
-        pyrebase = install_and_return('pyrebase')
         firebase = pyrebase.initialize_app(self.FIREBASE_CONFIG)
         self.fire_auth = firebase.auth()
         self.fire_db = firebase.database()
@@ -359,19 +361,3 @@ class CollaborateProtocol(models.Protocol):
         return data
 
 protocol = CollaborateProtocol
-
-def install_and_return(package):
-    """Dynamically install a package through pip.
-    Usage: install_and_import('requests')
-    Source: http://stackoverflow.com/a/24773951/411514
-    """
-    import importlib
-    try:
-        return importlib.import_module(package)
-    except ImportError:
-        log.info("Installing {0}".format(package))
-        print("Running 'python3 -m pip install {0}'. Please wait".format(package))
-        import pip
-        pip.main(['install', package])
-    finally:
-        return importlib.import_module(package)
