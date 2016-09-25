@@ -19,14 +19,11 @@ import time
 
 import webbrowser
 
-import logging
-
 log = logging.getLogger(__name__)
 
 class CollaborateProtocol(models.Protocol):
 
     # Timeouts are specified in seconds.
-    SHORT_TIMEOUT = 30
     LONG_TIMEOUT = 30
     API_ENDPOINT = '{prefix}://{server}'
     FIREBASE_CONFIG = {
@@ -144,12 +141,14 @@ class CollaborateProtocol(models.Protocol):
             open_url = response_data['url']
             if 'access_token' not in open_url:
                 open_url = open_url + "?access_token={}".format(access_token)
-            webbrowser.open_new(open_url)
+            could_open = webbrowser.open_new(open_url)
+            if not could_open:
+                print("Could not open browser. Go to {}".format(open_url))
         else:
             log.error("There was an error with the server. Please try again later!")
             return
 
-        print("Tell your group memebers or course staff to go to {}".format(self.short_url))
+        print("Tell your group members or course staff to go to {}".format(self.short_url))
 
         while True:
             data = input("[{}] Type exit to disconnect: ".format(self.short_url))
@@ -241,7 +240,7 @@ class CollaborateProtocol(models.Protocol):
             return
         action = data.get('action')
         sender = data.get('user')
-        log.debug('Recieved new {} message from {}'.format(action, sender))
+        log.debug('Received new {} message from {}'.format(action, sender))
 
         file_name = data.get('fileName')
 
