@@ -14,7 +14,7 @@ import webbrowser
 from client.exceptions import AuthenticationException
 from client.utils.html import (auth_html, partial_course_html,
                                partial_nocourse_html, red_css)
-from client.utils.network import check_ssl
+from client.utils import network
 from client.utils.sanction import Client
 
 import logging
@@ -133,7 +133,7 @@ def authenticate(force=False):
         except Exception as _:
             print('Performing authentication')
 
-    check_ssl()
+    network.check_ssl()
 
     print("Please enter your bCourses email.")
     email = input("bCourses email: ")

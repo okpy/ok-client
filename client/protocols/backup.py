@@ -1,6 +1,6 @@
 from client.protocols.common import models
 from client.utils import auth
-from client.utils.network import check_ssl
+from client.utils import network
 import client
 import datetime
 import json
@@ -29,7 +29,7 @@ class BackupProtocol(models.Protocol):
             return
 
         if not self.args.insecure:
-            check_ssl()
+            network.check_ssl()
 
         if self.args.revise:
             action = 'Revise'
