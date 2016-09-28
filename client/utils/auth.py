@@ -19,7 +19,6 @@ from client.utils.config import (CONFIG_DIRECTORY, REFRESH_FILE,
 from client.utils.html import (auth_html, partial_course_html,
                                partial_nocourse_html, red_css)
 from client.utils import network
-from client.utils.sanction import Client
 
 import logging
 
