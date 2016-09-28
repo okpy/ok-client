@@ -14,6 +14,7 @@ import webbrowser
 from client.exceptions import AuthenticationException
 from client.utils.html import (auth_html, partial_course_html,
                                partial_nocourse_html, red_css)
+from client.utils.network import check_ssl
 from client.utils.sanction import Client
 
 import logging
@@ -106,20 +107,6 @@ def update_storage(access_token, expires_in, refresh_token):
             'expires_at': cur_time + expires_in,
             'refresh_token': refresh_token
         }, fp)
-
-
-def check_ssl():
-    try:
-        import ssl
-    except:
-        log.warning('Error importing ssl', stack_info=True)
-        raise Exception(
-                'SSL Bindings are not installed. '
-                'You can install python3 SSL bindings or run OK locally:\n'
-                '\tpython3 ok --local')
-    else:
-        log.info('SSL bindings are available.')
-
 
 def authenticate(force=False):
     """

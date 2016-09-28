@@ -8,6 +8,19 @@ log = logging.getLogger(__name__)
 
 TIMEOUT = 15
 
+def check_ssl():
+    """Attempts to import SSL or raises an exception."""
+    try:
+        import ssl
+    except:
+        log.warning('Error importing ssl', stack_info=True)
+        raise Exception(
+                'SSL Bindings are not installed. '
+                'You can install python3 SSL bindings or run OK locally:\n'
+                '\tpython3 ok --local')
+    else:
+        log.info('SSL bindings are available')
+
 def api_request(access_token, server, route, insecure=False, arguments={}):
     """Makes a request to the server API and returns the result."""
     try:

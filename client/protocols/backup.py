@@ -1,5 +1,6 @@
 from client.protocols.common import models
 from client.utils import auth
+from client.utils.network import check_ssl
 import client
 import datetime
 import json
@@ -12,12 +13,6 @@ import urllib.request
 
 log = logging.getLogger(__name__)
 
-try:
-    import ssl
-except ImportError:
-    print("Python SSL module not available. Make sure OpenSSL is available when installing Python.")
-    log.debug('SSL module not found')
-    exit(0)
 
 class BackupProtocol(models.Protocol):
 
@@ -32,6 +27,9 @@ class BackupProtocol(models.Protocol):
     def run(self, messages):
         if self.args.local or self.args.restore:
             return
+
+        if not self.args.insecure:
+            check_ssl()
 
         if self.args.revise:
             action = 'Revise'
