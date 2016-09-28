@@ -9,7 +9,7 @@ log = logging.getLogger(__name__)
 
 VERSION_ENDPOINT = 'https://{server}/api/v3/version/ok-client'
 
-SHORT_TIMEOUT = 3  # seconds
+SHORT_TIMEOUT = 15  # seconds
 
 def check_version(server, version, filename, timeout=SHORT_TIMEOUT):
     """Check for the latest version of OK and update accordingly."""

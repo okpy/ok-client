@@ -11,7 +11,11 @@ from urllib.parse import urlparse, parse_qs
 from urllib.request import urlopen
 import webbrowser
 
+from sanction import Client
+
 from client.exceptions import AuthenticationException
+from client.utils.config import (CONFIG_DIRECTORY, REFRESH_FILE,
+                                 create_config_directory)
 from client.utils.html import (auth_html, partial_course_html,
                                partial_nocourse_html, red_css)
 from client.utils import network
@@ -75,12 +79,6 @@ def make_refresh_post(refresh_token):
     params = {"grant_type": "refresh_token"}
     client.request_token(refresh_token=refresh_token, **params)
     return client.access_token, client.expires_in
-
-
-def create_config_directory():
-    if not os.path.exists(CONFIG_DIRECTORY):
-        os.makedirs(CONFIG_DIRECTORY)
-
 
 def get_storage():
     create_config_directory()
@@ -310,6 +308,7 @@ def pluralize(num, string):
 
 # Grabs the student's email through the access_token and returns it.
 def get_student_email(access_token):
+    log.info("Attempting to get student email")
     if access_token is None:
         return None
     try:
@@ -320,12 +319,16 @@ def get_student_email(access_token):
         user_email = None
     return user_email
 
-def get_identifier():
+def get_identifier(token=None, email=None):
     """ Obtain anonmyzied identifier."""
-    token = authenticate(False)
-    student_email = get_student_email(token)
-    if not student_email:
-        return "Unknown"
+    if not token:
+        token = authenticate(False)
+    if email:
+        student_email = email
+    else:
+        student_email = get_student_email(token)
+        if not student_email:
+            return "Unknown"
     return hashlib.md5(student_email.encode()).hexdigest()
 
 if __name__ == "__main__":
