@@ -29,7 +29,7 @@ class ConceptSuite(ok_models.Suite):
             'failed': 0,
             'locked': 0,
         }
-        for i, case in enumerate(self.cases):
+        for i, case in self.enumerate_cases():
             if case.locked == True or results['locked'] > 0:
                 # If a test case is locked, refuse to run any of the subsequent
                 # test cases

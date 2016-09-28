@@ -60,7 +60,7 @@ class DoctestSuite(models.Suite):
             # be non-None in the programmatic API case.
             self.console.load_env(env)
 
-        for i, case in enumerate(self.cases):
+        for i, case in self.enumerate_cases():
             log.info('Running case {}'.format(i))
 
             if (case.locked == True or results['locked'] > 0) and self.skip_locked_cases:

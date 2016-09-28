@@ -52,6 +52,8 @@ class OkTest(models.Test):
         """
         passed, failed, locked = 0, 0, 0
         for i, suite in enumerate(self.suites):
+            if hasattr(self, 'run_only') and self.run_only != i + 1:
+                continue
             if hasattr(suite, 'doctest_suite_flag'):
                 # A hack that allows programmatic API users to plumb a custom
                 # environment through to Python tests.
@@ -206,6 +208,12 @@ class Suite(core.Serializable):
         """
         raise NotImplementedError
 
+    def enumerate_cases(self):
+        enumerated = enumerate(self.cases)
+        if hasattr(self, 'run_only'):
+            return [x for x in enumerated if x[0] + 1 in self.run_only]
+        return enumerated
+
     def _run_case(self, test_name, suite_number, case, case_number):
         """A wrapper for case.run().
 
@@ -215,7 +223,6 @@ class Suite(core.Serializable):
         """
         output.off()    # Delay printing until case status is determined.
         log_id = output.new_log()
-
         format.print_line('-')
         print('{} > Suite {} > Case {}'.format(test_name, suite_number,
                                                case_number))
