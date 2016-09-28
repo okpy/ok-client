@@ -113,6 +113,8 @@ class BackupProtocol(models.Protocol):
 
 
     def send_all_messages(self, access_token, message_list, current=False):
+        if not self.args.insecure:
+            import ssl
         if current and self.args.revise:
             action = "Revise"
         elif current and self.args.submit:
