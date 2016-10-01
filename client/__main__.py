@@ -14,7 +14,7 @@ def patch_requests():
     """
     config.create_config_directory()
     ca_certs_file = config.CERT_FILE
-    ca_certs_contents = requests.__loader__.get_data('ok/requests/cacert.pem')
+    ca_certs_contents = requests.__loader__.get_data('requests/cacert.pem')
 
     should_write_certs = True
 
