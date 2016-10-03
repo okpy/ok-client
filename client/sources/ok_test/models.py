@@ -23,6 +23,7 @@ class OkTest(models.Test):
         self.interactive = interactive
         self.timeout = timeout
         self.assignment_name = assign_name
+        self.run_only = None
 
     def post_instantiation(self):
         for i, suite in enumerate(self.suites):
@@ -52,7 +53,7 @@ class OkTest(models.Test):
         """
         passed, failed, locked = 0, 0, 0
         for i, suite in enumerate(self.suites):
-            if hasattr(self, 'run_only') and self.run_only != i + 1:
+            if self.run_only and self.run_only != i + 1:
                 continue
             if hasattr(suite, 'doctest_suite_flag'):
                 # A hack that allows programmatic API users to plumb a custom
@@ -190,6 +191,7 @@ class Suite(core.Serializable):
         self.verbose = verbose
         self.interactive = interactive
         self.timeout = timeout
+        self.run_only = []
 
     def run(self, test_name, suite_number):
         """Subclasses should override this method to run tests.
@@ -210,7 +212,7 @@ class Suite(core.Serializable):
 
     def enumerate_cases(self):
         enumerated = enumerate(self.cases)
-        if hasattr(self, 'run_only'):
+        if self.run_only:
             return [x for x in enumerated if x[0] + 1 in self.run_only]
         return enumerated
 
