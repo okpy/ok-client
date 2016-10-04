@@ -30,7 +30,14 @@ class GradingProtocol(models.Protocol):
         """
         if self.args.score or self.args.unlock or self.args.restore:
             return
-        grade(self.assignment.specified_tests, messages, verbose=self.args.verbose)
+        tests = self.assignment.specified_tests
+        for test in tests:
+            if self.args.suite and hasattr(test, 'suites'):
+                test.run_only = self.args.suite
+                suite = test.suites[self.args.suite - 1]
+                if self.args.case:
+                    suite.run_only = self.args.case
+        grade(tests, messages, verbose=self.args.verbose)
 
 
 def grade(questions, messages, env=None, verbose=True):

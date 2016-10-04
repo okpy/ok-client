@@ -18,8 +18,8 @@ class DoctestSuite(models.Suite):
     # imports.
     doctest_suite_flag = True
 
-    def __init__(self, verbose, interactive, timeout=None, **fields):
-        super().__init__(verbose, interactive, timeout, **fields)
+    def __init__(self, test, verbose, interactive, timeout=None, **fields):
+        super().__init__(test, verbose, interactive, timeout, **fields)
         self.skip_locked_cases = True
         self.console = self.console_type(verbose, interactive, timeout)
 
@@ -60,7 +60,7 @@ class DoctestSuite(models.Suite):
             # be non-None in the programmatic API case.
             self.console.load_env(env)
 
-        for i, case in enumerate(self.cases):
+        for i, case in self.enumerate_cases():
             log.info('Running case {}'.format(i))
 
             if (case.locked == True or results['locked'] > 0) and self.skip_locked_cases:
@@ -70,12 +70,8 @@ class DoctestSuite(models.Suite):
                 results['locked'] += 1
                 continue
 
-            success, output_log = self._run_case(test_name, suite_number,
-                                                 case, i + 1)
-
-            if not success or self.verbose:
-                print(''.join(output_log))
-
+            success = self._run_case(test_name, suite_number,
+                                     case, i + 1)
             if not success and self.interactive:
                 self.console.interact()
 

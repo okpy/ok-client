@@ -14,8 +14,8 @@ class WwppSuite(models.Suite):
 
     console_type = pyconsole.PythonConsole
 
-    def __init__(self, verbose, interactive, timeout=None, **fields):
-        super().__init__(verbose, interactive, timeout, **fields)
+    def __init__(self, test, verbose, interactive, timeout=None, **fields):
+        super().__init__(test, verbose, interactive, timeout, **fields)
         self.console = self.console_type(verbose, interactive, timeout)
 
     def post_instantiation(self):
@@ -30,7 +30,7 @@ class WwppSuite(models.Suite):
             'failed': 0,
             'locked': 0,
         }
-        for i, case in enumerate(self.cases):
+        for i, case in self.enumerate_cases():
             if case.locked == True or results['locked'] > 0:
                 # If a test case is locked, refuse to run any of the subsequent
                 # test cases
@@ -38,13 +38,10 @@ class WwppSuite(models.Suite):
                 results['locked'] += 1
                 continue
 
-            success, output_log = self._run_case(test_name, suite_number,
-                                                 case, i + 1)
+            success = self._run_case(test_name, suite_number,
+                                     case, i + 1)
             assert success, 'Wwpp case should never fail while grading'
             results['passed'] += 1
-
-            if self.verbose:
-                print(''.join(output_log))
         return results
 
 class WwppCase(interpreter.CodeCase):
@@ -67,4 +64,3 @@ class WwppCase(interpreter.CodeCase):
         print('What would Python display? If you get stuck, try it out in the '
               'Python\ninterpreter!')
         super().unlock(unique_id_prefix, case_id, interact)
-

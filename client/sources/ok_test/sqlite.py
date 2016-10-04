@@ -153,6 +153,6 @@ class SqliteSuite(doctest.DoctestSuite):
     # TODO: Ordered should be a property of cases, not entire suites.
     ordered = core.Boolean(default=False)
 
-    def __init__(self, verbose, interactive, timeout=None, **fields):
-        super().__init__(verbose, interactive, timeout, **fields)
+    def __init__(self, test, verbose, interactive, timeout=None, **fields):
+        super().__init__(test, verbose, interactive, timeout, **fields)
         self.console.ordered = fields.get('ordered', False)

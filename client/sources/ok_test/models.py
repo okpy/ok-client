@@ -14,15 +14,23 @@ class OkTest(models.Test):
     suites = core.List()
     description = core.String(optional=True)
 
-    def __init__(self, file, suite_map, assign_name, verbose, interactive,
+    def __init__(self, file, suite_map, assign_name, assignment, verbose, interactive,
                  timeout=None, **fields):
         super().__init__(**fields)
         self.file = file
         self.suite_map = suite_map
+
         self.verbose = verbose
         self.interactive = interactive
         self.timeout = timeout
+        self.assignment = assignment
         self.assignment_name = assign_name
+        self.run_only = None
+
+    def get_short_name(self):
+        for name, value in self.assignment.test_map.items():
+            if value == self:
+                return name
 
     def post_instantiation(self):
         for i, suite in enumerate(self.suites):
@@ -34,7 +42,7 @@ class OkTest(models.Test):
                 raise ex.SerializeException('Invalid suite type: '
                                             '{}'.format(suite['type']))
             self.suites[i] = self.suite_map[suite['type']](
-                    self.verbose, self.interactive, self.timeout, **suite)
+                    self, self.verbose, self.interactive, self.timeout, **suite)
 
     def run(self, env):
         """Runs the suites associated with this OK test.
@@ -52,6 +60,8 @@ class OkTest(models.Test):
         """
         passed, failed, locked = 0, 0, 0
         for i, suite in enumerate(self.suites):
+            if self.run_only and self.run_only != i + 1:
+                continue
             if hasattr(suite, 'doctest_suite_flag'):
                 # A hack that allows programmatic API users to plumb a custom
                 # environment through to Python tests.
@@ -183,11 +193,13 @@ class Suite(core.Serializable):
     scored = core.Boolean(default=True)
     cases = core.List()
 
-    def __init__(self, verbose, interactive, timeout=None, **fields):
+    def __init__(self, test, verbose, interactive, timeout=None, **fields):
         super().__init__(**fields)
+        self.test = test
         self.verbose = verbose
         self.interactive = interactive
         self.timeout = timeout
+        self.run_only = []
 
     def run(self, test_name, suite_number):
         """Subclasses should override this method to run tests.
@@ -206,16 +218,21 @@ class Suite(core.Serializable):
         """
         raise NotImplementedError
 
+    def enumerate_cases(self):
+        enumerated = enumerate(self.cases)
+        if self.run_only:
+            return [x for x in enumerated if x[0] + 1 in self.run_only]
+        return enumerated
+
     def _run_case(self, test_name, suite_number, case, case_number):
         """A wrapper for case.run().
 
         Prints informative output and also captures output of the test case
-        and returns it as a log. The output is suppressed -- it is up to the
-        calling function to decide whether or not to print the log.
+        and returns it as a log. The output is printed only if the case fails,
+        or if self.verbose is True.
         """
         output.off()    # Delay printing until case status is determined.
         log_id = output.new_log()
-
         format.print_line('-')
         print('{} > Suite {} > Case {}'.format(test_name, suite_number,
                                                case_number))
@@ -229,4 +246,12 @@ class Suite(core.Serializable):
         output_log = output.get_log(log_id)
         output.remove_log(log_id)
 
-        return success, output_log
+        if not success or self.verbose:
+            print(''.join(output_log))
+        if not success:
+            short_name = self.test.get_short_name()
+            print('Run only this test case with '
+                '"python3 ok -q {} --suite {} --case {}"'.format(
+                    short_name, suite_number, case_number))
+
+        return success

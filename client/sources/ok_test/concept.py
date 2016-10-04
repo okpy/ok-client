@@ -29,7 +29,7 @@ class ConceptSuite(ok_models.Suite):
             'failed': 0,
             'locked': 0,
         }
-        for i, case in enumerate(self.cases):
+        for i, case in self.enumerate_cases():
             if case.locked == True or results['locked'] > 0:
                 # If a test case is locked, refuse to run any of the subsequent
                 # test cases
@@ -37,13 +37,10 @@ class ConceptSuite(ok_models.Suite):
                 results['locked'] += 1
                 continue
 
-            success, output_log = self._run_case(test_name, suite_number,
-                                                 case, i + 1)
+            success = self._run_case(test_name, suite_number,
+                                     case, i + 1)
             assert success, 'Concept case should never fail while grading'
             results['passed'] += 1
-
-            if self.verbose:
-                print(''.join(output_log))
         return results
 
 class ConceptCase(common_models.Case):
@@ -84,4 +81,3 @@ class ConceptCase(common_models.Case):
             # Answer was presumably unlocked
             self.locked = False
             self.answer = answer
-

@@ -79,6 +79,10 @@ def parse_input(command_input=None):
     testing = parser.add_argument_group('running tests')
     testing.add_argument('-q', '--question', type=str, action='append',
                         help="run tests for a specific question")
+    testing.add_argument('--suite', type=int, default=None,
+                        help="run cases from a specific suite")
+    testing.add_argument('--case', type=int, action='append',
+                        help="run specific cases")
     testing.add_argument('-u', '--unlock', action='store_true',
                         help="unlock tests interactively")
     testing.add_argument('-i', '--interactive', action='store_true',

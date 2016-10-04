@@ -45,7 +45,7 @@ def load(file, parameter, assign):
 
     name = os.path.basename(filename)
     try:
-        return {name: models.OkTest(file, SUITES, assign.endpoint,
+        return {name: models.OkTest(file, SUITES, assign.endpoint, assign,
                                     assign.cmd_args.verbose,
                                     assign.cmd_args.interactive,
                                     assign.cmd_args.timeout, **test)}
