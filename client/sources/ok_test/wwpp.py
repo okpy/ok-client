@@ -14,8 +14,8 @@ class WwppSuite(models.Suite):
 
     console_type = pyconsole.PythonConsole
 
-    def __init__(self, verbose, interactive, timeout=None, **fields):
-        super().__init__(verbose, interactive, timeout, **fields)
+    def __init__(self, test, verbose, interactive, timeout=None, **fields):
+        super().__init__(test, verbose, interactive, timeout, **fields)
         self.console = self.console_type(verbose, interactive, timeout)
 
     def post_instantiation(self):
