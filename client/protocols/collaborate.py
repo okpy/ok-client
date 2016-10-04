@@ -206,8 +206,7 @@ class CollaborateProtocol(models.Protocol):
                               headers=headers, timeout=timeout)
             r.raise_for_status()
             return r.json()
-        except (requests.exceptions.RequestException, urllib.error.HTTPError,
-                json.decoder.JSONDecodeError) as ex:
+        except (requests.exceptions.RequestException, urllib.error.HTTPError, Exception) as ex:
             message = '{}: {}'.format(ex.__class__.__name__, str(ex))
             log.warning(message)
             print("There was an error connecting to the server."
