@@ -32,7 +32,7 @@ class OkTest(unittest.TestCase):
         self.hash_fn = mock.Mock()
 
     def makeTest(self, name=NAME, points=POINTS, file=FILE, **fields):
-        return models.OkTest(file, self.suite_map, self.ASSIGNMENT, True, False,
+        return models.OkTest(file, self.suite_map, self.ASSIGNMENT, self.ASSIGNMENT,
                              name=name, points=points, **fields)
 
     def callsRun(self, passed, failed, locked):

@@ -14,16 +14,25 @@ class OkTest(models.Test):
     suites = core.List()
     description = core.String(optional=True)
 
-    def __init__(self, file, suite_map, assign_name, verbose, interactive,
+    def __init__(self, file, suite_map, assign_name, assignment, verbose, interactive,
                  timeout=None, **fields):
         super().__init__(**fields)
         self.file = file
         self.suite_map = suite_map
+
         self.verbose = verbose
         self.interactive = interactive
         self.timeout = timeout
+        self.assignment = assignment
         self.assignment_name = assign_name
+        self.short_name = None
         self.run_only = None
+
+    def get_short_name(self):
+        for name, value in self.assignment.test_map.items():
+            if value.file == self.file:
+                self.short_name = value
+                return name
 
     def post_instantiation(self):
         for i, suite in enumerate(self.suites):
@@ -36,6 +45,7 @@ class OkTest(models.Test):
                                             '{}'.format(suite['type']))
             self.suites[i] = self.suite_map[suite['type']](
                     self.verbose, self.interactive, self.timeout, **suite)
+            self.suites[i].test = self
 
     def run(self, env):
         """Runs the suites associated with this OK test.
@@ -241,8 +251,8 @@ class Suite(core.Serializable):
         if not success or self.verbose:
             print(''.join(output_log))
         if not success:
+            short_name = self.test.get_short_name()
             print('Run only this test case with '
-                '"python3 ok -q {} --suite {} --case {}"'.format(
-                    test_name, suite_number, case_number))
+                '"python3 ok -q {} --suite {} --case {}"'.format(short_name , suite_number, case_number))
 
         return success
