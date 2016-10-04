@@ -1,4 +1,5 @@
 from client import exceptions as ex
+from client.api import assignment
 from client.sources.ok_test import models
 from client.sources.common import core
 import mock
@@ -11,6 +12,8 @@ class OkTest(unittest.TestCase):
     FILE = 'file'
 
     def setUp(self):
+        self.assignment = mock.Mock(spec=assignment.Assignment)
+
         self.mockSuite1 = mock.Mock(spec=models.Suite)
         self.mockCase1 = mock.Mock()
         self.mockSuite1.return_value.cases = [
@@ -32,7 +35,7 @@ class OkTest(unittest.TestCase):
         self.hash_fn = mock.Mock()
 
     def makeTest(self, name=NAME, points=POINTS, file=FILE, **fields):
-        return models.OkTest(file, self.suite_map, self.ASSIGNMENT, self.ASSIGNMENT,
+        return models.OkTest(file, self.suite_map, self.ASSIGNMENT, self.assignment, True, False,
                              name=name, points=points, **fields)
 
     def callsRun(self, passed, failed, locked):
@@ -295,4 +298,3 @@ class OkTest(unittest.TestCase):
     def testDump(self):
         # TODO(albert)
         pass
-

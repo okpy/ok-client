@@ -18,8 +18,8 @@ class DoctestSuite(models.Suite):
     # imports.
     doctest_suite_flag = True
 
-    def __init__(self, verbose, interactive, timeout=None, **fields):
-        super().__init__(verbose, interactive, timeout, **fields)
+    def __init__(self, test, verbose, interactive, timeout=None, **fields):
+        super().__init__(test, verbose, interactive, timeout, **fields)
         self.skip_locked_cases = True
         self.console = self.console_type(verbose, interactive, timeout)
 

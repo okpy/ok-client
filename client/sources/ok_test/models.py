@@ -42,8 +42,7 @@ class OkTest(models.Test):
                 raise ex.SerializeException('Invalid suite type: '
                                             '{}'.format(suite['type']))
             self.suites[i] = self.suite_map[suite['type']](
-                    self.verbose, self.interactive, self.timeout, **suite)
-            self.suites[i].test = self
+                    self, self.verbose, self.interactive, self.timeout, **suite)
 
     def run(self, env):
         """Runs the suites associated with this OK test.
@@ -194,8 +193,9 @@ class Suite(core.Serializable):
     scored = core.Boolean(default=True)
     cases = core.List()
 
-    def __init__(self, verbose, interactive, timeout=None, **fields):
+    def __init__(self, test, verbose, interactive, timeout=None, **fields):
         super().__init__(**fields)
+        self.test = test
         self.verbose = verbose
         self.interactive = interactive
         self.timeout = timeout
@@ -251,6 +251,7 @@ class Suite(core.Serializable):
         if not success:
             short_name = self.test.get_short_name()
             print('Run only this test case with '
-                '"python3 ok -q {} --suite {} --case {}"'.format(short_name , suite_number, case_number))
+                '"python3 ok -q {} --suite {} --case {}"'.format(
+                    short_name, suite_number, case_number))
 
         return success

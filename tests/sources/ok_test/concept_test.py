@@ -1,5 +1,7 @@
 from client import exceptions as ex
+from client.sources.common import models
 from client.sources.ok_test import concept
+import mock
 import unittest
 
 class ConceptSuiteTest(unittest.TestCase):
@@ -7,7 +9,8 @@ class ConceptSuiteTest(unittest.TestCase):
     SUITE_NUMBER = 0
 
     def makeTest(self, cases):
-        return concept.ConceptSuite(False, False, type='concept', cases=cases)
+        test = mock.Mock(spec=models.Test)
+        return concept.ConceptSuite(test, False, False, type='concept', cases=cases)
 
     def testConstructor_noCases(self):
         try:
@@ -94,4 +97,3 @@ class ConceptSuiteTest(unittest.TestCase):
             'failed': 0,
             'locked': 0,
         }, test.run(self.TEST_NAME, self.SUITE_NUMBER))
-

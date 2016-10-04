@@ -1,5 +1,6 @@
 from client import exceptions as ex
-from client.sources.ok_test import doctest
+from client.sources.ok_test import doctest, models
+import mock
 import unittest
 
 class DoctestSuiteTest(unittest.TestCase):
@@ -7,7 +8,9 @@ class DoctestSuiteTest(unittest.TestCase):
     SUITE_NUMBER = 'suite number'
 
     def makeSuite(self, cases, setup='', teardown=''):
-        return doctest.DoctestSuite(False, False, cases=cases, setup=setup,
+        test = mock.Mock(spec=models.OkTest)
+        test.get_short_name.return_value = 'testname'
+        return doctest.DoctestSuite(test, False, False, cases=cases, setup=setup,
                                     teardown=teardown, type='doctest')
 
     def testConstructor_noCases(self):
@@ -142,4 +145,3 @@ class DoctestSuiteTest(unittest.TestCase):
             },
         ])
         self.callsRun(test, 0, 0, 2)
-
