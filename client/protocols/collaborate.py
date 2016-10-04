@@ -65,7 +65,7 @@ class CollaborateProtocol(models.Protocol):
             exit_val = self.start_firebase(messages)
             if exit_val is None:
                 return
-        except (Exception, KeyboardInterrupt, AttributeError, RuntimeError) as e:
+        except (Exception, KeyboardInterrupt, AttributeError, RuntimeError, OSError) as e:
             print("Exiting collaboration mode (Run with --debug if this was unexpected)")
             self.log_event('exit',  {'method': str(e)})
 
