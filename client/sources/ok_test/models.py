@@ -25,13 +25,11 @@ class OkTest(models.Test):
         self.timeout = timeout
         self.assignment = assignment
         self.assignment_name = assign_name
-        self.short_name = None
         self.run_only = None
 
     def get_short_name(self):
         for name, value in self.assignment.test_map.items():
-            if value.file == self.file:
-                self.short_name = value
+            if value == self:
                 return name
 
     def post_instantiation(self):
