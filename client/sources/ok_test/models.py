@@ -220,8 +220,8 @@ class Suite(core.Serializable):
         """A wrapper for case.run().
 
         Prints informative output and also captures output of the test case
-        and returns it as a log. The output is suppressed -- it is up to the
-        calling function to decide whether or not to print the log.
+        and returns it as a log. The output is printed only if the case fails,
+        or if self.verbose is True.
         """
         output.off()    # Delay printing until case status is determined.
         log_id = output.new_log()
@@ -238,4 +238,11 @@ class Suite(core.Serializable):
         output_log = output.get_log(log_id)
         output.remove_log(log_id)
 
-        return success, output_log
+        if not success or self.verbose:
+            print(''.join(output_log))
+        if not success:
+            print('Run only this test case with '
+                '"python3 ok -q {} --suite {} --case {}"'.format(
+                    test_name, suite_number, case_number))
+
+        return success

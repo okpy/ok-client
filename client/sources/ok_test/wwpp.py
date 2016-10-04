@@ -38,13 +38,10 @@ class WwppSuite(models.Suite):
                 results['locked'] += 1
                 continue
 
-            success, output_log = self._run_case(test_name, suite_number,
-                                                 case, i + 1)
+            success = self._run_case(test_name, suite_number,
+                                     case, i + 1)
             assert success, 'Wwpp case should never fail while grading'
             results['passed'] += 1
-
-            if self.verbose:
-                print(''.join(output_log))
         return results
 
 class WwppCase(interpreter.CodeCase):
@@ -67,4 +64,3 @@ class WwppCase(interpreter.CodeCase):
         print('What would Python display? If you get stuck, try it out in the '
               'Python\ninterpreter!')
         super().unlock(unique_id_prefix, case_id, interact)
-

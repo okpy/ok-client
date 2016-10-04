@@ -70,12 +70,8 @@ class DoctestSuite(models.Suite):
                 results['locked'] += 1
                 continue
 
-            success, output_log = self._run_case(test_name, suite_number,
-                                                 case, i + 1)
-
-            if not success or self.verbose:
-                print(''.join(output_log))
-
+            success = self._run_case(test_name, suite_number,
+                                     case, i + 1)
             if not success and self.interactive:
                 self.console.interact()
 
