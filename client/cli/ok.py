@@ -173,10 +173,6 @@ def main():
                 args.server, client.__version__, client.FILE_NAME, timeout=10)
         exit(not did_update)  # exit with error if ok failed to update
 
-    if args.local or args.restore:
-        print("Cannot authenticate when running ok locally (--local)")
-        return
-
     if args.get_token:
         access_token = auth.authenticate(True)
         print("Token: {}".format(access_token))
