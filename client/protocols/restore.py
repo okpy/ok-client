@@ -24,7 +24,7 @@ class RestoreProtocol(models.Protocol):
             return
         
         if self.args.local:
-            print("Cannot restore when running ok locally.")
+            print("Cannot restore when running ok with --local.")
             return
 
         self.access_token = auth.authenticate(self.args.authenticate)

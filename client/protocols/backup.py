@@ -25,7 +25,7 @@ class BackupProtocol(models.Protocol):
 
     def run(self, messages):
         if self.args.local or self.args.restore:
-            print("Cannot backup when running ok locally.")
+            print("Cannot backup when running ok with --local.")
             return
 
         if self.args.revise:
