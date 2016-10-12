@@ -23,6 +23,10 @@ class RestoreProtocol(models.Protocol):
         if not self.args.restore:
             return
         
+        if self.args.local:
+            print("Cannot restore when running ok locally.")
+            return
+
         self.access_token = auth.authenticate(self.args.authenticate)
         
         print('Loading backups...')
