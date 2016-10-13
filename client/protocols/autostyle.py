@@ -16,7 +16,7 @@ class AutoStyleProtocol(models.Protocol):
     # Timeouts are specified in seconds.
     SHORT_TIMEOUT = 10
     API_ENDPOINT = '{prefix}://{server}'
-    ALLOW_QUESTIONS = ['flatten', 'add_up', 'permutations']
+    ALLOW_QUESTIONS = ['flatten', 'add_up', 'permutations', 'deep_len']
 
     def run(self, messages):
         if not self.args.style:
