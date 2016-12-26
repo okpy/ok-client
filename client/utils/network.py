@@ -25,6 +25,7 @@ def check_ssl():
         sys.exit(1)
     else:
         log.info('SSL module is available')
+        return ssl
 
 def api_request(access_token, server, route, insecure=False, arguments={}):
     """Makes a request to the server API and returns the result."""

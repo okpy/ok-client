@@ -115,7 +115,10 @@ class BackupProtocol(models.Protocol):
 
     def send_all_messages(self, access_token, message_list, current=False):
         if not self.args.insecure:
-            network.check_ssl()
+            ssl = network.check_ssl()
+        else:
+            ssl = None
+
         if current and self.args.revise:
             action = "Revise"
         elif current and self.args.submit:
@@ -159,11 +162,6 @@ class BackupProtocol(models.Protocol):
                 retries -= 1
                 error_msg = 'Connection timed out after {} seconds. '.format(timeout) + \
                             'Please check your network connection.'
-            except ssl.CertificateError as ex:
-                log.warning("SSL Error: %s", str(ex))
-                retries -= 1
-                error_msg = 'SSL Verification Error: {}\n'.format(ex) + \
-                            'Please check your network connection and SSL configuration.'
             except (urllib.error.URLError, urllib.error.HTTPError) as ex:
                 log.warning('%s: %s', ex.__class__.__name__, str(ex))
                 retries -= 1
@@ -190,6 +188,17 @@ class BackupProtocol(models.Protocol):
                 else:
                     retries -= 1
                     error_msg = response_json['message']
+            except Exception as ex:
+                retries -= 1
+                if ssl and isinstance(ex, ssl.CertificateError):
+                    retries = 0
+                    log.warning("SSL Error: %s", str(ex))
+                    error_msg = 'SSL Verification Error: {}\n'.format(ex) + \
+                                'Please check your network connection and SSL configuration.'
+                else:
+                    error_msg = "Unknown Error {}".format(ex)
+                    log.warning(error_msg, exc_info=True)
+
             else:
                 if not first_response:
                     first_response = response
