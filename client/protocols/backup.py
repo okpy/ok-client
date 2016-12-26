@@ -1,5 +1,6 @@
 from client.protocols.common import models
 from client.utils import auth
+from client.utils import network
 import client
 import datetime
 import json
@@ -7,11 +8,11 @@ import logging
 import os
 import pickle
 import socket
-import ssl
 import urllib.error
 import urllib.request
 
 log = logging.getLogger(__name__)
+
 
 class BackupProtocol(models.Protocol):
 
@@ -27,6 +28,9 @@ class BackupProtocol(models.Protocol):
         if self.args.local or self.args.restore:
             print("Cannot backup when running ok with --local.")
             return
+
+        if not self.args.insecure:
+            network.check_ssl()
 
         if self.args.revise:
             action = 'Revise'
@@ -110,6 +114,8 @@ class BackupProtocol(models.Protocol):
 
 
     def send_all_messages(self, access_token, message_list, current=False):
+        if not self.args.insecure:
+            network.check_ssl()
         if current and self.args.revise:
             action = "Revise"
         elif current and self.args.submit:

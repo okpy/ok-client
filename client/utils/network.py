@@ -8,6 +8,21 @@ log = logging.getLogger(__name__)
 
 TIMEOUT = 15
 
+def check_ssl():
+    """Attempts to import SSL or raises an exception."""
+    try:
+        import ssl
+    except:
+        log.warning('Error importing SSL module', stack_info=True)
+        raise Exception(
+            'Your Python installation does not support SSL. '
+            'You may need to install OpenSSL and reinstall Python. '
+            'In the meantime, you can run OK locally, '
+            'but you will not be able to back up or submit:\n'
+            '\tpython3 ok --local')
+    else:
+        log.info('SSL module is available')
+
 def api_request(access_token, server, route, insecure=False, arguments={}):
     """Makes a request to the server API and returns the result."""
     try:
