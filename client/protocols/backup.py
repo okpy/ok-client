@@ -1,6 +1,5 @@
 from client.protocols.common import models
-from client.utils import auth
-from client.utils import network
+from client.utils import auth, network
 import client
 import datetime
 import json
