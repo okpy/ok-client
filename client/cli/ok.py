@@ -97,8 +97,6 @@ def parse_input(command_input=None):
                         help="attempt to reliably backup your work")
     testing.add_argument('--revise', action='store_true',
                         help="submit composition revision")
-    testing.add_argument('--restore', action='store_true',
-                        help="restore assignment from an earlier backup")
     testing.add_argument('--timeout', type=int, default=10,
                         help="set the timeout duration (in seconds) for running tests")
 

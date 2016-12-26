@@ -23,7 +23,7 @@ class BackupProtocol(models.Protocol):
     REVISION_ENDPOINT = '{prefix}://{server}/api/v3/revision/'
 
     def run(self, messages):
-        if self.args.local or self.args.restore:
+        if self.args.local:
             print("Cannot backup when running ok with --local.")
             return
 
