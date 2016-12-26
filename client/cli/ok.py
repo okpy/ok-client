@@ -213,7 +213,7 @@ def main():
     except KeyboardInterrupt:
         log.info('KeyboardInterrupt received.')
     finally:
-        if not args.no_update:
+        if not args.no_update and not args.local:
             try:
                 software_update.check_version(args.server, client.__version__,
                                               client.FILE_NAME)
