@@ -1,5 +1,5 @@
 from client.protocols.common import models
-from client.utils import auth
+from client.utils import auth, network
 import client
 import datetime
 import json
@@ -7,7 +7,6 @@ import logging
 import os
 import pickle
 import socket
-import ssl
 import urllib.error
 import urllib.request
 
@@ -27,6 +26,9 @@ class BackupProtocol(models.Protocol):
         if self.args.local or self.args.restore:
             print("Cannot backup when running ok with --local.")
             return
+
+        if not self.args.insecure:
+            network.check_ssl()
 
         if self.args.revise:
             action = 'Revise'
@@ -110,6 +112,11 @@ class BackupProtocol(models.Protocol):
 
 
     def send_all_messages(self, access_token, message_list, current=False):
+        if not self.args.insecure:
+            ssl = network.check_ssl()
+        else:
+            ssl = None
+
         if current and self.args.revise:
             action = "Revise"
         elif current and self.args.submit:
@@ -153,11 +160,6 @@ class BackupProtocol(models.Protocol):
                 retries -= 1
                 error_msg = 'Connection timed out after {} seconds. '.format(timeout) + \
                             'Please check your network connection.'
-            except ssl.CertificateError as ex:
-                log.warning("SSL Error: %s", str(ex))
-                retries -= 1
-                error_msg = 'SSL Verification Error: {}\n'.format(ex) + \
-                            'Please check your network connection and SSL configuration.'
             except (urllib.error.URLError, urllib.error.HTTPError) as ex:
                 log.warning('%s: %s', ex.__class__.__name__, str(ex))
                 retries -= 1
@@ -184,6 +186,16 @@ class BackupProtocol(models.Protocol):
                 else:
                     retries -= 1
                     error_msg = response_json['message']
+            except Exception as ex:
+                if ssl and isinstance(ex, ssl.CertificateError):
+                    retries = 0
+                    log.warning("SSL Error: %s", str(ex))
+                    error_msg = 'SSL Verification Error: {}\n'.format(ex) + \
+                                'Please check your network connection and SSL configuration.'
+                else:
+                    retries -= 1
+                    log.warning(error_msg, exc_info=True)
+                    error_msg = "Unknown Error: {}".format(ex)
             else:
                 if not first_response:
                     first_response = response
