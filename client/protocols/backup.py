@@ -187,16 +187,15 @@ class BackupProtocol(models.Protocol):
                     retries -= 1
                     error_msg = response_json['message']
             except Exception as ex:
-                retries -= 1
                 if ssl and isinstance(ex, ssl.CertificateError):
                     retries = 0
                     log.warning("SSL Error: %s", str(ex))
                     error_msg = 'SSL Verification Error: {}\n'.format(ex) + \
                                 'Please check your network connection and SSL configuration.'
                 else:
-                    error_msg = "Unknown Error {}".format(ex)
+                    retries -= 1
                     log.warning(error_msg, exc_info=True)
-
+                    error_msg = "Unknown Error: {}".format(ex)
             else:
                 if not first_response:
                     first_response = response
