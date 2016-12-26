@@ -3,10 +3,17 @@
 from urllib import request, error
 import json
 import logging
+import sys
 
 log = logging.getLogger(__name__)
 
 TIMEOUT = 15
+SSL_ERROR_MESSAGE = """
+ERROR: Your Python installation does not support SSL. You may need to
+install OpenSSL and reinstall Python. In the meantime, you can run OK
+locally, but you will not be able to back up or submit:
+\tpython3 ok --local
+""".strip()
 
 def check_ssl():
     """Attempts to import SSL or raises an exception."""
@@ -14,12 +21,8 @@ def check_ssl():
         import ssl
     except:
         log.warning('Error importing SSL module', stack_info=True)
-        raise Exception(
-            'Your Python installation does not support SSL. '
-            'You may need to install OpenSSL and reinstall Python. '
-            'In the meantime, you can run OK locally, '
-            'but you will not be able to back up or submit:\n'
-            '\tpython3 ok --local')
+        print(SSL_ERROR_MESSAGE)
+        sys.exit(1)
     else:
         log.info('SSL module is available')
 
