@@ -13,7 +13,6 @@ import urllib.request
 
 log = logging.getLogger(__name__)
 
-
 class BackupProtocol(models.Protocol):
 
     # Timeouts are specified in seconds.
