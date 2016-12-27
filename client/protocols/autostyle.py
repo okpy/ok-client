@@ -1,5 +1,5 @@
 from client.protocols.common import models
-from client.utils import auth, network
+from client.utils import auth
 import client
 
 import logging
@@ -13,8 +13,7 @@ class AutoStyleProtocol(models.Protocol):
 
     # Timeouts are specified in seconds.
     SHORT_TIMEOUT = 10
-    SERVER_DOMAIN = 'codestyle.herokuapp.com'
-    API_ENDPOINT = '/ok_launch/'
+    API_ENDPOINT = 'https://codestyle.herokuapp.com/ok_launch/'
     ALLOW_QUESTIONS = ['flatten', 'add_up', 'permutations', 'deep_len']
 
     def run(self, messages):
@@ -70,7 +69,7 @@ class AutoStyleProtocol(models.Protocol):
         if confirm.lower().strip() != 'y':
             return
 
-        messages['analytics']['identifier'] = auth.get_identifier(self.args)
+        messages['analytics']['identifier'] = auth.get_identifier(self.assignment)
         # Send data to autostyle
         response_url = self.send_messages(messages, self.SHORT_TIMEOUT)
         # Parse response_url
@@ -86,7 +85,7 @@ class AutoStyleProtocol(models.Protocol):
             'messages': messages,
             'submit': self.args.submit
         }
-        address = network.server_url(self.args, self.SERVER_DOMAIN) + self.API_ENDPOINT
+        address = self.API_ENDPOINT
         address_params = {
             'client_name': 'ok-client',
             'client_version': client.__version__,

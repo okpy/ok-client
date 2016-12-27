@@ -171,20 +171,20 @@ def main():
                 args.server, client.__version__, client.FILE_NAME, timeout=10)
         exit(not did_update)  # exit with error if ok failed to update
 
-    if args.get_token:
-        access_token = auth.authenticate(args, force=True)
-        print("Token: {}".format(access_token))
-        exit(not access_token)  # exit with error if no access_token
-
     assign = None
     try:
-        if args.authenticate:
-            # Authenticate and check for success
-            if not auth.authenticate(args, force=True):
-                exit(1)
-
         # Instantiating assignment
         assign = assignment.load_assignment(args.config, args)
+
+        if args.authenticate:
+            # Authenticate and check for success
+            if not auth.authenticate(assign, force=True):
+                exit(1)
+
+        if args.get_token:
+            access_token = auth.authenticate(assign, force=True)
+            print("Token: {}".format(access_token))
+            exit(not access_token)  # exit with error if no access_token
 
         if args.tests:
             print('Available tests:')

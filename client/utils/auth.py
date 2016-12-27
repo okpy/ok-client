@@ -104,12 +104,12 @@ def update_storage(access_token, expires_in, refresh_token):
             'refresh_token': refresh_token
         }, fp)
 
-def authenticate(args, force=False):
+def authenticate(assignment, force=False):
     """Returns an OAuth token that can be passed to the server for
     identification. If FORCE is False, it will attempt to use a cached token
     or refresh the OAuth token. ARGS is the command-line arguments object.
     """
-    server = network.server_url(args)
+    server = assignment.server_url
     if not force:
         try:
             cur_time = int(time.time())
@@ -199,7 +199,7 @@ def authenticate(args, force=False):
             if auth_error:
                 self.send_failure(auth_error)
             else:
-                self.send_redirect(server)
+                self.send_redirect('{}/{}'.format(server, assignment.endpoint))
 
         def log_message(self, format, *args):
             return
@@ -221,12 +221,13 @@ def authenticate(args, force=False):
         return None
 
 # Grabs the student's email through the access_token and returns it.
-def get_student_email(args, access_token):
+def get_student_email(assignment, access_token):
     log.info("Attempting to get student email")
     if access_token is None:
         return None
     try:
-        response = requests.get(network.server_url(args) + INFO_ENDPOINT,
+        response = requests.get(
+            network.server_url(assignment.cmd_args) + INFO_ENDPOINT,
             params={'access_token': access_token},
             timeout=3)
         response.raise_for_status()
@@ -235,14 +236,14 @@ def get_student_email(args, access_token):
         user_email = None
     return user_email
 
-def get_identifier(args, token=None, email=None):
+def get_identifier(assignment, token=None, email=None):
     """ Obtain anonmyzied identifier."""
     if not token:
-        token = authenticate(args, force=False)
+        token = authenticate(assignment, force=False)
     if email:
         student_email = email
     else:
-        student_email = get_student_email(args, token)
+        student_email = get_student_email(assignment, token)
         if not student_email:
             return "Unknown"
     return hashlib.md5(student_email.encode()).hexdigest()

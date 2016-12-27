@@ -73,9 +73,9 @@ class CollaborateProtocol(models.Protocol):
             log.warning("Exception while waiting", exc_info=True)
 
     def start_firebase(self, messages):
-        access_token = auth.authenticate(self.args, force=False)
-        email = auth.get_student_email(self.args, access_token)
-        identifier = auth.get_identifier(self.args, token=access_token, email=email)
+        access_token = auth.authenticate(self.assignment, force=False)
+        email = auth.get_student_email(self.assignment, access_token)
+        identifier = auth.get_identifier(self.assignment, token=access_token, email=email)
 
         firebase = pyrebase.initialize_app(self.FIREBASE_CONFIG)
         self.fire_auth = firebase.auth()

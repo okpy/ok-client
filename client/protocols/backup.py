@@ -36,7 +36,7 @@ class BackupProtocol(models.Protocol):
 
         message_list = self.load_unsent_messages()
 
-        access_token = auth.authenticate(self.args, force=False)
+        access_token = auth.authenticate(self.assignment, force=False)
         log.info('Authenticated with access token')
         log.info('Sending unsent messages')
 
@@ -60,7 +60,7 @@ class BackupProtocol(models.Protocol):
             response = self.send_all_messages(access_token, message_list,
                                               current=False)
 
-        base_url = network.server_url(self.args) + '/{}/{}/{}'
+        base_url = self.assignment.server_url + '/{}/{}/{}'
 
         if isinstance(response, dict):
             print('{action} successful for user: {email}'.format(action=action,
@@ -225,9 +225,9 @@ class BackupProtocol(models.Protocol):
         }
 
         if is_revision:
-            address = self.REVISION_ENDPOINT.format(server=network.server_url(self.args))
+            address = self.REVISION_ENDPOINT.format(server=self.assignment.server_url)
         else:
-            address = self.BACKUP_ENDPOINT.format(server=network.server_url(self.args))
+            address = self.BACKUP_ENDPOINT.format(server=self.assignment.server_url)
         address_params = {
             'access_token': access_token,
             'client_name': 'ok-client',
