@@ -7,10 +7,8 @@ import os
 import pickle
 import requests
 import time
-from urllib.parse import urlparse, parse_qs
+from urllib.parse import urlencode, urlparse, parse_qs
 import webbrowser
-
-from sanction import Client
 
 from client.exceptions import AuthenticationException
 from client.utils.config import (CONFIG_DIRECTORY, REFRESH_FILE,
@@ -41,6 +39,8 @@ TIMEOUT = 10
 SERVER = 'https://okpy.org'
 INFO_ENDPOINT = "https://www.googleapis.com/oauth2/v1/userinfo"
 
+AUTH_ENDPOINT = 'https://accounts.google.com/o/oauth2/auth'
+TOKEN_ENDPOINT = 'https://accounts.google.com/o/oauth2/token'
 
 def pick_free_port(hostname=REDIRECT_HOST, port=0):
     """ Try to bind a port. Default=0 selects a free port. """
@@ -60,23 +60,29 @@ def pick_free_port(hostname=REDIRECT_HOST, port=0):
     return port
 
 def _make_code_post(code, redirect_uri):
-    client = Client(
-        token_endpoint='https://accounts.google.com/o/oauth2/token',
-        resource_endpoint='https://www.googleapis.com/oauth2/v1',
-        client_id=CLIENT_ID, client_secret=CLIENT_SECRET)
-    params = {"redirect_uri": redirect_uri}
-    client.request_token(code=code, **params)
-    return client.access_token, client.refresh_token, client.expires_in
-
+    data = {
+        'client_id': CLIENT_ID,
+        'client_secret': CLIENT_SECRET,
+        'code': code,
+        'grant_type': 'authorization_code',
+        'redirect_uri': redirect_uri,
+    }
+    response = requests.post(TOKEN_ENDPOINT, data=data, timeout=TIMEOUT)
+    response.raise_for_status()
+    info = response.json()
+    return info['access_token'], info['refresh_token'], int(info['expires_in'])
 
 def make_refresh_post(refresh_token):
-    client = Client(
-        token_endpoint='https://accounts.google.com/o/oauth2/token',
-        resource_endpoint='https://www.googleapis.com/oauth2/v1',
-        client_id=CLIENT_ID, client_secret=CLIENT_SECRET)
-    params = {"grant_type": "refresh_token"}
-    client.request_token(refresh_token=refresh_token, **params)
-    return client.access_token, client.expires_in
+    data = {
+        'client_id': CLIENT_ID,
+        'client_secret': CLIENT_SECRET,
+        'grant_type': 'refresh_token',
+        'refresh_token': refresh_token,
+    }
+    response = requests.post(TOKEN_ENDPOINT, data=data, timeout=TIMEOUT)
+    response.raise_for_status()
+    info = response.json()
+    return info['access_token'], int(info['expires_in'])
 
 def get_storage():
     create_config_directory()
@@ -145,12 +151,16 @@ def authenticate(force=False):
     redirect_uri = "http://{0}:{1}/".format(host_name, port_number)
     log.info("Authentication server running on {}".format(redirect_uri))
 
-    c = Client(auth_endpoint='https://accounts.google.com/o/oauth2/auth',
-               client_id=CLIENT_ID)
-    url = c.auth_uri(scope="profile email", access_type='offline',
-                     name='ok-server', redirect_uri=redirect_uri,
-                     login_hint=email)
-
+    params = {
+        'access_type': 'offline',
+        'client_id': CLIENT_ID,
+        'login_hint': email,
+        'name': 'ok-server',
+        'redirect_uri': redirect_uri,
+        'response_type': 'code',
+        'scope': 'profile email',
+    }
+    url = '{}?{}'.format(AUTH_ENDPOINT, urlencode(params))
     webbrowser.open_new(url)
 
     done = False
