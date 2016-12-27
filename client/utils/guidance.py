@@ -5,7 +5,7 @@ import hashlib
 import json
 import logging
 import os
-from urllib.request import urlopen
+import requests
 log = logging.getLogger(__name__)
 
 """
@@ -335,8 +335,7 @@ class Guidance:
                               TG_SERVER_ENDING))
             try:
                 log.info("Accessing treatment server at %s", tg_url)
-                data = json.loads((urlopen(tg_url, timeout=1).read()
-                                                             .decode("utf-8")))
+                data = requests.get(tg_url, timeout=1).json()
             except IOError:
                 data = {"tg": -1}
                 log.warning("Failed to communicate to server", exc_info=True)

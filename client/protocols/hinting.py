@@ -10,12 +10,9 @@ from client.protocols.common import models as protocol_models
 from client.utils import auth
 from client.utils import format
 
-import json
 import logging
 import random
-import socket
-import urllib.error
-import urllib.request
+import requests
 
 log = logging.getLogger(__name__)
 
@@ -122,7 +119,7 @@ class HintingProtocol(protocol_models.Protocol):
                 log.info('Prompting for hint on %s', question)
                 try:
                     response = self.query_server(messages, question)
-                except (urllib.error.URLError, urllib.error.HTTPError, socket.timeout):
+                except (requests.exceptions.RequestException, requests.exceptions.BaseHTTPError):
                     log.debug("Network error while fetching hint", exc_info=True)
                     hint_info['fetch_error'] = True
                     print("\r\nNetwork Error while generating hint. Try again later")
@@ -163,17 +160,12 @@ class HintingProtocol(protocol_models.Protocol):
             'messages': messages,
             'user': user
         }
-
-        serialized_data = json.dumps(data).encode(encoding='utf-8')
-
         address = self.HINT_SERVER + self.HINT_ENDPOINT
-
         log.info('Sending hint request to %s', address)
-        request = urllib.request.Request(address)
-        request.add_header("Content-Type", "application/json")
 
-        response = urllib.request.urlopen(request, serialized_data, 35)
-        return json.loads(response.read().decode('utf-8'))
+        response = requests.post(address, json=data, timeout=35)
+        response.raise_for_status()
+        return response.json()
 
 def prompt_user(query, results):
     try:

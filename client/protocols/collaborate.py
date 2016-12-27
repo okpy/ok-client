@@ -11,10 +11,7 @@ import os
 import sys
 import shutil
 
-import json
 import logging
-import urllib.error
-import urllib.request
 import platform
 import time
 
@@ -189,7 +186,6 @@ class CollaborateProtocol(models.Protocol):
 
     def send_messages(self, data, timeout=30, endpoint='/collab/start/'):
         """Send messages to server, along with user authentication."""
-        serialized_data = json.dumps(data).encode(encoding='utf-8')
         server = self.COLLAB_SERVER + endpoint
         prefix = 'http' if self.args.insecure else 'https'
         address = self.API_ENDPOINT.format(server=server, prefix=prefix)
@@ -198,15 +194,13 @@ class CollaborateProtocol(models.Protocol):
             'client_name': 'ok-client',
             'client_version': client.__version__,
         }
-        headers = {"Content-Type": "application/json"}
 
         log.info('Sending messages to %s', address)
         try:
-            r = requests.post(address, params=params, data=serialized_data,
-                              headers=headers, timeout=timeout)
+            r = requests.post(address, params=params, json=data, timeout=timeout)
             r.raise_for_status()
             return r.json()
-        except (requests.exceptions.RequestException, urllib.error.HTTPError, Exception) as ex:
+        except (requests.exceptions.RequestException, requests.exceptions.BaseHTTPError, Exception) as ex:
             message = '{}: {}'.format(ex.__class__.__name__, str(ex))
             log.warning(message)
             print("There was an error connecting to the server."

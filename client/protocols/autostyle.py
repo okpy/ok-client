@@ -2,10 +2,8 @@ from client.protocols.common import models
 from client.utils import auth
 import client
 
-import json
 import logging
-import urllib.error
-import urllib.request
+import requests
 import webbrowser
 
 log = logging.getLogger(__name__)
@@ -87,25 +85,19 @@ class AutoStyleProtocol(models.Protocol):
             'messages': messages,
             'submit': self.args.submit
         }
-        serialized_data = json.dumps(data).encode(encoding='utf-8')
         server = 'codestyle.herokuapp.com/ok_launch/'
         address = self.API_ENDPOINT.format(server=server, prefix='http' if self.args.insecure else 'https')
         address_params = {
             'client_name': 'ok-client',
             'client_version': client.__version__,
         }
-        address += '?'
-        address += '&'.join('{}={}'.format(param, value) for param, value in address_params.items())
-
         log.info('Sending messages to %s', address)
         try:
-            request = urllib.request.Request(address)
-            request.add_header("Content-Type", "application/json")
-            response = urllib.request.urlopen(request, serialized_data, timeout)
-            response_dict = json.loads(response.read().decode('utf-8'))
-            return response_dict['url']
-        except (urllib.error.URLError, urllib.error.HTTPError,
-                json.decoder.JSONDecodeError) as ex:
+            response = requests.post(address,
+                params=address_params, json=data, timeout=timeout)
+            response.raise_for_status()
+            return response.json()['url']
+        except (requests.exceptions.RequestException, requests.exceptions.BaseHTTPError, ValueError) as ex:
             log.warning('%s: %s', ex.__class__.__name__, str(ex))
         return
 

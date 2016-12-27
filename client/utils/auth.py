@@ -2,13 +2,12 @@
 
 import http.server
 
-import json
 import hashlib
 import os
 import pickle
+import requests
 import time
 from urllib.parse import urlparse, parse_qs
-from urllib.request import urlopen
 import webbrowser
 
 from sanction import Client
@@ -40,7 +39,7 @@ REDIRECT_PORT = 6165
 
 TIMEOUT = 10
 SERVER = 'https://okpy.org'
-INFO_ENDPOINT = "https://www.googleapis.com/oauth2/v1/userinfo?access_token={}"
+INFO_ENDPOINT = "https://www.googleapis.com/oauth2/v1/userinfo"
 
 
 def pick_free_port(hostname=REDIRECT_HOST, port=0):
@@ -234,13 +233,16 @@ def success_page(server, email, access_token):
     API = server + '/api/v3/enrollment/{0}/?access_token={1}'.format(
         email, access_token)
     try:
-        data = urlopen(API).read().decode("utf-8")
-        log.debug("Enrollment API {} resp: {}".format(API, data))
-        success_data = success_courses(email, data, server)
+        response = requests.get(
+            '{}/api/v3/enrollment/{}/'.format(server, email),
+            params={'access_token': access_token},
+            timeout=TIMEOUT)
+        response.raise_for_status()
+        data = response.json()
     except:
         log.debug("Enrollment for {} failed".format(email), exc_info=True)
-        return success_auth(success_courses(email, '[]', server))
-    return success_auth(success_data)
+        data = []
+    return success_auth(success_courses(email, data, server))
 
 
 def failure_page(error):
@@ -260,8 +262,6 @@ def failure_page(error):
 
 def success_courses(email, response, server):
     """Generates HTML for individual courses"""
-    response = json.loads(response)
-
     if response and response['data'].get('courses', []):
         courses = response['data']['courses']
         template_course = partial_course_html
@@ -311,9 +311,11 @@ def get_student_email(access_token):
     if access_token is None:
         return None
     try:
-        request = urlopen(INFO_ENDPOINT.format(access_token), timeout=3)
-        user_data = json.loads(request.read().decode("utf-8"))
-        user_email = user_data["email"]
+        response = requests.get(INFO_ENDPOINT,
+            params={'access_token': access_token},
+            timeout=3)
+        response.raise_for_status()
+        user_email = response.json()["email"]
     except IOError as e:
         user_email = None
     return user_email

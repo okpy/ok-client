@@ -2,13 +2,10 @@ from client.protocols.common import models
 from client.utils import auth, network
 import client
 import datetime
-import json
 import logging
 import os
 import pickle
-import socket
-import urllib.error
-import urllib.request
+import requests
 
 log = logging.getLogger(__name__)
 
@@ -155,32 +152,29 @@ class BackupProtocol(models.Protocol):
 
             try:
                 response = self.send_messages(access_token, message, timeout, current)
-            except socket.timeout as ex:
-                log.warning("socket.timeout: %s", str(ex))
+            except requests.exceptions.Timeout as ex:
+                log.warning("HTTP request timeout: %s", str(ex))
                 retries -= 1
                 error_msg = 'Connection timed out after {} seconds. '.format(timeout) + \
                             'Please check your network connection.'
-            except (urllib.error.URLError, urllib.error.HTTPError) as ex:
+            except (requests.exceptions.RequestException, requests.exceptions.BaseHTTPError) as ex:
                 log.warning('%s: %s', ex.__class__.__name__, str(ex))
                 retries -= 1
-                if not hasattr(ex, 'read'):
-                    error_msg = 'Please check your network connection:\n{}'.format(ex)
+                if getattr(ex, 'response', None) is None:
+                    error_msg = 'Please check your network connection.'
                     continue
-
                 try:
-                    response_json = json.loads(ex.read().decode('utf-8'))
-                except json.decoder.JSONDecodeError as ex:
+                    response_json = ex.response.json()
+                except ValueError as ex:
                     log.warning("Invalid JSON Response", exc_info=True)
                     retries -= 1
-                    error_msg = 'Invalid Server Error Response: {} \n'.format(ex) + \
-                                'The server did not provide a valid response. Try again soon.'
+                    error_msg = 'The server did not provide a valid response. Try again soon.'
                     continue
 
-                log.warning('%s: %s', ex.__class__.__name__, str(ex))
                 log.warning('%s error message: %s', ex.__class__.__name__,
                             response_json['message'])
 
-                if ex.code == 403 and 'download_link' in response_json['data']:
+                if ex.response.status_code == 403 and 'download_link' in response_json['data']:
                     retries = 0
                     error_msg = 'Aborting because OK may need to be updated.'
                 else:
@@ -230,7 +224,6 @@ class BackupProtocol(models.Protocol):
             'messages': messages,
             'submit': is_submit
         }
-        serialized_data = json.dumps(data).encode(encoding='utf-8')
 
         if is_revision:
             address = self.REVISION_ENDPOINT.format(server=self.args.server,
@@ -243,18 +236,11 @@ class BackupProtocol(models.Protocol):
             'client_name': 'ok-client',
             'client_version': client.__version__,
         }
-        address += '?'
-        address += '&'.join('{}={}'.format(param, value)
-                            for param, value in address_params.items())
 
-        redacted_address = address.replace(access_token, '*******')
-        log.info('Sending messages to %s', redacted_address)
-
-        request = urllib.request.Request(address)
-        request.add_header("Content-Type", "application/json")
-
-        response = urllib.request.urlopen(request, serialized_data, timeout)
-
-        return json.loads(response.read().decode('utf-8'))
+        log.info('Sending messages to %s', address)
+        response = requests.post(address,
+            params=address_params, json=data, timeout=timeout)
+        response.raise_for_status()
+        return response.json()
 
 protocol = BackupProtocol
