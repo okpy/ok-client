@@ -1,8 +1,5 @@
-#!/usr/bin/env python3
-
-import http.server
-
 import hashlib
+import http.server
 import os
 import pickle
 import requests
@@ -13,8 +10,6 @@ import webbrowser
 from client.exceptions import AuthenticationException
 from client.utils.config import (CONFIG_DIRECTORY, REFRESH_FILE,
                                  create_config_directory)
-from client.utils.html import (auth_html, partial_course_html,
-                               partial_nocourse_html, red_css)
 from client.utils import network
 
 import logging
@@ -39,6 +34,7 @@ TIMEOUT = 10
 INFO_ENDPOINT = '/api/v3/user/'
 AUTH_ENDPOINT =  '/oauth/authorize'
 TOKEN_ENDPOINT = '/oauth/token'
+ERROR_ENDPOINT = '/oauth/errors'
 
 def pick_free_port(hostname=REDIRECT_HOST, port=0):
     """ Try to bind a port. Default=0 selects a free port. """
@@ -163,23 +159,29 @@ def authenticate(args, force=False):
     url = '{}{}?{}'.format(server, AUTH_ENDPOINT, urlencode(params))
     webbrowser.open_new(url)
 
-    done = False
     access_token = None
     refresh_token = None
     expires_in = None
     auth_error = None
 
     class CodeHandler(http.server.BaseHTTPRequestHandler):
-        def send_failure(self, message):
-            self.send_response(400)
-            self.send_header("Content-type", "text/html")
+        def send_redirect(self, location):
+            self.send_response(302)
+            self.send_header("Location", location)
             self.end_headers()
-            self.wfile.write(bytes(failure_page(message), "utf-8"))
+
+        def send_failure(self, message):
+            params = {
+                'error': 'Authentication Failed',
+                'error_description': message,
+            }
+            url = '{}{}?{}'.format(server, ERROR_ENDPOINT, urlencode(params))
+            self.send_redirect(url)
 
         def do_GET(self):
             """Respond to the GET request made by the OAuth"""
-            nonlocal access_token, refresh_token, expires_in, auth_error, done
-
+            nonlocal access_token, refresh_token, expires_in, auth_error
+            log.debug('Received GET request for %s', self.path)
             path = urlparse(self.path)
             qs = parse_qs(path.query)
             try:
@@ -187,34 +189,17 @@ def authenticate(args, force=False):
                 code_response = _make_code_post(server, code, redirect_uri)
                 access_token, refresh_token, expires_in = code_response
             except KeyError:
-                message = qs.get('error', 'Unknown')
+                message = qs.get('error', ['Unknown'])[0]
                 log.warning("No auth code provided {}".format(message))
                 auth_error = message
-                done = True
-                self.send_failure(message)
-                return
             except Exception as e:  # TODO : Catch just SSL errors
                 log.warning("Could not obtain token", exc_info=True)
-                auth_error = e.message
-                done = True
-                self.send_failure(e.message)
-                return
+                auth_error = str(e)
 
-            done = True
-            self.send_response(200)
-            self.send_header("Content-type", "text/html")
-            self.end_headers()
-            actual_email = email
-
-            try:
-                email_resp = get_student_email(args, access_token)
-                if email_resp:
-                    actual_email = email_resp
-            except Exception as e:  # TODO : Catch just SSL errors
-                log.warning("Could not get email from token", exc_info=True)
-
-            reponse = success_page(server, actual_email, access_token)
-            self.wfile.write(bytes(reponse, "utf-8"))
+            if auth_error:
+                self.send_failure(auth_error)
+            else:
+                self.send_redirect(server)
 
         def log_message(self, format, *args):
             return
@@ -234,86 +219,6 @@ def authenticate(args, force=False):
     else:
         print("Authentication error: {}".format(auth_error))
         return None
-
-
-def success_page(server, email, access_token):
-    """ Generate HTML for the auth page.
-        Fetches courses and plug into templates.
-    """
-    API = server + '/api/v3/enrollment/{0}/?access_token={1}'.format(
-        email, access_token)
-    try:
-        response = requests.get(
-            '{}/api/v3/enrollment/{}/'.format(server, email),
-            params={'access_token': access_token},
-            timeout=TIMEOUT)
-        response.raise_for_status()
-        data = response.json()
-    except:
-        log.debug("Enrollment for {} failed".format(email), exc_info=True)
-        data = []
-    return success_auth(success_courses(email, data, server))
-
-
-def failure_page(error):
-    html = partial_nocourse_html
-    title = 'Authentication Error'
-    byline = 'Error: {}'.format(error)
-    status = 'We could not authenticate you.'
-    head = '<style>{0}</style>'.format(red_css)
-    return auth_html.format(
-        site=SERVER,
-        status=status,
-        courses=html,
-        byline=byline,
-        title=title,
-        head=head)
-
-
-def success_courses(email, response, server):
-    """Generates HTML for individual courses"""
-    if response and response['data'].get('courses', []):
-        courses = response['data']['courses']
-        template_course = partial_course_html
-        html = ''
-        for course in courses:
-            html += template_course.format(**course['course'])
-
-        status = "Scroll for more: {0}".format(
-            ', '.join(course['course']['display_name'] for course in courses))
-        byline = '"{}" is currently enrolled in {}.'.format(
-            email, pluralize(len(courses), ' course'))
-        title = 'Ok!'
-        head = ''
-    else:
-        html = partial_nocourse_html
-        byline = 'The email "{}" is not enrolled. Is it correct?'.format(email)
-        status = 'No courses found'
-        title = 'Uh oh'
-        head = '<style>{0}</style>'.format(red_css)
-    return html, status, byline, title, head, server
-
-
-def success_auth(data):
-    """Generates finalized HTML"""
-    return auth_html.format(
-        site=data[5],
-        status=data[1],
-        courses=data[0],
-        byline=data[2],
-        title=data[3],
-        head=data[4])
-
-def get_file(relative_path, purpose):
-    dir = os.path.dirname(__file__)
-    filename = os.path.join(dir, relative_path)
-    return open(filename, purpose)
-
-def get_contents(relative_path, purpose='r'):
-    return get_file(relative_path, purpose).read()
-
-def pluralize(num, string):
-    return str(num)+string+('s' if num != 1 else '')
 
 # Grabs the student's email through the access_token and returns it.
 def get_student_email(args, access_token):
@@ -341,6 +246,3 @@ def get_identifier(args, token=None, email=None):
         if not student_email:
             return "Unknown"
     return hashlib.md5(student_email.encode()).hexdigest()
-
-if __name__ == "__main__":
-    print(authenticate())
