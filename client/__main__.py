@@ -1,8 +1,15 @@
 import sys
 import os
 
-if sys.version_info[0] < 3:
-    sys.exit("ok requires Python 3. \nFor more info: http://www-inst.eecs.berkeley.edu/~cs61a/fa14/lab/lab01/#installing-python")
+VERSION_MESSAGE = """
+ERROR: You are using Python {}.{}, but OK requires Python 3.3 or higher.
+Make sure you are using the right command (e.g. `python3 ok` instead of
+`python ok`) and that you have Python 3 installed.
+""".strip()
+
+if sys.version_info[:2] < (3, 3):
+    print(VERSION_MESSAGE.format(*sys.version_info[:2]))
+    sys.exit(1)
 
 from client.cli import ok
 from client.utils import config
