@@ -69,7 +69,7 @@ class AutoStyleProtocol(models.Protocol):
         if confirm.lower().strip() != 'y':
             return
 
-        messages['analytics']['identifier'] = auth.get_identifier()
+        messages['analytics']['identifier'] = auth.get_identifier(self.args)
         # Send data to autostyle
         response_url = self.send_messages(messages, self.SHORT_TIMEOUT)
         # Parse response_url

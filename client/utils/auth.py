@@ -21,12 +21,11 @@ import logging
 
 log = logging.getLogger(__name__)
 
-CLIENT_ID = ('931757735585-vb3p8g53a442iktc4nkv5q8cbjrtuonv'
-             '.apps.googleusercontent.com')
-
+CLIENT_ID = 'ok-client'
 # The client secret in an installed application isn't a secret.
 # See: https://developers.google.com/accounts/docs/OAuth2InstalledApp
-CLIENT_SECRET = 'zGY9okExIBnompFTWcBmOZo4'
+CLIENT_SECRET = 'sPuzzAfdWtQPvUajMek9liDQFLQstE0'
+OAUTH_SCOPE = 'all'
 
 CONFIG_DIRECTORY = os.path.join(os.path.expanduser('~'), '.config', 'ok')
 
@@ -36,11 +35,11 @@ REDIRECT_HOST = "127.0.0.1"
 REDIRECT_PORT = 6165
 
 TIMEOUT = 10
-SERVER = 'https://okpy.org'
+
 INFO_ENDPOINT = "https://www.googleapis.com/oauth2/v1/userinfo"
 
-AUTH_ENDPOINT = 'https://accounts.google.com/o/oauth2/auth'
-TOKEN_ENDPOINT = 'https://accounts.google.com/o/oauth2/token'
+AUTH_ENDPOINT =  '/oauth/authorize'
+TOKEN_ENDPOINT = '/oauth/token'
 
 def pick_free_port(hostname=REDIRECT_HOST, port=0):
     """ Try to bind a port. Default=0 selects a free port. """
@@ -59,7 +58,7 @@ def pick_free_port(hostname=REDIRECT_HOST, port=0):
     s.close()
     return port
 
-def _make_code_post(code, redirect_uri):
+def _make_code_post(server, code, redirect_uri):
     data = {
         'client_id': CLIENT_ID,
         'client_secret': CLIENT_SECRET,
@@ -67,19 +66,19 @@ def _make_code_post(code, redirect_uri):
         'grant_type': 'authorization_code',
         'redirect_uri': redirect_uri,
     }
-    response = requests.post(TOKEN_ENDPOINT, data=data, timeout=TIMEOUT)
+    response = requests.post(server + TOKEN_ENDPOINT, data=data, timeout=TIMEOUT)
     response.raise_for_status()
     info = response.json()
     return info['access_token'], info['refresh_token'], int(info['expires_in'])
 
-def make_refresh_post(refresh_token):
+def make_refresh_post(server, refresh_token):
     data = {
         'client_id': CLIENT_ID,
         'client_secret': CLIENT_SECRET,
         'grant_type': 'refresh_token',
         'refresh_token': refresh_token,
     }
-    response = requests.post(TOKEN_ENDPOINT, data=data, timeout=TIMEOUT)
+    response = requests.post(server + TOKEN_ENDPOINT, data=data, timeout=TIMEOUT)
     response.raise_for_status()
     info = response.json()
     return info['access_token'], int(info['expires_in'])
@@ -110,17 +109,19 @@ def update_storage(access_token, expires_in, refresh_token):
             'refresh_token': refresh_token
         }, fp)
 
-def authenticate(force=False):
+def authenticate(args, force=False):
+    """Returns an OAuth token that can be passed to the server for
+    identification. If FORCE is False, it will attempt to use a cached token
+    or refresh the OAuth token. ARGS is the command-line arguments object.
     """
-    Returns an oauth token that can be passed to the server for identification.
-    """
+    server = '{}://{}'.format('http' if args.insecure else 'https', args.server)
     if not force:
         try:
             cur_time = int(time.time())
             access_token, expires_at, refresh_token = get_storage()
             if cur_time < expires_at - 10:
                 return access_token
-            access_token, expires_in = make_refresh_post(refresh_token)
+            access_token, expires_in = make_refresh_post(server, refresh_token)
 
             if not access_token and expires_in:
                 raise AuthenticationException(
@@ -158,9 +159,9 @@ def authenticate(force=False):
         'name': 'ok-server',
         'redirect_uri': redirect_uri,
         'response_type': 'code',
-        'scope': 'profile email',
+        'scope': OAUTH_SCOPE,
     }
-    url = '{}?{}'.format(AUTH_ENDPOINT, urlencode(params))
+    url = '{}{}?{}'.format(server, AUTH_ENDPOINT, urlencode(params))
     webbrowser.open_new(url)
 
     done = False
@@ -184,7 +185,7 @@ def authenticate(force=False):
             qs = parse_qs(path.query)
             try:
                 code = qs['code'][0]
-                code_response = _make_code_post(code, redirect_uri)
+                code_response = _make_code_post(server, code, redirect_uri)
                 access_token, refresh_token, expires_in = code_response
             except KeyError:
                 message = qs.get('error', 'Unknown')
@@ -213,7 +214,7 @@ def authenticate(force=False):
             except Exception as e:  # TODO : Catch just SSL errors
                 log.warning("Could not get email from token", exc_info=True)
 
-            reponse = success_page(SERVER, actual_email, access_token)
+            reponse = success_page(server, actual_email, access_token)
             self.wfile.write(bytes(reponse, "utf-8"))
 
         def log_message(self, format, *args):
@@ -330,10 +331,10 @@ def get_student_email(access_token):
         user_email = None
     return user_email
 
-def get_identifier(token=None, email=None):
+def get_identifier(args, token=None, email=None):
     """ Obtain anonmyzied identifier."""
     if not token:
-        token = authenticate(False)
+        token = authenticate(args, force=False)
     if email:
         student_email = email
     else:

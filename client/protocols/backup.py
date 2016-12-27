@@ -36,7 +36,7 @@ class BackupProtocol(models.Protocol):
 
         message_list = self.load_unsent_messages()
 
-        access_token = auth.authenticate(False)
+        access_token = auth.authenticate(self.args, force=False)
         log.info('Authenticated with access token')
         log.info('Sending unsent messages')
 
