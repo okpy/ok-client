@@ -19,7 +19,7 @@ log = logging.getLogger(__name__)
 CLIENT_ID = 'ok-client'
 # The client secret in an installed application isn't a secret.
 # See: https://developers.google.com/accounts/docs/OAuth2InstalledApp
-CLIENT_SECRET = 'sPuzzAfdWtQPvUajMek9liDQFLQstE0'
+CLIENT_SECRET = 'EWKtcCp5nICeYgVyCPypjs3aLORqQ3H'
 OAUTH_SCOPE = 'all'
 
 CONFIG_DIRECTORY = os.path.join(os.path.expanduser('~'), '.config', 'ok')
