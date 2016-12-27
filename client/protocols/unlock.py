@@ -52,7 +52,7 @@ class UnlockProtocol(models.Protocol):
         if not self.args.unlock:
             return
         if not self.args.local:
-            self.access_token = auth.authenticate(False)
+            self.access_token = auth.authenticate(self.assignment, force=False)
 
         format.print_line('~')
         print('Unlocking tests')

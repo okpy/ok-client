@@ -1,34 +1,26 @@
-#!/usr/bin/env python3
-
-import http.server
-
 import hashlib
+import http.server
 import os
 import pickle
 import requests
 import time
-from urllib.parse import urlparse, parse_qs
+from urllib.parse import urlencode, urlparse, parse_qs
 import webbrowser
-
-from sanction import Client
 
 from client.exceptions import AuthenticationException
 from client.utils.config import (CONFIG_DIRECTORY, REFRESH_FILE,
                                  create_config_directory)
-from client.utils.html import (auth_html, partial_course_html,
-                               partial_nocourse_html, red_css)
 from client.utils import network
 
 import logging
 
 log = logging.getLogger(__name__)
 
-CLIENT_ID = ('931757735585-vb3p8g53a442iktc4nkv5q8cbjrtuonv'
-             '.apps.googleusercontent.com')
-
+CLIENT_ID = 'ok-client'
 # The client secret in an installed application isn't a secret.
 # See: https://developers.google.com/accounts/docs/OAuth2InstalledApp
-CLIENT_SECRET = 'zGY9okExIBnompFTWcBmOZo4'
+CLIENT_SECRET = 'EWKtcCp5nICeYgVyCPypjs3aLORqQ3H'
+OAUTH_SCOPE = 'all'
 
 CONFIG_DIRECTORY = os.path.join(os.path.expanduser('~'), '.config', 'ok')
 
@@ -38,9 +30,11 @@ REDIRECT_HOST = "127.0.0.1"
 REDIRECT_PORT = 6165
 
 TIMEOUT = 10
-SERVER = 'https://okpy.org'
-INFO_ENDPOINT = "https://www.googleapis.com/oauth2/v1/userinfo"
 
+INFO_ENDPOINT = '/api/v3/user/'
+AUTH_ENDPOINT =  '/oauth/authorize'
+TOKEN_ENDPOINT = '/oauth/token'
+ERROR_ENDPOINT = '/oauth/errors'
 
 def pick_free_port(hostname=REDIRECT_HOST, port=0):
     """ Try to bind a port. Default=0 selects a free port. """
@@ -59,24 +53,30 @@ def pick_free_port(hostname=REDIRECT_HOST, port=0):
     s.close()
     return port
 
-def _make_code_post(code, redirect_uri):
-    client = Client(
-        token_endpoint='https://accounts.google.com/o/oauth2/token',
-        resource_endpoint='https://www.googleapis.com/oauth2/v1',
-        client_id=CLIENT_ID, client_secret=CLIENT_SECRET)
-    params = {"redirect_uri": redirect_uri}
-    client.request_token(code=code, **params)
-    return client.access_token, client.refresh_token, client.expires_in
+def _make_code_post(server, code, redirect_uri):
+    data = {
+        'client_id': CLIENT_ID,
+        'client_secret': CLIENT_SECRET,
+        'code': code,
+        'grant_type': 'authorization_code',
+        'redirect_uri': redirect_uri,
+    }
+    response = requests.post(server + TOKEN_ENDPOINT, data=data, timeout=TIMEOUT)
+    response.raise_for_status()
+    info = response.json()
+    return info['access_token'], info['refresh_token'], int(info['expires_in'])
 
-
-def make_refresh_post(refresh_token):
-    client = Client(
-        token_endpoint='https://accounts.google.com/o/oauth2/token',
-        resource_endpoint='https://www.googleapis.com/oauth2/v1',
-        client_id=CLIENT_ID, client_secret=CLIENT_SECRET)
-    params = {"grant_type": "refresh_token"}
-    client.request_token(refresh_token=refresh_token, **params)
-    return client.access_token, client.expires_in
+def make_refresh_post(server, refresh_token):
+    data = {
+        'client_id': CLIENT_ID,
+        'client_secret': CLIENT_SECRET,
+        'grant_type': 'refresh_token',
+        'refresh_token': refresh_token,
+    }
+    response = requests.post(server + TOKEN_ENDPOINT, data=data, timeout=TIMEOUT)
+    response.raise_for_status()
+    info = response.json()
+    return info['access_token'], int(info['expires_in'])
 
 def get_storage():
     create_config_directory()
@@ -104,17 +104,19 @@ def update_storage(access_token, expires_in, refresh_token):
             'refresh_token': refresh_token
         }, fp)
 
-def authenticate(force=False):
+def authenticate(assignment, force=False):
+    """Returns an OAuth token that can be passed to the server for
+    identification. If FORCE is False, it will attempt to use a cached token
+    or refresh the OAuth token. ARGS is the command-line arguments object.
     """
-    Returns an oauth token that can be passed to the server for identification.
-    """
+    server = assignment.server_url
     if not force:
         try:
             cur_time = int(time.time())
             access_token, expires_at, refresh_token = get_storage()
             if cur_time < expires_at - 10:
                 return access_token
-            access_token, expires_in = make_refresh_post(refresh_token)
+            access_token, expires_in = make_refresh_post(server, refresh_token)
 
             if not access_token and expires_in:
                 raise AuthenticationException(
@@ -145,66 +147,59 @@ def authenticate(force=False):
     redirect_uri = "http://{0}:{1}/".format(host_name, port_number)
     log.info("Authentication server running on {}".format(redirect_uri))
 
-    c = Client(auth_endpoint='https://accounts.google.com/o/oauth2/auth',
-               client_id=CLIENT_ID)
-    url = c.auth_uri(scope="profile email", access_type='offline',
-                     name='ok-server', redirect_uri=redirect_uri,
-                     login_hint=email)
-
+    params = {
+        'access_type': 'offline',
+        'client_id': CLIENT_ID,
+        'login_hint': email,
+        'name': 'ok-server',
+        'redirect_uri': redirect_uri,
+        'response_type': 'code',
+        'scope': OAUTH_SCOPE,
+    }
+    url = '{}{}?{}'.format(server, AUTH_ENDPOINT, urlencode(params))
     webbrowser.open_new(url)
 
-    done = False
     access_token = None
     refresh_token = None
     expires_in = None
     auth_error = None
 
     class CodeHandler(http.server.BaseHTTPRequestHandler):
-        def send_failure(self, message):
-            self.send_response(400)
-            self.send_header("Content-type", "text/html")
+        def send_redirect(self, location):
+            self.send_response(302)
+            self.send_header("Location", location)
             self.end_headers()
-            self.wfile.write(bytes(failure_page(message), "utf-8"))
+
+        def send_failure(self, message):
+            params = {
+                'error': 'Authentication Failed',
+                'error_description': message,
+            }
+            url = '{}{}?{}'.format(server, ERROR_ENDPOINT, urlencode(params))
+            self.send_redirect(url)
 
         def do_GET(self):
             """Respond to the GET request made by the OAuth"""
-            nonlocal access_token, refresh_token, expires_in, auth_error, done
-
+            nonlocal access_token, refresh_token, expires_in, auth_error
+            log.debug('Received GET request for %s', self.path)
             path = urlparse(self.path)
             qs = parse_qs(path.query)
             try:
                 code = qs['code'][0]
-                code_response = _make_code_post(code, redirect_uri)
+                code_response = _make_code_post(server, code, redirect_uri)
                 access_token, refresh_token, expires_in = code_response
             except KeyError:
-                message = qs.get('error', 'Unknown')
+                message = qs.get('error', ['Unknown'])[0]
                 log.warning("No auth code provided {}".format(message))
                 auth_error = message
-                done = True
-                self.send_failure(message)
-                return
             except Exception as e:  # TODO : Catch just SSL errors
                 log.warning("Could not obtain token", exc_info=True)
-                auth_error = e.message
-                done = True
-                self.send_failure(e.message)
-                return
+                auth_error = str(e)
 
-            done = True
-            self.send_response(200)
-            self.send_header("Content-type", "text/html")
-            self.end_headers()
-            actual_email = email
-
-            try:
-                email_resp = get_student_email(access_token)
-                if email_resp:
-                    actual_email = email_resp
-            except Exception as e:  # TODO : Catch just SSL errors
-                log.warning("Could not get email from token", exc_info=True)
-
-            reponse = success_page(SERVER, actual_email, access_token)
-            self.wfile.write(bytes(reponse, "utf-8"))
+            if auth_error:
+                self.send_failure(auth_error)
+            else:
+                self.send_redirect('{}/{}'.format(server, assignment.endpoint))
 
         def log_message(self, format, *args):
             return
@@ -225,112 +220,30 @@ def authenticate(force=False):
         print("Authentication error: {}".format(auth_error))
         return None
 
-
-def success_page(server, email, access_token):
-    """ Generate HTML for the auth page.
-        Fetches courses and plug into templates.
-    """
-    API = server + '/api/v3/enrollment/{0}/?access_token={1}'.format(
-        email, access_token)
-    try:
-        response = requests.get(
-            '{}/api/v3/enrollment/{}/'.format(server, email),
-            params={'access_token': access_token},
-            timeout=TIMEOUT)
-        response.raise_for_status()
-        data = response.json()
-    except:
-        log.debug("Enrollment for {} failed".format(email), exc_info=True)
-        data = []
-    return success_auth(success_courses(email, data, server))
-
-
-def failure_page(error):
-    html = partial_nocourse_html
-    title = 'Authentication Error'
-    byline = 'Error: {}'.format(error)
-    status = 'We could not authenticate you.'
-    head = '<style>{0}</style>'.format(red_css)
-    return auth_html.format(
-        site=SERVER,
-        status=status,
-        courses=html,
-        byline=byline,
-        title=title,
-        head=head)
-
-
-def success_courses(email, response, server):
-    """Generates HTML for individual courses"""
-    if response and response['data'].get('courses', []):
-        courses = response['data']['courses']
-        template_course = partial_course_html
-        html = ''
-        for course in courses:
-            html += template_course.format(**course['course'])
-
-        status = "Scroll for more: {0}".format(
-            ', '.join(course['course']['display_name'] for course in courses))
-        byline = '"{}" is currently enrolled in {}.'.format(
-            email, pluralize(len(courses), ' course'))
-        title = 'Ok!'
-        head = ''
-    else:
-        html = partial_nocourse_html
-        byline = 'The email "{}" is not enrolled. Is it correct?'.format(email)
-        status = 'No courses found'
-        title = 'Uh oh'
-        head = '<style>{0}</style>'.format(red_css)
-    return html, status, byline, title, head, server
-
-
-def success_auth(data):
-    """Generates finalized HTML"""
-    return auth_html.format(
-        site=data[5],
-        status=data[1],
-        courses=data[0],
-        byline=data[2],
-        title=data[3],
-        head=data[4])
-
-def get_file(relative_path, purpose):
-    dir = os.path.dirname(__file__)
-    filename = os.path.join(dir, relative_path)
-    return open(filename, purpose)
-
-def get_contents(relative_path, purpose='r'):
-    return get_file(relative_path, purpose).read()
-
-def pluralize(num, string):
-    return str(num)+string+('s' if num != 1 else '')
-
 # Grabs the student's email through the access_token and returns it.
-def get_student_email(access_token):
+def get_student_email(assignment, access_token):
     log.info("Attempting to get student email")
     if access_token is None:
         return None
     try:
-        response = requests.get(INFO_ENDPOINT,
+        response = requests.get(
+            network.server_url(assignment.cmd_args) + INFO_ENDPOINT,
             params={'access_token': access_token},
             timeout=3)
         response.raise_for_status()
-        user_email = response.json()["email"]
+        user_email = response.json()['data']['email']
     except IOError as e:
         user_email = None
     return user_email
 
-def get_identifier(token=None, email=None):
+def get_identifier(assignment, token=None, email=None):
     """ Obtain anonmyzied identifier."""
     if not token:
-        token = authenticate(False)
+        token = authenticate(assignment, force=False)
     if email:
         student_email = email
     else:
-        student_email = get_student_email(token)
+        student_email = get_student_email(assignment, token)
         if not student_email:
             return "Unknown"
     return hashlib.md5(student_email.encode()).hexdigest()
-
-if __name__ == "__main__":
-    print(authenticate())

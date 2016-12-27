@@ -1,5 +1,4 @@
 # Client
-sanction==0.4.1
 requests==2.12.4
 
 # Tests

@@ -13,7 +13,7 @@ class AutoStyleProtocol(models.Protocol):
 
     # Timeouts are specified in seconds.
     SHORT_TIMEOUT = 10
-    API_ENDPOINT = '{prefix}://{server}'
+    API_ENDPOINT = 'https://codestyle.herokuapp.com/ok_launch/'
     ALLOW_QUESTIONS = ['flatten', 'add_up', 'permutations', 'deep_len']
 
     def run(self, messages):
@@ -69,7 +69,7 @@ class AutoStyleProtocol(models.Protocol):
         if confirm.lower().strip() != 'y':
             return
 
-        messages['analytics']['identifier'] = auth.get_identifier()
+        messages['analytics']['identifier'] = auth.get_identifier(self.assignment)
         # Send data to autostyle
         response_url = self.send_messages(messages, self.SHORT_TIMEOUT)
         # Parse response_url
@@ -85,8 +85,7 @@ class AutoStyleProtocol(models.Protocol):
             'messages': messages,
             'submit': self.args.submit
         }
-        server = 'codestyle.herokuapp.com/ok_launch/'
-        address = self.API_ENDPOINT.format(server=server, prefix='http' if self.args.insecure else 'https')
+        address = self.API_ENDPOINT
         address_params = {
             'client_name': 'ok-client',
             'client_version': client.__version__,

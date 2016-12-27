@@ -324,7 +324,7 @@ class Guidance:
         # Checks to see the student currently has a treatment group number. If
         # not, calls helper function in auth.py
         if not os.path.isfile(self.current_working_dir + LOCAL_TG_FILE):
-            cur_email = auth.get_student_email(access_token)
+            cur_email = auth.get_student_email(self.assignment, access_token)
             log.info("Current email is %s", cur_email)
             if not cur_email:
                 self.tg_id = -1

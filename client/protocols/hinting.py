@@ -149,7 +149,7 @@ class HintingProtocol(protocol_models.Protocol):
 
     def query_server(self, messages, test):
         access_token, _, _ = auth.get_storage()
-        user = auth.get_student_email(access_token) or access_token
+        user = auth.get_student_email(self.assignment, access_token) or access_token
         if user:
             # The hinting server should not recieve identifying information
             user = hash(user)

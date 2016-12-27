@@ -9,7 +9,7 @@ import zipfile
 
 OK_ROOT = os.path.normpath(os.path.dirname(client.__file__))
 CONFIG_NAME = 'config.ok'
-EXTRA_PACKAGES = ['sanction', 'requests']
+EXTRA_PACKAGES = ['requests']
 
 def abort(message):
     print(message + ' Aborting', file=sys.stderr)

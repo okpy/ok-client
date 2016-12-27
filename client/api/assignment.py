@@ -101,6 +101,11 @@ class Assignment(core.Serializable):
         grade(tests, messages, env)
         return messages['grading'][test_name]
 
+    @property
+    def server_url(self):
+        scheme = 'http' if self.cmd_args.insecure else 'https'
+        return '{}://{}'.format(scheme, self.cmd_args.server)
+
     ############
     # Internal #
     ############
