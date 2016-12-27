@@ -3,7 +3,6 @@ import client
 import json
 import mock
 import unittest
-import urllib.error
 
 class CheckVersionTest(unittest.TestCase):
     SERVER = 'test.server'
@@ -13,23 +12,19 @@ class CheckVersionTest(unittest.TestCase):
     FILE_NAME = 'ok'
 
     def setUp(self):
-        self.patcherRequest = mock.patch('urllib.request.Request')
-        self.addCleanup(self.patcherRequest.stop)
-        self.mockRequest = self.patcherRequest.start()
+        self.patcherGet = mock.patch('requests.get')
+        self.addCleanup(self.patcherGet.stop)
+        self.mockGet = self.patcherGet.start()
 
-        self.patcherUrlopen = mock.patch('urllib.request.urlopen')
-        self.addCleanup(self.patcherUrlopen.stop)
-        self.mockUrlopen = self.patcherUrlopen.start()
-
-        self.mockRead = self.mockUrlopen.return_value.read
-        self.mockDecode = self.mockUrlopen.return_value.read.return_value.decode
+        self.mockContent = self.mockGet.return_value.content
+        self.mockJson = self.mockGet.return_value.json
 
         self.patcherWriteZip = mock.patch('client.utils.software_update._write_zip')
         self.addCleanup(self.patcherWriteZip.stop)
         self.mockWriteZip = self.patcherWriteZip.start()
 
     def createVersionApiJson(self, current_version, current_download_link):
-        self.mockDecode.return_value = json.dumps({
+        self.mockJson.return_value = {
             'data': {
                 'results': [
                     {
@@ -39,10 +34,10 @@ class CheckVersionTest(unittest.TestCase):
                     }
                 ]
             }
-        })
+        }
 
     def testMalformedApiResponse(self):
-        self.mockDecode.return_value = json.dumps({'data': []})
+        self.mockJson.return_value = {'data': []}
         self.assertFalse(software_update.check_version(self.SERVER,
                                                        self.CURRENT_VERSION,
                                                        self.FILE_NAME))
@@ -63,7 +58,7 @@ class CheckVersionTest(unittest.TestCase):
         self.assertTrue(software_update.check_version(self.SERVER,
                                                       self.PREVIOUS_VERSION,
                                                       self.FILE_NAME))
-        expected_zip_call = ((self.FILE_NAME, self.mockRead.return_value),)
+        expected_zip_call = ((self.FILE_NAME, self.mockContent),)
         self.assertEqual(expected_zip_call, self.mockWriteZip.call_args)
 
     def testWriteZip_IOError(self):
@@ -75,4 +70,3 @@ class CheckVersionTest(unittest.TestCase):
                                                        self.PREVIOUS_VERSION,
                                                        self.FILE_NAME))
         self.assertTrue(self.mockWriteZip.called)
-
