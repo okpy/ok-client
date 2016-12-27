@@ -160,7 +160,7 @@ def main():
 
     # Checking user's Python bit version
     bit_v = (8 * struct.calcsize("P"))
-    log.debug("Python {}bit".format(bit_v))
+    log.debug("Python {} ({}bit)".format(sys.version, bit_v))
 
     if args.version:
         print("okpy=={}".format(client.__version__))
