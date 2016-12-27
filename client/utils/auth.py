@@ -36,8 +36,7 @@ REDIRECT_PORT = 6165
 
 TIMEOUT = 10
 
-INFO_ENDPOINT = "https://www.googleapis.com/oauth2/v1/userinfo"
-
+INFO_ENDPOINT = '/api/v3/user/'
 AUTH_ENDPOINT =  '/oauth/authorize'
 TOKEN_ENDPOINT = '/oauth/token'
 
@@ -114,7 +113,7 @@ def authenticate(args, force=False):
     identification. If FORCE is False, it will attempt to use a cached token
     or refresh the OAuth token. ARGS is the command-line arguments object.
     """
-    server = '{}://{}'.format('http' if args.insecure else 'https', args.server)
+    server = network.server_url(args)
     if not force:
         try:
             cur_time = int(time.time())
@@ -208,7 +207,7 @@ def authenticate(args, force=False):
             actual_email = email
 
             try:
-                email_resp = get_student_email(access_token)
+                email_resp = get_student_email(args, access_token)
                 if email_resp:
                     actual_email = email_resp
             except Exception as e:  # TODO : Catch just SSL errors
@@ -317,16 +316,16 @@ def pluralize(num, string):
     return str(num)+string+('s' if num != 1 else '')
 
 # Grabs the student's email through the access_token and returns it.
-def get_student_email(access_token):
+def get_student_email(args, access_token):
     log.info("Attempting to get student email")
     if access_token is None:
         return None
     try:
-        response = requests.get(INFO_ENDPOINT,
+        response = requests.get(network.server_url(args) + INFO_ENDPOINT,
             params={'access_token': access_token},
             timeout=3)
         response.raise_for_status()
-        user_email = response.json()["email"]
+        user_email = response.json()['data']['email']
     except IOError as e:
         user_email = None
     return user_email
@@ -338,7 +337,7 @@ def get_identifier(args, token=None, email=None):
     if email:
         student_email = email
     else:
-        student_email = get_student_email(token)
+        student_email = get_student_email(args, token)
         if not student_email:
             return "Unknown"
     return hashlib.md5(student_email.encode()).hexdigest()

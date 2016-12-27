@@ -1,7 +1,6 @@
 from client.protocols.common import models
 from client.protocols.grading import grade
-from client.utils import output
-from client.utils import auth
+from client.utils import auth, network, output
 from client.utils.firebase import pyrebase
 
 import client
@@ -23,7 +22,6 @@ class CollaborateProtocol(models.Protocol):
 
     # Timeouts are specified in seconds.
     LONG_TIMEOUT = 30
-    API_ENDPOINT = '{prefix}://{server}'
     FIREBASE_CONFIG = {
         'apiKey': "AIzaSyAFJn-q5SbxJnJcPVFhjxd25DA5Jusmd74",
         'authDomain': "ok-server.firebaseapp.com",
@@ -76,7 +74,7 @@ class CollaborateProtocol(models.Protocol):
 
     def start_firebase(self, messages):
         access_token = auth.authenticate(self.args, force=False)
-        email = auth.get_student_email(access_token)
+        email = auth.get_student_email(self.args, access_token)
         identifier = auth.get_identifier(self.args, token=access_token, email=email)
 
         firebase = pyrebase.initialize_app(self.FIREBASE_CONFIG)
@@ -186,10 +184,7 @@ class CollaborateProtocol(models.Protocol):
 
     def send_messages(self, data, timeout=30, endpoint='/collab/start/'):
         """Send messages to server, along with user authentication."""
-        server = self.COLLAB_SERVER + endpoint
-        prefix = 'http' if self.args.insecure else 'https'
-        address = self.API_ENDPOINT.format(server=server, prefix=prefix)
-
+        address = 'https://{}{}'.format(self.COLLAB_SERVER, endpoint)
         params = {
             'client_name': 'ok-client',
             'client_version': client.__version__,

@@ -16,8 +16,8 @@ class BackupProtocol(models.Protocol):
 
     RETRY_LIMIT = 5
     BACKUP_FILE = ".ok_messages"
-    BACKUP_ENDPOINT = '{prefix}://{server}/api/v3/backups/'
-    REVISION_ENDPOINT = '{prefix}://{server}/api/v3/revision/'
+    BACKUP_ENDPOINT = '{server}/api/v3/backups/'
+    REVISION_ENDPOINT = '{server}/api/v3/revision/'
 
     def run(self, messages):
         if self.args.local:
@@ -60,8 +60,7 @@ class BackupProtocol(models.Protocol):
             response = self.send_all_messages(access_token, message_list,
                                               current=False)
 
-        prefix = 'http' if self.args.insecure else 'https'
-        base_url = '{0}://{1}'.format(prefix, self.args.server) + '/{}/{}/{}'
+        base_url = network.server_url(self.args) + '/{}/{}/{}'
 
         if isinstance(response, dict):
             print('{action} successful for user: {email}'.format(action=action,
@@ -226,11 +225,9 @@ class BackupProtocol(models.Protocol):
         }
 
         if is_revision:
-            address = self.REVISION_ENDPOINT.format(server=self.args.server,
-                        prefix='http' if self.args.insecure else 'https')
+            address = self.REVISION_ENDPOINT.format(server=network.server_url(self.args))
         else:
-            address = self.BACKUP_ENDPOINT.format(server=self.args.server,
-                        prefix='http' if self.args.insecure else 'https')
+            address = self.BACKUP_ENDPOINT.format(server=network.server_url(self.args))
         address_params = {
             'access_token': access_token,
             'client_name': 'ok-client',

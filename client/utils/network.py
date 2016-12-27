@@ -22,3 +22,8 @@ def check_ssl():
     else:
         log.info('SSL module is available')
         return ssl
+
+def server_url(args, domain=None):
+    scheme = 'http' if args.insecure else 'https'
+    domain = domain or args.server
+    return '{}://{}'.format('http' if args.insecure else 'https', domain)
