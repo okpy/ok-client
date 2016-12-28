@@ -220,30 +220,27 @@ def authenticate(assignment, force=False):
         print("Authentication error: {}".format(auth_error))
         return None
 
-# Grabs the student's email through the access_token and returns it.
-def get_student_email(assignment, access_token):
+def get_student_email(assignment):
+    """Attempts to get the student's email. Returns the email, or None."""
     log.info("Attempting to get student email")
-    if access_token is None:
+    if assignment.cmd_args.local:
+        return None
+    access_token = authenticate(assignment, force=False)
+    if not access_token:
         return None
     try:
         response = requests.get(
-            network.server_url(assignment.cmd_args) + INFO_ENDPOINT,
+            assignment.server_url + INFO_ENDPOINT,
             params={'access_token': access_token},
             timeout=3)
         response.raise_for_status()
-        user_email = response.json()['data']['email']
+        return response.json()['data']['email']
     except IOError as e:
-        user_email = None
-    return user_email
+        return None
 
-def get_identifier(assignment, token=None, email=None):
+def get_identifier(assignment):
     """ Obtain anonmyzied identifier."""
-    if not token:
-        token = authenticate(assignment, force=False)
-    if email:
-        student_email = email
-    else:
-        student_email = get_student_email(assignment, token)
-        if not student_email:
-            return "Unknown"
+    student_email = get_student_email(assignment)
+    if not student_email:
+        return "Unknown"
     return hashlib.md5(student_email.encode()).hexdigest()

@@ -51,7 +51,7 @@ class GuidanceProtocolTest(unittest.TestCase):
         self.input_choices = []
         self.choice_number = 0
 
-    def mockSet_TG(self,access_token):
+    def mockSet_TG(self):
         return 1
 
     def mockInput(self, prompt):

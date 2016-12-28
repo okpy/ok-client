@@ -41,7 +41,6 @@ class UnlockProtocol(models.Protocol):
         super().__init__(cmd_args, assignment)
         self.hash_key = assignment.name
         self.analytics = []
-        self.access_token = None
         self.guidance_util = guidance.Guidance("", assignment=assignment)
 
     def run(self, messages):
@@ -56,8 +55,6 @@ class UnlockProtocol(models.Protocol):
         """
         if not self.args.unlock:
             return
-        if not self.args.local:
-            self.access_token = auth.authenticate(self.assignment, force=False)
 
         format.print_line('~')
         print('Unlocking tests')
@@ -159,7 +156,7 @@ class UnlockProtocol(models.Protocol):
 
             if not correct:
                 misU_count_dict, tg_id, printed_msg = self.guidance_util.show_guidance_msg(unique_id,input_lines,
-                    self.access_token, self.hash_key)
+                    self.hash_key)
 
             else:
                 print("-- OK! --")
