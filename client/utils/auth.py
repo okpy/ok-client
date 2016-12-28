@@ -148,10 +148,8 @@ def authenticate(assignment, force=False):
     log.info("Authentication server running on {}".format(redirect_uri))
 
     params = {
-        'access_type': 'offline',
         'client_id': CLIENT_ID,
         'login_hint': email,
-        'name': 'ok-server',
         'redirect_uri': redirect_uri,
         'response_type': 'code',
         'scope': OAUTH_SCOPE,
