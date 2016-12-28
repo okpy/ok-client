@@ -22,8 +22,6 @@ CLIENT_ID = 'ok-client'
 CLIENT_SECRET = 'EWKtcCp5nICeYgVyCPypjs3aLORqQ3H'
 OAUTH_SCOPE = 'all'
 
-CONFIG_DIRECTORY = os.path.join(os.path.expanduser('~'), '.config', 'ok')
-
 REFRESH_FILE = os.path.join(CONFIG_DIRECTORY, "auth_refresh")
 
 REDIRECT_HOST = "127.0.0.1"
