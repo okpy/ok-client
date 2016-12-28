@@ -28,11 +28,11 @@ class BackupProtocol(models.Protocol):
             network.check_ssl()
 
         if self.args.revise:
-            action = 'Revise'
+            action = 'revision'
         elif self.args.submit:
-            action = 'Submission'
+            action = 'submission'
         else:
-            action = 'Backup'
+            action = 'backup'
 
         message_list = self.load_unsent_messages()
 
@@ -63,7 +63,7 @@ class BackupProtocol(models.Protocol):
         base_url = self.assignment.server_url + '/{}/{}/{}'
 
         if isinstance(response, dict):
-            print('{action} successful for user: {email}'.format(action=action,
+            print('{action} successful for user: {email}'.format(action=action.title(),
                         email=response['data']['email']))
 
             submission_type = 'submissions' if self.args.submit else 'backups'
