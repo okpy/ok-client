@@ -4,7 +4,7 @@ import os
 import pickle
 import requests
 import time
-from urllib.parse import urlencode, urlparse, parse_qs
+from urllib.parse import urlencode, urlparse, parse_qsl
 import webbrowser
 
 from client.exceptions import AuthenticationException
@@ -159,6 +159,7 @@ def authenticate(assignment, force=False):
     refresh_token = None
     expires_in = None
     auth_error = None
+    auth_error_description = None
 
     class CodeHandler(http.server.BaseHTTPRequestHandler):
         def send_redirect(self, location):
@@ -166,34 +167,46 @@ def authenticate(assignment, force=False):
             self.send_header("Location", location)
             self.end_headers()
 
-        def send_failure(self, message):
+        def send_failure(self, error, description):
             params = {
-                'error': 'Authentication Failed',
-                'error_description': message,
+                'error': error,
+                'error_description': description,
             }
             url = '{}{}?{}'.format(server, ERROR_ENDPOINT, urlencode(params))
             self.send_redirect(url)
 
         def do_GET(self):
             """Respond to the GET request made by the OAuth"""
-            nonlocal access_token, refresh_token, expires_in, auth_error
+            nonlocal access_token, refresh_token, expires_in
+            nonlocal auth_error, auth_error_description
             log.debug('Received GET request for %s', self.path)
             path = urlparse(self.path)
-            qs = parse_qs(path.query)
-            try:
-                code = qs['code'][0]
-                code_response = _make_code_post(server, code, redirect_uri)
-                access_token, refresh_token, expires_in = code_response
-            except KeyError:
-                message = qs.get('error', ['Unknown'])[0]
-                log.warning("No auth code provided {}".format(message))
-                auth_error = message
-            except Exception as e:  # TODO : Catch just SSL errors
-                log.warning("Could not obtain token", exc_info=True)
-                auth_error = str(e)
+            qs = {k: v for k, v in parse_qsl(path.query)}
+            code = qs.get('code')
+            if code:
+                try:
+                    code_response = _make_code_post(server, code, redirect_uri)
+                    access_token, refresh_token, expires_in = code_response
+                except requests.exceptions.HTTPError as e:
+                    log.warning('HTTP error when exchanging code', exc_info=True)
+                    try:
+                        body = e.response.json()
+                        auth_error = body.get('error', 'Unknown Error')
+                        auth_error_description = body.get('error_descrption', '')
+                    except ValueError:
+                        log.warning('Could not parse response: %s', e.response.text)
+                        auth_error = 'Authentication Failed'
+                        auth_error_description = str(e)
+                except Exception as e:
+                    log.warning('Other error when exchanging code', exc_info=True)
+                    auth_error = 'Authentication Failed'
+                    auth_error_description = str(e)
+            else:
+                auth_error = qs.get('error', 'Unknown Error')
+                auth_error_description = qs.get('error_descrption', '')
 
             if auth_error:
-                self.send_failure(auth_error)
+                self.send_failure(auth_error, auth_error_description)
             else:
                 self.send_redirect('{}/{}'.format(server, assignment.endpoint))
 
@@ -213,7 +226,9 @@ def authenticate(assignment, force=False):
         update_storage(access_token, expires_in, refresh_token)
         return access_token
     else:
-        print("Authentication error: {}".format(auth_error))
+        print("Authentication error: {}".format(auth_error.replace('_', ' ')))
+        if auth_error_description:
+            print(auth_error_description)
         return None
 
 def get_student_email(assignment):
