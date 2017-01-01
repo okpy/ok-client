@@ -31,6 +31,11 @@ class UnlockProtocol(models.Protocol):
         'exit()',
         'quit()',
     )
+    SPECIAL_INPUTS = (  # Inputs that are not from the interpreter
+        'Error',
+        'Infinite Loop',
+        'Nothing',
+    )
 
     def __init__(self, cmd_args, assignment):
         super().__init__(cmd_args, assignment)
@@ -141,20 +146,12 @@ class UnlockProtocol(models.Protocol):
                 if choices and student_input in choice_map:
                     student_input = choice_map[student_input]
 
-                input_lines.append(student_input)
-                if not self._verify(student_input, line):
-                    # Try to evaluate student answer as Python expression and
-                    # use the result as the answer.
-                    try:
-                        eval_input = repr(ast.literal_eval(student_input))
-                        if not self._verify(eval_input, answer[line_number]):
-                            break
-                        # Replace student_input with evaluated input.
-                        input_lines[-1] = eval_input
-                    except Exception as e:
-                        # Incorrect answer.
-                        break
-
+                correct_answer = self._verify_student_input(student_input, line)
+                if correct_answer:
+                    input_lines.append(correct_answer)
+                else:
+                    input_lines.append(student_input)
+                    break
             else:
                 correct = True
             tg_id = -1
@@ -186,6 +183,21 @@ class UnlockProtocol(models.Protocol):
     ###################
     # Private Methods #
     ###################
+
+    def _verify_student_input(self, student_input, locked):
+        """If the student's answer is correct, returns the normalized answer.
+        Otherwise, returns None.
+        """
+        guesses = [student_input]
+        try:
+            guesses.append(repr(ast.literal_eval(student_input)))
+        except Exception:
+            pass
+        if student_input.title() in self.SPECIAL_INPUTS:
+            guesses.append(student_input.title())
+        for guess in guesses:
+            if self._verify(guess, locked):
+                return guess
 
     def _verify(self, guess, locked):
         return locking.lock(self.hash_key, guess) == locked
