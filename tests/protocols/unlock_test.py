@@ -227,3 +227,35 @@ class InteractTest(unittest.TestCase):
                                     correct=False)
             else:
                 self.validateRecord(attempt, answer=self.EVAL_ANSWER, correct=True)
+
+    def testSpecialInputs_correct(self):
+        # list of (answer, student_input)
+        inputs = [
+            ('Error', 'error'),
+            ('Nothing', 'noThing'),
+            ('Infinite Loop', 'infinite Loop'),
+            ('Foo', 'Foo'),
+            ('error', 'error'),
+        ]
+        for answer, student_input in inputs:
+            self.choice_number = 0
+            self.proto.analytics = []
+            self.input_choices = [student_input]
+            self.callsInteract([answer], [answer])
+            self.checkNumberOfAttempts(1)
+            self.validateRecord(self.proto.analytics[0], answer=[answer], correct=True)
+
+    def testSpecialInputs_incorrect(self):
+        # list of (answer, student_input)
+        inputs = [
+            ('Foo', 'foo'),  # not special
+            ('error', 'Error'),  # must be lowercase
+        ]
+        for answer, student_input in inputs:
+            self.choice_number = 0
+            self.proto.analytics = []
+            self.input_choices = [student_input, answer]
+            self.callsInteract([answer], [answer])
+            self.checkNumberOfAttempts(2)
+            self.validateRecord(self.proto.analytics[0], answer=[student_input], correct=False)
+            self.validateRecord(self.proto.analytics[1], answer=[answer], correct=True)
