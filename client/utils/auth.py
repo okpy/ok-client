@@ -108,6 +108,7 @@ def authenticate(assignment, force=False):
     or refresh the OAuth token. ARGS is the command-line arguments object.
     """
     server = assignment.server_url
+    network.check_ssl()
     if not force:
         try:
             cur_time = int(time.time())
@@ -128,8 +129,6 @@ def authenticate(assignment, force=False):
             raise e  # Let the main script handle this error
         except Exception as _:
             print('Performing authentication')
-
-    network.check_ssl()
 
     print("Please enter your bCourses email.")
     email = input("bCourses email: ")
