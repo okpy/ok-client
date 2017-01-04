@@ -163,14 +163,20 @@ def authenticate(assignment, force=False):
 
     try:
         access_token, expires_in, refresh_token = get_code(assignment)
-        update_storage(access_token, expires_in, refresh_token)
-        return access_token
     except OAuthException as e:
         with format.block('-'):
             print("Authentication error: {}".format(e.error.replace('_', ' ')))
             if e.error_description:
                 print(e.error_description)
         return None
+
+    update_storage(access_token, expires_in, refresh_token)
+    try:
+        email = get_info(assignment, access_token)['email']
+        print('Successfully logged in as', email)
+    except Exception:
+        log.warning('Could not get student email', exc_info=True)
+    return access_token
 
 def get_code(assignment):
     if assignment.cmd_args.no_browser:
@@ -273,6 +279,14 @@ def get_code_via_terminal(assignment):
     code = input('Paste your code here: ')
     return make_code_post(assignment.server_url, code, redirect_uri)
 
+def get_info(assignment, access_token):
+    response = requests.get(
+        assignment.server_url + INFO_ENDPOINT,
+        params={'access_token': access_token},
+        timeout=3)
+    response.raise_for_status()
+    return response.json()['data']
+
 def get_student_email(assignment):
     """Attempts to get the student's email. Returns the email, or None."""
     log.info("Attempting to get student email")
@@ -282,12 +296,7 @@ def get_student_email(assignment):
     if not access_token:
         return None
     try:
-        response = requests.get(
-            assignment.server_url + INFO_ENDPOINT,
-            params={'access_token': access_token},
-            timeout=3)
-        response.raise_for_status()
-        return response.json()['data']['email']
+        return get_info(assignment, access_token)['email']
     except IOError as e:
         return None
 
