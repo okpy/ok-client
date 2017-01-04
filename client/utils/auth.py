@@ -10,7 +10,7 @@ import webbrowser
 from client.exceptions import AuthenticationException
 from client.utils.config import (CONFIG_DIRECTORY, REFRESH_FILE,
                                  create_config_directory)
-from client.utils import network
+from client.utils import format, network
 
 import logging
 
@@ -166,9 +166,10 @@ def authenticate(assignment, force=False):
         update_storage(access_token, expires_in, refresh_token)
         return access_token
     except OAuthException as e:
-        print("Authentication error: {}".format(e.error.replace('_', ' ')))
-        if e.error_description:
-            print(e.error_description)
+        with format.block('-'):
+            print("Authentication error: {}".format(e.error.replace('_', ' ')))
+            if e.error_description:
+                print(e.error_description)
         return None
 
 def get_code(assignment):
