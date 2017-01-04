@@ -172,11 +172,11 @@ def authenticate(assignment, force=False):
         return None
 
 def get_code(assignment):
+    if assignment.cmd_args.no_browser:
+        return get_code_via_terminal(assignment)
+
     print("Please enter your bCourses email.")
     email = input("bCourses email: ")
-
-    if assignment.cmd_args.no_browser:
-        return get_code_via_terminal(assignment, email)
 
     host_name = REDIRECT_HOST
     try:
@@ -260,20 +260,12 @@ def get_code_via_browser(assignment, redirect_uri, host_name, port_number):
         raise oauth_exception
     return code_response
 
-def get_code_via_terminal(assignment, email):
+def get_code_via_terminal(assignment):
     redirect_uri = 'urn:ietf:wg:oauth:2.0:oob'
-    params = {
-        'client_id': CLIENT_ID,
-        'login_hint': email,
-        'redirect_uri': redirect_uri,
-        'response_type': 'code',
-        'scope': OAUTH_SCOPE,
-    }
-    url = '{}{}?{}'.format(assignment.server_url, AUTH_ENDPOINT, urlencode(params))
     print()
     print(COPY_MESSAGE)
     print()
-    print(url)
+    print('{}/client/login/'.format(assignment.server_url))
     print()
     print(PASTE_MESSAGE)
     print()
