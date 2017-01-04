@@ -111,7 +111,7 @@ class Guidance:
         """ Return the unique id (str) from the assesment id number. """
         return self.guidance_json['dictAssessNum2AssessId'].get(num)
 
-    def show_guidance_msg(self, unique_id, input_lines, access_token, hash_key,
+    def show_guidance_msg(self, unique_id, input_lines, hash_key,
                           guidance_flag=False):
         """
         Based on the student's answer (input_lines), we grab each associated
@@ -122,7 +122,7 @@ class Guidance:
             return EMPTY_MISUCOUNT_TGID_PRNTEDMSG
 
         response = repr(input_lines)
-        self.set_tg(access_token)
+        self.set_tg()
         log.info("Guidance TG is %d", self.tg_id)
 
         if self.tg_id == TG_ERROR_VALUE:
@@ -316,7 +316,7 @@ class Guidance:
             json.dump(data, f)
         return data
 
-    def set_tg(self, access_token):
+    def set_tg(self):
         """ Try to grab the treatment group number for the student.
         If there is no treatment group number available, request it
         from the server.
@@ -324,7 +324,7 @@ class Guidance:
         # Checks to see the student currently has a treatment group number. If
         # not, calls helper function in auth.py
         if not os.path.isfile(self.current_working_dir + LOCAL_TG_FILE):
-            cur_email = auth.get_student_email(self.assignment, access_token)
+            cur_email = auth.get_student_email(self.assignment)
             log.info("Current email is %s", cur_email)
             if not cur_email:
                 self.tg_id = -1

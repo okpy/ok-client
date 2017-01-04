@@ -4,13 +4,13 @@ import os
 import pickle
 import requests
 import time
-from urllib.parse import urlencode, urlparse, parse_qs
+from urllib.parse import urlencode, urlparse, parse_qsl
 import webbrowser
 
 from client.exceptions import AuthenticationException
 from client.utils.config import (CONFIG_DIRECTORY, REFRESH_FILE,
                                  create_config_directory)
-from client.utils import network
+from client.utils import format, network
 
 import logging
 
@@ -21,8 +21,6 @@ CLIENT_ID = 'ok-client'
 # See: https://developers.google.com/accounts/docs/OAuth2InstalledApp
 CLIENT_SECRET = 'EWKtcCp5nICeYgVyCPypjs3aLORqQ3H'
 OAUTH_SCOPE = 'all'
-
-CONFIG_DIRECTORY = os.path.join(os.path.expanduser('~'), '.config', 'ok')
 
 REFRESH_FILE = os.path.join(CONFIG_DIRECTORY, "auth_refresh")
 
@@ -35,6 +33,21 @@ INFO_ENDPOINT = '/api/v3/user/'
 AUTH_ENDPOINT =  '/oauth/authorize'
 TOKEN_ENDPOINT = '/oauth/token'
 ERROR_ENDPOINT = '/oauth/errors'
+
+COPY_MESSAGE = """
+Copy the following URL and open it in a web browser. To copy,
+highlight the URL, right-click, and select "Copy".
+""".strip()
+
+PASTE_MESSAGE = """
+After logging in, copy the code from the web page and paste it below.
+To paste, right-click and select "Paste".
+""".strip()
+
+class OAuthException(Exception):
+    def __init__(self, error='', error_description=''):
+        self.error = error
+        self.error_description = error_description
 
 def pick_free_port(hostname=REDIRECT_HOST, port=0):
     """ Try to bind a port. Default=0 selects a free port. """
@@ -53,7 +66,25 @@ def pick_free_port(hostname=REDIRECT_HOST, port=0):
     s.close()
     return port
 
-def _make_code_post(server, code, redirect_uri):
+def make_token_post(server, data):
+    """Try getting an access token from the server. If successful, returns the
+    JSON response. If unsuccessful, raises an OAuthException.
+    """
+    try:
+        response = requests.post(server + TOKEN_ENDPOINT, data=data, timeout=TIMEOUT)
+        body = response.json()
+    except Exception as e:
+        log.warning('Other error when exchanging code', exc_info=True)
+        raise OAuthException(
+            error='Authentication Failed',
+            error_description=str(e))
+    if 'error' in body:
+        raise OAuthException(
+            error=body.get('error', 'Unknown Error'),
+            error_description = body.get('error_description', ''))
+    return body
+
+def make_code_post(server, code, redirect_uri):
     data = {
         'client_id': CLIENT_ID,
         'client_secret': CLIENT_SECRET,
@@ -61,10 +92,8 @@ def _make_code_post(server, code, redirect_uri):
         'grant_type': 'authorization_code',
         'redirect_uri': redirect_uri,
     }
-    response = requests.post(server + TOKEN_ENDPOINT, data=data, timeout=TIMEOUT)
-    response.raise_for_status()
-    info = response.json()
-    return info['access_token'], info['refresh_token'], int(info['expires_in'])
+    info = make_token_post(server, data)
+    return info['access_token'], int(info['expires_in']), info['refresh_token']
 
 def make_refresh_post(server, refresh_token):
     data = {
@@ -73,9 +102,7 @@ def make_refresh_post(server, refresh_token):
         'grant_type': 'refresh_token',
         'refresh_token': refresh_token,
     }
-    response = requests.post(server + TOKEN_ENDPOINT, data=data, timeout=TIMEOUT)
-    response.raise_for_status()
-    info = response.json()
+    info = make_token_post(server, data)
     return info['access_token'], int(info['expires_in'])
 
 def get_storage():
@@ -110,6 +137,7 @@ def authenticate(assignment, force=False):
     or refresh the OAuth token. ARGS is the command-line arguments object.
     """
     server = assignment.server_url
+    network.check_ssl()
     if not force:
         try:
             cur_time = int(time.time())
@@ -131,7 +159,26 @@ def authenticate(assignment, force=False):
         except Exception as _:
             print('Performing authentication')
 
-    network.check_ssl()
+    try:
+        access_token, expires_in, refresh_token = get_code(assignment)
+    except OAuthException as e:
+        with format.block('-'):
+            print("Authentication error: {}".format(e.error.replace('_', ' ')))
+            if e.error_description:
+                print(e.error_description)
+        return None
+
+    update_storage(access_token, expires_in, refresh_token)
+    try:
+        email = get_info(assignment, access_token)['email']
+        print('Successfully logged in as', email)
+    except Exception:
+        log.warning('Could not get student email', exc_info=True)
+    return access_token
+
+def get_code(assignment):
+    if assignment.cmd_args.no_browser:
+        return get_code_via_terminal(assignment)
 
     print("Please enter your bCourses email.")
     email = input("bCourses email: ")
@@ -145,24 +192,25 @@ def authenticate(assignment, force=False):
         port_number = pick_free_port(host_name, 0)
 
     redirect_uri = "http://{0}:{1}/".format(host_name, port_number)
-    log.info("Authentication server running on {}".format(redirect_uri))
 
     params = {
-        'access_type': 'offline',
         'client_id': CLIENT_ID,
         'login_hint': email,
-        'name': 'ok-server',
         'redirect_uri': redirect_uri,
         'response_type': 'code',
         'scope': OAUTH_SCOPE,
     }
-    url = '{}{}?{}'.format(server, AUTH_ENDPOINT, urlencode(params))
-    webbrowser.open_new(url)
+    url = '{}{}?{}'.format(assignment.server_url, AUTH_ENDPOINT, urlencode(params))
+    if webbrowser.open_new(url):
+        return get_code_via_browser(assignment, redirect_uri, host_name, port_number)
+    else:
+        log.warning('Failed to open browser, falling back to browserless auth')
+        return get_code_via_terminal(assignment, email)
 
-    access_token = None
-    refresh_token = None
-    expires_in = None
-    auth_error = None
+def get_code_via_browser(assignment, redirect_uri, host_name, port_number):
+    server = assignment.server_url
+    code_response = None
+    oauth_exception = None
 
     class CodeHandler(http.server.BaseHTTPRequestHandler):
         def send_redirect(self, location):
@@ -170,34 +218,33 @@ def authenticate(assignment, force=False):
             self.send_header("Location", location)
             self.end_headers()
 
-        def send_failure(self, message):
+        def send_failure(self, oauth_exception):
             params = {
-                'error': 'Authentication Failed',
-                'error_description': message,
+                'error': oauth_exception.error,
+                'error_description': oauth_exception.error_description,
             }
             url = '{}{}?{}'.format(server, ERROR_ENDPOINT, urlencode(params))
             self.send_redirect(url)
 
         def do_GET(self):
             """Respond to the GET request made by the OAuth"""
-            nonlocal access_token, refresh_token, expires_in, auth_error
+            nonlocal code_response, oauth_exception
             log.debug('Received GET request for %s', self.path)
             path = urlparse(self.path)
-            qs = parse_qs(path.query)
-            try:
-                code = qs['code'][0]
-                code_response = _make_code_post(server, code, redirect_uri)
-                access_token, refresh_token, expires_in = code_response
-            except KeyError:
-                message = qs.get('error', ['Unknown'])[0]
-                log.warning("No auth code provided {}".format(message))
-                auth_error = message
-            except Exception as e:  # TODO : Catch just SSL errors
-                log.warning("Could not obtain token", exc_info=True)
-                auth_error = str(e)
+            qs = {k: v for k, v in parse_qsl(path.query)}
+            code = qs.get('code')
+            if code:
+                try:
+                    code_response = make_code_post(server, code, redirect_uri)
+                except OAuthException as e:
+                    oauth_exception = e
+            else:
+                oauth_exception = OAuthException(
+                    error=qs.get('error', 'Unknown Error'),
+                    error_description = qs.get('error_description', ''))
 
-            if auth_error:
-                self.send_failure(auth_error)
+            if oauth_exception:
+                self.send_failure(oauth_exception)
             else:
                 self.send_redirect('{}/{}'.format(server, assignment.endpoint))
 
@@ -205,6 +252,7 @@ def authenticate(assignment, force=False):
             return
 
     server_address = (host_name, port_number)
+    log.info("Authentication server running on {}:{}".format(host_name, port_number))
 
     try:
         httpd = http.server.HTTPServer(server_address, CodeHandler)
@@ -213,37 +261,46 @@ def authenticate(assignment, force=False):
         log.warning("HTTP Server Err {}".format(server_address), exc_info=True)
         raise
 
-    if not auth_error:
-        update_storage(access_token, expires_in, refresh_token)
-        return access_token
-    else:
-        print("Authentication error: {}".format(auth_error))
-        return None
+    if oauth_exception:
+        raise oauth_exception
+    return code_response
 
-# Grabs the student's email through the access_token and returns it.
-def get_student_email(assignment, access_token):
+def get_code_via_terminal(assignment):
+    redirect_uri = 'urn:ietf:wg:oauth:2.0:oob'
+    print()
+    print(COPY_MESSAGE)
+    print()
+    print('{}/client/login/'.format(assignment.server_url))
+    print()
+    print(PASTE_MESSAGE)
+    print()
+    code = input('Paste your code here: ')
+    return make_code_post(assignment.server_url, code, redirect_uri)
+
+def get_info(assignment, access_token):
+    response = requests.get(
+        assignment.server_url + INFO_ENDPOINT,
+        params={'access_token': access_token},
+        timeout=3)
+    response.raise_for_status()
+    return response.json()['data']
+
+def get_student_email(assignment):
+    """Attempts to get the student's email. Returns the email, or None."""
     log.info("Attempting to get student email")
-    if access_token is None:
+    if assignment.cmd_args.local:
+        return None
+    access_token = authenticate(assignment, force=False)
+    if not access_token:
         return None
     try:
-        response = requests.get(
-            network.server_url(assignment.cmd_args) + INFO_ENDPOINT,
-            params={'access_token': access_token},
-            timeout=3)
-        response.raise_for_status()
-        user_email = response.json()['data']['email']
+        return get_info(assignment, access_token)['email']
     except IOError as e:
-        user_email = None
-    return user_email
+        return None
 
-def get_identifier(assignment, token=None, email=None):
+def get_identifier(assignment):
     """ Obtain anonmyzied identifier."""
-    if not token:
-        token = authenticate(assignment, force=False)
-    if email:
-        student_email = email
-    else:
-        student_email = get_student_email(assignment, token)
-        if not student_email:
-            return "Unknown"
+    student_email = get_student_email(assignment)
+    if not student_email:
+        return "Unknown"
     return hashlib.md5(student_email.encode()).hexdigest()
