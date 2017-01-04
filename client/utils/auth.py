@@ -35,15 +35,13 @@ TOKEN_ENDPOINT = '/oauth/token'
 ERROR_ENDPOINT = '/oauth/errors'
 
 COPY_MESSAGE = """
-Copy the following URL and open it in a web browser. To copy, highlight the URL
-and press Ctrl+Shift+C (Windows, Linux) or Cmd+C (Mac), or right-click and
-select "Copy".
+Copy the following URL and open it in a web browser. To copy,
+highlight the URL, right-click, and select "Copy".
 """.strip()
 
 PASTE_MESSAGE = """
-After logging in, copy the code from the web page and paste it below. To paste,
-press Ctrl+Shift+V (Windows, Linux) or Cmd+V (Mac), or right-click and
-select "Paste".
+After logging in, copy the code from the web page and paste it below.
+To paste, right-click and select "Paste".
 """.strip()
 
 class OAuthException(Exception):
