@@ -70,3 +70,4 @@ To deploy a new version of ok-client, do the following:
         ok-publish
 
 6. Draft a new release on Github with the newly created `ok` binary.
+7. Update the version and Github link on [okpy.org](https://okpy.org/admin/versions/ok-client)
