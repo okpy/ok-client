@@ -10,7 +10,8 @@ class Notebook:
         self.assignment = load_assignment(filepath, cmd_args)
 
     def auth(self, force=False, inline=True):
-        ok_auth.authenticate(self.assignment, force=force, inline=inline)
+        self.assignment.cmd_args.set_args(['--no-browser'])
+        ok_auth.authenticate(self.assignment, force=force)
 
     def grade(self, *args, **kwargs):
         return self.assignment.grade(*args, **kwargs)

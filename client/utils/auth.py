@@ -134,7 +134,7 @@ def update_storage(access_token, expires_in, refresh_token):
 def authenticate(assignment, force=False):
     """Returns an OAuth token that can be passed to the server for
     identification. If FORCE is False, it will attempt to use a cached token
-    or refresh the OAuth token. ARGS is the command-line arguments object.
+    or refresh the OAuth token.
     """
     server = assignment.server_url
     network.check_ssl()
@@ -152,11 +152,11 @@ def authenticate(assignment, force=False):
 
             update_storage(access_token, expires_in, refresh_token)
             return access_token
-        except IOError as _:
+        except IOError:
             print('Performing authentication')
         except AuthenticationException as e:
             raise e  # Let the main script handle this error
-        except Exception as _:
+        except Exception:
             print('Performing authentication')
 
     try:
@@ -186,7 +186,7 @@ def get_code(assignment):
     host_name = REDIRECT_HOST
     try:
         port_number = pick_free_port(port=REDIRECT_PORT)
-    except AuthenticationException as e:
+    except AuthenticationException:
         # Could not bind to REDIRECT_HOST:0, try localhost instead
         host_name = 'localhost'
         port_number = pick_free_port(host_name, 0)
