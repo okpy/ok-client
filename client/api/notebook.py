@@ -1,9 +1,5 @@
-import logging
-
 from client.api.assignment import load_assignment
 from client.utils import auth as ok_auth
-
-log = logging.getLogger(__name__)
 
 class Notebook:
     def __init__(self, filepath=None, cmd_args=None):
