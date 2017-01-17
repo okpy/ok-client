@@ -241,5 +241,11 @@ class _MockNamespace(object):
         from client.cli.ok import parse_input
         self.args = parse_input([])
 
+    def set_args(self, args=None):
+        from client.cli.ok import parse_input
+        if args is None:
+            args = []
+        self.args = parse_input(args)
+
     def __getattr__(self, attr):
         return getattr(self.args, attr)
