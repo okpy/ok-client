@@ -36,11 +36,12 @@ class AnalyticsProtocol(models.Protocol):
         """Returns some analytics about this autograder run."""
         statistics = {}
         statistics['time'] = str(datetime.now())
+        statistics['time-utc'] = str(datetime.utcnow())
         statistics['unlock'] = self.args.unlock
 
         if self.args.question:
             statistics['question'] = [t.name for t in self.assignment.specified_tests]
-            statistics['raw-question'] = self.args.question
+            statistics['question-args'] = self.args.question
 
             if self.args.suite:
                 statistics['requested-suite'] = self.args.suite
