@@ -98,7 +98,7 @@ class AnalyticsProtocol(models.Protocol):
             failed = first_failed_test(self.assignment.specified_tests, grading)
             logging.info('First failed test: {}'.format(failed))
             if failed:
-                history['question'] = [failed]
+                questions = [failed]
 
             # Update question correctness status from previous attempts
             for saved_q, details in history['questions'].items():
@@ -106,11 +106,12 @@ class AnalyticsProtocol(models.Protocol):
                 if not finished and saved_q in grading:
                     scoring = grading[saved_q]
                     details['solved'] = is_correct(scoring)
-        else:
-            history['question'] = questions
+
+        # The question(s) that the student is testing right now.
+        history['question'] = questions
 
         # Update attempt and correctness counts for the graded questions
-        for question in history['question']:
+        for question in questions:
             detail = history['questions']
             if grading and question in grading:
                 scoring = is_correct(grading[question])
@@ -140,6 +141,7 @@ class AnalyticsProtocol(models.Protocol):
             pickle.dump(history, f)
             os.fsync(f)
 
+        print(history)
         messages['analytics']['history'] = history
 
 def is_correct(grading_results):
