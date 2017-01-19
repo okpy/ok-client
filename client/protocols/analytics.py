@@ -141,7 +141,6 @@ class AnalyticsProtocol(models.Protocol):
             pickle.dump(history, f)
             os.fsync(f)
 
-        print(history)
         messages['analytics']['history'] = history
 
 def is_correct(grading_results):
