@@ -118,17 +118,16 @@ class AnalyticsProtocol(models.Protocol):
             else:
                 scoring = False
 
-            # Update or initalize question stats
+            # Update attempt counts or initialize counts
             if question in history['questions']:
                 q_info = detail[question]
                 if grading and question in grading:
                     if q_info['solved'] != True:
                         q_info['solved'] = scoring
                     else:
-                        continue # Already solved. Do not change total
+                        continue  # Already solved. Do not change total
                 q_info['attempts'] += 1
             else:
-                # Initialize this question info.
                 detail[question] = {
                     'attempts': 1,
                     'solved': scoring
