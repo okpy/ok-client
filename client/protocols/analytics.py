@@ -41,7 +41,7 @@ class AnalyticsProtocol(models.Protocol):
 
         if self.args.question:
             statistics['question'] = [t.name for t in self.assignment.specified_tests]
-            statistics['question-args'] = self.args.question
+            statistics['requested-questions'] = self.args.question
 
             if self.args.suite:
                 statistics['requested-suite'] = self.args.suite
