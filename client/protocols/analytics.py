@@ -36,14 +36,19 @@ class AnalyticsProtocol(models.Protocol):
         """Returns some analytics about this autograder run."""
         statistics = {}
         statistics['time'] = str(datetime.now())
+        statistics['time-utc'] = str(datetime.utcnow())
         statistics['unlock'] = self.args.unlock
 
         if self.args.question:
-            # TODO(denero) Get the canonical name of the question
-            statistics['question'] = self.args.question
+            statistics['question'] = [t.name for t in self.assignment.specified_tests]
+            statistics['requested-questions'] = self.args.question
+
+            if self.args.suite:
+                statistics['requested-suite'] = self.args.suite
+            if self.args.case:
+                statistics['requested-case'] = self.args.case
 
         messages['analytics'] = statistics
-
         self.log_run(messages)
 
     def replaced(self, contents):
@@ -82,7 +87,7 @@ class AnalyticsProtocol(models.Protocol):
         history = self.read_history()
         history['all_attempts'] += 1
 
-        # List of questions that the student asked to have graded
+        # List of question names that the student asked to have graded
         questions = messages['analytics'].get('question', [])
         # The output of the grading protocol
         grading = messages.get('grading')
@@ -91,10 +96,9 @@ class AnalyticsProtocol(models.Protocol):
         if not questions and grading:
             # If questions are unspecified by the user, use the first failed test
             failed = first_failed_test(self.assignment.specified_tests, grading)
-
-            logging.info('First failed test: %s', failed)
+            logging.info('First failed test: {}'.format(failed))
             if failed:
-                history['question'] = [failed]
+                questions = [failed]
 
             # Update question correctness status from previous attempts
             for saved_q, details in history['questions'].items():
@@ -102,8 +106,9 @@ class AnalyticsProtocol(models.Protocol):
                 if not finished and saved_q in grading:
                     scoring = grading[saved_q]
                     details['solved'] = is_correct(scoring)
-        else:
-            history['question'] = questions
+
+        # The question(s) that the student is testing right now.
+        history['question'] = questions
 
         # Update attempt and correctness counts for the graded questions
         for question in questions:
@@ -113,16 +118,16 @@ class AnalyticsProtocol(models.Protocol):
             else:
                 scoring = False
 
+            # Update attempt counts or initialize counts
             if question in history['questions']:
                 q_info = detail[question]
                 if grading and question in grading:
                     if q_info['solved'] != True:
                         q_info['solved'] = scoring
                     else:
-                        continue # Already solved. Do not change total
+                        continue  # Already solved. Do not change total
                 q_info['attempts'] += 1
             else:
-                # Initialize this question info.
                 detail[question] = {
                     'attempts': 1,
                     'solved': scoring
