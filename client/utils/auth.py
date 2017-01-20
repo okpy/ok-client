@@ -131,7 +131,7 @@ def update_storage(access_token, expires_in, refresh_token):
             'refresh_token': refresh_token
         }, fp)
 
-def authenticate(assignment, force=False):
+def authenticate(assignment, force=False, print_email=True):
     """Returns an OAuth token that can be passed to the server for
     identification. If FORCE is False, it will attempt to use a cached token
     or refresh the OAuth token.
@@ -168,12 +168,9 @@ def authenticate(assignment, force=False):
                 print(e.error_description)
         return None
 
+    if print_email:
+        print_student_email(assignment, access_token)
     update_storage(access_token, expires_in, refresh_token)
-    try:
-        email = get_info(assignment, access_token)['email']
-        print('Successfully logged in as', email)
-    except Exception:
-        log.warning('Could not get student email', exc_info=True)
     return access_token
 
 def get_code(assignment):
@@ -284,6 +281,14 @@ def get_info(assignment, access_token):
         timeout=3)
     response.raise_for_status()
     return response.json()['data']
+
+def print_student_email(assignment, access_token):
+    try:
+        email = get_info(assignment, access_token)['email']
+        print('Successfully logged in as', email)
+    except Exception:
+        log.warning('Could not get student email', exc_info=True)
+        return False
 
 def get_student_email(assignment):
     """Attempts to get the student's email. Returns the email, or None."""
