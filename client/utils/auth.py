@@ -40,8 +40,8 @@ highlight the URL, right-click, and select "Copy".
 """.strip()
 
 PASTE_MESSAGE = """
-After logging in, copy the code from the web page and paste it below.
-To paste, right-click and select "Paste".
+After logging in, copy the code from the web page, paste it below,
+and press Enter. To paste, right-click and select "Paste".
 """.strip()
 
 class OAuthException(Exception):
