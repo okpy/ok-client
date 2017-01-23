@@ -19,14 +19,28 @@ class Notebook:
     def grade(self, *args, **kwargs):
         return self.assignment.grade(*args, **kwargs)
 
-    def score(self, env=None):
+    def grade_all(self, *args, **kwargs):
+        for test_key in self.assignment.test_map:
+            self.assignment.grade(test_key, *args, **kwargs)
+
+    def score(self, env=None, score_out=None):
+        """ Run the scoring protocol.
+
+        score_out -- str; a file name to write the point breakdown
+                     into.
+
+        Returns: dict; maps score tag (str) -> points (float)
+        """
         messages = {}
-        self.assignment.cmd_args.set_args(['--score'])
+        args = ['--score']
+        if score_out:
+            args.extend(['--score-out', score_out])
+        self.assignment.cmd_args.set_args(args)
         if env is None:
             import __main__
             env = __main__.__dict__
         self.run('scoring', messages, env=env)
-        return messages
+        return messages['scoring']
 
     def backup(self):
         messages = {}
