@@ -45,12 +45,24 @@ class Notebook:
 
     def backup(self):
         messages = {}
+        save_notebook()
+        time.sleep(2)
         self.assignment.cmd_args.set_args(['--backup'])
         self.run('file_contents', messages)
         return self.run('backup', messages)
 
     def submit(self):
         messages = {}
+        save_notebook()
         self.assignment.cmd_args.set_args(['--submit'])
         self.run('file_contents', messages)
         return self.run('backup', messages)
+
+def save_notebook():
+    try:
+        from IPython.display import display,Javascript
+        display(Javascript('IPython.notebook.save_checkpoint();'))
+        display(Javascript('IPython.notebook.save_notebook();'))
+    except:
+        log.warning("Could not import IPython Save")
+        print("Make sure to save your notebook before sending it to OK!")
