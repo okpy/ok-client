@@ -9,6 +9,7 @@ from client.sources.common import models as sources_models
 from client.protocols.common import models as protocol_models
 from client.utils import auth
 from client.utils import format
+from client.utils import prompt
 
 import logging
 import random
@@ -145,7 +146,7 @@ class HintingProtocol(protocol_models.Protocol):
                     print("\n{}".format(hint.rstrip()))
 
                     if post_prompt:
-                        prompt_user(post_prompt, hint_info)
+                        results['prompts'][query] = prompt.explanation_msg(post_prompt)
 
     def query_server(self, messages, test):
         access_token, _, _ = auth.get_storage()
@@ -166,34 +167,6 @@ class HintingProtocol(protocol_models.Protocol):
         response = requests.post(address, json=data, timeout=35)
         response.raise_for_status()
         return response.json()
-
-def prompt_user(query, results):
-    try:
-        response = None
-        short_respones = 0
-        while not response:
-            response = input("{}\nYour Response: ".format(query))
-            if not response or len(response) < 5:
-                short_respones += 1
-                # Do not ask more than twice to avoid annoying the user
-                if short_respones > 2:
-                    break
-                print("Please enter at least a sentence.")
-        results['prompts'][query] = response
-        return response
-    except KeyboardInterrupt:
-        # Hack for windows:
-        results['prompts'][query] = 'KeyboardInterrupt'
-        try:
-            print("Exiting Hint") # Second I/O will get KeyboardInterrupt
-            return ''
-        except KeyboardInterrupt:
-            return ''
-
-def confirm(message):
-    response = input("{} [yes/no]: ".format(message))
-    return response.lower() == "yes" or response.lower() == "y"
-
 
 SOLVE_SUCCESS_MSG = [
     "If another student had the same error on this question, what advice would you give them?",
