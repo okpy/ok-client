@@ -372,9 +372,10 @@ class Guidance:
 
     def prompt_with_prob(self, orig_response=None, prob=None):
         """Ask for rationale with a specific level of probability. """
-        if self.assignment.cmd_args.no_experiments:
-            log.info("Skipping prompt due to --no-experiments")
-            return "Skipped due to --no-experiments"
+        # Disable opt-out.
+        # if self.assignment.cmd_args.no_experiments:
+        #     log.info("Skipping prompt due to --no-experiments")
+        #     return "Skipped due to --no-experiments"
 
         if prob is None:
             prob = self.prompt_probability
