@@ -1,3 +1,6 @@
+import os.path
+import time
+
 from client.api.assignment import load_assignment
 from client.utils import auth as ok_auth
 
@@ -66,3 +69,15 @@ def save_notebook():
     except:
         log.warning("Could not import IPython Save")
         print("Make sure to save your notebook before sending it to OK!")
+
+def wait_for_save(filename, timeout=5):
+    """Waits for the file FILENAME to update, waiting up to TIMEOUT seconds.
+    Returns True if a save was detected, and False otherwise.
+    """
+    start_time = time.time()
+    modification_time = os.path.getmtime(path)
+    while time.time() < start_time + timeout:
+        if os.path.getmtime(path) > modification_time:
+            return True
+        time.sleep(0.1)
+    return False
