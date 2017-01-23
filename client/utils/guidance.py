@@ -287,7 +287,7 @@ class Guidance:
         if response in wa_lst_explain_responses:
             rationale = self.prompt_with_prob(orig_response=input_lines, prob=1.0)
         else:
-            rationale = 'Unavailable - not in watch list'
+            rationale = 'Response not in watch list'
 
         if len(msg_id_set) == 0:
             log.info("No messages to display.")
@@ -370,9 +370,9 @@ class Guidance:
 
     def prompt_with_prob(self, orig_response=None, prob=None):
         """Ask for rationale with a specific level of probability. """
-        if self.assignment.cmd_args.no_hints:
-            log.info("Skipping prompt due to --no-hints")
-            return "Skipped due to --no-hints"
+        if self.assignment.cmd_args.no_experiments:
+            log.info("Skipping prompt due to --no-experiments")
+            return "Skipped due to --no-experiments"
 
         if prob is None:
             prob = self.prompt_probability

@@ -153,14 +153,14 @@ class UnlockProtocol(models.Protocol):
                 correct = True
             tg_id = -1
             misU_count_dict = {}
-            rationale = "Unknown"
+            rationale = "Unknown - Default Value"
 
             if not correct:
                 guidance_data = self.guidance_util.show_guidance_msg(unique_id, input_lines,
                                                                      self.hash_key)
                 misU_count_dict, tg_id, printed_msg, rationale = guidance_data
             else:
-                rationale = self.guidance_util.prompt_with_prob()
+                rationale = self.guidance_util.prompt_with_prob(prob=1.0)
                 print("-- OK! --")
                 printed_msg = ["-- OK! --"]
 

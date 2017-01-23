@@ -56,7 +56,7 @@ class HintingProtocol(protocol_models.Protocol):
             log.info('File Contents needed to generate hints')
             return
 
-        if self.args.no_hints:
+        if self.args.no_experiments:
             messages['hinting'] = {'disabled': 'user'}
             return
 
