@@ -41,6 +41,12 @@ highlight the URL, right-click, and select "Copy".
 
 NOTEBOOK_COPY_MESSAGE = "Open the following URL:"
 
+NOTEBOOK_PASTE_MESSAGE = """
+After logging, copy the code from the web page, paste it in the box.
+
+Then press the "Enter" key on your keyboard.
+"""
+
 PASTE_MESSAGE = """
 After logging in, copy the code from the web page, paste it below,
 and press Enter. To paste, right-click and select "Paste".
@@ -305,7 +311,7 @@ def get_code_via_terminal(assignment, email=None,
 
 def notebook_get_code(assignment):
     return get_code_via_terminal(assignment, copy_msg=NOTEBOOK_COPY_MESSAGE,
-                                 paste_msg=PASTE_MESSAGE)
+                                 paste_msg=NOTEBOOK_PASTE_MESSAGE)
 
 def get_info(assignment, access_token):
     response = requests.get(
