@@ -56,6 +56,8 @@ CONFIRM_BLANK_EXPLANATION = """
 Are you sure you don't want to answer? Explaining your answer
 can improve your understanding of the question. (hit enter to skip)"""
 
+DEFAULT_PROMPT_PROBABILITY = 0.10
+
 # These lambda functions allow us to map from a certain type of misunderstanding to
 # the desired targeted guidance message we want to show.
 # lambda for control or treatment group where we want nothing to happen
@@ -77,7 +79,7 @@ class Guidance:
         an error when opening the JSON file, we flagged it as error.
         """
         self.tg_id = -1
-        self.prompt_probability = 0.10
+        self.prompt_probability = DEFAULT_PROMPT_PROBABILITY
         self.assignment = assignment
         if assignment:
             self.assignment_name = assignment.name.replace(" ", "")

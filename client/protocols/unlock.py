@@ -70,7 +70,7 @@ class UnlockProtocol(models.Protocol):
             self.current_test = test.name
 
             # Reset guidance explanation probability for every question
-            self.guidance_util.prompt_probability = 0.10
+            self.guidance_util.prompt_probability = guidance.DEFAULT_PROMPT_PROBABILITY
 
             try:
                 test.unlock(self.interact)
