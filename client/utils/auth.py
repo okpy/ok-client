@@ -41,11 +41,8 @@ highlight the URL, right-click, and select "Copy".
 
 NOTEBOOK_COPY_MESSAGE = "Open the following URL:"
 
-NOTEBOOK_PASTE_MESSAGE = """
-After logging, copy the code from the web page, paste it in the box.
-
-Then press the "Enter" key on your keyboard.
-"""
+NOTEBOOK_PASTE_MESSAGE = """After logging in, copy the code from the web page and paste it into the box.
+Then press the "Enter" key on your keyboard."""
 
 PASTE_MESSAGE = """
 After logging in, copy the code from the web page, paste it below,
