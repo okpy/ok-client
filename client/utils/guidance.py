@@ -77,7 +77,7 @@ class Guidance:
         an error when opening the JSON file, we flagged it as error.
         """
         self.tg_id = -1
-        self.prompt_probability = 0.5
+        self.prompt_probability = 0.10
         self.assignment = assignment
         if assignment:
             self.assignment_name = assignment.name.replace(" ", "")
@@ -285,7 +285,7 @@ class Guidance:
 
         wa_lst_explain_responses = assess_dict_info.get('lstWrongAnsWatch', [])
         if response in wa_lst_explain_responses:
-            rationale = self.prompt_with_prob(orig_response=input_lines)
+            rationale = self.prompt_with_prob(orig_response=input_lines, prob=1.0)
         else:
             rationale = 'Unavailable - not in watch list'
 
@@ -381,11 +381,13 @@ class Guidance:
             log.info("Did not prompt for rationale: Insufficient Probability")
             return "Did not prompt for rationale"
         with format.block(style="-"):
-            rationale =  prompt.explanation_msg(EXPLANTION_PROMPT,
+            rationale = prompt.explanation_msg(EXPLANTION_PROMPT,
                                 short_msg=CONFIRM_BLANK_EXPLANATION)
 
-        # Reduce future prompt likelihood
-        self.prompt_probability = self.prompt_probability / 2
-
+        if prob is None:
+            # Reduce future prompt likelihood
+            self.prompt_probability = self.prompt_probability / 2
         if orig_response:
             print('Thanks! Your original response was: {}'.format('\n'.join(orig_response)))
+
+        return rationale
