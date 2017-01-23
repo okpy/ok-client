@@ -69,6 +69,9 @@ class UnlockProtocol(models.Protocol):
             log.info('Unlocking test {}'.format(test.name))
             self.current_test = test.name
 
+            # Reset guidance explanation probability for every question
+            self.guidance_util.prompt_probability = 0.10
+
             try:
                 test.unlock(self.interact)
             except (KeyboardInterrupt, EOFError):

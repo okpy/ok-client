@@ -386,7 +386,7 @@ class Guidance:
 
         if prob is None:
             # Reduce future prompt likelihood
-            self.prompt_probability = self.prompt_probability / 2
+            self.prompt_probability = 0
         if orig_response:
             print('Thanks! Your original response was: {}'.format('\n'.join(orig_response)))
 
