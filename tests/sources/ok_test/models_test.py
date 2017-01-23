@@ -59,8 +59,8 @@ class OkTest(unittest.TestCase):
         ])
 
         self.assertEqual(score, test.score())
-        self.mockSuite1.return_value.run.assert_called_with(self.NAME, 1)
-        self.mockSuite2.return_value.run.assert_called_with(self.NAME, 2)
+        self.mockSuite1.return_value.run.assert_called_with(self.NAME, 1, None)
+        self.mockSuite2.return_value.run.assert_called_with(self.NAME, 2, None)
 
     def testConstructor_noSuites(self):
         try:
