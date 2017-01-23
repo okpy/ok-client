@@ -48,7 +48,7 @@ class Notebook:
 
     def backup(self):
         messages = {}
-        save_notebook()
+        self.save_notebook()
         time.sleep(2)
         self.assignment.cmd_args.set_args(['--backup'])
         self.run('file_contents', messages)
@@ -56,28 +56,32 @@ class Notebook:
 
     def submit(self):
         messages = {}
-        save_notebook()
+        self.save_notebook()
         self.assignment.cmd_args.set_args(['--submit'])
         self.run('file_contents', messages)
         return self.run('backup', messages)
 
-def save_notebook():
-    try:
-        from IPython.display import display,Javascript
-        display(Javascript('IPython.notebook.save_checkpoint();'))
-        display(Javascript('IPython.notebook.save_notebook();'))
-    except:
-        log.warning("Could not import IPython Save")
-        print("Make sure to save your notebook before sending it to OK!")
+    def save_notebook(self):
+        try:
+            from IPython.display import display,Javascript
+            display(Javascript('IPython.notebook.save_checkpoint();'))
+            display(Javascript('IPython.notebook.save_notebook();'))
+            ipynbs = [path in self.assignment.src
+                if os.path.splitext(path)[1] == '.ipynb']
+            if not wait_for_save(ipynbs):
+                log.warning("Timed out waiting for IPython save")
+                print("Could not save your notebook. Make sure your notebook is saved before sending it to OK!")
+        except:
+            log.warning("Could not import IPython Save")
+            print("Make sure to save your notebook before sending it to OK!")
 
-def wait_for_save(filename, timeout=5):
-    """Waits for the file FILENAME to update, waiting up to TIMEOUT seconds.
-    Returns True if a save was detected, and False otherwise.
+def wait_for_save(filenames, timeout=5):
+    """Waits for one of the files in the list FILENAMES to update, waiting up to
+    TIMEOUT seconds. Returns True if a save was detected, and False otherwise.
     """
     start_time = time.time()
-    modification_time = os.path.getmtime(path)
     while time.time() < start_time + timeout:
-        if os.path.getmtime(path) > modification_time:
+        if any(os.path.getmtime(path) > start_time for path in filenames):
             return True
         time.sleep(0.1)
     return False
