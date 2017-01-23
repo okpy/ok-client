@@ -92,7 +92,7 @@ class OkTest(models.Test):
             'locked': locked,
         }
 
-    def score(self):
+    def score(self, env=None):
         """Runs test cases and computes the score for this particular test.
 
         Scores are determined by aggregating results from suite.run() for each
@@ -106,9 +106,13 @@ class OkTest(models.Test):
         for i, suite in enumerate(self.suites):
             if not suite.scored:
                 continue
-
             total += 1
-            results = suite.run(self.name, i + 1)
+
+            # Hack for programmatic API users to plumb a custom environment
+            if hasattr(suite, 'doctest_suite_flag'):
+                results = suite.run(self.name, i + 1, env)
+            else:
+                results = suite.run(self.name, i + 1)
 
             if results['locked'] == 0 and results['failed'] == 0:
                 passed += 1
@@ -250,6 +254,7 @@ class Suite(core.Serializable):
             print(''.join(output_log))
         if not success:
             short_name = self.test.get_short_name()
+            # TODO: Change when in notebook mode.
             print('Run only this test case with '
                 '"python3 ok -q {} --suite {} --case {}"'.format(
                     short_name, suite_number, case_number))

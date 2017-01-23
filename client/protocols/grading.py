@@ -19,7 +19,7 @@ class GradingProtocol(models.Protocol):
     """A Protocol that runs tests, formats results, and sends results
     to the server.
     """
-    def run(self, messages):
+    def run(self, messages, env=None):
         """Run gradeable tests and print results and return analytics.
 
         RETURNS:
@@ -37,7 +37,7 @@ class GradingProtocol(models.Protocol):
                 suite = test.suites[self.args.suite - 1]
                 if self.args.case:
                     suite.run_only = self.args.case
-        grade(tests, messages, verbose=self.args.verbose)
+        grade(tests, messages, env, verbose=self.args.verbose)
 
 
 def grade(questions, messages, env=None, verbose=True):
