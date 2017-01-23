@@ -8,7 +8,7 @@ def explanation_msg(message, short_limit=1, short_msg=None):
         response = None
         short_responses = 0
         while not response:
-            response = input("{}\nYour Response: ".format(message)).strip()
+            response = input("{}\nYour Response: ".format(message))
             if not response or len(response) < 5:
                 response = ''
                 short_responses += 1
