@@ -39,6 +39,8 @@ Copy the following URL and open it in a web browser. To copy,
 highlight the URL, right-click, and select "Copy".
 """.strip()
 
+NOTEBOOK_COPY_MESSAGE = "Open the following URL:"
+
 PASTE_MESSAGE = """
 After logging in, copy the code from the web page, paste it below,
 and press Enter. To paste, right-click and select "Paste".
@@ -131,6 +133,39 @@ def update_storage(access_token, expires_in, refresh_token):
             'refresh_token': refresh_token
         }, fp)
 
+def refresh_local_token(assignment, server):
+    try:
+        cur_time = int(time.time())
+        access_token, expires_at, refresh_token = get_storage()
+        if cur_time < expires_at - 10:
+            return access_token
+        access_token, expires_in = make_refresh_post(server, refresh_token)
+
+        if not access_token and expires_in:
+            raise AuthenticationException(
+                "Authentication failed and returned an empty token.")
+
+        update_storage(access_token, expires_in, refresh_token)
+        return access_token
+    except IOError:
+        return False
+    except AuthenticationException as e:
+        raise e  # Let the main script handle this error
+    except Exception:
+        return False
+
+def perform_oauth(assignment, code_fn):
+    try:
+        access_token, expires_in, refresh_token = code_fn(assignment)
+    except OAuthException as e:
+        with format.block('-'):
+            print("Authentication error: {}".format(e.error.replace('_', ' ')))
+            if e.error_description:
+                print(e.error_description)
+        return None
+    update_storage(access_token, expires_in, refresh_token)
+    return access_token
+
 def authenticate(assignment, force=False):
     """Returns an OAuth token that can be passed to the server for
     identification. If FORCE is False, it will attempt to use a cached token
@@ -138,43 +173,33 @@ def authenticate(assignment, force=False):
     """
     server = assignment.server_url
     network.check_ssl()
+    access_token = None
     if not force:
-        try:
-            cur_time = int(time.time())
-            access_token, expires_at, refresh_token = get_storage()
-            if cur_time < expires_at - 10:
-                return access_token
-            access_token, expires_in = make_refresh_post(server, refresh_token)
+        access_token = refresh_local_token(assignment, server)
 
-            if not access_token and expires_in:
-                raise AuthenticationException(
-                    "Authentication failed and returned an empty token.")
+    if not access_token:
+        print('Performing authentication')
+        access_token = perform_oauth(assignment, get_code)
+        display_student_email(assignment, access_token)
 
-            update_storage(access_token, expires_in, refresh_token)
-            return access_token
-        except IOError:
-            print('Performing authentication')
-        except AuthenticationException as e:
-            raise e  # Let the main script handle this error
-        except Exception:
-            print('Performing authentication')
-
-    try:
-        access_token, expires_in, refresh_token = get_code(assignment)
-    except OAuthException as e:
-        with format.block('-'):
-            print("Authentication error: {}".format(e.error.replace('_', ' ')))
-            if e.error_description:
-                print(e.error_description)
-        return None
-
-    update_storage(access_token, expires_in, refresh_token)
-    try:
-        email = get_info(assignment, access_token)['email']
-        print('Successfully logged in as', email)
-    except Exception:
-        log.warning('Could not get student email', exc_info=True)
     return access_token
+
+def notebook_authenticate(assignment, force=False):
+    """ Similiar to authenticate but prints student emails after
+    all calls and uses a different way to get codes.
+    """
+    server = assignment.server_url
+    network.check_ssl()
+    access_token = None
+    if not force:
+        access_token = refresh_local_token(assignment, server)
+
+    if not access_token:
+        access_token = perform_oauth(assignment, notebook_get_code)
+
+    display_student_email(assignment, access_token) # Always display email
+    return access_token
+
 
 def get_code(assignment):
     if assignment.cmd_args.no_browser:
@@ -265,25 +290,38 @@ def get_code_via_browser(assignment, redirect_uri, host_name, port_number):
         raise oauth_exception
     return code_response
 
-def get_code_via_terminal(assignment):
+def get_code_via_terminal(assignment, email=None,
+                          copy_msg=COPY_MESSAGE, paste_msg=PASTE_MESSAGE):
     redirect_uri = 'urn:ietf:wg:oauth:2.0:oob'
     print()
-    print(COPY_MESSAGE)
+    print(copy_msg)
     print()
     print('{}/client/login/'.format(assignment.server_url))
     print()
-    print(PASTE_MESSAGE)
+    print(paste_msg)
     print()
     code = input('Paste your code here: ')
     return make_code_post(assignment.server_url, code, redirect_uri)
+
+def notebook_get_code(assignment):
+    return get_code_via_terminal(assignment, copy_msg=NOTEBOOK_COPY_MESSAGE,
+                                 paste_msg=PASTE_MESSAGE)
 
 def get_info(assignment, access_token):
     response = requests.get(
         assignment.server_url + INFO_ENDPOINT,
         params={'access_token': access_token},
-        timeout=3)
+        timeout=5)
     response.raise_for_status()
     return response.json()['data']
+
+def display_student_email(assignment, access_token):
+    try:
+        email = get_info(assignment, access_token)['email']
+        print('Successfully logged in as', email)
+        return email
+    except Exception:
+        log.warning('Could not get student email', exc_info=True)
 
 def get_student_email(assignment):
     """Attempts to get the student's email. Returns the email, or None."""

@@ -12,9 +12,10 @@ class Notebook:
         return self.assignment.protocol_map[protocol].run(messages, **kwargs)
 
     def auth(self, force=False, inline=True):
-        if inline:
-            self.assignment.cmd_args.set_args(['--no-browser'])
-        ok_auth.authenticate(self.assignment, force=force)
+        if not inline:
+            ok_auth.authenticate(self.assignment, force=force)
+        else:
+            ok_auth.notebook_authenticate(self.assignment, force=force)
 
     def grade(self, *args, **kwargs):
         return self.assignment.grade(*args, **kwargs)
