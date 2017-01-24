@@ -111,7 +111,7 @@ def validate_contents(file_contents):
     for name, contents in file_contents.items():
         if os.path.splitext(name)[1] != '.ipynb':
             continue
-        if not contents
+        if not contents:
             return False
         try:
             json_object = json.loads(contents)
