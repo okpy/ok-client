@@ -51,10 +51,15 @@ GUIDANCE_FLAG_TG_NUMBER = 1
 TG_ERROR_VALUE = -1
 
 # Question prompt for misunderstanding recognition
-EXPLANTION_PROMPT = "To help CS61A provide better hints, explain your answer "
+EXPLANTION_PROMPT = """
+To help CS 61A provide better hints to future students, please take
+a moment to explain your answer.
+""".strip()
 CONFIRM_BLANK_EXPLANATION = """
-Are you sure you don't want to answer? Explaining your answer
-can improve your understanding of the question. (hit enter to skip)"""
+Are you sure you don't want to answer? Explaining your answer can
+improve your understanding of the question. Press Enter again to skip
+the explanation and continue unlocking.
+""".strip()
 
 DEFAULT_PROMPT_PROBABILITY = 0.10
 
@@ -116,7 +121,7 @@ class Guidance:
             log.warning("Checksum on guidance not found. Invalidating file")
             return False
         if digest != checksum:
-            log.warning("Checksum %s did not match digest", checksum)
+            log.warning("Checksum %s did not match actual digest %s", checksum, digest)
             return False
         return True
 
