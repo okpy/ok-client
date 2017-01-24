@@ -116,7 +116,7 @@ class Guidance:
             log.warning("Checksum on guidance not found. Invalidating file")
             return False
         if digest != checksum:
-            log.warning("Checksum %s did not match digest", checksum)
+            log.warning("Checksum %s did not match actual digest %s", checksum, digest)
             return False
         return True
 
