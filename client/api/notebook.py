@@ -97,5 +97,5 @@ def wait_for_save(filename, timeout=5):
         if (os.path.getmtime(filename) > modification_time and
             os.path.getsize(filename) > 0):
             return True
-        time.sleep(0.1)
+        time.sleep(0.2)
     return False
