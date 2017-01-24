@@ -66,7 +66,7 @@ class Notebook:
         self.save_notebook()
         for _ in range(attempts):
             self.run('file_contents', messages)
-            if validate_contents(messages['file_contents'])):
+            if validate_contents(messages['file_contents']):
                 return messages
             else:
                 log.info("Notebook file is invalid, Retrying File Read")
