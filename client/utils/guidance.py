@@ -57,7 +57,7 @@ a moment to explain your answer.
 """.strip()
 CONFIRM_BLANK_EXPLANATION = """
 Are you sure you don't want to answer? Explaining your answer can
-improve your understanding of the question. Hit Enter again to skip
+improve your understanding of the question. Press Enter again to skip
 the explanation and continue unlocking.
 """.strip()
 
