@@ -255,7 +255,7 @@ class Console(object):
                 actual = printed.strip()
 
         expected = expected.strip()
-        
+
         if not self.skip_locked_cases and expected != actual:
             actual = locking.lock(self.hash_key, actual)
             if expected != actual:

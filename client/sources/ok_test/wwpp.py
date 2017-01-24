@@ -24,7 +24,7 @@ class WwppSuite(models.Suite):
                 raise ex.SerializeException('Test cases must be dictionaries')
             self.cases[i] = WwppCase(self.console, **case)
 
-    def run(self, test_name, suite_number):
+    def run(self, test_name, suite_number, env=None):
         results = {
             'passed': 0,
             'failed': 0,

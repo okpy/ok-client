@@ -1,11 +1,16 @@
 from client.utils import auth
 from client.utils import assess_id_util
+from client.utils import prompt
+from client.utils import format
 
 import hashlib
 import json
 import logging
 import os
+import random
+
 import requests
+
 log = logging.getLogger(__name__)
 
 """
@@ -36,7 +41,7 @@ TG_SERVER_ENDING = "/unlock_tg"
 LOCAL_TG_FILE = "tests/tg.ok_tg"
 OK_GUIDANCE_FILE = "tests/.ok_guidance"
 GUIDANCE_DEFAULT_MSG = "-- Not quite. Try again! --"
-EMPTY_MISUCOUNT_TGID_PRNTEDMSG = ({}, -1, [])
+EMPTY_MISUCOUNT_TGID_PRNTEDMSG = ({}, -1, [], "Unknown Rationale")
 COUNT_FILE_PATH = "tests/misUcount.json"
 TG_CONTROL = 0
 # If student forces guidance messages to show, we will assign treatment
@@ -44,6 +49,14 @@ TG_CONTROL = 0
 GUIDANCE_FLAG_TG_NUMBER = 1
 # If set_tg() fails, we will default to this treatment group number
 TG_ERROR_VALUE = -1
+
+# Question prompt for misunderstanding recognition
+EXPLANTION_PROMPT = "To help CS61A provide better hints, explain your answer "
+CONFIRM_BLANK_EXPLANATION = """
+Are you sure you don't want to answer? Explaining your answer
+can improve your understanding of the question. (hit enter to skip)"""
+
+DEFAULT_PROMPT_PROBABILITY = 0.10
 
 # These lambda functions allow us to map from a certain type of misunderstanding to
 # the desired targeted guidance message we want to show.
@@ -66,7 +79,7 @@ class Guidance:
         an error when opening the JSON file, we flagged it as error.
         """
         self.tg_id = -1
-
+        self.prompt_probability = DEFAULT_PROMPT_PROBABILITY
         self.assignment = assignment
         if assignment:
             self.assignment_name = assignment.name.replace(" ", "")
@@ -170,6 +183,7 @@ class Guidance:
         wa_count_threshold = self.guidance_json['wrongAnsThresh']
         wa_lst_assess_num = assess_dict_info['dictWA2LstAssessNum_WA']
         msg_id_set = set()
+        should_skip_propagation = self.tg_id == 3 or self.tg_id == 4
 
         answerDict, countData = self.get_misUdata()
         prev_responses = answerDict.get(shorten_unique_id, [])
@@ -206,12 +220,13 @@ class Guidance:
 
                 log.info("Has given %d previous responses in lst_assess_num", num_prev_responses)
 
-                # Increment countDict by the number of wrong answers seen
-                # for each tag assoicated with this wrong answer
-                increment = num_prev_responses
-                for misu in lst_mis_u:
-                    log.info("Updating the count of misu: %s by %s", misu, increment)
-                    countData[misu] = countData.get(misu, 0) + increment
+                if not should_skip_propagation:
+                    # Increment countDict by the number of wrong answers seen
+                    # for each tag assoicated with this wrong answerDict
+                    increment = num_prev_responses
+                    for misu in lst_mis_u:
+                        log.info("Updating the count of misu: %s by %s", misu, increment)
+                        countData[misu] = countData.get(misu, 0) + increment
 
                 for misu in lst_mis_u:
                     log.debug("Misu: %s has count %s", misu, countData[misu])
@@ -219,7 +234,7 @@ class Guidance:
                         msg_info = lambda_info_misu(wa_details, misu)
                         if msg_info:
                             msg_id_set.add(msg_info)
-            else:
+            elif not should_skip_propagation:
                 # Lookup the lst_mis_u of each wrong answer in the list of wrong
                 # answers related to the current wrong answer (lst_assess_num),
                 # using dictAssessNum2AssessId
@@ -268,13 +283,18 @@ class Guidance:
                             log.info("misu %s seen %s/%s times",
                                      misu, countData[misu], wa_count_threshold)
 
-
         self.save_misUdata(answerDict, countData)
+
+        wa_lst_explain_responses = assess_dict_info.get('lstWrongAnsWatch', [])
+        if response in wa_lst_explain_responses:
+            rationale = self.prompt_with_prob(orig_response=input_lines, prob=1.0)
+        else:
+            rationale = 'Response not in watch list'
 
         if len(msg_id_set) == 0:
             log.info("No messages to display.")
             print(GUIDANCE_DEFAULT_MSG)
-            return (countData, self.tg_id, [])
+            return (countData, self.tg_id, [], rationale)
 
         print("\n-- Helpful Hint --")
 
@@ -290,7 +310,7 @@ class Guidance:
         print()
         print(GUIDANCE_DEFAULT_MSG)
 
-        return (countData, self.tg_id, printed_out_msgs)
+        return (countData, self.tg_id, printed_out_msgs, rationale)
 
     def get_misUdata(self):
         # Creates a new folder inside tests that stores the number of misU per
@@ -309,7 +329,7 @@ class Guidance:
     def save_misUdata(self, answerDict, countData):
         data = {
             "countData": countData,
-            "answerDict": answerDict
+            "answerDict": answerDict,
         }
         log.info("Attempting to save response/count dict")
         with open(self.current_working_dir + COUNT_FILE_PATH, "w") as f:
@@ -349,3 +369,31 @@ class Guidance:
 
         tg_file = open(self.current_working_dir + LOCAL_TG_FILE, 'r')
         self.tg_id = int(tg_file.read())
+
+    def prompt_with_prob(self, orig_response=None, prob=None):
+        """Ask for rationale with a specific level of probability. """
+        # Disable opt-out.
+        # if self.assignment.cmd_args.no_experiments:
+        #     log.info("Skipping prompt due to --no-experiments")
+        #     return "Skipped due to --no-experiments"
+        if hasattr(self.assignment, 'is_test'):
+            log.info("Skipping prompt due to test mode")
+            return "Test response"
+
+        if prob is None:
+            prob = self.prompt_probability
+
+        if random.random() > prob:
+            log.info("Did not prompt for rationale: Insufficient Probability")
+            return "Did not prompt for rationale"
+        with format.block(style="-"):
+            rationale = prompt.explanation_msg(EXPLANTION_PROMPT,
+                                short_msg=CONFIRM_BLANK_EXPLANATION)
+
+        if prob is None:
+            # Reduce future prompt likelihood
+            self.prompt_probability = 0
+        if orig_response:
+            print('Thanks! Your original response was: {}'.format('\n'.join(orig_response)))
+
+        return rationale
