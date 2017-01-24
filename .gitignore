@@ -28,6 +28,9 @@ ok
 *.ok_history
 misUcount.json
 
+# IPython
+.ipynb_checkpoints/
+
 # IDE
 *.iml
 .idea/
