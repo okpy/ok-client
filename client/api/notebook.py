@@ -1,8 +1,11 @@
+import logging
 import os.path
 import time
 
 from client.api.assignment import load_assignment
 from client.utils import auth as ok_auth
+
+log = logging.getLogger(__name__)
 
 class Notebook:
     def __init__(self, filepath=None, cmd_args=None):
@@ -64,24 +67,32 @@ class Notebook:
     def save_notebook(self):
         try:
             from IPython.display import display,Javascript
-            display(Javascript('IPython.notebook.save_checkpoint();'))
-            display(Javascript('IPython.notebook.save_notebook();'))
-            ipynbs = [path in self.assignment.src
-                if os.path.splitext(path)[1] == '.ipynb']
-            if not wait_for_save(ipynbs):
-                log.warning("Timed out waiting for IPython save")
-                print("Could not save your notebook. Make sure your notebook is saved before sending it to OK!")
-        except:
+        except ImportError:
             log.warning("Could not import IPython Save")
             print("Make sure to save your notebook before sending it to OK!")
+            return
 
-def wait_for_save(filenames, timeout=5):
-    """Waits for one of the files in the list FILENAMES to update, waiting up to
-    TIMEOUT seconds. Returns True if a save was detected, and False otherwise.
+        display(Javascript('IPython.notebook.save_checkpoint();'))
+        display(Javascript('IPython.notebook.save_notebook();'))
+        print('Saving notebook...')
+        ipynbs = [path for path in self.assignment.src
+            if os.path.splitext(path)[1] == '.ipynb']
+        # Wait for first .ipynb to save
+        if ipynbs:
+            if wait_for_save(ipynbs[0]):
+                print("Saved '{}'.".format(ipynbs[0]))
+            else:
+                log.warning("Timed out waiting for IPython save")
+                print("Could not save your notebook. Make sure your notebook is saved before sending it to OK!")
+
+def wait_for_save(filename, timeout=5):
+    """Waits for FILENAME to update, waiting up to TIMEOUT seconds.
+    Returns True if a save was detected, and False otherwise.
     """
+    modification_time = os.path.getmtime(filename)
     start_time = time.time()
     while time.time() < start_time + timeout:
-        if any(os.path.getmtime(path) > start_time for path in filenames):
+        if os.path.getmtime(filename) > modification_time:
             return True
         time.sleep(0.1)
     return False
