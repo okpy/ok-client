@@ -52,7 +52,6 @@ class Notebook:
 
     def backup(self):
         messages = {}
-        self.save_notebook()
         self.assignment.cmd_args.set_args(['--backup'])
         self.save(messages)
         return self.run('backup', messages)
@@ -63,23 +62,19 @@ class Notebook:
         self.save(messages)
         return self.run('backup', messages)
 
-    def save(self, messages, delay=0.5, retry=3):
-        self.save_notebook(delay)
-        self.run('file_contents', messages)
-        attempts = 0
-        while (attempts <= retry and
-               not validate_contents(messages['file_contents'])):
-            log.info("Notebook file is invalid, Retrying File Read")
-            time.sleep(delay)
+    def save(self, messages, delay=0.5, attempts=3):
+        self.save_notebook()
+        for _ in range(attempts):
             self.run('file_contents', messages)
-            attempts += 1
+            if validate_contents(messages['file_contents'])):
+                return messages
+            else:
+                log.info("Notebook file is invalid, Retrying File Read")
+                time.sleep(delay)
+        log.warning("OK could not autosave the notebook. "
+                    " Please ensure that the submission URL on OK appears complete")
 
-        if not validate_contents(messages['file_contents']):
-            log.warning("OK could not autosave the notebook file completely."
-                        " Please ensure that the submission URL on OK appears complete")
-        return messages
-
-    def save_notebook(self, delay=0.5):
+    def save_notebook(self):
         try:
             from IPython.display import display, Javascript
         except ImportError:
@@ -95,8 +90,6 @@ class Notebook:
         # Wait for first .ipynb to save
         if ipynbs:
             if wait_for_save(ipynbs[0]):
-                # Optional delay to increase likelihood of complete save.
-                time.sleep(delay)
                 print("Saved '{}'.".format(ipynbs[0]))
             else:
                 log.warning("Timed out waiting for IPython save")
