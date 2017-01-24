@@ -62,12 +62,10 @@ class OkTest(models.Test):
         for i, suite in enumerate(self.suites):
             if self.run_only and self.run_only != i + 1:
                 continue
-            if hasattr(suite, 'doctest_suite_flag'):
-                # A hack that allows programmatic API users to plumb a custom
-                # environment through to Python tests.
-                results = suite.run(self.name, i + 1, env)
-            else:
-                results = suite.run(self.name, i + 1)
+
+            # Env is a hack that allows programmatic API users to plumb a custom
+            # environment through to Python tests.
+            results = suite.run(self.name, i + 1, env)
 
             passed += results['passed']
             failed += results['failed']
@@ -92,7 +90,7 @@ class OkTest(models.Test):
             'locked': locked,
         }
 
-    def score(self):
+    def score(self, env=None):
         """Runs test cases and computes the score for this particular test.
 
         Scores are determined by aggregating results from suite.run() for each
@@ -106,9 +104,10 @@ class OkTest(models.Test):
         for i, suite in enumerate(self.suites):
             if not suite.scored:
                 continue
-
             total += 1
-            results = suite.run(self.name, i + 1)
+
+            # Hack for programmatic API users to plumb a custom environment
+            results = suite.run(self.name, i + 1, env)
 
             if results['locked'] == 0 and results['failed'] == 0:
                 passed += 1
@@ -201,12 +200,14 @@ class Suite(core.Serializable):
         self.timeout = timeout
         self.run_only = []
 
-    def run(self, test_name, suite_number):
+    def run(self, test_name, suite_number, env=None):
         """Subclasses should override this method to run tests.
 
         PARAMETERS:
         test_name    -- str; name of the parent test.
         suite_number -- int; suite number, assumed to be 1-indexed.
+        env          -- dict; used by programmatic API to provide a
+                        custom environment to run tests with.
 
         RETURNS:
         dict; results of the following form:
@@ -250,6 +251,7 @@ class Suite(core.Serializable):
             print(''.join(output_log))
         if not success:
             short_name = self.test.get_short_name()
+            # TODO: Change when in notebook mode.
             print('Run only this test case with '
                 '"python3 ok -q {} --suite {} --case {}"'.format(
                     short_name, suite_number, case_number))
