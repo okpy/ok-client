@@ -11,6 +11,7 @@ class UnlockProtocolTest(unittest.TestCase):
     def setUp(self):
         self.cmd_args = mock.Mock()
         self.assignment = mock.Mock()
+        self.assignment.is_test = True
         self.proto = unlock.protocol(self.cmd_args, self.assignment)
 
     def testOnInteract_noTests(self):

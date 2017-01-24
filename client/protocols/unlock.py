@@ -163,7 +163,7 @@ class UnlockProtocol(models.Protocol):
                                                                      self.hash_key)
                 misU_count_dict, tg_id, printed_msg, rationale = guidance_data
             else:
-                rationale = self.guidance_util.prompt_with_prob(prob=1.0)
+                rationale = self.guidance_util.prompt_with_prob()
                 print("-- OK! --")
                 printed_msg = ["-- OK! --"]
 
