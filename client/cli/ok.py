@@ -102,8 +102,8 @@ def parse_input(command_input=None):
 
     # Experiments
     experiment = parser.add_argument_group('experiment options')
-    experiment.add_argument('--no-hints', action='store_true',
-                        help="do not give hints")
+    experiment.add_argument('--no-experiments', action='store_true',
+                        help="do not run experimental features")
     experiment.add_argument('--hint', action='store_true',
                         help="give a hint (if available)")
     experiment.add_argument('--style', action='store_true',

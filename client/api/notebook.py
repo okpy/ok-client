@@ -62,6 +62,7 @@ class Notebook:
         self.assignment.cmd_args.set_args(['--submit'])
         self.run('file_contents', messages)
         return self.run('backup', messages)
+<<<<<<< HEAD
 
     def save_notebook(self):
         try:
@@ -99,3 +100,5 @@ def wait_for_save(filename, timeout=5):
             return True
         time.sleep(0.2)
     return False
+=======
+>>>>>>> master
