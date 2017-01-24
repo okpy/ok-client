@@ -106,7 +106,7 @@ class OkTest(models.Test):
                 continue
             total += 1
 
-            # Hack for programmatic API users to plumb a custom environment
+            # Env is for programmatic API users to plumb a custom environment
             results = suite.run(self.name, i + 1, env)
 
             if results['locked'] == 0 and results['failed'] == 0:
