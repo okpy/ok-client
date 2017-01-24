@@ -234,11 +234,12 @@ class Guidance:
                         countData[misu] = countData.get(misu, 0) + increment
 
                 for misu in lst_mis_u:
-                    log.debug("Misu: %s has count %s", misu, countData[misu])
-                    if countData[misu] >= wa_count_threshold:
+                    log.debug("Misu: %s has count %s", misu, countData.get(misu, 0))
+                    if countData.get(misu, 0) >= wa_count_threshold:
                         msg_info = lambda_info_misu(wa_details, misu)
                         if msg_info:
                             msg_id_set.add(msg_info)
+
             elif not should_skip_propagation:
                 # Lookup the lst_mis_u of each wrong answer in the list of wrong
                 # answers related to the current wrong answer (lst_assess_num),
@@ -281,12 +282,12 @@ class Guidance:
                         countData[misu] = countData.get(misu, 0) + 1
 
                     for misu, lst_wa_info in related_misu_tags_dict.items():
-                        if countData[misu] >= wa_count_threshold:
+                        if countData.get(misu, 0) >= wa_count_threshold:
                             for wa_info in lst_wa_info:
                                 msg_id_set.add(lambda_info_misu(wa_info, misu))
                         else:
                             log.info("misu %s seen %s/%s times",
-                                     misu, countData[misu], wa_count_threshold)
+                                     misu, countData.get(misu, 0), wa_count_threshold)
 
         self.save_misUdata(answerDict, countData)
 
