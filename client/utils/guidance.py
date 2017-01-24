@@ -183,7 +183,7 @@ class Guidance:
         wa_count_threshold = self.guidance_json['wrongAnsThresh']
         wa_lst_assess_num = assess_dict_info['dictWA2LstAssessNum_WA']
         msg_id_set = set()
-        should_skip_propogation = self.tg_id == 3 or self.tg_id == 4
+        should_skip_propagation = self.tg_id == 3 or self.tg_id == 4
 
         answerDict, countData = self.get_misUdata()
         prev_responses = answerDict.get(shorten_unique_id, [])
@@ -220,7 +220,7 @@ class Guidance:
 
                 log.info("Has given %d previous responses in lst_assess_num", num_prev_responses)
 
-                if not should_skip_propogation:
+                if not should_skip_propagation:
                     # Increment countDict by the number of wrong answers seen
                     # for each tag assoicated with this wrong answerDict
                     increment = num_prev_responses
@@ -234,7 +234,7 @@ class Guidance:
                         msg_info = lambda_info_misu(wa_details, misu)
                         if msg_info:
                             msg_id_set.add(msg_info)
-            elif not should_skip_propogation:
+            elif not should_skip_propagation:
                 # Lookup the lst_mis_u of each wrong answer in the list of wrong
                 # answers related to the current wrong answer (lst_assess_num),
                 # using dictAssessNum2AssessId
