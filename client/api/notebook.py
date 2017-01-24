@@ -1,5 +1,11 @@
+import logging
+import os.path
+import time
+
 from client.api.assignment import load_assignment
 from client.utils import auth as ok_auth
+
+log = logging.getLogger(__name__)
 
 class Notebook:
     def __init__(self, filepath=None, cmd_args=None):
@@ -45,12 +51,54 @@ class Notebook:
 
     def backup(self):
         messages = {}
+        self.save_notebook()
         self.assignment.cmd_args.set_args(['--backup'])
         self.run('file_contents', messages)
         return self.run('backup', messages)
 
     def submit(self):
         messages = {}
+        self.save_notebook()
         self.assignment.cmd_args.set_args(['--submit'])
         self.run('file_contents', messages)
         return self.run('backup', messages)
+<<<<<<< HEAD
+
+    def save_notebook(self):
+        try:
+            from IPython.display import display, Javascript
+        except ImportError:
+            log.warning("Could not import IPython Display Function")
+            print("Make sure to save your notebook before sending it to OK!")
+            return
+
+        display(Javascript('IPython.notebook.save_checkpoint();'))
+        display(Javascript('IPython.notebook.save_notebook();'))
+        print('Saving notebook...', end=' ')
+        ipynbs = [path for path in self.assignment.src
+                  if os.path.splitext(path)[1] == '.ipynb']
+        # Wait for first .ipynb to save
+        if ipynbs:
+            if wait_for_save(ipynbs[0]):
+                print("Saved '{}'.".format(ipynbs[0]))
+            else:
+                log.warning("Timed out waiting for IPython save")
+                print("Could not save your notebook. Make sure your notebook"
+                      " is saved before sending it to OK!")
+        else:
+            print()
+
+def wait_for_save(filename, timeout=5):
+    """Waits for FILENAME to update, waiting up to TIMEOUT seconds.
+    Returns True if a save was detected, and False otherwise.
+    """
+    modification_time = os.path.getmtime(filename)
+    start_time = time.time()
+    while time.time() < start_time + timeout:
+        if (os.path.getmtime(filename) > modification_time and
+            os.path.getsize(filename) > 0):
+            return True
+        time.sleep(0.2)
+    return False
+=======
+>>>>>>> master
