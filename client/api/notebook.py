@@ -1,5 +1,6 @@
 import logging
 import os.path
+import json
 import time
 
 from client.api.assignment import load_assignment
@@ -51,17 +52,27 @@ class Notebook:
 
     def backup(self):
         messages = {}
-        self.save_notebook()
         self.assignment.cmd_args.set_args(['--backup'])
-        self.run('file_contents', messages)
+        self.save(messages)
         return self.run('backup', messages)
 
     def submit(self):
         messages = {}
-        self.save_notebook()
         self.assignment.cmd_args.set_args(['--submit'])
-        self.run('file_contents', messages)
+        self.save(messages)
         return self.run('backup', messages)
+
+    def save(self, messages, delay=0.5, attempts=3):
+        self.save_notebook()
+        for _ in range(attempts):
+            self.run('file_contents', messages)
+            if validate_contents(messages['file_contents']):
+                return messages
+            else:
+                log.info("Notebook file is invalid, Retrying File Read")
+                time.sleep(delay)
+        log.warning("OK could not autosave the notebook. "
+                    " Please ensure that the submission URL on OK appears complete")
 
     def save_notebook(self):
         try:
@@ -86,6 +97,20 @@ class Notebook:
                       " is saved before sending it to OK!")
         else:
             print()
+
+def validate_contents(file_contents):
+    """Ensures that all ipynb files in FILE_CONTENTS
+    are valid JSON files."""
+    for name, contents in file_contents.items():
+        if os.path.splitext(name)[1] != '.ipynb':
+            continue
+        if not contents:
+            return False
+        try:
+            json_object = json.loads(contents)
+        except ValueError:
+            return False
+    return True
 
 def wait_for_save(filename, timeout=5):
     """Waits for FILENAME to update, waiting up to TIMEOUT seconds.

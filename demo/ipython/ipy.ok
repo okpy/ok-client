@@ -10,6 +10,7 @@
   "protocols": [
       "file_contents",
       "grading",
+      "scoring",
       "backup"
   ]
 }
