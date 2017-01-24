@@ -69,6 +69,9 @@ class UnlockProtocol(models.Protocol):
             log.info('Unlocking test {}'.format(test.name))
             self.current_test = test.name
 
+            # Reset guidance explanation probability for every question
+            self.guidance_util.prompt_probability = guidance.DEFAULT_PROMPT_PROBABILITY
+
             try:
                 test.unlock(self.interact)
             except (KeyboardInterrupt, EOFError):
@@ -153,12 +156,14 @@ class UnlockProtocol(models.Protocol):
                 correct = True
             tg_id = -1
             misU_count_dict = {}
+            rationale = "Unknown - Default Value"
 
             if not correct:
-                misU_count_dict, tg_id, printed_msg = self.guidance_util.show_guidance_msg(unique_id,input_lines,
-                    self.hash_key)
-
+                guidance_data = self.guidance_util.show_guidance_msg(unique_id, input_lines,
+                                                                     self.hash_key)
+                misU_count_dict, tg_id, printed_msg, rationale = guidance_data
             else:
+                rationale = self.guidance_util.prompt_with_prob()
                 print("-- OK! --")
                 printed_msg = ["-- OK! --"]
 
@@ -171,6 +176,7 @@ class UnlockProtocol(models.Protocol):
                 'answer': input_lines,
                 'correct': correct,
                 'treatment group id': tg_id,
+                'rationale': rationale,
                 'misU count': misU_count_dict,
                 'printed msg': printed_msg
             })
