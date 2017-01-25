@@ -183,7 +183,9 @@ def authenticate(assignment, force=False):
     if not access_token:
         print('Performing authentication')
         access_token = perform_oauth(assignment, get_code)
-        display_student_email(assignment, access_token)
+        email = display_student_email(assignment, access_token)
+        if not email:
+            log.warning('Could not get login email. Try logging in again.')
 
     return access_token
 
@@ -200,7 +202,14 @@ def notebook_authenticate(assignment, force=False):
     if not access_token:
         access_token = perform_oauth(assignment, notebook_get_code)
 
-    display_student_email(assignment, access_token) # Always display email
+    # Always display email
+    email = display_student_email(assignment, access_token, warn=True)
+    if email is None and not force:
+        return notebook_authenticate(assignment, force=True)  # Token has expired
+    elif email is None:
+        # Did not get a valid token even after a fresh login
+        log.warning('Could not get login email. You may have been logged out. '
+                    ' Try logging in again.')
     return access_token
 
 
@@ -318,13 +327,13 @@ def get_info(assignment, access_token):
     response.raise_for_status()
     return response.json()['data']
 
-def display_student_email(assignment, access_token):
+def display_student_email(assignment, access_token, warn=True):
     try:
         email = get_info(assignment, access_token)['email']
         print('Successfully logged in as', email)
         return email
-    except Exception:
-        log.warning('Could not get student email', exc_info=True)
+    except:
+        return None
 
 def get_student_email(assignment):
     """Attempts to get the student's email. Returns the email, or None."""
