@@ -327,12 +327,13 @@ def get_info(assignment, access_token):
     response.raise_for_status()
     return response.json()['data']
 
-def display_student_email(assignment, access_token, warn=True):
+def display_student_email(assignment, access_token):
     try:
         email = get_info(assignment, access_token)['email']
         print('Successfully logged in as', email)
         return email
-    except:
+    except Exception:  # Do not catch KeyboardInterrupts
+        log.debug("Did not obtain email", exc_info=True)
         return None
 
 def get_student_email(assignment):
