@@ -203,7 +203,7 @@ def notebook_authenticate(assignment, force=False):
         access_token = perform_oauth(assignment, notebook_get_code)
 
     # Always display email
-    email = display_student_email(assignment, access_token, warn=True)
+    email = display_student_email(assignment, access_token)
     if email is None and not force:
         return notebook_authenticate(assignment, force=True)  # Token has expired
     elif email is None:
