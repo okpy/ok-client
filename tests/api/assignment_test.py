@@ -354,7 +354,7 @@ class AssignmentTest(unittest.TestCase):
         self.mockImportModule.side_effect = import_module
         self.mockFindFiles.return_value = [self.FILE1]
 
-        self.makeAssignment()
+        self.assertRaises(ImportError, self.makeAssignment)
 
     def testConstructor_noProtocols(self):
         self.mockFindFiles.return_value = [self.FILE1]
