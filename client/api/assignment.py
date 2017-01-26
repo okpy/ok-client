@@ -233,12 +233,9 @@ class Assignment(core.Serializable):
     def _load_protocols(self):
         log.info('Loading protocols')
         for proto in self._PROTOCOLS:
-            try:
-                module = importlib.import_module(self._PROTOCOL_PACKAGE + '.' + proto)
-                self.protocol_map[proto] = module.protocol(self.cmd_args, self)
-                log.info('Loaded protocol "{}"'.format(proto))
-            except ImportError:
-                log.debug('Skipping unknown protocol "{}"'.format(proto))
+            module = importlib.import_module(self._PROTOCOL_PACKAGE + '.' + proto)
+            self.protocol_map[proto] = module.protocol(self.cmd_args, self)
+            log.info('Loaded protocol "{}"'.format(proto))
 
     def _print_header(self):
         format.print_line('=')
