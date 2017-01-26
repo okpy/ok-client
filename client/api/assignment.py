@@ -60,7 +60,8 @@ class Assignment(core.Serializable):
     src = core.List(type=str, optional=True)
     tests = core.Dict(keys=str, values=str, ordered=True)
     default_tests = core.List(type=str, optional=True)
-    protocols = core.List(type=str)
+    # ignored, for backwards-compatibility only
+    protocols = core.List(type=str, optional=True)
 
     ####################
     # Programmatic API #
@@ -112,6 +113,31 @@ class Assignment(core.Serializable):
 
     _TESTS_PACKAGE = 'client.sources'
     _PROTOCOL_PACKAGE = 'client.protocols'
+
+    # A list of all protocols that should be loaded. Order is important.
+    # Dependencies:
+    # analytics     -> grading
+    # autostyle     -> analytics, grading
+    # backup        -> all other protocols
+    # collaborate   -> file_contents, analytics
+    # file_contents -> none
+    # grading       -> none
+    # hinting       -> file_contents, analytics
+    # lock          -> none
+    # scoring       -> none
+    # unlock        -> none
+    _PROTOCOLS = [
+        "file_contents",
+        "grading",
+        "analytics",
+        "autostyle"
+        "collaborate",
+        "hinting"
+        "lock",
+        "scoring",
+        "unlock",
+        "backup",
+    ]
 
     def __init__(self, args, **fields):
         self.cmd_args = args
@@ -206,7 +232,7 @@ class Assignment(core.Serializable):
 
     def _load_protocols(self):
         log.info('Loading protocols')
-        for proto in self.protocols:
+        for proto in self._PROTOCOLS:
             try:
                 module = importlib.import_module(self._PROTOCOL_PACKAGE + '.' + proto)
                 self.protocol_map[proto] = module.protocol(self.cmd_args, self)
