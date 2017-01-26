@@ -130,9 +130,9 @@ class Assignment(core.Serializable):
         "file_contents",
         "grading",
         "analytics",
-        "autostyle"
+        "autostyle",
         "collaborate",
-        "hinting"
+        "hinting",
         "lock",
         "scoring",
         "unlock",
