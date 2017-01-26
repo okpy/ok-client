@@ -382,6 +382,8 @@ class Guidance:
         # if self.assignment.cmd_args.no_experiments:
         #     log.info("Skipping prompt due to --no-experiments")
         #     return "Skipped due to --no-experiments"
+        if self.load_error:
+            return 'Failed to read guidance config file'
         if hasattr(self.assignment, 'is_test'):
             log.info("Skipping prompt due to test mode")
             return "Test response"
