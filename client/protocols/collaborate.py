@@ -289,7 +289,7 @@ class CollaborateProtocol(models.Protocol):
                     "computer": self.hostname,
                     "email": self.user_email,
                     "time": time.strftime(self.TIME_FORMAT),
-                    'text': str(grading_results['output'])[:6000],
+                    'text': str(grading_results['output'])[:50000],
                     'grading': grading_results['grading']},
                    self.fire_user['idToken']))
 
