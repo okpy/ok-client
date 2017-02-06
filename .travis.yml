@@ -24,4 +24,4 @@ notifications:
   slack:
     on_success: never
     on_failure: always
-    secure: mGqCgRCFMB89AKsYVOZI79sifCFOLaQkuY3rvFKMitpD1GYQQpkBbZ9Z1SWi0VQV63oOKTQBrPCeDSwhZMaJA/dCZZIuz6e9nkVyJJUIrqAuH9PjgQr6FM4FkKzVLpHdPnXIikAvUAKiPRzzj8z4KO1EohBRR/xb2/4TpoWrkSA=
+    secure: Mdy0pgux/YjCky+k/QCEHrNj9iTeCo2qD7DP0SyuO93KzVBWjH5H25rR38pKFnUA3eRbbRiXijXh641TVZ5wTWRWuP+CuXmVtuCAsp4A6Bb87pOM6YbGA9fgjwYsDdgPn4bGAM9uzZYDqdbiWQ0B6ae2NsFJzQimpPTQxsQcgVg=
