@@ -56,7 +56,7 @@ def _get_config(config):
 
 class Assignment(core.Serializable):
     name = core.String()
-    endpoint = core.String()
+    endpoint = core.String(optional=True, default='')
     src = core.List(type=str, optional=True)
     tests = core.Dict(keys=str, values=str, ordered=True)
     default_tests = core.List(type=str, optional=True)
