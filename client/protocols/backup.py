@@ -20,6 +20,10 @@ class BackupProtocol(models.Protocol):
     REVISION_ENDPOINT = '{server}/api/v3/revision/'
 
     def run(self, messages):
+        if not self.assignment.endpoint:
+            log.info('No assignment endpoint, skipping backup')
+            return
+
         if self.args.local:
             print("Cannot backup when running ok with --local.")
             return
