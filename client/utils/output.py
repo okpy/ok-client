@@ -54,11 +54,7 @@ class _OutputLogger(object):
         PARAMTERS:
         msg -- str
         """
-        try:
-            self._current_stream.write(msg)
-        except UnicodeEncodeError as e:
-            msg_encode = msg.encode('ascii', 'ignore')
-            self._current_stream.write(msg_encode)
+        self._current_stream.write(msg.encode('utf-8'))
 
         for log in self._logs.values():
             log.append(msg)
