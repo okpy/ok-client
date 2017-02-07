@@ -126,7 +126,7 @@ def parse_input(command_input=None):
                         help="lock the tests in a directory")
     grading.add_argument('--score', action='store_true',
                         help="score the assignment")
-    grading.add_argument('--score-out', type=argparse.FileType('w', encoding='UTF-8'),
+    grading.add_argument('--score-out', type=argparse.FileType('w'),
                         default=sys.stdout, help="write scores to a file")
     grading.add_argument('--config', type=str,
                         help="use a specific configuration file")
