@@ -1,6 +1,6 @@
 import logging
-import os.path
 import json
+import os.path
 import time
 
 from client.api.assignment import load_assignment
@@ -9,7 +9,9 @@ from client.utils import auth as ok_auth
 log = logging.getLogger(__name__)
 
 class Notebook:
-    def __init__(self, filepath=None, cmd_args=None):
+    def __init__(self, filepath=None, cmd_args=None, debug=False):
+        ok_logger = logging.getLogger('client')   # Get top-level ok logger
+        ok_logger.setLevel(logging.DEBUG if debug else logging.ERROR)
         self.assignment = load_assignment(filepath, cmd_args)
 
     def run(self, protocol, messages, **kwargs):
