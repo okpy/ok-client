@@ -35,3 +35,13 @@ def forever():
     while True:
         pass
     return 1
+
+def exception():
+    """
+    >>> exception()
+    Traceback (most recent call last):
+      ...
+    ValueError: hello
+    """
+    print('foo')
+    raise ValueError('hello')
