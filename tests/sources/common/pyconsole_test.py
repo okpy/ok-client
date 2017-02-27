@@ -40,10 +40,27 @@ class PythonConsoleTest(unittest.TestCase):
             7
             """)
 
+    def testPass_printMultipleLines(self):
+        self.calls_interpret(True,
+            """
+            >>> print('Hello,\\nworld!')
+            Hello,
+            world!
+            """)
+
     def testPass_expectException(self):
         self.calls_interpret(True,
             """
             >>> 1 / 0
+            Traceback (most recent call last):
+              ...
+            ZeroDivisionError: division by zero
+            """)
+
+    def testPass_printThenException(self):
+        self.calls_interpret(True,
+            """
+            >>> print('hello'); 1 / 0
             Traceback (most recent call last):
               ...
             ZeroDivisionError: division by zero
@@ -149,6 +166,16 @@ class PythonConsoleTest(unittest.TestCase):
             Traceback (most recent call last):
               ...
             ZeroDivisionError: multiplication by zero
+            """)
+
+    def testError_printThenException(self):
+        self.calls_interpret(True,
+            """
+            >>> print('hello'); 1 / 0
+            hello
+            Traceback (most recent call last):
+              ...
+            ZeroDivisionError: division by zero
             """)
 
     def testError_onlyExceptionName(self):
