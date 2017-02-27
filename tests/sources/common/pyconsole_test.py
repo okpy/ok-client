@@ -66,6 +66,17 @@ class PythonConsoleTest(unittest.TestCase):
             ZeroDivisionError: division by zero
             """)
 
+    def testPass_multilineExceptionDetail(self):
+        self.calls_interpret(True,
+            """
+            >>> raise ValueError('1\\n  2\\n3')
+            Traceback (most recent call last):
+              ...
+            ValueError: 1
+              2
+            3
+            """)
+
     def testPass_expectExceptionAlternateFormat(self):
         self.calls_interpret(True,
             """
@@ -169,7 +180,7 @@ class PythonConsoleTest(unittest.TestCase):
             """)
 
     def testError_printThenException(self):
-        self.calls_interpret(True,
+        self.calls_interpret(False,
             """
             >>> print('hello'); 1 / 0
             hello
@@ -188,9 +199,7 @@ class PythonConsoleTest(unittest.TestCase):
     def testError_notException(self):
         self.calls_interpret(False,
             """
-            >>> print('Traceback (most recent call last):')
-            >>> print('  ...')
-            >>> print('ZeroDivisionError: division by zero')
+            >>> print('Traceback (most recent call last):\\n  ...\\nZeroDivisionError: division by zero')
             Traceback (most recent call last):
               ...
             ZeroDivisionError: division by zero
@@ -250,6 +259,7 @@ class PythonConsoleTest(unittest.TestCase):
         self.calls_interpret(True, """
         >>> 2 + 2
         %s
+        # locked
         """ % hashedAnswer, skip_locked_cases=False, hash_key=key)
 
     def testError_locked(self):
@@ -258,6 +268,7 @@ class PythonConsoleTest(unittest.TestCase):
         self.calls_interpret(False, """
         >>> 2 + 2
         %s
+        # locked
         """ % hashedAnswer, skip_locked_cases=False, hash_key=key)
 
     def testError_skipLocked(self):
@@ -266,4 +277,5 @@ class PythonConsoleTest(unittest.TestCase):
         self.calls_interpret(False, """
         >>> 2 + 2
         %s
+        # locked
         """ % hashedAnswer)
