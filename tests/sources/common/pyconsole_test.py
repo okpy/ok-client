@@ -151,6 +151,13 @@ class PythonConsoleTest(unittest.TestCase):
             ZeroDivisionError: multiplication by zero
             """)
 
+    def testError_onlyExceptionName(self):
+        self.calls_interpret(False,
+            """
+            >>> 1 / 0
+            ZeroDivisionError
+            """)
+
     def testError_notException(self):
         self.calls_interpret(False,
             """
