@@ -1,7 +1,8 @@
 from client.sources.common import interpreter
 from client.sources.common import pyconsole
-from client.utils import locking
+from client.utils import locking, output
 import client
+import sys
 import unittest
 
 class PythonConsoleTest(unittest.TestCase):
@@ -10,19 +11,32 @@ class PythonConsoleTest(unittest.TestCase):
                 verbose, interactive, timeout)
 
     def calls_interpret(self, success, code, setup='', teardown='', skip_locked_cases=True, hash_key=None):
-        self.console = self.createConsole()
-        self.console.skip_locked_cases = skip_locked_cases
-        self.console.hash_key = hash_key
-        lines = interpreter.CodeCase.split_code(code, self.console.PS1,
-                                                self.console.PS2)
-        self.console.load(lines, setup, teardown)
-        result = self.console.interpret()
-        self.assertEqual(success, result)
+        # nosetests captures sys.stdout, but so do we
+        stdout = sys.stdout
+        try:
+            sys.stdout = output._logger = output._OutputLogger(stdout=stdout)
+            self.console = self.createConsole()
+            self.console.skip_locked_cases = skip_locked_cases
+            self.console.hash_key = hash_key
+            lines = interpreter.CodeCase.split_code(code, self.console.PS1,
+                                                    self.console.PS2)
+            self.console.load(lines, setup, teardown)
+            result = self.console.interpret()
+            self.assertEqual(success, result)
+        finally:
+            sys.stdout = stdout
 
     def testPass_equals(self):
         self.calls_interpret(True,
             """
             >>> 3 + 4
+            7
+            """)
+
+    def testPass_print(self):
+        self.calls_interpret(True,
+            """
+            >>> print('7')
             7
             """)
 
@@ -70,15 +84,6 @@ class PythonConsoleTest(unittest.TestCase):
             ...     return x * x
             >>> square(4)
             16
-            """)
-
-    def testPass_indentedPrompts(self):
-        self.calls_interpret(True,
-            """
-            >>> print('  >>>')
-              >>>
-            >>> print('  ...')
-              ...
             """)
 
     def testPass_setup(self):
