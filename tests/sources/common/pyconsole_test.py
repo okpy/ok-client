@@ -6,25 +6,27 @@ import sys
 import unittest
 
 class PythonConsoleTest(unittest.TestCase):
+    def setUp(self):
+        # nosetests captures sys.stdout, but so do we
+        self.stdout = sys.stdout
+        sys.stdout = output._logger = output._OutputLogger(stdout=self.stdout)
+
+    def tearDown(self):
+        sys.stdout = self.stdout
+
     def createConsole(self, verbose=True, interactive=False, timeout=None):
         return pyconsole.PythonConsole(
                 verbose, interactive, timeout)
 
     def calls_interpret(self, success, code, setup='', teardown='', skip_locked_cases=True, hash_key=None):
-        # nosetests captures sys.stdout, but so do we
-        stdout = sys.stdout
-        try:
-            sys.stdout = output._logger = output._OutputLogger(stdout=stdout)
-            self.console = self.createConsole()
-            self.console.skip_locked_cases = skip_locked_cases
-            self.console.hash_key = hash_key
-            lines = interpreter.CodeCase.split_code(code, self.console.PS1,
-                                                    self.console.PS2)
-            self.console.load(lines, setup, teardown)
-            result = self.console.interpret()
-            self.assertEqual(success, result)
-        finally:
-            sys.stdout = stdout
+        self.console = self.createConsole()
+        self.console.skip_locked_cases = skip_locked_cases
+        self.console.hash_key = hash_key
+        lines = interpreter.CodeCase.split_code(code, self.console.PS1,
+                                                self.console.PS2)
+        self.console.load(lines, setup, teardown)
+        result = self.console.interpret()
+        self.assertEqual(success, result)
 
     def testPass_equals(self):
         self.calls_interpret(True,
