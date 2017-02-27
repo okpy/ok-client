@@ -249,10 +249,10 @@ class Console(object):
             detail = "{}: {}".format(e.exception_type, str(e.exception))
             actual = CodeAnswer(exception=True, exception_detail=detail.splitlines())
         else:
-            output = printed.splitlines()
             if value is not None:
                 print(self._output_fn(value))
-                output.append(self._output_fn(value))
+                printed += self._output_fn(value)
+            output = printed.splitlines()
             actual = CodeAnswer(output=output)
 
         if not self.skip_locked_cases and expected.locked:
