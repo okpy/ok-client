@@ -1,6 +1,6 @@
 {
     "name": "Homework 1",
-    "endpoint": "https://okpy.org/path/to/endpoint",
+    "endpoint": "ok/test/su16/ex",
     "src": [
         "hw1.py"
     ],
