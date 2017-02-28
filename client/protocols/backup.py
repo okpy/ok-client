@@ -232,14 +232,16 @@ class BackupProtocol(models.Protocol):
             address = self.REVISION_ENDPOINT.format(server=self.assignment.server_url)
         else:
             address = self.BACKUP_ENDPOINT.format(server=self.assignment.server_url)
+
         address_params = {
-            'access_token': access_token,
             'client_name': 'ok-client',
             'client_version': client.__version__,
         }
 
+        headers = {'Authorization': 'Bearer {}'.format(access_token)}
+
         log.info('Sending messages to %s', address)
-        response = requests.post(address,
+        response = requests.post(address, headers=headers,
             params=address_params, json=data, timeout=timeout)
         response.raise_for_status()
         return response.json()
