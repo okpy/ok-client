@@ -46,11 +46,17 @@ def load(file, name, assign):
 
 
 def _load_tests(file, module, assign):
+    """Recursively find doctests from all objects in MODULE."""
     tests = {}
-    for name in dir(module):
-        to_test = getattr(module, name)
-        if callable(to_test) and to_test.__module__ == module.__name__:
-            tests[name] = _load_test(file, module, name, assign)
+    def _load_tests_from_obj(obj, attribute_path):
+        for attr in dir(obj):
+            to_test = getattr(obj, attr)
+            if callable(to_test) and getattr(to_test, '__module__', None) == module.__name__:
+                path = attribute_path + [attr]
+                name = '.'.join(path)
+                tests[name] = _load_test(file, module, name, assign)
+                _load_tests_from_obj(to_test, path)
+    _load_tests_from_obj(module, [])
     return tests
 
 def _load_test(file, module, name, assign):
