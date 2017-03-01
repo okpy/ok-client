@@ -12,6 +12,7 @@ from client.utils import auth
 
 GITHUB_TOKEN_FILE = '.github-token'
 GITHUB_REPO = 'Cal-CS-61A-Staff/ok-client'
+OK_SERVER_DOMAIN = 'okpy.org'
 
 def abort(message=None):
     if message:
@@ -169,8 +170,15 @@ if __name__ == '__main__':
         )
 
     print('Updating version on okpy.org...')
-    access_token = auth.authenticate(args, server_url)
-    post_request('https://okpy.org/api/v3/versions/ok-client',
+    # Create a fake assignment to log in. I'm not happy about this
+    args = assignment._MockNamespace()
+    class FakeAssignment:
+        def __init__(self):
+            self.args = assignment._MockNamespace()
+            self.args.server = OK_SERVER_DOMAIN
+            self.endpoint = ''
+    access_token = auth.authenticate(FakeAssignment())
+    post_request('https://{}/api/v3/versions/ok-client'.format(OK_SERVER_DOMAIN),
         token=access_token,
         json={
             'current_version': new_release,
