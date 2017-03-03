@@ -164,7 +164,7 @@ if __name__ == '__main__':
             data=f,
         )
 
-    print('Updating version on okpy.org...')
+    print('Updating version on {}...'.format(OK_SERVER_DOMAIN))
     # Create a fake assignment to log in. I'm not happy about this
     args = assignment._MockNamespace()
     class FakeAssignment:
