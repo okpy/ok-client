@@ -62,14 +62,6 @@ def post_request(*args, **kwargs):
         abort(str(e))
     return r.json()
 
-def github(endpoint, domain='api.github.com', token='', **kwargs):
-    path = os.path.join('/repos/Cal-CS-61A-Staff/ok-client', endpoint)
-    headers = kwargs.pop('headers', {})
-    if token:
-        headers['authorization'] = 'token {}'.format(token)
-    return post_request('https://{}/{}'.format(domain, endpoint),
-        headers=headers, **kwargs)
-
 if __name__ == '__main__':
     if len(sys.argv) < 2:
         print('Usage: {} NEW_VERSION'.format(sys.argv[0]), file=sys.stderr)
@@ -145,7 +137,9 @@ if __name__ == '__main__':
     shell('ok-publish')
     github_release = post_request(
         'https://api.github.com/repos/{}/releases'.format(GITHUB_REPO),
-        token=github_token,
+        headers={
+            'Authorization': 'token ' + github_token,
+        },
         json={
             'tag_name': new_release,
             'target_commitish': 'master',
@@ -162,9 +156,9 @@ if __name__ == '__main__':
             params={
                 'name': 'ok'
             },
-            token=github_token,
             headers={
-                'content-type': 'application/octet-stream'
+                'Authorization': 'token ' + github_token,
+                'Content-Type': 'application/octet-stream',
             },
             data=f,
         )
@@ -179,7 +173,9 @@ if __name__ == '__main__':
             self.endpoint = ''
     access_token = auth.authenticate(FakeAssignment())
     post_request('https://{}/api/v3/versions/ok-client'.format(OK_SERVER_DOMAIN),
-        token=access_token,
+        headers={
+            'Authorization': 'Bearer ' + access_token,
+        },
         json={
             'current_version': new_release,
             'download_link': github_asset['browser_download_url'],
