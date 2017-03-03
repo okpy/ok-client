@@ -19,12 +19,12 @@ def abort(message=None):
         print(message, file=sys.stderr)
     sys.exit(1)
 
-def shell(command, capture_output=True, echo=False):
-    if echo:
-        print('>', command)
+def shell(command, capture_output=False):
     kwargs = dict(shell=True, check=True)
     if capture_output:
         kwargs.update(stderr=subprocess.PIPE, stdout=subprocess.PIPE)
+    else:
+        print('>', command)
     try:
         output = subprocess.run(command, **kwargs)
     except subprocess.CalledProcessError as e:
@@ -46,7 +46,7 @@ def edit(text):
         f.close()
 
         editor = os.environ.get('EDITOR', 'vi')
-        shell('{} \"{}\"'.format(editor, name), capture_output=False)
+        shell('{} \"{}\"'.format(editor, name))
         f = open(name)
         t = f.read()
         f.close()
@@ -84,13 +84,14 @@ if __name__ == '__main__':
 
     if new_release[:1] != 'v':
         abort("Version must start with 'v'")
-    if shell('git rev-parse --abbrev-ref HEAD') != 'master':
+    if shell('git rev-parse --abbrev-ref HEAD', capture_output=True) != 'master':
         abort('You must be on master to release a new version')
-    shell('git pull --ff-only', capture_output=False, echo=True)
+    shell('git pull --ff-only')
 
     # find latest release
-    latest_release = shell('git describe --tags --abbrev=0')
-    latest_release_commit = shell('git rev-list -n 1 {}'.format(latest_release))
+    latest_release = shell('git describe --tags --abbrev=0', capture_output=True)
+    latest_release_commit = shell('git rev-list -n 1 {}'.format(latest_release),
+        capture_output=True)
 
     print('Latest version: {} ({})'.format(latest_release, latest_release_commit[:7]))
     print('New version: {}'.format(new_release))
@@ -103,7 +104,8 @@ if __name__ == '__main__':
         abort(str(e))
 
     # edit changelog message
-    log = shell('git log --pretty=format:"- %s" {}..HEAD'.format(latest_release))
+    log = shell('git log --pretty=format:"- %s" {}..HEAD'.format(latest_release),
+        capture_output=True)
     changelog = edit('\n'.join([
         'Changelog',
         log,
@@ -128,10 +130,9 @@ if __name__ == '__main__':
         print('Editing version string in {}'.format(init_file))
         with open(init_file, 'w', encoding='utf-8') as f:
             init = f.write(new_init)
-        shell('git add {}'.format(init_file), capture_output=False, echo=True)
-        shell('git commit -m "Bump version to {}"'.format(new_release),
-            capture_output=False, echo=True)
-        shell('git push', capture_output=False, echo=True)
+        shell('git add {}'.format(init_file))
+        shell('git commit -m "Bump version to {}"'.format(new_release))
+        shell('git push')
 
     print('Uploading release to GitHub...')
     shell('ok-publish')
@@ -183,8 +184,8 @@ if __name__ == '__main__':
     )
 
     print('Uploading release to PyPI...')
-    shell('python setup.py develop', echo=True)
-    # shell('python setup.py sdist upload', echo=True)
+    shell('python setup.py develop')
+    # shell('python setup.py sdist upload')
 
     print('Done. Remember to update the requirements.txt file for any repos')
     print('that depend on okpy.')
