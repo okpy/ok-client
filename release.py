@@ -11,8 +11,8 @@ from client.api import assignment
 from client.utils import auth
 
 GITHUB_TOKEN_FILE = '.github-token'
-GITHUB_REPO = 'Cal-CS-61A-Staff/ok-client'
-OK_SERVER_DOMAIN = 'okpy.org'
+GITHUB_REPO = 'okpy/ok-client'
+OK_SERVER_DOMAIN = 'localhost:5000'
 
 def abort(message=None):
     if message:
@@ -188,7 +188,7 @@ if __name__ == '__main__':
 
     print('Uploading release to PyPI...')
     shell('python setup.py develop', echo=True)
-    shell('python setup.py sdist upload', echo=True)
+    # shell('python setup.py sdist upload', echo=True)
 
     print('Done. Remember to update the requirements.txt file for any repos')
     print('that depend on okpy.')
