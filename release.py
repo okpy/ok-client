@@ -16,7 +16,7 @@ OK_SERVER_URL = 'http://localhost:5000'
 
 def abort(message=None):
     if message:
-        print(message, file=sys.stderr)
+        print('ERROR:', message, file=sys.stderr)
     sys.exit(1)
 
 def shell(command, capture_output=False):
