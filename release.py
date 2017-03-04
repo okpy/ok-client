@@ -28,9 +28,9 @@ def shell(command, capture_output=False):
     try:
         output = subprocess.run(command, **kwargs)
     except subprocess.CalledProcessError as e:
-        print(str(e))
+        print(str(e), file=sys.stderr)
         if capture_output:
-            print(e.stderr.decode('utf-8'))
+            print(e.stderr.decode('utf-8'), file=sys.stderr)
         abort()
     if capture_output:
         return output.stdout.decode('utf-8').strip()
