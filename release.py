@@ -54,9 +54,10 @@ def edit(text):
         os.unlink(name)
     return t
 
-def post_request(*args, **kwargs):
+def post_request(url, *args, **kwargs):
     try:
-        r = requests.post(*args, **kwargs)
+        print('POST', url)
+        r = requests.post(url, *args, **kwargs)
         r.raise_for_status()
     except Exception as e:
         abort(str(e))
