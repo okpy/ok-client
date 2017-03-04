@@ -185,7 +185,6 @@ if __name__ == '__main__':
     )
 
     print('Uploading release to PyPI...')
-    shell('python setup.py develop')
     # shell('python setup.py sdist upload')
 
     print('Done. Remember to update the requirements.txt file for any repos')
