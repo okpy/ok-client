@@ -50,24 +50,23 @@ To run all tests, use the following command:
 
     nosetests tests
 
-## Deployment
+## Releasing an ok-client version
 
-To deploy a new version of ok-client, do the following:
+First make sure that
 
-1. Change the version number in `client/__init__.py`.
-2. Make sure your virtualenv is activated. Also make sure that your `~/.pypirc`
-   contains okpy's Pypi credentials.
-3. From the base of the repo, make sure your virtualenv is activated and run
+* Your virtualenv is activated and you are on the master branch.
+* Your `~/.pypirc` contains okpy's PyPI credentials.
+* A file `.github-token` contains a
+  [GitHub access token](https://help.github.com/articles/creating-an-access-token-for-command-line-use/)
+  with the "repo" scope.
 
-        python setup.py sdist upload
+To deploy a new version of ok-client, change to the `master` branch and run
 
-4. Make sure to deploy a development version locally:
+    ./release.py vX.X.X
 
-        python setup.py develop
+where `vX.X.X` is the new version. This will:
 
-5. Create an `ok` binary:
-
-        ok-publish
-
-6. Draft a new release on Github with the newly created `ok` binary.
-7. Update the version and Github link on [okpy.org](https://okpy.org/admin/versions/ok-client)
+* Change the version number
+* Create a GitHub release
+* Change the ok-client version on https://okpy.org/admin/versions/ok-client
+* Upload the release to PyPI
