@@ -12,7 +12,7 @@ from client.utils import auth
 
 GITHUB_TOKEN_FILE = '.github-token'
 GITHUB_REPO = 'Cal-CS-61A-Staff/ok-client'
-OK_SERVER_DOMAIN = 'https://okpy.org'
+OK_SERVER_URL = 'https://okpy.org'
 
 def abort(message=None):
     if message:
