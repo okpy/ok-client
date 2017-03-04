@@ -136,6 +136,7 @@ if __name__ == '__main__':
         shell('git push')
 
     print('Uploading release to GitHub...')
+    shell('python setup.py develop')
     shell('ok-publish')
     github_release = post_request(
         'https://api.github.com/repos/{}/releases'.format(GITHUB_REPO),
