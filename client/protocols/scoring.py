@@ -63,8 +63,8 @@ def display_breakdown(scores, outfile):
 
     format.print_line('-')
     print('Point breakdown', file=outfile)
-    for name, (score, total) in scores.items():
-        print('    {}: {}/{}'.format(name, score, total), file=outfile)
+    for name, (score, max_score) in scores.items():
+        print('    {}: {}/{}'.format(name, score, max_score), file=outfile)
         total += score
     print(file=outfile)
 

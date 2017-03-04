@@ -8,7 +8,7 @@ import unittest
 
 class ScoringProtocolTest(unittest.TestCase):
     SCORE0 = 1
-    SCORE1 = 2
+    SCORE1 = 2.5
     SCORE2 = 3
 
     def setUp(self):
