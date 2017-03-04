@@ -167,7 +167,6 @@ if __name__ == '__main__':
 
     print('Updating version on {}...'.format(OK_SERVER_URL))
     # Create a fake assignment to log in. I'm not happy about this
-    args = assignment._MockNamespace()
     class FakeAssignment:
         def __init__(self):
             self.cmd_args = assignment._MockNamespace()
