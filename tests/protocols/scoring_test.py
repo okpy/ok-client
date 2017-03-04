@@ -8,11 +8,8 @@ import unittest
 
 class ScoringProtocolTest(unittest.TestCase):
     SCORE0 = 1
-    SCORE1 = 2
+    SCORE1 = 2.5
     SCORE2 = 3
-
-    PARTNER1 = 'A'
-    PARTNER2 = 'B'
 
     def setUp(self):
         self.cmd_args = mock.Mock()
@@ -49,30 +46,11 @@ class ScoringProtocolTest(unittest.TestCase):
     def testOnInteract_noTests(self):
         self.assignment.specified_tests = []
         self.assertEqual({
-            scoring.NO_PARTNER_NAME: 0,
+            'Total': 0,
         }, self.callRun())
 
     def testOnInteract_noSpecifiedPartners(self):
         messages = {}
         self.assertEqual({
-            scoring.NO_PARTNER_NAME: self.SCORE0 + self.SCORE1 + self.SCORE2
-        }, self.callRun())
-
-    def testOnInteract_specifiedPartners_noSharedPoints(self):
-        self.mockTest0.partner = self.PARTNER1
-        self.mockTest1.partner = self.PARTNER1
-        self.mockTest2.partner = self.PARTNER2
-        messages = {}
-        self.assertEqual({
-            self.PARTNER1: self.SCORE0 + self.SCORE1,
-            self.PARTNER2: self.SCORE2
-        }, self.callRun())
-
-    def testOnInteract_specifiedPartners_sharedPoints(self):
-        self.mockTest0.partner = self.PARTNER1
-        self.mockTest1.partner = self.PARTNER2
-        messages = {}
-        self.assertEqual({
-            self.PARTNER1: self.SCORE0 + self.SCORE2,
-            self.PARTNER2: self.SCORE1 + self.SCORE2
+            'Total': self.SCORE0 + self.SCORE1 + self.SCORE2
         }, self.callRun())
