@@ -187,5 +187,6 @@ if __name__ == '__main__':
     print('Uploading release to PyPI...')
     # shell('python setup.py sdist upload')
 
-    print('Done. Remember to update the requirements.txt file for any repos')
-    print('that depend on okpy.')
+    print()
+    print('Released okpy=={}'.format(new_release))
+    print('Remember to update the requirements.txt file for any repos that depend on okpy.')
