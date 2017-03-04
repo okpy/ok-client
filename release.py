@@ -70,7 +70,7 @@ if __name__ == '__main__':
     new_release = sys.argv[1]
 
     # change to directory that script is in; should be root of project
-    os.chdir(os.path.dirname(__file__))
+    os.chdir(os.path.dirname(os.path.realpath(__file__)))
 
     # read GitHub token
     try:
