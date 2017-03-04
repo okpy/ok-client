@@ -174,7 +174,7 @@ if __name__ == '__main__':
             self.server_url = OK_SERVER_URL
             self.endpoint = ''
     access_token = auth.authenticate(FakeAssignment())
-    post_request('{}/api/v3/versions/ok-client'.format(OK_SERVER_URL),
+    post_request('{}/api/v3/version/ok-client'.format(OK_SERVER_URL),
         headers={
             'Authorization': 'Bearer ' + access_token,
         },
