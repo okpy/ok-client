@@ -184,7 +184,7 @@ if __name__ == '__main__':
     )
 
     print('Uploading release to PyPI...')
-    shell('python setup.py sdist upload')
+    shell('python setup.py sdist bdist_wheel upload')
 
     print()
     print('Released okpy=={}'.format(new_release))
