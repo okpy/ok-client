@@ -97,12 +97,16 @@ if __name__ == '__main__':
     print('Latest version: {} ({})'.format(latest_release, latest_release_commit[:7]))
     print('New version: {}'.format(new_release))
 
-    # check that release numbers are increasing
+    # check that release numbers are sane
     try:
-        if StrictVersion(latest_release[1:]) >= StrictVersion(new_release[1:]):
-            abort('Version numbers must be increasing')
+        latest_version = StrictVersion(latest_release[1:])
+        new_version = StrictVersion(new_release[1:])
     except ValueError as e:
         abort(str(e))
+    if latest_version >= new_version:
+        abort('Version numbers must be increasing')
+    elif new_version.version[0] > latest_version.version[0] + 1:
+        abort('Major version number cannot increase by more than one')
 
     # edit changelog message
     log = shell('git log --pretty=format:"- %s" {}..HEAD'.format(latest_release),
