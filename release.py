@@ -169,7 +169,7 @@ if __name__ == '__main__':
     args = assignment._MockNamespace()
     class FakeAssignment:
         def __init__(self):
-            self.args = assignment._MockNamespace()
+            self.cmd_args = assignment._MockNamespace()
             self.server_url = OK_SERVER_URL
             self.endpoint = ''
     access_token = auth.authenticate(FakeAssignment())
