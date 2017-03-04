@@ -56,7 +56,9 @@ First make sure that
 
 * Your virtualenv is activated and you are on the master branch.
 * Your `~/.pypirc` contains okpy's PyPI credentials.
-* A file `.github-token` contains a [GitHub access token](https://help.github.com/articles/creating-an-access-token-for-command-line-use/).
+* A file `.github-token` contains a
+  [GitHub access token](https://help.github.com/articles/creating-an-access-token-for-command-line-use/)
+  with the "repo" scope.
 
 To deploy a new version of ok-client, change to the `master` branch and run
 
