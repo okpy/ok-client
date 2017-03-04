@@ -97,6 +97,9 @@ if __name__ == '__main__':
     print('Latest version: {} ({})'.format(latest_release, latest_release_commit[:7]))
     print('New version: {}'.format(new_release))
 
+    # run tests
+    shell('nosetests tests')
+
     # check that release numbers are sane
     try:
         latest_version = StrictVersion(latest_release[1:])
