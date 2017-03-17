@@ -322,7 +322,7 @@ def notebook_get_code(assignment):
 def get_info(assignment, access_token):
     response = requests.get(
         assignment.server_url + INFO_ENDPOINT,
-        headers={'Authentication': 'Bearer {}'.format(access_token)},
+        headers={'Authorization': 'Bearer {}'.format(access_token)},
         timeout=5)
     response.raise_for_status()
     return response.json()['data']
