@@ -115,7 +115,7 @@ if __name__ == '__main__':
     log = shell('git log --pretty=format:"- %s" {}..HEAD'.format(latest_release),
         capture_output=True)
     changelog = edit('\n'.join([
-        'Changelog',
+        'Changelog:',
         log,
         '',
         '# Please enter a changelog since the latest release. Lines starting',
