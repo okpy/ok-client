@@ -29,7 +29,8 @@ class HintingProtocol(protocol_models.Protocol):
     HINT_ENDPOINT = 'api/hints'
     SMALL_EFFORT = 2
     WAIT_ATTEMPTS = 5
-    SUPPORTED_ASSIGNMENTS = ['cal/cs61a/su16/hw08', 'cal/cs61a/su16/lab10', 'cal/cs61a/fa16/hw09']
+    SUPPORTED_ASSIGNMENTS = ['cal/cs61a/su16/hw08', 'cal/cs61a/su16/lab10', 'cal/cs61a/fa16/hw09', 
+                             'cal/cs61a/sp17/hw07']
 
     def run(self, messages):
         """Determine if a student is elgible to recieve a hint. Based on their
