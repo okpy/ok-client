@@ -175,6 +175,11 @@ def main():
 
     assign = None
     try:
+        if args.get_token:
+            access_token = auth.authenticate(args, force=True)
+            print("Token: {}".format(access_token))
+            exit(not access_token)  # exit with error if no access_token
+
         # Instantiating assignment
         assign = assignment.load_assignment(args.config, args)
 
@@ -182,11 +187,6 @@ def main():
             # Authenticate and check for success
             if not assign.authenticate(force=True):
                 exit(1)
-
-        if args.get_token:
-            access_token = assign.authenticate(force=True)
-            print("Token: {}".format(access_token))
-            exit(not access_token)  # exit with error if no access_token
 
         if args.tests:
             print('Available tests:')
