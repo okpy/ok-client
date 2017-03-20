@@ -29,7 +29,7 @@ class HintingProtocol(protocol_models.Protocol):
     HINT_ENDPOINT = 'api/hints'
     SMALL_EFFORT = 2
     WAIT_ATTEMPTS = 5
-    SUPPORTED_ASSIGNMENTS = ['cal/cs61a/su16/hw08', 'cal/cs61a/su16/lab10', 'cal/cs61a/fa16/hw09', 
+    SUPPORTED_ASSIGNMENTS = ['cal/cs61a/su16/hw08', 'cal/cs61a/su16/lab10', 'cal/cs61a/fa16/hw09',
                              'cal/cs61a/sp17/hw07']
 
     def run(self, messages):
@@ -151,7 +151,7 @@ class HintingProtocol(protocol_models.Protocol):
 
     def query_server(self, messages, test):
         access_token, _, _ = auth.get_storage()
-        user = auth.get_student_email(self.assignment, access_token) or access_token
+        user = auth.get_student_email(self.assignment) or access_token
         if user:
             # The hinting server should not recieve identifying information
             user = hash(user)
