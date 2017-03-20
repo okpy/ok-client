@@ -180,11 +180,11 @@ def main():
 
         if args.authenticate:
             # Authenticate and check for success
-            if not auth.authenticate(assign, force=True):
+            if not assign.authenticate(force=True):
                 exit(1)
 
         if args.get_token:
-            access_token = auth.authenticate(assign, force=True)
+            access_token = assign.authenticate(force=True)
             print("Token: {}".format(access_token))
             exit(not access_token)  # exit with error if no access_token
 

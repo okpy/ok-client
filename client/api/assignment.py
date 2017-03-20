@@ -1,6 +1,6 @@
 from client import exceptions as ex
 from client.sources.common import core
-from client.utils import format
+from client.utils import auth, format
 from client.protocols.grading import grade
 import client
 import collections
@@ -162,6 +162,18 @@ class Assignment(core.Serializable):
             )
         """
         self.cmd_args = Settings(**kwargs)
+
+    def authenticate(self, force=False, inline=False):
+        if not inline:
+            return auth.authenticate(self.cmd_args, endpoint=self.endpoint, force=force)
+        else:
+            return auth.notebook_authenticate(self.cmd_args, force=force)
+
+    def get_student_email(self):
+        return auth.get_student_email(self.cmd_args, endpoint=self.endpoint)
+
+    def get_identifier(self):
+        return auth.get_identifier(self.cmd_args, endpoint=self.endpoint)
 
     def _load_tests(self):
         """Loads all tests specified by test_map."""

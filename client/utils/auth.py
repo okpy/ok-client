@@ -136,7 +136,7 @@ def update_storage(access_token, expires_in, refresh_token):
             'refresh_token': refresh_token
         }, fp)
 
-def refresh_local_token(assignment, server):
+def refresh_local_token(server):
     try:
         cur_time = int(time.time())
         access_token, expires_at, refresh_token = get_storage()
@@ -157,9 +157,9 @@ def refresh_local_token(assignment, server):
     except Exception:
         return False
 
-def perform_oauth(assignment, code_fn):
+def perform_oauth(code_fn, *args, **kwargs):
     try:
-        access_token, expires_in, refresh_token = code_fn(assignment)
+        access_token, expires_in, refresh_token = code_fn(*args, **kwargs)
     except OAuthException as e:
         with format.block('-'):
             print("Authentication error: {}".format(e.error.replace('_', ' ')))
@@ -169,53 +169,60 @@ def perform_oauth(assignment, code_fn):
     update_storage(access_token, expires_in, refresh_token)
     return access_token
 
-def authenticate(assignment, force=False):
+def server_url(cmd_args):
+    scheme = 'http' if cmd_args.insecure else 'https'
+    return '{}://{}'.format(scheme, cmd_args.server)
+
+def authenticate(cmd_args, endpoint='', force=False):
     """Returns an OAuth token that can be passed to the server for
     identification. If FORCE is False, it will attempt to use a cached token
     or refresh the OAuth token.
     """
-    server = assignment.server_url
+    server = server_url(cmd_args)
     network.check_ssl()
     access_token = None
     if not force:
-        access_token = refresh_local_token(assignment, server)
+        access_token = refresh_local_token(server)
 
     if not access_token:
         print('Performing authentication')
-        access_token = perform_oauth(assignment, get_code)
-        email = display_student_email(assignment, access_token)
+        access_token = perform_oauth(get_code, cmd_args, endpoint)
+        email = display_student_email(cmd_args, access_token)
         if not email:
             log.warning('Could not get login email. Try logging in again.')
 
     return access_token
 
-def notebook_authenticate(assignment, force=False):
+def notebook_authenticate(cmd_args, force=False):
     """ Similiar to authenticate but prints student emails after
     all calls and uses a different way to get codes.
     """
-    server = assignment.server_url
+    server = server_url(cmd_args)
     network.check_ssl()
     access_token = None
     if not force:
-        access_token = refresh_local_token(assignment, server)
+        access_token = refresh_local_token(server)
 
     if not access_token:
-        access_token = perform_oauth(assignment, notebook_get_code)
+        access_token = perform_oauth(
+            get_code_via_terminal,
+            cmd_args,
+            copy_msg=NOTEBOOK_COPY_MESSAGE,
+            paste_msg=NOTEBOOK_PASTE_MESSAGE)
 
     # Always display email
-    email = display_student_email(assignment, access_token)
+    email = display_student_email(cmd_args, access_token)
     if email is None and not force:
-        return notebook_authenticate(assignment, force=True)  # Token has expired
+        return notebook_authenticate(cmd_args, force=True)  # Token has expired
     elif email is None:
         # Did not get a valid token even after a fresh login
         log.warning('Could not get login email. You may have been logged out. '
                     ' Try logging in again.')
     return access_token
 
-
-def get_code(assignment):
-    if assignment.cmd_args.no_browser:
-        return get_code_via_terminal(assignment)
+def get_code(cmd_args, endpoint=''):
+    if cmd_args.no_browser:
+        return get_code_via_terminal(cmd_args)
 
     print("Please enter your bCourses email.")
     email = input("bCourses email: ")
@@ -237,15 +244,16 @@ def get_code(assignment):
         'response_type': 'code',
         'scope': OAUTH_SCOPE,
     }
-    url = '{}{}?{}'.format(assignment.server_url, AUTH_ENDPOINT, urlencode(params))
+    url = '{}{}?{}'.format(server_url(cmd_args), AUTH_ENDPOINT, urlencode(params))
     if webbrowser.open_new(url):
-        return get_code_via_browser(assignment, redirect_uri, host_name, port_number)
+        return get_code_via_browser(cmd_args, redirect_uri,
+            host_name, port_number, endpoint)
     else:
         log.warning('Failed to open browser, falling back to browserless auth')
-        return get_code_via_terminal(assignment, email)
+        return get_code_via_terminal(cmd_args, email)
 
-def get_code_via_browser(assignment, redirect_uri, host_name, port_number):
-    server = assignment.server_url
+def get_code_via_browser(cmd_args, redirect_uri, host_name, port_number, endpoint):
+    server = server_url(cmd_args)
     code_response = None
     oauth_exception = None
 
@@ -283,7 +291,7 @@ def get_code_via_browser(assignment, redirect_uri, host_name, port_number):
             if oauth_exception:
                 self.send_failure(oauth_exception)
             else:
-                self.send_redirect('{}/{}'.format(server, assignment.endpoint))
+                self.send_redirect('{}/{}'.format(server, endpoint))
 
         def log_message(self, format, *args):
             return
@@ -302,56 +310,52 @@ def get_code_via_browser(assignment, redirect_uri, host_name, port_number):
         raise oauth_exception
     return code_response
 
-def get_code_via_terminal(assignment, email=None,
+def get_code_via_terminal(cmd_args, email=None,
                           copy_msg=COPY_MESSAGE, paste_msg=PASTE_MESSAGE):
     redirect_uri = 'urn:ietf:wg:oauth:2.0:oob'
     print()
     print(copy_msg)
     print()
-    print('{}/client/login/'.format(assignment.server_url))
+    print('{}/client/login/'.format(server_url(cmd_args)))
     print()
     print(paste_msg)
     print()
     code = input('Paste your code here: ')
-    return make_code_post(assignment.server_url, code, redirect_uri)
+    return make_code_post(server_url(cmd_args), code, redirect_uri)
 
-def notebook_get_code(assignment):
-    return get_code_via_terminal(assignment, copy_msg=NOTEBOOK_COPY_MESSAGE,
-                                 paste_msg=NOTEBOOK_PASTE_MESSAGE)
-
-def get_info(assignment, access_token):
+def get_info(cmd_args, access_token):
     response = requests.get(
-        assignment.server_url + INFO_ENDPOINT,
+        server_url(cmd_args) + INFO_ENDPOINT,
         headers={'Authorization': 'Bearer {}'.format(access_token)},
         timeout=5)
     response.raise_for_status()
     return response.json()['data']
 
-def display_student_email(assignment, access_token):
+def display_student_email(cmd_args, access_token):
     try:
-        email = get_info(assignment, access_token)['email']
+        email = get_info(cmd_args, access_token)['email']
         print('Successfully logged in as', email)
         return email
     except Exception:  # Do not catch KeyboardInterrupts
         log.debug("Did not obtain email", exc_info=True)
         return None
 
-def get_student_email(assignment):
+def get_student_email(cmd_args, endpoint=''):
     """Attempts to get the student's email. Returns the email, or None."""
     log.info("Attempting to get student email")
-    if assignment.cmd_args.local:
+    if cmd_args.local:
         return None
-    access_token = authenticate(assignment, force=False)
+    access_token = authenticate(cmd_args, endpoint=endpoint, force=False)
     if not access_token:
         return None
     try:
-        return get_info(assignment, access_token)['email']
+        return get_info(cmd_args, access_token)['email']
     except IOError as e:
         return None
 
-def get_identifier(assignment):
+def get_identifier(cmd_args, endpoint=''):
     """ Obtain anonmyzied identifier."""
-    student_email = get_student_email(assignment)
+    student_email = get_student_email(cmd_args, endpoint)
     if not student_email:
         return "Unknown"
     return hashlib.md5(student_email.encode()).hexdigest()

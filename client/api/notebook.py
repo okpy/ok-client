@@ -21,10 +21,7 @@ class Notebook:
         return self.assignment.protocol_map[protocol].run(messages, **kwargs)
 
     def auth(self, force=False, inline=True):
-        if not inline:
-            ok_auth.authenticate(self.assignment, force=force)
-        else:
-            ok_auth.notebook_authenticate(self.assignment, force=force)
+        self.assignment.authenticate(force=force, inline=inline)
 
     def grade(self, *args, **kwargs):
         return self.assignment.grade(*args, **kwargs)

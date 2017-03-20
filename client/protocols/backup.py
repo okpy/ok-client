@@ -1,5 +1,5 @@
 from client.protocols.common import models
-from client.utils import auth, network
+from client.utils import network
 import client
 import datetime
 import logging
@@ -40,7 +40,7 @@ class BackupProtocol(models.Protocol):
 
         message_list = self.load_unsent_messages()
 
-        access_token = auth.authenticate(self.assignment, force=False)
+        access_token = self.assignment.authenticate()
         log.info('Authenticated with access token')
         log.info('Sending unsent messages')
 
