@@ -59,6 +59,13 @@ class PythonConsoleTest(unittest.TestCase):
             ZeroDivisionError: division by zero
             """)
 
+    def testPass_expectLegacyException(self):
+        self.calls_interpret(True,
+            """
+            >>> 1 / 0
+            ZeroDivisionError
+            """)
+
     def testPass_printThenException(self):
         self.calls_interpret(True,
             """
@@ -163,6 +170,13 @@ class PythonConsoleTest(unittest.TestCase):
             ZeroDivisionError: division by zero
             """)
 
+    def testError_expectedLegacyException(self):
+        self.calls_interpret(False,
+            """
+            >>> 1 + 2
+            ZeroDivisionError
+            """)
+
     def testError_wrongException(self):
         self.calls_interpret(False,
             """
@@ -170,6 +184,13 @@ class PythonConsoleTest(unittest.TestCase):
             Traceback (most recent call last):
               ...
             TypeError: division by zero
+            """)
+
+    def testError_wrongLegacyException(self):
+        self.calls_interpret(False,
+            """
+            >>> 1 / 0
+            TypeError
             """)
 
     def testError_wrongExceptionDetail(self):
@@ -189,13 +210,6 @@ class PythonConsoleTest(unittest.TestCase):
             Traceback (most recent call last):
               ...
             ZeroDivisionError: division by zero
-            """)
-
-    def testError_onlyExceptionName(self):
-        self.calls_interpret(False,
-            """
-            >>> 1 / 0
-            ZeroDivisionError
             """)
 
     def testError_notException(self):

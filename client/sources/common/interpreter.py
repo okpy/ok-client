@@ -247,7 +247,10 @@ class Console(object):
             value, printed = self.evaluate(code)
         except ConsoleException as e:
             detail = "{}: {}".format(e.exception_type, str(e.exception))
-            actual = CodeAnswer(exception=True, exception_detail=detail.splitlines())
+            actual = CodeAnswer(
+                exception=True,
+                exception_type=e.exception_type,
+                exception_detail=detail.splitlines())
         else:
             if value is not None:
                 print(self._output_fn(value))
@@ -260,7 +263,14 @@ class Console(object):
                 print()
                 print("# Error: expected and actual results do not match")
                 raise ConsoleException
-        elif expected.exception != actual.exception or expected.dump() != actual.dump():
+            else:
+                return
+
+        correct = (expected.exception == actual.exception
+            and expected.dump() == actual.dump())
+        correct_legacy_exception = (actual.exception
+            and actual.exception_type == expected.dump())
+        if not correct and not correct_legacy_exception:
             print()
             print('# Error: expected')
             print('\n'.join('#     {}'.format(line)
@@ -288,12 +298,13 @@ class CodeAnswer(object):
     ]
 
     def __init__(self, output=None, choices=None, explanation='', locked=False,
-                 exception=False, exception_detail=None):
+                 exception=False, exception_type=None, exception_detail=None):
         self.output = output or []
         self.choices = choices or []
         self.locked = locked
         self.explanation = explanation
         self.exception = exception
+        self.exception_type = exception_type
         self.exception_detail = exception_detail or []
 
     def dump(self):
