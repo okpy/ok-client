@@ -272,3 +272,18 @@ class _MockNamespace(object):
 
     def __getattr__(self, attr):
         return getattr(self.args, attr)
+
+class AuthAssignment(object):
+    """A mock Assignment object that is meant to be a substitute for an 
+    Assignment for use with authentication-related work that doesn't need
+    a full assignment.
+
+    (see Design Note above in _MockNamespace)
+    """
+    def __init__(self):
+        self.cmd_args = _MockNamespace()
+        self.server_url = 'https://okpy.org'
+        self.endpoint = ''
+
+    def dump_tests(self):
+        pass
