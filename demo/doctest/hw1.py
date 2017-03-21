@@ -42,6 +42,8 @@ def exception():
     Traceback (most recent call last):
       ...
     ValueError: hello
+    >>> exception()
+    ValueError
     """
     print('foo')
     raise ValueError('hello')
