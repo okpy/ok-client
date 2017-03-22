@@ -174,7 +174,7 @@ if __name__ == '__main__':
         )
 
     print('Updating version on {}...'.format(OK_SERVER_URL))
-    args = Settings(server_url=OK_SERVER_URL)
+    args = assignment.Settings(server=OK_SERVER_URL)
     access_token = auth.authenticate(args)
     post_request('https://{}/api/v3/version/ok-client'.format(OK_SERVER_URL),
         headers={
