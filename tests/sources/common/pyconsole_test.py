@@ -154,6 +154,14 @@ class PythonConsoleTest(unittest.TestCase):
             """)
         self.assertEqual(1, client.foo)
 
+    def testPass_explanation(self):
+        self.calls_interpret(True,
+            """
+            >>> 3 + 4
+            7
+            # explanation: count on your fingers
+            """)
+
     def testError_notEqualError(self):
         self.calls_interpret(False,
             """

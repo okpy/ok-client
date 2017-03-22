@@ -267,17 +267,17 @@ class Console(object):
                 return
 
         correct = (expected.exception == actual.exception
-            and expected.dump() == actual.dump())
+            and expected.output_lines() == actual.output_lines())
         correct_legacy_exception = (actual.exception
-            and actual.exception_type == expected.dump())
+            and [actual.exception_type] == expected.output_lines())
         if not correct and not correct_legacy_exception:
             print()
             print('# Error: expected')
             print('\n'.join('#     {}'.format(line)
-                            for line in expected.dump().splitlines()))
+                            for line in expected.output_lines()))
             print('# but got')
             print('\n'.join('#     {}'.format(line)
-                            for line in actual.dump().splitlines()))
+                            for line in actual.output_lines()))
             raise ConsoleException
 
     def _strip_prompt(self, line):
@@ -308,10 +308,8 @@ class CodeAnswer(object):
         self.exception_detail = exception_detail or []
 
     def dump(self):
-        if self.exception:
-            result = [self.EXCEPTION_HEADERS[0], '  ...'] + self.exception_detail
-        else:
-            result = list(self.output)
+        """Serialize a test case to a string."""
+        result = list(self.output_lines())
         if self.locked:
             result.append('# locked')
             if self.choices:
@@ -320,6 +318,15 @@ class CodeAnswer(object):
         if self.explanation:
             result.append('# explanation: ' + self.explanation)
         return '\n'.join(result)
+
+    def output_lines(self):
+        """Return a sequence of lines, suitable for printing or comparing
+        answers.
+        """
+        if self.exception:
+            return [self.EXCEPTION_HEADERS[0], '  ...'] + self.exception_detail
+        else:
+            return self.output
 
     def update(self, line):
         if self.exception:
