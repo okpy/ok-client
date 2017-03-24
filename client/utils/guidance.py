@@ -295,7 +295,7 @@ class Guidance:
         if response in wa_lst_explain_responses:
             rationale = self.prompt_with_prob(orig_response=input_lines, prob=1.0)
         else:
-            rationale = 'Response not in watch list'
+            rationale = self.prompt_with_prob(orig_response=input_lines)
 
         if len(msg_id_set) == 0:
             log.info("No messages to display.")
