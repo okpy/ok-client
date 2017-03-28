@@ -150,11 +150,7 @@ class HintingProtocol(protocol_models.Protocol):
                         results['prompts'][query] = prompt.explanation_msg(post_prompt)
 
     def query_server(self, messages, test):
-        access_token, _, _ = auth.get_storage()
-        user = auth.get_student_email(self.assignment) or access_token
-        if user:
-            # The hinting server should not recieve identifying information
-            user = hash(user)
+        user = auth.get_identifier(self.assignment)
 
         data = {
             'assignment': self.assignment.endpoint,
