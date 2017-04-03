@@ -87,7 +87,7 @@ if __name__ == '__main__':
         abort("Version must start with 'v'")
     if shell('git rev-parse --abbrev-ref HEAD', capture_output=True) != 'master':
         abort('You must be on master to release a new version')
-    shell('git pull --ff-only')
+    shell('git pull --ff-only --tags')
 
     # find latest release
     latest_release = shell('git describe --tags --abbrev=0', capture_output=True)
