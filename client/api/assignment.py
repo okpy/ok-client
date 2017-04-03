@@ -1,6 +1,6 @@
 from client import exceptions as ex
 from client.sources.common import core
-from client.utils import format
+from client.utils import auth, format
 from client.protocols.grading import grade
 import client
 import collections
@@ -20,7 +20,7 @@ def load_assignment(filepath=None, cmd_args=None):
     if not isinstance(config, dict):
         raise ex.LoadingException('Config should be a dictionary')
     if cmd_args is None:
-        cmd_args = _MockNamespace()
+        cmd_args = Settings()
     return Assignment(cmd_args, **config)
 
 def _get_config(config):
@@ -151,6 +151,30 @@ class Assignment(core.Serializable):
         self.specified_tests = self._resolve_specified_tests(
             self.cmd_args.question, self.cmd_args.all)
 
+    def set_args(self, **kwargs):
+        """Set command-line arguments programmatically. For example:
+
+            assignment.set_args(
+                server='http://localhost:5000',
+                no_browser=True,
+                backup=True,
+                timeout=60,
+            )
+        """
+        self.cmd_args = Settings(**kwargs)
+
+    def authenticate(self, force=False, inline=False):
+        if not inline:
+            return auth.authenticate(self.cmd_args, endpoint=self.endpoint, force=force)
+        else:
+            return auth.notebook_authenticate(self.cmd_args, force=force)
+
+    def get_student_email(self):
+        return auth.get_student_email(self.cmd_args, endpoint=self.endpoint)
+
+    def get_identifier(self):
+        return auth.get_identifier(self.cmd_args, endpoint=self.endpoint)
+
     def _load_tests(self):
         """Loads all tests specified by test_map."""
         log.info('Loading tests')
@@ -244,31 +268,23 @@ class Assignment(core.Serializable):
         format.print_line('=')
         print()
 
-class _MockNamespace(object):
-    """A mock object that is meant to be a substitute for an argparse.Namespace
-    object. This object contains the minimal set of fields necessary for an
-    Assignment to be created.
+class Settings:
+    """Command-line arguments that are set programmatically instead of by
+    parsing the command line. For example:
 
-    Do NOT use this for any command-line related work. This object should only
-    be used for the programmatic API. This implies that if an Assignment is
-    created with a MockNamespace, any functionality not specified in the
-    programmatic API will not work.
-
-    Design note: In an ideal world, this object wouldn't even exist and the
-    Assignment and Protocol classes shouldn't take in an argparse.Namespace
-    object. Instead, the Assignment class should be part of the API and should
-    not be tied to command-line usage only. Making changes to this effect would
-    take a substantial rewrite, so I'm putting it off for now.
+        args = Settings(
+            server='http://localhost:5000',
+            no_browser=True,
+            backup=True,
+            timeout=60,
+        )
+        assignment = Assignment(args)
     """
-    def __init__(self):
+    def __init__(self, **kwargs):
         from client.cli.ok import parse_input
         self.args = parse_input([])
-
-    def set_args(self, args=None):
-        from client.cli.ok import parse_input
-        if args is None:
-            args = []
-        self.args = parse_input(args)
+        for k, v in kwargs.items():
+            setattr(self.args, k, v)
 
     def __getattr__(self, attr):
         return getattr(self.args, attr)

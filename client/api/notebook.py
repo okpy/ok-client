@@ -21,10 +21,7 @@ class Notebook:
         return self.assignment.protocol_map[protocol].run(messages, **kwargs)
 
     def auth(self, force=False, inline=True):
-        if not inline:
-            ok_auth.authenticate(self.assignment, force=force)
-        else:
-            ok_auth.notebook_authenticate(self.assignment, force=force)
+        self.assignment.authenticate(force=force, inline=inline)
 
     def grade(self, *args, **kwargs):
         return self.assignment.grade(*args, **kwargs)
@@ -42,10 +39,10 @@ class Notebook:
         Returns: dict; maps score tag (str) -> points (float)
         """
         messages = {}
-        args = ['--score']
-        if score_out:
-            args.extend(['--score-out', score_out])
-        self.assignment.cmd_args.set_args(args)
+        self.assignment.set_args(
+            score=True,
+            score_out=score_out,
+        )
         if env is None:
             import __main__
             env = __main__.__dict__
@@ -54,13 +51,13 @@ class Notebook:
 
     def backup(self):
         messages = {}
-        self.assignment.cmd_args.set_args(['--backup'])
+        self.assignment.set_args(backup=True)
         self.save(messages)
         return self.run('backup', messages)
 
     def submit(self):
         messages = {}
-        self.assignment.cmd_args.set_args(['--submit'])
+        self.assignment.set_args(submit=True)
         self.save(messages)
         return self.run('backup', messages)
 

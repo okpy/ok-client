@@ -150,7 +150,7 @@ class HintingProtocol(protocol_models.Protocol):
                         results['prompts'][query] = prompt.explanation_msg(post_prompt)
 
     def query_server(self, messages, test):
-        user = auth.get_identifier(self.assignment)
+        user = self.assignment.get_identifier()
 
         data = {
             'assignment': self.assignment.endpoint,

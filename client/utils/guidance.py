@@ -1,4 +1,3 @@
-from client.utils import auth
 from client.utils import assess_id_util
 from client.utils import prompt
 from client.utils import format
@@ -347,10 +346,9 @@ class Guidance:
         If there is no treatment group number available, request it
         from the server.
         """
-        # Checks to see the student currently has a treatment group number. If
-        # not, calls helper function in auth.py
+        # Checks to see the student currently has a treatment group number.
         if not os.path.isfile(self.current_working_dir + LOCAL_TG_FILE):
-            cur_email = auth.get_student_email(self.assignment)
+            cur_email = self.assignment.get_student_email()
             log.info("Current email is %s", cur_email)
             if not cur_email:
                 self.tg_id = -1

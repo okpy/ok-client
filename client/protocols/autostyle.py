@@ -1,5 +1,4 @@
 from client.protocols.common import models
-from client.utils import auth
 import client
 
 import logging
@@ -69,7 +68,7 @@ class AutoStyleProtocol(models.Protocol):
         if confirm.lower().strip() != 'y':
             return
 
-        messages['analytics']['identifier'] = auth.get_identifier(self.assignment)
+        messages['analytics']['identifier'] = self.assignment.get_identifier()
         # Send data to autostyle
         response_url = self.send_messages(messages, self.SHORT_TIMEOUT)
         # Parse response_url
