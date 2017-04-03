@@ -102,12 +102,12 @@ class CodeCase(models.Case):
         list; a processed sequence of lines corresponding to the input code.
         """
         processed_lines = []
-        for line in textwrap.dedent(code).split('\n'):
+        for line in textwrap.dedent(code).splitlines():
             if not line or line.startswith(PS1) or line.startswith(PS2):
                 processed_lines.append(line)
                 continue
 
-            assert len(processed_lines) > 0, 'code improperly formated: {}'.format(code)
+            assert len(processed_lines) > 0, 'code improperly formatted: {}'.format(code)
             if not isinstance(processed_lines[-1], CodeAnswer):
                 processed_lines.append(CodeAnswer())
             processed_lines[-1].update(line)
@@ -165,9 +165,9 @@ class Console(object):
         setup    -- str; raw setup code
         teardown -- str; raw teardown code
         """
-        self._setup = textwrap.dedent(setup).split('\n')
+        self._setup = textwrap.dedent(setup).splitlines()
         self._code = code
-        self._teardown = textwrap.dedent(teardown).split('\n')
+        self._teardown = textwrap.dedent(teardown).splitlines()
 
     def interpret(self):
         """Interprets the console on the loaded code.
@@ -223,7 +223,7 @@ class Console(object):
                     # Previous prompt ends when PS1 or a blank line occurs
                     try:
                         if compare_all:
-                            self._compare('', '\n'.join(current))
+                            self._compare(CodeAnswer(), '\n'.join(current))
                         else:
                             self.evaluate('\n'.join(current))
                     except ConsoleException:
@@ -236,7 +236,7 @@ class Console(object):
             elif isinstance(line, CodeAnswer):
                 assert len(current) > 0, 'Answer without a prompt'
                 try:
-                    self._compare('\n'.join(line.output), '\n'.join(current))
+                    self._compare(line, '\n'.join(current))
                 except ConsoleException:
                     return False
                 current = []
@@ -246,30 +246,38 @@ class Console(object):
         try:
             value, printed = self.evaluate(code)
         except ConsoleException as e:
-            actual = e.exception_type
+            detail = "{}: {}".format(e.exception_type, str(e.exception))
+            actual = CodeAnswer(
+                exception=True,
+                exception_type=e.exception_type,
+                exception_detail=detail.splitlines())
         else:
             if value is not None:
                 print(self._output_fn(value))
-                actual = (printed + self._output_fn(value)).strip()
-            else:
-                actual = printed.strip()
+                printed += self._output_fn(value)
+            output = printed.splitlines()
+            actual = CodeAnswer(output=output)
 
-        expected = expected.strip()
-
-        if not self.skip_locked_cases and expected != actual:
-            actual = locking.lock(self.hash_key, actual)
-            if expected != actual:
+        if not self.skip_locked_cases and expected.locked:
+            if '\n'.join(expected.output) != locking.lock(self.hash_key, actual.dump()):
                 print()
                 print("# Error: expected and actual results do not match")
                 raise ConsoleException
-        elif expected != actual:
+            else:
+                return
+
+        correct = (expected.exception == actual.exception
+            and expected.output_lines() == actual.output_lines())
+        correct_legacy_exception = (actual.exception
+            and [actual.exception_type] == expected.output_lines())
+        if not correct and not correct_legacy_exception:
             print()
             print('# Error: expected')
             print('\n'.join('#     {}'.format(line)
-                            for line in expected.split('\n')))
+                            for line in expected.output_lines()))
             print('# but got')
             print('\n'.join('#     {}'.format(line)
-                            for line in actual.split('\n')))
+                            for line in actual.output_lines()))
             raise ConsoleException
 
     def _strip_prompt(self, line):
@@ -284,14 +292,24 @@ class CodeAnswer(object):
     status_re = re.compile(r'^#\s*(.+?):\s*(.*)\s*$')
     locked_re = re.compile(r'^#\s*locked\s*$')
 
-    def __init__(self, output=None, choices=None, explanation='', locked=False):
+    EXCEPTION_HEADERS = [
+        'Traceback (most recent call last):',
+        'Traceback (innermost last):',
+    ]
+
+    def __init__(self, output=None, choices=None, explanation='', locked=False,
+                 exception=False, exception_type=None, exception_detail=None):
         self.output = output or []
         self.choices = choices or []
         self.locked = locked
         self.explanation = explanation
+        self.exception = exception
+        self.exception_type = exception_type
+        self.exception_detail = exception_detail or []
 
     def dump(self):
-        result = list(self.output)
+        """Serialize a test case to a string."""
+        result = list(self.output_lines())
         if self.locked:
             result.append('# locked')
             if self.choices:
@@ -301,19 +319,39 @@ class CodeAnswer(object):
             result.append('# explanation: ' + self.explanation)
         return '\n'.join(result)
 
+    def output_lines(self):
+        """Return a sequence of lines, suitable for printing or comparing
+        answers.
+        """
+        if self.exception:
+            return [self.EXCEPTION_HEADERS[0], '  ...'] + self.exception_detail
+        else:
+            return self.output
+
     def update(self, line):
-        if self.locked_re.match(line):
-            self.locked = True
-            return
-        match = self.status_re.match(line)
-        if not match:
-            self.output.append(line)
-        elif match.group(1) == 'locked':
-            self.locked = True
-        elif match.group(1) == 'explanation':
-            self.explanation = match.group(2)
-        elif match.group(1) == 'choice':
-            self.choices.append(match.group(2))
+        if self.exception:
+            if not self.exception_detail and not (line and line[0].isalnum()):
+                # ignore indented or lines that start with non-alphanumeric
+                # characters
+                return
+            self.exception_detail.append(line)
+        else:
+            if not self.output and line in self.EXCEPTION_HEADERS:
+                # Exception header must be first
+                self.exception = True
+                return
+            if self.locked_re.match(line):
+                self.locked = True
+                return
+            match = self.status_re.match(line)
+            if not match:
+                self.output.append(line)
+            elif match.group(1) == 'locked':
+                self.locked = True
+            elif match.group(1) == 'explanation':
+                self.explanation = match.group(2)
+            elif match.group(1) == 'choice':
+                self.choices.append(match.group(2))
 
 
 class ConsoleException(Exception):
@@ -323,4 +361,3 @@ class ConsoleException(Exception):
             self.exception_type = exception_type
         else:
             self.exception_type = exception.__class__.__name__
-

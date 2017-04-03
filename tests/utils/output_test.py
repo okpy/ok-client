@@ -2,22 +2,17 @@ from client.utils import output
 import sys
 import unittest
 
-LOGGER = sys.stdout
-assert isinstance(LOGGER, output._OutputLogger)
-sys.stdout = sys.__stdout__
-
 class OutputLoggerTest(unittest.TestCase):
     MESSAGE1 = 'message 1'
     MESSAGE2 = 'message 2'
 
     def setUp(self):
-        sys.stdout = LOGGER
-        output.on()
+        # nosetests captures sys.stdout, but so do we
+        self.stdout = sys.stdout
+        sys.stdout = output._logger = output._OutputLogger(stdout=self.stdout)
 
     def tearDown(self):
-        output.on()
-        output.remove_all_logs()
-        sys.stdout = sys.__stdout__
+        sys.stdout = self.stdout
 
     def testRegisterLog_oneLog_outputOn(self):
         output.on()

@@ -67,6 +67,10 @@ test = {
           'code': r"""
           >>> 1 / square(0)
           ZeroDivisionError
+          >>> square(1) / square(0)
+          Traceback (most recent call last):
+            ...
+          ZeroDivisionError: division by zero
           """,
           'hidden': True
         }

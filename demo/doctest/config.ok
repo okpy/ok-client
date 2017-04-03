@@ -7,7 +7,8 @@
     "tests": {
         "hw1.py:square": "doctest",
         "hw1.py:double": "doctest",
-        "hw1.py:forever": "doctest"
+        "hw1.py:forever": "doctest",
+        "hw1.py:exception": "doctest"
     },
     "default_tests": [
         "square"

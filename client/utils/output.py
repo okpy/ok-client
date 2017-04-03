@@ -7,8 +7,8 @@ class _OutputLogger(object):
     """Custom logger for capturing and suppressing standard output."""
     # TODO(albert): logger should fully implement output stream.
 
-    def __init__(self):
-        self._current_stream = self._stdout = sys.stdout
+    def __init__(self, stdout=sys.stdout):
+        self._current_stream = self._stdout = stdout
         self._devnull = open(os.devnull, 'w')
         self._logs = {}
         self._num_logs = 0

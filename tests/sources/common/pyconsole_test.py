@@ -1,10 +1,19 @@
 from client.sources.common import interpreter
 from client.sources.common import pyconsole
-from client.utils import locking
+from client.utils import locking, output
 import client
+import sys
 import unittest
 
 class PythonConsoleTest(unittest.TestCase):
+    def setUp(self):
+        # nosetests captures sys.stdout, but so do we
+        self.stdout = sys.stdout
+        sys.stdout = output._logger = output._OutputLogger(stdout=self.stdout)
+
+    def tearDown(self):
+        sys.stdout = self.stdout
+
     def createConsole(self, verbose=True, interactive=False, timeout=None):
         return pyconsole.PythonConsole(
                 verbose, interactive, timeout)
@@ -26,11 +35,65 @@ class PythonConsoleTest(unittest.TestCase):
             7
             """)
 
+    def testPass_print(self):
+        self.calls_interpret(True,
+            """
+            >>> print('7')
+            7
+            """)
+
+    def testPass_printMultipleLines(self):
+        self.calls_interpret(True,
+            """
+            >>> print('Hello,\\nworld!')
+            Hello,
+            world!
+            """)
+
     def testPass_expectException(self):
         self.calls_interpret(True,
             """
             >>> 1 / 0
+            Traceback (most recent call last):
+              ...
+            ZeroDivisionError: division by zero
+            """)
+
+    def testPass_expectLegacyException(self):
+        self.calls_interpret(True,
+            """
+            >>> 1 / 0
             ZeroDivisionError
+            """)
+
+    def testPass_printThenException(self):
+        self.calls_interpret(True,
+            """
+            >>> print('hello'); 1 / 0
+            Traceback (most recent call last):
+              ...
+            ZeroDivisionError: division by zero
+            """)
+
+    def testPass_multilineExceptionDetail(self):
+        self.calls_interpret(True,
+            """
+            >>> raise ValueError('1\\n  2\\n3')
+            Traceback (most recent call last):
+              ...
+            ValueError: 1
+              2
+            3
+            """)
+
+    def testPass_expectExceptionAlternateFormat(self):
+        self.calls_interpret(True,
+            """
+            >>> 1 / 0
+            Traceback (innermost last):
+              this line is indented and is ignored
+            # this line starts with a non-alphanumeric character and is ignored
+            ZeroDivisionError: division by zero
             """)
 
     def testPass_multilineSinglePrompt(self):
@@ -91,6 +154,14 @@ class PythonConsoleTest(unittest.TestCase):
             """)
         self.assertEqual(1, client.foo)
 
+    def testPass_explanation(self):
+        self.calls_interpret(True,
+            """
+            >>> 3 + 4
+            7
+            # explanation: count on your fingers
+            """)
+
     def testError_notEqualError(self):
         self.calls_interpret(False,
             """
@@ -102,6 +173,15 @@ class PythonConsoleTest(unittest.TestCase):
         self.calls_interpret(False,
             """
             >>> 1 + 2
+            Traceback (most recent call last):
+              ...
+            ZeroDivisionError: division by zero
+            """)
+
+    def testError_expectedLegacyException(self):
+        self.calls_interpret(False,
+            """
+            >>> 1 + 2
             ZeroDivisionError
             """)
 
@@ -109,7 +189,44 @@ class PythonConsoleTest(unittest.TestCase):
         self.calls_interpret(False,
             """
             >>> 1 / 0
+            Traceback (most recent call last):
+              ...
+            TypeError: division by zero
+            """)
+
+    def testError_wrongLegacyException(self):
+        self.calls_interpret(False,
+            """
+            >>> 1 / 0
             TypeError
+            """)
+
+    def testError_wrongExceptionDetail(self):
+        self.calls_interpret(False,
+            """
+            >>> 1 / 0
+            Traceback (most recent call last):
+              ...
+            ZeroDivisionError: multiplication by zero
+            """)
+
+    def testError_printThenException(self):
+        self.calls_interpret(False,
+            """
+            >>> print('hello'); 1 / 0
+            hello
+            Traceback (most recent call last):
+              ...
+            ZeroDivisionError: division by zero
+            """)
+
+    def testError_notException(self):
+        self.calls_interpret(False,
+            """
+            >>> print('Traceback (most recent call last):\\n  ...\\nZeroDivisionError: division by zero')
+            Traceback (most recent call last):
+              ...
+            ZeroDivisionError: division by zero
             """)
 
     def testError_runtimeError(self):
@@ -159,29 +276,30 @@ class PythonConsoleTest(unittest.TestCase):
             teardown="""
             >>> 1 / 0
             """)
-            
-    
-        
+
     def testPass_locked(self):
         key = "testKey"
         hashedAnswer = locking.lock(key, "4")
         self.calls_interpret(True, """
         >>> 2 + 2
         %s
+        # locked
         """ % hashedAnswer, skip_locked_cases=False, hash_key=key)
-        
+
     def testError_locked(self):
         key = "testKey"
         hashedAnswer = locking.lock(key, "5")
         self.calls_interpret(False, """
         >>> 2 + 2
         %s
+        # locked
         """ % hashedAnswer, skip_locked_cases=False, hash_key=key)
-        
+
     def testError_skipLocked(self):
         key = "testKey"
         hashedAnswer = locking.lock(key, "4")
         self.calls_interpret(False, """
         >>> 2 + 2
         %s
+        # locked
         """ % hashedAnswer)
