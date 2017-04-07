@@ -105,18 +105,18 @@ class Notebook:
             print()
 
 def login_with_env(assignment):
-    access_token = os.enviorn.get('OKPY_ACCESS_TOKEN')
+    access_token = os.environ.get('OKPY_ACCESS_TOKEN')
     if not access_token:
-        log.info("ACCESS_TOKEN did not exist in the enviornment")
+        log.info("ACCESS_TOKEN did not exist in the environment")
         return
     student_email = ok_auth.display_student_email(assignment, access_token)
     if student_email:
         # Token is valid,
-        expires_in = os.enviorn.get('OKPY_EXPIRES_IN', 10)
-        refresh_token = os.enviorn.get('OKPY_REFRESH_TOKEN')
+        expires_in = int(os.environ.get('OKPY_EXPIRES_IN', 60))
+        refresh_token = os.environ.get('OKPY_REFRESH_TOKEN')
 
         expires_at = int(time.time()) + expires_in
-        ok_auth.update_storage(access_token, refresh_token, expires_at)
+        ok_auth.update_storage(access_token, expires_at, refresh_token)
         return True
 
 def validate_contents(file_contents):
