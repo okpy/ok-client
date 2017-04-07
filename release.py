@@ -12,7 +12,7 @@ from client.utils import auth
 
 GITHUB_TOKEN_FILE = '.github-token'
 GITHUB_REPO = 'Cal-CS-61A-Staff/ok-client'
-OK_SERVER_URL = 'https://okpy.org'
+OK_SERVER_URL = 'okpy.org'
 
 def abort(message=None):
     if message:
@@ -87,7 +87,7 @@ if __name__ == '__main__':
         abort("Version must start with 'v'")
     if shell('git rev-parse --abbrev-ref HEAD', capture_output=True) != 'master':
         abort('You must be on master to release a new version')
-    shell('git pull --ff-only')
+    shell('git pull --ff-only --tags')
 
     # find latest release
     latest_release = shell('git describe --tags --abbrev=0', capture_output=True)
@@ -174,14 +174,9 @@ if __name__ == '__main__':
         )
 
     print('Updating version on {}...'.format(OK_SERVER_URL))
-    # Create a fake assignment to log in. I'm not happy about this
-    class FakeAssignment:
-        def __init__(self):
-            self.cmd_args = assignment._MockNamespace()
-            self.server_url = OK_SERVER_URL
-            self.endpoint = ''
-    access_token = auth.authenticate(FakeAssignment())
-    post_request('{}/api/v3/version/ok-client'.format(OK_SERVER_URL),
+    args = assignment.Settings(server=OK_SERVER_URL)
+    access_token = auth.authenticate(args)
+    post_request('https://{}/api/v3/version/ok-client'.format(OK_SERVER_URL),
         headers={
             'Authorization': 'Bearer ' + access_token,
         },

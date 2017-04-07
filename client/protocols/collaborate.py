@@ -1,6 +1,6 @@
 from client.protocols.common import models
 from client.protocols.grading import grade
-from client.utils import auth, network, output
+from client.utils import network, output
 from client.utils.firebase import pyrebase
 
 import client
@@ -73,9 +73,9 @@ class CollaborateProtocol(models.Protocol):
             log.warning("Exception while waiting", exc_info=True)
 
     def start_firebase(self, messages):
-        access_token = auth.authenticate(self.assignment, force=False)
-        email = auth.get_student_email(self.assignment)
-        identifier = auth.get_identifier(self.assignment)
+        access_token = self.assignment.authenticate()
+        email = self.assignment.get_student_email()
+        identifier = self.assignment.get_identifier()
 
         firebase = pyrebase.initialize_app(self.FIREBASE_CONFIG)
         self.fire_auth = firebase.auth()
