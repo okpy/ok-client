@@ -106,7 +106,7 @@ def login_with_env(assignment):
     if not access_token:
         log.info("ACCESS_TOKEN did not exist in the environment")
         return
-    student_email = ok_auth.display_student_email(assignment, access_token)
+    student_email = ok_auth.display_student_email(assignment.cmd_args, access_token)
     if student_email:
         # Token is valid,
         expires_in = int(os.environ.get('OKPY_EXPIRES_IN', 60))
