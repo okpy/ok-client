@@ -132,7 +132,7 @@ def update_storage(access_token, expires_in, refresh_token):
     with open(REFRESH_FILE, 'wb') as fp:
         pickle.dump({
             'access_token': access_token,
-            'expires_at': cur_time + expires_in,
+            'expires_at': cur_time + (expires_in or 0),
             'refresh_token': refresh_token
         }, fp)
 
