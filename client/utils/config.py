@@ -1,5 +1,4 @@
 import os
-import pickle
 
 CONFIG_DIRECTORY = os.path.join(os.path.expanduser('~'), '.config', 'ok')
 REFRESH_FILE = os.path.join(CONFIG_DIRECTORY, "auth_refresh")
