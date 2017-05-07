@@ -91,7 +91,9 @@ class TraceProtocol(models.Protocol):
         messages['tracing']['end-trace'] = get_time()
         messages['tracing']['trace-len'] = len(json.loads(data).get('trace', [])) # includes the code since data is a str
 
-        if data:
+        if data and self.args.trace_print:
+            print(data)
+        elif data:
             messages['tracing']['start-server'] = get_time()
             # Open Python Tutor Browser Window with this trace
             server.run_server(data)
