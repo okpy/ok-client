@@ -2,13 +2,16 @@
 provides a Python Tutor visualization.
 """
 
+import datetime as dt
 import logging
+import json
 
 from client.protocols.common import models
 from client.sources.doctest import models as doctest_models
 
 from client.utils import format
 from client.pythontutor import generate_trace
+from client.pythontutor import server
 log = logging.getLogger(__name__)
 
 class TraceProtocol(models.Protocol):
@@ -20,6 +23,9 @@ class TraceProtocol(models.Protocol):
         if not self.args.trace:
             return
         tests = self.assignment.specified_tests
+        messages['tracing'] = {
+            'begin': get_time(),
+        }
         if not self.args.question:
             with format.block('*'):
                 print("Could not trace: Please specify a question to trace.")
@@ -79,11 +85,21 @@ class TraceProtocol(models.Protocol):
         # Setup and teardown are shared among cases within a suite.
         setup, test_script, _ = suite_to_code(suite)
         log.info("Starting program trace...")
-        data = generate_trace.run_logger(test_script, setup, {})
-        print(data)
-        log.info("Completed tracing")
+        messages['tracing']['start-trace'] = get_time()
+        modules = {k.replace('.py', '').replace('/', '.'): v for k,v in messages['file_contents'].items()}
+        data = generate_trace.run_logger(test_script, setup, modules) or "{}"
+        messages['tracing']['end-trace'] = get_time()
+        messages['tracing']['trace-len'] = len(json.loads(data).get('trace', [])) # includes the code since data is a str
 
-        # Call Python Tutor with the approriate values
+        if data:
+            messages['tracing']['start-server'] = get_time()
+            # Open Python Tutor Browser Window with this trace
+            server.run_server(data)
+            messages['tracing']['end-server'] = get_time()
+        else:
+            print("There was an internal error while generating the trace.")
+            messages['tracing']['error'] = True
+
 
 def suite_to_code(suite):
     code_lines = []
@@ -95,8 +111,13 @@ def suite_to_code(suite):
         code = '\n'.join(case['code'])
 
         # Only grab the code, since the setup/teardown is shared
-        lines = "{}\n{}".format(case_intro, code)
+        # Render the setup as commented out lines
+        lines = '\n'.join(['# {}'.format(s) for s in setup.splitlines()])
+        lines += "\n{}\n{}".format(case_intro, code)
         code_lines.append(lines)
     return setup, '\n'.join(code_lines), teardown
+
+def get_time():
+    return dt.datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S:%f")
 
 protocol = TraceProtocol
