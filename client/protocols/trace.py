@@ -27,7 +27,6 @@ class TraceProtocol(models.Protocol):
             return
 
         test = tests[0]
-        # TODO: Check for appropriate instance types
         data = test.get_code()
         if not data:
             with format.block('*'):
@@ -47,7 +46,7 @@ class TraceProtocol(models.Protocol):
             suite = [data[question]]
         elif hasattr(test, 'suites'):
             # Handle ok_tests
-            if self.args.suite:
+            if not self.args.suite:
                 eligible_suite_nums = ','.join([str(i) for i in data.keys()])
                 with format.block('*'):
                     print("Please specify a specific suite to test.")
@@ -73,12 +72,16 @@ class TraceProtocol(models.Protocol):
                         return
                 suite = [suite[case_arg[0]-1]]
         else:
-            pass
+            with format.block('*'):
+                print("This test is not traceable.")
+            return
 
         # Setup and teardown are shared among cases within a suite.
         setup, test_script, _ = suite_to_code(suite)
+        log.info("Starting program trace...")
         data = generate_trace.run_logger(test_script, setup, {})
         print(data)
+        log.info("Completed tracing")
 
         # Call Python Tutor with the approriate values
 
