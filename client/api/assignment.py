@@ -123,9 +123,9 @@ class Assignment(core.Serializable):
     # file_contents -> none
     # grading       -> none
     # hinting       -> file_contents, analytics
-    # trace         -> file_contents, analytics
     # lock          -> none
     # scoring       -> none
+    # trace         -> file_contents, analytics
     # unlock        -> none
     _PROTOCOLS = [
         "file_contents",
