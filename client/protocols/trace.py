@@ -6,12 +6,12 @@ import datetime as dt
 import logging
 import json
 
+from pytutor import generate_trace
+from pytutor import server
+
 from client.protocols.common import models
 from client.sources.doctest import models as doctest_models
-
 from client.utils import format
-from client.pythontutor import generate_trace
-from client.pythontutor import server
 log = logging.getLogger(__name__)
 
 class TraceProtocol(models.Protocol):
