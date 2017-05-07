@@ -99,6 +99,8 @@ def parse_input(command_input=None):
                         help="submit composition revision")
     testing.add_argument('--timeout', type=int, default=10,
                         help="set the timeout duration (in seconds) for running tests")
+    testing.add_argument('--trace', action='store_true',
+                         help="trace code and launch python tutor")
 
     # Experiments
     experiment = parser.add_argument_group('experiment options')

@@ -186,6 +186,16 @@ class OkTest(models.Test):
     def unique_id_prefix(self):
         return self.assignment_name + '\n' + self.name
 
+    def get_code(self):
+        extracted_code = {}
+        for ind, suite in enumerate(list(self.suites)):
+            if suite.type != 'doctest':
+                continue
+            suite_code = suite.extract_code()
+            if suite_code:
+                # Store with 1 indexed name
+                extracted_code[ind+1] = suite_code
+        return extracted_code
 
 class Suite(core.Serializable):
     type = core.String()
@@ -224,6 +234,15 @@ class Suite(core.Serializable):
         if self.run_only:
             return [x for x in enumerated if x[0] + 1 in self.run_only]
         return enumerated
+
+    def extract_code(self):
+        """Pull out the code for any doctest cases in the suite.
+        """
+        data = [{'setup': c.formatted_setup(),
+                 'code': c.formatted_code(),
+                 'teardown': c.formatted_teardown()} for _, c in self.enumerate_cases()
+                                                     if hasattr(c, 'setup')]
+        return data
 
     def _run_case(self, test_name, suite_number, case, case_number):
         """A wrapper for case.run().

@@ -113,6 +113,7 @@ class CodeCase(models.Case):
             processed_lines[-1].update(line)
         return processed_lines
 
+
     def _sync_code(self):
         """Syncs the current state of self.lines with self.code, the
         serializable string representing the set of code.
@@ -124,6 +125,41 @@ class CodeCase(models.Case):
             else:
                 new_code.append(line)
         self.code = '\n'.join(new_code)
+
+    def _format_code_line(self, line):
+        """Remove PS1/PS2 from code lines in tests.
+        """
+        if line.startswith(self.console.PS1):
+            line = line.replace(self.console.PS1, '')
+        elif line.startswith(self.console.PS2):
+            line = line.replace(self.console.PS2, '')
+        return line
+
+    def formatted_code(self):
+        """Provides a interpretable version of the code in the case,
+        with formatting for external users (Tracing or Exporting).
+        """
+        code_lines = []
+        for line in self.lines:
+            text = line
+            if isinstance(line, CodeAnswer):
+                if line.locked:
+                    text = '# Expected: ? (test case is locked)'
+                else:
+                    split_lines = line.dump().splitlines()
+                    # Handle case when we expect multiline outputs
+                    text = '# Expected: ' + '\n# '.join(split_lines)
+            else:
+                text = self._format_code_line(line)
+            code_lines.append(text)
+        return code_lines
+
+    def formatted_setup(self):
+        return '\n'.join([self._format_code_line(l) for l in self.setup.splitlines() if l])
+
+    def formatted_teardown(self):
+        return '\n'.join([self._format_code_line(l) for l in self.teardown.splitlines() if l])
+
 
     def _construct_unique_id(self, id_prefix, lines):
         """Constructs a unique ID for a particular prompt in this case,

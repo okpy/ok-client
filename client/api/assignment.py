@@ -123,6 +123,7 @@ class Assignment(core.Serializable):
     # file_contents -> none
     # grading       -> none
     # hinting       -> file_contents, analytics
+    # trace         -> file_contents, analytics
     # lock          -> none
     # scoring       -> none
     # unlock        -> none
@@ -136,6 +137,7 @@ class Assignment(core.Serializable):
         "lock",
         "scoring",
         "unlock",
+        "trace",
         "backup",
     ]
 
