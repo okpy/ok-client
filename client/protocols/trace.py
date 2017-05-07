@@ -47,8 +47,8 @@ class TraceProtocol(models.Protocol):
                     eligible_questions = ','.join([str(i) for i in data.keys()])
                     print("The following doctests can be traced: {}".format(eligible_questions))
                     usage_base = "Usage: python3 ok -q {} --trace"
-                    usage_base.format(eligible_questions[0])
-                    return
+                    print(usage_base.format(eligible_questions[0]))
+                return
             suite = [data[question]]
         elif hasattr(test, 'suites'):
             # Handle ok_tests
@@ -58,7 +58,7 @@ class TraceProtocol(models.Protocol):
                     print("Please specify a specific suite to test.")
                     print("The following suites can be traced: {}".format(eligible_suite_nums))
                     usage_base = "Usage: python3 ok -q {} --suite {} --trace"
-                    usage_base.format(self.args.question[0], eligible_suite_nums[0])
+                    print(usage_base.format(self.args.question[0], eligible_suite_nums[0]))
                 return
             if self.args.suite not in data:
                 with format.block('*'):
@@ -112,10 +112,12 @@ def suite_to_code(suite):
 
         # Only grab the code, since the setup/teardown is shared
         # Render the setup as commented out lines
-        lines = '\n'.join(['# {}'.format(s) for s in setup.splitlines()])
-        lines += "\n{}\n{}".format(case_intro, code)
+        setup_code = '\n'.join(['# {}'.format(s) for s in setup.splitlines()])
+        lines = "\n{}\n{}".format(case_intro, code)
         code_lines.append(lines)
-    return setup, '\n'.join(code_lines), teardown
+
+    rendered_code = setup_code + '\n' + '\n'.join(code_lines)
+    return setup, rendered_code, teardown
 
 def get_time():
     return dt.datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S:%f")
