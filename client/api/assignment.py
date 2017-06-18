@@ -121,12 +121,14 @@ class Assignment(core.Serializable):
     # backup        -> all other protocols
     # collaborate   -> file_contents, analytics
     # file_contents -> none
-    # grading       -> none
+    # grading       -> rate_limit
     # hinting       -> file_contents, analytics
     # lock          -> none
+    # rate_limit    -> none
     # scoring       -> none
     # unlock        -> none
     _PROTOCOLS = [
+        "rate_limit",
         "file_contents",
         "grading",
         "analytics",
