@@ -33,7 +33,7 @@ class RateLimitProtocol(models.Protocol):
 
     def check_attempt(self, test):
         now = int(time.time())
-        if not check(test.name, 'last_attempt') or not check(test.name, 'attempts'):
+        if not contains(test.name, 'last_attempt') or not contains(test.name, 'attempts'):
             return now, 1  # First attempt
         last_attempt = get(test.name, 'last_attempt')
         attempts = get(test.name, 'attempts')

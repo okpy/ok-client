@@ -13,7 +13,7 @@ def mac(value):
     mac.update(repr(value).encode('utf-8'))
     return mac.hexdigest()
 
-def check(root, key):
+def contains(root, key):
     key = '{}-{}'.format(root, key)
     with shelve.open(SHELVE_FILE) as db:
         return key in db
