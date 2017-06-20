@@ -2,20 +2,19 @@ from client.protocols.common import models
 from client.exceptions import EarlyExit
 from client.utils.storage import contains, get, store
 import time
+import textwrap
 
 
-BACKOFF_POLICY = (0, 0, 10, 20, 40, 80) # 1-2 no penalty, penalty in seconds after
+COOLDOWN_POLICY = (60,) # uniform 60s cooldown
 
 
 COOLDOWN_MSG = \
-"""
-You're spamming the autograder!  Please wait {wait}s... (attempts so far: {tries})
+"""You're spamming the autograder!  Please wait {wait}... (attempts so far: {tries})
 
 If you're stuck, talk to your neighbor, ask for help, or run your code in
 interactive mode:
 
     python3 -i {files}
-
 """
 
 
@@ -26,8 +25,8 @@ interactive mode:
 class RateLimitProtocol(models.Protocol):
     """A Protocol that keeps track of rate limiting for specific questions.
     """
-    def __init__(self, args, assignment, backoff=BACKOFF_POLICY):
-        self.backoff = backoff
+    def __init__(self, args, assignment, cooldown=COOLDOWN_POLICY):
+        self.cooldown = cooldown
         super().__init__(args, assignment)
 
     def run(self, messages):
@@ -50,8 +49,8 @@ class RateLimitProtocol(models.Protocol):
         last_attempt = get(test.name, 'last_attempt', now)
         attempts = get(test.name, 'attempts', 0)
         secs_elapsed = now - last_attempt
-        backoff_time = self.backoff[attempts] if attempts < len(self.backoff) else self.backoff[-1]
-        cooldown = backoff_time - secs_elapsed
+        cooldown_time = self.cooldown[attempts] if attempts < len(self.cooldown) else self.cooldown[-1]
+        cooldown = cooldown_time - secs_elapsed
         if cooldown > 0:
             files = ' '.join(self.assignment.src)
             raise EarlyExit(COOLDOWN_MSG

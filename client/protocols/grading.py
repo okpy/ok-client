@@ -56,8 +56,9 @@ def grade(questions, messages, env=None, verbose=True):
         log.info('Running tests for {}'.format(test.name))
         results = test.run(env)
 
-        # persist whether test was correct or not
-        storage.store(test.name, 'correct', results['failed'] == 0)
+        # if correct once, set persistent flag
+        if results['failed'] == 0:
+            storage.store(test.name, 'correct', True)
 
         passed += results['passed']
         failed += results['failed']
