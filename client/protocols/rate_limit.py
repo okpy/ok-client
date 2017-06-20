@@ -3,7 +3,7 @@ from client.exceptions import ProtocolException
 import time
 
 
-BACKOFF_POLICY = (0, 0, 180, 300) # 1-2 no penalty, penalty in seconds after
+BACKOFF_POLICY = (0, 0, 10, 20, 30, 60) # 1-2 no penalty, penalty in seconds after
 
 
 ##################
