@@ -7,6 +7,7 @@ are compatible with the GradingProtocol.
 
 from client.protocols.common import models
 from client.utils import format
+from client.utils import storage
 import logging
 
 log = logging.getLogger(__name__)
@@ -54,6 +55,10 @@ def grade(questions, messages, env=None, verbose=True):
     for test in questions:
         log.info('Running tests for {}'.format(test.name))
         results = test.run(env)
+
+        # persist whether test was correct or not
+        storage.store(test.name, 'correct', results['failed'] == 0)
+
         passed += results['passed']
         failed += results['failed']
         locked += results['locked']

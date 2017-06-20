@@ -24,7 +24,9 @@ def store(root, key, value):
         db[key] = {'value': value, 'mac': mac(value)}
     return value
 
-def get(root, key):
+def get(root, key, default=None):
+    if not contains(root, key):
+        return default
     key = '{}-{}'.format(root, key)
     with shelve.open(SHELVE_FILE) as db:
         data = db[key]
