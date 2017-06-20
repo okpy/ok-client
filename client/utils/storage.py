@@ -2,7 +2,7 @@ import shelve # persistance
 import hmac # security
 
 ##################
-# Secure Storage #  TODO: refactor persistance to one centralized location
+# Secure Storage #
 ##################
 
 SHELVE_FILE = '.ok_storage'
