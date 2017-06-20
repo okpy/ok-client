@@ -9,12 +9,14 @@ COOLDOWN_POLICY = (60,) # uniform 60s cooldown
 
 
 COOLDOWN_MSG = \
-"""You're spamming the autograder!  Please wait {wait}... (attempts so far: {tries})
+"""
+You're spamming the autograder!  Please wait {wait}... (attempts so far: {tries})
 
 If you're stuck, talk to your neighbor, ask for help, or run your code in
 interactive mode:
 
     python3 -i {files}
+
 """
 
 
