@@ -1,10 +1,22 @@
 from client.protocols.common import models
-from client.exceptions import ProtocolException
+from client.exceptions import EarlyExit
 from client.utils.storage import contains, get, store
 import time
 
 
 BACKOFF_POLICY = (0, 0, 10, 20, 40, 80) # 1-2 no penalty, penalty in seconds after
+
+
+COOLDOWN_MSG = \
+"""
+You're spamming the autograder!  Please wait {wait}s... (attempts so far: {tries})
+
+If you're stuck, talk to your neighbor, ask for help, or run your code in
+interactive mode:
+
+    python3 -i {files}
+
+"""
 
 
 ###########################
@@ -41,7 +53,9 @@ class RateLimitProtocol(models.Protocol):
         backoff_time = self.backoff[attempts] if attempts < len(self.backoff) else self.backoff[-1]
         cooldown = backoff_time - secs_elapsed
         if cooldown > 0:
-            raise ProtocolException('Cooling down... {} s to go! (total attempts: {})'.format(cooldown, attempts))
+            files = ' '.join(self.assignment.src)
+            raise EarlyExit(COOLDOWN_MSG
+                .format(wait=cooldown, tries=attempts, files=files))
         return now, attempts + 1
 
 protocol = RateLimitProtocol
