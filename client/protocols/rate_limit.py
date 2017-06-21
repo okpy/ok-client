@@ -5,15 +5,16 @@ import time
 import textwrap
 
 
-COOLDOWN_POLICY = (60,) # uniform 60s cooldown
+COOLDOWN_POLICY = (0, 60,) # uniform 60s cooldown
 
 
 COOLDOWN_MSG = \
 """
-You're spamming the autograder!  Please wait {wait}... (attempts so far: {tries})
+You're spamming the autograder for "{question}"!
+Please wait {wait}s... (attempts so far: {tries})
 
-If you're stuck, talk to your neighbor, ask for help, or run your code in
-interactive mode:
+If you're stuck on "{question}", try talking to your neighbor,
+asking for help, or running your code in interactive mode:
 
     python3 -i {files}
 
@@ -37,7 +38,7 @@ class RateLimitProtocol(models.Protocol):
         analytics = {}
         tests = self.assignment.specified_tests
         for test in tests:
-            if get(test.name, 'correct', False):
+            if get(test.name, 'correct', default=False):
                 continue # suppress rate limiting if question is correct
             last_attempt, attempts = self.check_attempt(test)
             analytics[test.name] = {
@@ -53,10 +54,10 @@ class RateLimitProtocol(models.Protocol):
         secs_elapsed = now - last_attempt
         cooldown_time = self.cooldown[attempts] if attempts < len(self.cooldown) else self.cooldown[-1]
         cooldown = cooldown_time - secs_elapsed
-        if cooldown > 0:
+        if attempts and cooldown > 0:
             files = ' '.join(self.assignment.src)
             raise EarlyExit(COOLDOWN_MSG
-                .format(wait=cooldown, tries=attempts, files=files))
+                .format(wait=cooldown, question=test.name, tries=attempts, files=files))
         return now, attempts + 1
 
 protocol = RateLimitProtocol
