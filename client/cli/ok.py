@@ -207,6 +207,9 @@ def main():
     except ex.AuthenticationException as e:
         log.warning('Authentication exception occurred', exc_info=True)
         print('Authentication error: {0}'.format(e))
+    except ex.EarlyExit as e:
+        log.warning('OK exited early (non-error)')
+        print(str(e))
     except ex.OkException as e:
         log.warning('General OK exception occurred', exc_info=True)
         print('Error: ' + str(e))
