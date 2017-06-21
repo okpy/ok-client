@@ -56,8 +56,8 @@ class RateLimitProtocol(models.Protocol):
         cooldown = cooldown_time - secs_elapsed
         if attempts and cooldown > 0:
             files = ' '.join(self.assignment.src)
-            raise EarlyExit(COOLDOWN_MSG
-                .format(wait=cooldown, question=test.name, tries=attempts, files=files))
+            raise EarlyExit(COOLDOWN_MSG.format(
+                wait=cooldown, question=test.name.lower(), tries=attempts, files=files))
         return now, attempts + 1
 
 protocol = RateLimitProtocol
