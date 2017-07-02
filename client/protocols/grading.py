@@ -9,6 +9,7 @@ from client.protocols.common import models
 from client.utils import format
 from client.utils import storage
 import logging
+import sys
 
 log = logging.getLogger(__name__)
 
@@ -35,7 +36,11 @@ class GradingProtocol(models.Protocol):
         for test in tests:
             if self.args.suite and hasattr(test, 'suites'):
                 test.run_only = self.args.suite
-                suite = test.suites[self.args.suite - 1]
+                try:
+                    suite = test.suites[self.args.suite - 1]
+                except IndexError as e:
+                    sys.exit(('python3 ok: error: ' 
+                        'Suite number must be valid.({})'.format(len(test.suites)))) 
                 if self.args.case:
                     suite.run_only = self.args.case
         grade(tests, messages, env, verbose=self.args.verbose)
