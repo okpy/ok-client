@@ -13,6 +13,7 @@ from client.utils.config import (CONFIG_DIRECTORY, REFRESH_FILE,
 from client.utils import format, network
 
 import logging
+import traceback
 
 log = logging.getLogger(__name__)
 
@@ -251,11 +252,13 @@ def get_code(cmd_args, endpoint=''):
         'scope': OAUTH_SCOPE,
     }
     url = '{}{}?{}'.format(server_url(cmd_args), AUTH_ENDPOINT, urlencode(params))
-    if webbrowser.open_new(url):
+    try:
+        assert webbrowser.open_new(url)
         return get_code_via_browser(cmd_args, redirect_uri,
             host_name, port_number, endpoint)
-    else:
-        log.warning('Failed to open browser, falling back to browserless auth')
+    except Exception as e:
+        log.debug('Error with Browser Auth:\n{}'.format(traceback.format_exc()))
+        log.warning('Browser auth failed, falling back to browserless auth')
         return get_code_via_terminal(cmd_args, email)
 
 def get_code_via_browser(cmd_args, redirect_uri, host_name, port_number, endpoint):
