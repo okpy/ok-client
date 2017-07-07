@@ -49,6 +49,14 @@ After logging in, copy the code from the web page, paste it below,
 and press Enter. To paste, right-click and select "Paste".
 """.strip()
 
+HOSTNAME_ERROR_MESSAGE = """
+Python couldn't recognize your computer's hostname because it contains
+non-ASCII characters (e.g. Non-English characters or accent marks).
+
+To fix, either upgrade Python to version 3.5.2+, or change your hostname.
+""".strip()
+
+
 def pick_free_port(hostname=REDIRECT_HOST, port=0):
     """ Try to bind a port. Default=0 selects a free port. """
     import socket
@@ -155,14 +163,17 @@ def refresh_local_token(server):
 def perform_oauth(code_fn, *args, **kwargs):
     try:
         access_token, expires_in, refresh_token = code_fn(*args, **kwargs)
+    except UnicodeDecodeError as e:
+        with format.block('-'):
+            print("Authentication error\n:{}".format(HOSTNAME_ERROR_MESSAGE))
     except OAuthException as e:
         with format.block('-'):
             print("Authentication error: {}".format(e.error.replace('_', ' ')))
             if e.error_description:
                 print(e.error_description)
-        return None
-    update_storage(access_token, expires_in, refresh_token)
-    return access_token
+    else:
+        update_storage(access_token, expires_in, refresh_token)
+        return access_token
 
 def server_url(cmd_args):
     scheme = 'http' if cmd_args.insecure else 'https'
