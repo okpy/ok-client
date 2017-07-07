@@ -7,7 +7,7 @@ import time
 from urllib.parse import urlencode, urlparse, parse_qsl
 import webbrowser
 
-from client.exceptions import AuthenticationException
+from client.exceptions import AuthenticationException, OAuthException
 from client.utils.config import (CONFIG_DIRECTORY, REFRESH_FILE,
                                  create_config_directory)
 from client.utils import format, network
@@ -48,11 +48,6 @@ PASTE_MESSAGE = """
 After logging in, copy the code from the web page, paste it below,
 and press Enter. To paste, right-click and select "Paste".
 """.strip()
-
-class OAuthException(Exception):
-    def __init__(self, error='', error_description=''):
-        self.error = error
-        self.error_description = error_description
 
 def pick_free_port(hostname=REDIRECT_HOST, port=0):
     """ Try to bind a port. Default=0 selects a free port. """

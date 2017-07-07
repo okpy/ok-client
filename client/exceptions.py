@@ -9,6 +9,13 @@ class AuthenticationException(OkException):
     """Exceptions related to authentication."""
 
 
+class OAuthException(AuthenticationException):
+    def __init__(self, error='', error_description=''):
+        super().__init__(self)
+        self.error = error
+        self.error_description = error_description
+
+
 class ProtocolException(OkException):
     """Exceptions related to protocol errors."""
 
