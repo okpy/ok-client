@@ -9,6 +9,7 @@ from client.protocols.common import models as protocol_models
 from client.utils import format
 from collections import OrderedDict
 import logging
+import sys
 
 log = logging.getLogger(__name__)
 
@@ -53,13 +54,15 @@ class ScoringProtocol(protocol_models.Protocol):
         messages['scoring'] = display_breakdown(raw_scores, self.args.score_out)
         print()
 
-def display_breakdown(scores, outfile):
-    """Writes the point breakdown to outfile given a dictionary of scores.
+def display_breakdown(scores, outfile=None):
+    """Writes the point breakdown to `outfile` given a dictionary of scores.
+    `outfile` should be a string.  If `outfile` is None, write to stdout.
 
     RETURNS:
     dict; 'Total' -> finalized score (float)
     """
     total = 0
+    outfile = open(outfile, 'w') if outfile else sys.stdout
 
     format.print_line('-')
     print('Point breakdown', file=outfile)

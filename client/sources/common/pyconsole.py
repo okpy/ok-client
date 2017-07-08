@@ -54,7 +54,7 @@ class PythonConsole(interpreter.Console):
             print('\n'.join(stacktrace[-stacktrace_length:]))
             raise interpreter.ConsoleException(e)
         except exceptions.Timeout as e:
-            print('# Error: evaluation exceeded {} seconds.'.format(e.timeout))
+            print('# Error: evaluation exceeded {} seconds - check for infinite loops'.format(e.timeout))
             raise interpreter.ConsoleException(e)
         except Exception as e:
             stacktrace = traceback.format_exc()

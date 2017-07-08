@@ -13,6 +13,10 @@ class ProtocolException(OkException):
     """Exceptions related to protocol errors."""
 
 
+class EarlyExit(OkException):
+    """Exceptions related to early exits that are NOT errors."""
+
+
 # TODO(albert): extend from a base class designed for student bugs.
 class Timeout(OkException):
     """Exception for timeouts."""

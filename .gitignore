@@ -17,6 +17,7 @@ tmp
 *.pydevproject
 *.kpf
 .coverage
+.ok_storage
 
 # pip-related files
 *.egg-info
@@ -36,3 +37,6 @@ misUcount.json
 # IDE
 *.iml
 .idea/
+
+# demo files
+demo/

@@ -126,8 +126,9 @@ def parse_input(command_input=None):
                         help="lock the tests in a directory")
     grading.add_argument('--score', action='store_true',
                         help="score the assignment")
-    grading.add_argument('--score-out', type=argparse.FileType('w'),
-                        default=sys.stdout, help="write scores to a file")
+    grading.add_argument('--score-out', type=str,
+                        nargs='?', const=None, default=None,
+                        help="write scores to a file")
     grading.add_argument('--config', type=str,
                         help="use a specific configuration file")
 
@@ -207,6 +208,9 @@ def main():
     except ex.AuthenticationException as e:
         log.warning('Authentication exception occurred', exc_info=True)
         print('Authentication error: {0}'.format(e))
+    except ex.EarlyExit as e:
+        log.warning('OK exited early (non-error)')
+        print(str(e))
     except ex.OkException as e:
         log.warning('General OK exception occurred', exc_info=True)
         print('Error: ' + str(e))
