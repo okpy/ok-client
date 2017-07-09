@@ -1,6 +1,6 @@
 import logging
 import json
-import os.path
+import os
 import time
 
 from client.api.assignment import load_assignment
@@ -13,6 +13,8 @@ class Notebook:
         ok_logger = logging.getLogger('client')   # Get top-level ok logger
         ok_logger.setLevel(logging.DEBUG if debug else logging.ERROR)
         self.assignment = load_assignment(filepath, cmd_args)
+        # Attempt a login with enviornment based tokens
+        login_with_env(self.assignment)
 
     def run(self, protocol, messages, **kwargs):
         if protocol not in self.assignment.protocol_map:
@@ -21,6 +23,8 @@ class Notebook:
         return self.assignment.protocol_map[protocol].run(messages, **kwargs)
 
     def auth(self, force=False, inline=True):
+        if not force and login_with_env(self.assignment):
+            return
         self.assignment.authenticate(force=force, inline=inline)
 
     def grade(self, *args, **kwargs):
@@ -96,6 +100,21 @@ class Notebook:
                       " is saved before sending it to OK!")
         else:
             print()
+
+def login_with_env(assignment):
+    access_token = os.environ.get('OKPY_ACCESS_TOKEN')
+    if not access_token:
+        log.info("ACCESS_TOKEN did not exist in the environment")
+        return
+    student_email = ok_auth.display_student_email(assignment.cmd_args, access_token)
+    if student_email:
+        # Token is valid,
+        expires_in = int(os.environ.get('OKPY_EXPIRES_IN', 60))
+        refresh_token = os.environ.get('OKPY_REFRESH_TOKEN')
+
+        expires_at = int(time.time()) + expires_in
+        ok_auth.update_storage(access_token, expires_at, refresh_token)
+        return True
 
 def validate_contents(file_contents):
     """Ensures that all ipynb files in FILE_CONTENTS
