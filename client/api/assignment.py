@@ -99,7 +99,7 @@ class Assignment(core.Serializable):
             except AttributeError:
                 pass
         test_name = tests[0].name
-        grade(tests, messages, env)
+        grade(self, tests, messages, env)
         return messages['grading'][test_name]
 
     @property

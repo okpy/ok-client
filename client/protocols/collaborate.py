@@ -343,7 +343,7 @@ class CollaborateProtocol(models.Protocol):
         data = {}
         print("Starting grading from external request")
         log_id = output.new_log()
-        grade(tests, data, verbose=self.args.verbose)
+        grade(self.assignment, tests, data, verbose=self.args.verbose)
         printed_output = ''.join(output.get_log(log_id))
         output.remove_log(log_id)
         data['output'] = printed_output

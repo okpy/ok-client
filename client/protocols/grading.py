@@ -7,7 +7,7 @@ are compatible with the GradingProtocol.
 
 from client.protocols.common import models
 from client.utils import format
-from client.utils import storage
+from client.utils.storage import get_store
 import logging
 import sys
 
@@ -39,14 +39,14 @@ class GradingProtocol(models.Protocol):
                 try:
                     suite = test.suites[self.args.suite - 1]
                 except IndexError as e:
-                    sys.exit(('python3 ok: error: ' 
-                        'Suite number must be valid.({})'.format(len(test.suites)))) 
+                    sys.exit(('python3 ok: error: '
+                        'Suite number must be valid.({})'.format(len(test.suites))))
                 if self.args.case:
                     suite.run_only = self.args.case
-        grade(tests, messages, env, verbose=self.args.verbose)
+        grade(self.assignment, tests, messages, env, verbose=self.args.verbose)
 
 
-def grade(questions, messages, env=None, verbose=True):
+def grade(assignment, questions, messages, env=None, verbose=True):
     format.print_line('~')
     print('Running tests')
     print()
@@ -63,7 +63,8 @@ def grade(questions, messages, env=None, verbose=True):
 
         # if correct once, set persistent flag
         if results['failed'] == 0:
-            storage.store(test.name, 'correct', True)
+            store = get_store(assignment.name, test.name)
+            store['correct'] = True
 
         passed += results['passed']
         failed += results['failed']

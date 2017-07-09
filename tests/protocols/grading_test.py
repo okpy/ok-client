@@ -2,6 +2,7 @@
 
 from client.protocols import grading
 from client.sources.common import models
+from client.utils.storage import get_store
 import mock
 import unittest
 
@@ -12,7 +13,11 @@ class GradingProtocolTest(unittest.TestCase):
         self.cmd_args.unlock = False
         self.cmd_args.restore = False
         self.assignment = mock.Mock()
+        self.assignment.name = 'gradingtest'
         self.proto = grading.protocol(self.cmd_args, self.assignment)
+
+    def tearDown(self):
+        get_store(self.assignment.name).clear()
 
     def callRun(self):
         messages = {}
@@ -32,6 +37,7 @@ class GradingProtocolTest(unittest.TestCase):
 
     def testOnInteract_withTests(self):
         test = mock.Mock(spec=models.Test)
+        test.name = 'test'
         test.run.return_value = {
             'passed': 0,
             'failed': 0,
@@ -67,3 +73,4 @@ class GradingProtocolTest(unittest.TestCase):
         results = messages['grading']
         self.assertIn('test1', results)
         self.assertIn('test2', results)
+
