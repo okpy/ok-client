@@ -8,9 +8,8 @@ from urllib.parse import urlencode, urlparse, parse_qsl
 import webbrowser
 
 from client.exceptions import AuthenticationException, OAuthException
-from client.utils.config import (CONFIG_DIRECTORY, REFRESH_FILE,
-                                 create_config_directory)
 from client.utils import format, network
+from client.utils.storage import get_store
 
 import logging
 import traceback
@@ -22,8 +21,6 @@ CLIENT_ID = 'ok-client'
 # See: https://developers.google.com/accounts/docs/OAuth2InstalledApp
 CLIENT_SECRET = 'EWKtcCp5nICeYgVyCPypjs3aLORqQ3H'
 OAUTH_SCOPE = 'all'
-
-REFRESH_FILE = os.path.join(CONFIG_DIRECTORY, "auth_refresh")
 
 REDIRECT_HOST = "127.0.0.1"
 REDIRECT_PORT = 6165
@@ -58,22 +55,7 @@ To fix, either upgrade Python to version 3.5.2+, or change your hostname.
 """.strip()
 
 
-def pick_free_port(hostname=REDIRECT_HOST, port=0):
-    """ Try to bind a port. Default=0 selects a free port. """
-    import socket
-    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    try:
-        s.bind((hostname, port))  # port=0 finds an open port
-    except OSError as e:
-        log.warning("Could not bind to %s:%s %s", hostname, port, e)
-        if port == 0:
-            print('Unable to find an open port for authentication.')
-            raise AuthenticationException(e)
-        else:
-            return pick_free_port(hostname, 0)
-    addr, port = s.getsockname()
-    s.close()
-    return port
+# Posting to Server
 
 def make_token_post(server, data):
     """Try getting an access token from the server. If successful, returns the
@@ -114,17 +96,15 @@ def make_refresh_post(server, refresh_token):
     info = make_token_post(server, data)
     return info['access_token'], int(info['expires_in'])
 
+
+# Communicating with Local Storage
+
 def get_storage():
-    create_config_directory()
-    with open(REFRESH_FILE, 'rb') as fp:
-        storage = pickle.load(fp)
-
-    access_token = storage['access_token']
-    expires_at = storage['expires_at']
-    refresh_token = storage['refresh_token']
-
+    auth_store = get_store('auth')
+    access_token = auth_store['access_token']
+    expires_at = auth_store['expires_at']
+    refresh_token = auth_store['refresh_token']
     return access_token, expires_at, refresh_token
-
 
 def update_storage(access_token, expires_in, refresh_token):
     if not (access_token and expires_in and refresh_token):
@@ -132,13 +112,15 @@ def update_storage(access_token, expires_in, refresh_token):
             "Authentication failed and returned an empty token.")
 
     cur_time = int(time.time())
-    create_config_directory()
-    with open(REFRESH_FILE, 'wb') as fp:
-        pickle.dump({
-            'access_token': access_token,
-            'expires_at': cur_time + expires_in,
-            'refresh_token': refresh_token
-        }, fp)
+    auth_store = get_store('auth')
+    auth_store.update({
+        'access_token': access_token,
+        'expires_at': cur_time + expires_in,
+        'refresh_token': refresh_token
+    })
+
+
+# Helpers for Authentication
 
 def refresh_local_token(server):
     try:
@@ -161,6 +143,10 @@ def refresh_local_token(server):
     except Exception:
         return False
 
+def server_url(cmd_args):
+    scheme = 'http' if cmd_args.insecure else 'https'
+    return '{}://{}'.format(scheme, cmd_args.server)
+
 def perform_oauth(code_fn, *args, **kwargs):
     try:
         access_token, expires_in, refresh_token = code_fn(*args, **kwargs)
@@ -176,9 +162,8 @@ def perform_oauth(code_fn, *args, **kwargs):
         update_storage(access_token, expires_in, refresh_token)
         return access_token
 
-def server_url(cmd_args):
-    scheme = 'http' if cmd_args.insecure else 'https'
-    return '{}://{}'.format(scheme, cmd_args.server)
+
+# Main Authentication Method
 
 def authenticate(cmd_args, endpoint='', force=False):
     """Returns an OAuth token that can be passed to the server for
@@ -226,6 +211,26 @@ def notebook_authenticate(cmd_args, force=False):
         log.warning('Could not get login email. You may have been logged out. '
                     ' Try logging in again.')
     return access_token
+
+
+# Getting Access Token
+
+def pick_free_port(hostname=REDIRECT_HOST, port=0):
+    """ Try to bind a port. Default=0 selects a free port. """
+    import socket
+    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    try:
+        s.bind((hostname, port))  # port=0 finds an open port
+    except OSError as e:
+        log.warning("Could not bind to %s:%s %s", hostname, port, e)
+        if port == 0:
+            print('Unable to find an open port for authentication.')
+            raise AuthenticationException(e)
+        else:
+            return pick_free_port(hostname, 0)
+    addr, port = s.getsockname()
+    s.close()
+    return port
 
 def get_code(cmd_args, endpoint=''):
     if cmd_args.no_browser:
@@ -331,6 +336,9 @@ def get_code_via_terminal(cmd_args, email=None,
     print()
     code = input('Paste your code here: ')
     return make_code_post(server_url(cmd_args), code, redirect_uri)
+
+
+# Accessing Auth Info
 
 def get_info(cmd_args, access_token):
     response = requests.get(
