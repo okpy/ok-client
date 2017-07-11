@@ -1,4 +1,4 @@
-"""Tests the UnlockProtocol."""
+"""Tests the RateLimitProtocol."""
 from client.protocols import rate_limit
 from client.sources.common import models
 from client.exceptions import EarlyExit
