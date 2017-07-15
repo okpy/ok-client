@@ -14,6 +14,7 @@ class ScoringProtocolTest(unittest.TestCase):
     def setUp(self):
         self.cmd_args = mock.Mock()
         self.cmd_args.score = True
+        self.cmd_args.testing = False
         self.assignment = mock.MagicMock()
         self.proto = scoring.protocol(self.cmd_args, self.assignment)
 
