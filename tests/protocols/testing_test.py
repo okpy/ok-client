@@ -25,8 +25,9 @@ class TestingProtocolTest(unittest.TestCase):
         self.FAILED0 = 0
         self.ATTEMPTED1 = 2
         self.FAILED1 = 1
-        self.PATH = os.path.join(os.getcwd(), 'support_files/')
-
+        self.PATH = os.path.join(os.getcwd(), 'protocols/support_files/')
+        print(self.PATH)
+        
     def callRun(self):
         messages = {}
         self.proto.run(messages, self.PATH)
