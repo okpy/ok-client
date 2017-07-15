@@ -97,6 +97,9 @@ if __name__ == '__main__':
     print('Latest version: {} ({})'.format(latest_release, latest_release_commit[:7]))
     print('New version: {}'.format(new_release))
 
+    # uninstall ``okpy`` in virtual env, if installed
+    shell('pip uninstall okpy')
+
     # run tests
     shell('nosetests tests')
 

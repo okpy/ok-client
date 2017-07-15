@@ -37,3 +37,6 @@ misUcount.json
 # IDE
 *.iml
 .idea/
+
+# demo files
+demo/
