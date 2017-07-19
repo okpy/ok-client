@@ -153,6 +153,8 @@ def parse_input(command_input=None):
     server.add_argument('--update', action='store_true',
                         help="update ok and exit")
 
+    #args.question = 'q01'
+    #args.local = True
     return parser.parse_args(command_input)
 
 def main():
