@@ -34,7 +34,7 @@ class TestingProtocol(models.Protocol):
                 count += 1
         return test_results
 
-    def run(self, messages, testloc=None):
+    def run(self, messages, testloc=CURR_DIR):
         if self.args.score or self.args.unlock:
             return
         analytics = self.test(self.args.verbose, testloc)
