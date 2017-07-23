@@ -39,8 +39,8 @@ class GradingProtocol(models.Protocol):
                 try:
                     suite = test.suites[self.args.suite - 1]
                 except IndexError as e:
-                    sys.exit(('python3 ok: error: ' 
-                        'Suite number must be valid.({})'.format(len(test.suites)))) 
+                    sys.exit(('python3 ok: error: '
+                        'Suite number must be valid.({})'.format(len(test.suites))))
                 if self.args.case:
                     suite.run_only = self.args.case
         grade(tests, messages, env, verbose=self.args.verbose)
@@ -62,7 +62,7 @@ def grade(questions, messages, env=None, verbose=True):
         results = test.run(env)
 
         # if correct once, set persistent flag
-        if results['failed'] == 0:
+        if results['failed'] == 0 and results['locked'] == 0:
             storage.store(test.name, 'correct', True)
 
         passed += results['passed']
