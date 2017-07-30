@@ -18,30 +18,30 @@ class TestingProtocolTest(unittest.TestCase):
         self.cmd_args.restore = False
         self.cmd_args.testing = True
         self.assignment = mock.Mock(spec=Assignment)
-        self.proto = testing.protocol(self.cmd_args, self.assignment)
-        self.test0name = 'easytests.rst'
-        self.test1name = 'mytests.rst'
-        self.ATTEMPTED0 = 4
-        self.FAILED0 = 0
-        self.ATTEMPTED1 = 2
-        self.FAILED1 = 1
         self.PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'support_files')
-        print(self.PATH)
 
     def callRun(self):
         messages = {}
         self.proto.run(messages, self.PATH)
+        #print(self.PATH)
         self.assertIn('testing', messages)
         return messages['testing']
 
     def testTest(self):
+        expected1 = {'Test 0': {'passed': 5, 'suites_total': 2, 
+        'name': 'mytests.rst', 'failed': 1, 'cases_total': 3, 'attempted': 6}}
+        self.manage('mytests.rst', None, None, expected1)
+        expected2 = {'Test 0': {'passed': 2, 'suites_total': 2, 
+        'name': 'mytests.rst', 'failed': 0, 'cases_total': 3, 'attempted': 2}}
+        self.manage('mytests.rst', 2, [1], expected2)
+        
+    def manage(self, file, suite, case, expected):
+        self.cmd_args.suite = suite
+        self.cmd_args.case = case
+        self.proto = testing.protocol(self.cmd_args, self.assignment)
+        self.test0name = file
         msg = self.callRun()
-        self.assertEqual(msg['Test 0']['name'], 'easytests.rst')
-        self.assertEqual(msg['Test 1']['name'], 'mytests.rst')
-        self.assertEqual(msg['Test 0']['attempted'], self.ATTEMPTED0)
-        self.assertEqual(msg['Test 1']['attempted'], self.ATTEMPTED1)
-        self.assertEqual(msg['Test 0']['failed'], self.FAILED0)
-        self.assertEqual(msg['Test 1']['failed'], self.FAILED1)
+        self.assertEqual(msg, expected)
 
 
 
