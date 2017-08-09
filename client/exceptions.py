@@ -23,7 +23,7 @@ class AuthenticationException(OkException):
 
 class OAuthException(AuthenticationException):
     def __init__(self, error='', error_description=''):
-        super().__init__(self)
+        super().__init__()
         self.error = error
         self.error_description = error_description
 
@@ -47,7 +47,7 @@ class Timeout(OkException):
         PARAMTERS:
         timeout -- int; number of seconds before timeout error occurred
         """
-        super().__init__(self)
+        super().__init__()
         self.timeout = timeout
         self.message = self._message
 
