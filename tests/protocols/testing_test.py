@@ -7,6 +7,7 @@ from client.api.assignment import Assignment
 import mock
 import os
 import unittest
+import sys
 
 class TestingProtocolTest(unittest.TestCase):
 
@@ -16,8 +17,9 @@ class TestingProtocolTest(unittest.TestCase):
         self.cmd_args.score = False
         self.cmd_args.unlock = False
         self.cmd_args.restore = False
-        self.cmd_args.testing = True
+        self.cmd_args.testing = 'mytests.rst'
         self.assignment = mock.Mock(spec=Assignment)
+        self.assignment.src = ['hw1.py', 'hw1_extra.py']
         self.PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'support_files')
 
     def callRun(self):
@@ -28,20 +30,32 @@ class TestingProtocolTest(unittest.TestCase):
         return messages['testing']
 
     def testTest(self):
-        expected1 = {'Test 0': {'passed': 5, 'suites_total': 2, 
-        'name': 'mytests.rst', 'failed': 1, 'cases_total': 3, 'attempted': 6}}
-        self.manage('mytests.rst', None, None, expected1)
-        expected2 = {'Test 0': {'passed': 2, 'suites_total': 2, 
-        'name': 'mytests.rst', 'failed': 0, 'cases_total': 3, 'attempted': 2}}
-        self.manage('mytests.rst', 2, [1], expected2)
-        
-    def manage(self, file, suite, case, expected):
-        self.cmd_args.suite = suite
-        self.cmd_args.case = case
+        self.run_all()
+        self.run_suite_and_case()
+
+
+
+
+    def run_all(self):
+        self.cmd_args.suite = None
+        self.cmd_args.case = None
         self.proto = testing.protocol(self.cmd_args, self.assignment)
-        self.test0name = file
         msg = self.callRun()
+        expected = {'mytests.rst': {'cases_total': 5, 'total_cov': 6, 'exs_passed': 23, 
+        'actual_cov': 6, 'exs_failed': 1, 'suites_total': 3, 'attempted': 24}}
         self.assertEqual(msg, expected)
+
+    def run_suite_and_case(self):
+        self.cmd_args.suite = 1
+        self.cmd_args.case = [2]
+        self.proto = testing.protocol(self.cmd_args, self.assignment)
+        msg = self.callRun()
+        expected = {'mytests.rst': {'attempted': 9, 'total_cov': 0, 'exs_failed': 0, 
+        'exs_passed': 9, 'suites_total': 3, 'actual_cov': 0, 'cases_total': 5}}
+        self.assertEqual(msg, expected)
+
+ 
+
 
 
 
