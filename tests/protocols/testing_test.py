@@ -9,6 +9,8 @@ import os
 import unittest
 import sys
 
+DEFAULT_TST_FILE = "mytests.rst"
+
 class TestingProtocolTest(unittest.TestCase):
 
     def setUp(self):
@@ -30,28 +32,29 @@ class TestingProtocolTest(unittest.TestCase):
         return messages['testing']
 
     def testTest(self):
-        self.run_all()
-        self.run_suite_and_case()
+        #can't test for coverage twice, doesn't reset properly
+        #self.run_all(file='sample.rst', expected={'sample.rst': {'exs_failed': 1, 'total_cov': 7, 'attempted': 13, 'suites_total': 4, 'exs_passed': 12, 'actual_cov': 2, 'cases_total': 6}})
+        self.run_all(file=DEFAULT_TST_FILE, expected={'mytests.rst': {'total_cov': 7, 'actual_cov': 7, 'exs_failed': 1, 'suites_total': 3, 'exs_passed': 17, 'attempted': 18, 'cases_total': 6}})
+        self.run_suite_and_case(file=DEFAULT_TST_FILE, suite='algebra', 
+                                 case='double', expected={'mytests.rst': {'actual_cov': 0, 'suites_total': 3, 'total_cov': 0, 'exs_failed': 0, 'attempted': 5, 'exs_passed': 5, 'cases_total': 6}})
+        self.run_suite_and_case(file='sample.rst', suite='algebra', 
+                             case='double', expected={'sample.rst': {'cases_total': 6, 'total_cov': 0, 'exs_passed': 4, 'suites_total': 4, 'actual_cov': 0, 'exs_failed': 1, 'attempted': 5}})
 
 
-
-
-    def run_all(self):
+    def run_all(self, file, expected):
+        self.cmd_args.testing = file
         self.cmd_args.suite = None
         self.cmd_args.case = None
         self.proto = testing.protocol(self.cmd_args, self.assignment)
         msg = self.callRun()
-        expected = {'mytests.rst': {'cases_total': 5, 'total_cov': 6, 'exs_passed': 23, 
-        'actual_cov': 6, 'exs_failed': 1, 'suites_total': 3, 'attempted': 24}}
         self.assertEqual(msg, expected)
 
-    def run_suite_and_case(self):
-        self.cmd_args.suite = 1
-        self.cmd_args.case = [2]
+    def run_suite_and_case(self, suite, case, file, expected):
+        self.cmd_args.testing = file
+        self.cmd_args.suite = suite
+        self.cmd_args.case = [case]
         self.proto = testing.protocol(self.cmd_args, self.assignment)
         msg = self.callRun()
-        expected = {'mytests.rst': {'attempted': 9, 'total_cov': 0, 'exs_failed': 0, 
-        'exs_passed': 9, 'suites_total': 3, 'actual_cov': 0, 'cases_total': 5}}
         self.assertEqual(msg, expected)
 
  

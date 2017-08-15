@@ -8,4 +8,4 @@ def cube(x):
 def neverlucky():
     """Return magic."""
     randint(0, 9)
-    return 'Not today'
+    return 'magic'

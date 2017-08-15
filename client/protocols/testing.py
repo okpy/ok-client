@@ -6,6 +6,7 @@ import os
 import re
 import sys
 import importlib
+import collections
 from coverage import coverage
 import signal
 
@@ -57,7 +58,7 @@ class TestingProtocol(models.Protocol):
     def test(self, good_env={}, suite=None, case=None):
         test_results = {}
         # all examples to be run will be put in exs
-        exs = {}
+        exs = collections.OrderedDict()
         # use regex to get raw strings organized into suite/case
         self.get_data()
         try:
@@ -73,7 +74,7 @@ class TestingProtocol(models.Protocol):
             test_results[self.tstfile_name] =  self.analyze(suite, case, exs)
         except KeyError as e:
             raise EarlyExit('python3 ok: error: ' 
-                    'Suite/Case number must be valid.'
+                    'Suite/Case label must be valid.'
                     '(Suites: {}, Cases: {})'.format(self.num_suites, self.num_cases))
         return test_results
 
@@ -116,35 +117,35 @@ class TestingProtocol(models.Protocol):
 
     def get_suite_examples(self, suite, case):
         # suite/case specified, so only parse relevant text into Examples
-        exs = {}
-        case_ex = {}
+        exs = collections.OrderedDict()
+        case_ex = collections.OrderedDict()
         # get the shared lines that should impact all the cases in the suite.
-        shrd_txt = self.shared_case_data[str(suite)]
+        shrd_txt = self.shared_case_data[suite]
         if shrd_txt:
             parse_shared = self.parser.parse(shrd_txt.group(0), self.tstfile_name)
             shrd_ex = [i for i in parse_shared if isinstance(i, Example)]
             if shrd_ex:
                 case_ex['shared'] = shrd_ex
         if case:
-            if str(case[0]) not in self.data[str(suite)]:
+            if str(case[0]) not in self.data[suite]:
                  raise KeyError
-            parsed_temp_examples = self.parser.parse(self.data[str(suite)][str(case[0])], self.tstfile_name)
+            parsed_temp_examples = self.parser.parse(self.data[suite][case[0]], self.tstfile_name)
             case_examples = [i for i in parsed_temp_examples if isinstance(i, Example)]
             case_ex[str(case[0])] = case_examples
         else:
-            for itemcase in sorted(self.data[str(suite)].keys()):
-                parsed_temp_examples = self.parser.parse(self.data[str(suite)][itemcase], self.tstfile_name)
+            for itemcase in self.data[suite].keys():
+                parsed_temp_examples = self.parser.parse(self.data[suite][itemcase], self.tstfile_name)
                 case_examples = [i for i in parsed_temp_examples if isinstance(i, Example)]
                 case_ex[itemcase] = case_examples
-        exs[str(suite)] = case_ex
+        exs[suite] = case_ex
         return exs
         
 
     def get_all_examples(self):
         # no suite/case flag, so parses all text into Example objects
-        exs = {}
-        for sui in sorted(self.data.keys()):
-            case_ex = {}
+        exs = collections.OrderedDict()
+        for sui in self.data.keys():
+            case_ex = collections.OrderedDict()
             # get the shared lines that should impact all the cases in the suite.
             shrd_txt = self.shared_case_data[sui]
             if shrd_txt:
@@ -152,7 +153,7 @@ class TestingProtocol(models.Protocol):
                 shrd_ex = [i for i in parse_shared if isinstance(i, Example)]
                 if shrd_ex:
                     case_ex['shared'] = shrd_ex
-            for itemcase in sorted(self.data[sui].keys()):
+            for itemcase in self.data[sui].keys():
                 parsed_temp_examples = self.parser.parse(self.data[sui][itemcase], self.tstfile_name)
                 case_examples = [i for i in parsed_temp_examples if isinstance(i, Example)]
                 case_ex[itemcase] = case_examples
@@ -166,7 +167,7 @@ class TestingProtocol(models.Protocol):
         total_failed = 0
         total_attempted = 0
         case = 'shared'
-        for sui in sorted(exs.keys()):
+        for sui in exs.keys():
             if not total_failed:
                 final_env = dict(self.good_env)
                 if 'shared' in exs[sui].keys():
@@ -176,7 +177,7 @@ class TestingProtocol(models.Protocol):
                     final_env = dict(self.good_env, **dtest.globs)
                     total_failed += result.failed
                     total_attempted += result.attempted
-            for case in sorted(exs[sui].keys()):
+            for case in exs[sui].keys():
                 if case != 'shared':    
                     if not total_failed:
                         example_name = "Suite {}, Case {}".format(sui, case)
@@ -189,16 +190,16 @@ class TestingProtocol(models.Protocol):
     def get_data(self):
         # organizes data into suite/case strings to feed to the parser module
         self.tstfile_name, data_str = self.get_tstfile(self.testloc)
-        self.data = {}
-        self.shared_case_data = {}
+        self.data = collections.OrderedDict()
+        self.shared_case_data = collections.OrderedDict()
         # chunk the file into suites
-        data_suites = re.findall("(Suite\s*([0-9]+))((?:(?!Suite)(.|\n))*)", data_str)
+        data_suites = re.findall("(Suite\s*([\d\w]+))((?:(?!Suite)(.|\n))*)", data_str)
         self.num_suites = len(data_suites)
         self.num_cases = 0
         for curr_suite in data_suites:
-                case_data = {}
+                case_data = collections.OrderedDict()
                 # chunk the suite into cases
-                cases = re.findall("(Case\s*([0-9]+))((?:(?!Case)(.|\n))*)", curr_suite[2])
+                cases = re.findall("(Case\s*([\d\w]+))((?:(?!Case)(.|\n))*)", curr_suite[2])
                 self.num_cases += len(cases)
                 self.shared_case_data[str(curr_suite[1])] = re.match("((?:(?!Case)(.|\n))*)", curr_suite[2])
                 for curr_case in cases:
@@ -263,7 +264,7 @@ class TestingProtocol(models.Protocol):
                 del globals()[key]
 
     def run(self, messages, testloc=CURR_DIR):
-        if self.args.score or self.args.unlock:
+        if self.args.score or self.args.unlock or not self.args.testing:
             return
         # Note: All (and only) .py files given in the src will be tracked and 
         # contribute to coverage statistics

@@ -1,73 +1,68 @@
 This file is for student-created tests. Remember to import the python file(s) 
 you wish to test, along with any other modules you may need.
 Run tests with "python3 ok -t"
+
+IDEAL TEST FILE
+
 --------------------------------------------------------------------------------
-
-Suite 1
-
-	This is a common set up:
+Suite lists
 
 	>>> master = [1, 2, 3]
+	>>> more = [4, 5, 6]
+	
+	Case extend
 
-
-	Case 0
-		>>> x = 1
-		>>> x *=100
-		>>> x
-		100
-		>>> square(3)
-		9
-		>>> master = master[:2]
+		>>> master.extend(more)
 		>>> master
-		[1, 2]
+		[1, 2, 3, 4, 5, 6]
+
+	Case pop
+
 		>>> a = master.pop()
 		>>> a
-		2
-		
+		6
 
-		Ignore this
+Suite algebra
 
+	>>> x = 100
+	>>> y = 200
 
+	Case square
 
-	Case 2
-		>>> a = master.pop()
-		>>> a
-		3
-		>>> master
-		[1, 2]
-		>>> 1 + 3 + 5 + 7 + 9 + 11 + 13 + 15 + 17 + 19
-		100
-		>>> 1 + 1
-		2
-		>>> double(2)
-		4
-		>>> 1
+		>>> square(x)
+		10000
+		>>> square(x - 99)
 		1
-		>>> 100
-		100
 
+	Case double
 
-Suite 2
-	This is a common set up
+		>>> double(y)
+		400
+		>>> dub = double(double(double(x)))
+		>>> dub
+		800
 
-	>>> life = {'key' : 42}
+Suite alpha
+	
+	>>> why = 'not'
 
-	Case 1
-		>>> square(10)
-		100
-	Case 3
-		>>> tosuccess = life['key']
-		>>> tosuccess
-		42
+	Case zeus
 
-Suite 3
-	Case 1
-		>>> cube(2)
-		8
-		>>> hmmm('perhaps')
+		>>> hmmm(why)
 		'01101000 01101101 01101101 01101101'
+		>>> inf_loop(10)
+		'ok'
+
+	Case 1
+
+		>>> cube(0)
+		0
 		>>> neverlucky()
 		7
+
+
+
+
 
 
 

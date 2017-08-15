@@ -79,9 +79,9 @@ def parse_input(command_input=None):
     testing = parser.add_argument_group('running tests')
     testing.add_argument('-q', '--question', type=str, action='append',
                         help="run tests for a specific question")
-    testing.add_argument('--suite', type=int, default=None,
+    testing.add_argument('--suite', type=str, default=None,
                         help="run cases from a specific suite")
-    testing.add_argument('--case', type=int, action='append',
+    testing.add_argument('--case', type=str, action='append',
                         help="run specific cases")
     testing.add_argument('-u', '--unlock', action='store_true',
                         help="unlock tests interactively")
@@ -156,14 +156,11 @@ def parse_input(command_input=None):
     server.add_argument('--update', action='store_true',
                         help="update ok and exit")
 
-    #args.question = 'q01'
-    #args.local = True
     return parser.parse_args(command_input)
 
 def main():
     """Run all relevant aspects of ok.py."""
     args = parse_input()
-
     log.setLevel(logging.DEBUG if args.debug else logging.ERROR)
     log.debug(args)
 

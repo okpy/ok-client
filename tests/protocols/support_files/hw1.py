@@ -10,5 +10,9 @@ def hmmm(x):
 
 def double(x):
     """Return x doubled."""
-    return x*2 
+    return x*2
 
+def inf_loop(x):
+	while False:
+		x = 'Hello'
+	return 'ok'
