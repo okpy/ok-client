@@ -18,7 +18,13 @@ class RateLimitProtocolTest(unittest.TestCase):
         self.cmd_args.restore = False
         self.assignment = mock.Mock(spec=Assignment)
         self.assignment.src = ['foo.py', 'bar.py']
-        self.proto = rate_limit.protocol(self.cmd_args, self.assignment, cooldown=(0,0,2,4))
+        self.proto = rate_limit.protocol(self.cmd_args, self.assignment,
+                hints=(
+                    rate_limit.Hint.NONE,
+                    rate_limit.Hint.NONE,
+                    rate_limit.Hint('a', 2),
+                    rate_limit.Hint('b', 4),
+                    ))
         self.test = mock.Mock(spec=models.Test)
         self.test.name = 'test'
 
@@ -67,7 +73,13 @@ class RateLimitProtocolTest(unittest.TestCase):
     def testSuppressOnUnlock(self):
         # set unlock (-u)
         self.cmd_args.unlock = True
-        self.proto = rate_limit.protocol(self.cmd_args, self.assignment, cooldown=(0,0,2,4))
+        self.proto = rate_limit.protocol(self.cmd_args, self.assignment,
+                hints=(
+                    rate_limit.Hint.NONE,
+                    rate_limit.Hint.NONE,
+                    rate_limit.Hint('a', 2),
+                    rate_limit.Hint('b', 4),
+                    ))
         # successive attempts should not cooldown
         # attempts not tracked when unlocking
         self.make_attempt(self.test, 0)
