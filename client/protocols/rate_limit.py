@@ -5,7 +5,7 @@ import time
 import textwrap
 
 
-COOLDOWN_POLICY = (0, 60,) # uniform 60s cooldown
+COOLDOWN_POLICY = (0, 0, 0, 0, 60, 120, 240) # cooldown per attempt in seconds
 
 
 COOLDOWN_MSG = \
