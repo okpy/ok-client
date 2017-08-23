@@ -41,9 +41,10 @@ to visualize Python's process with
 """
 
 DIAGRAM = \
-"""Try walking through your approach with a friend and drawing
-your solution on the board. Verify that the strategy matches
-with the implementation.
+"""Try walking through your approach with a friend and
+diagramming your solution. Verify that each step matches with
+the implementation by working through smaller examples in the
+interpreter or with your friend.
 """
 
 HINTS = (
