@@ -127,7 +127,9 @@ class Assignment(core.Serializable):
     # rate_limit    -> none
     # scoring       -> none
     # unlock        -> none
+    # testing       -> none
     _PROTOCOLS = [
+        "testing",
         "rate_limit",
         "file_contents",
         "grading",

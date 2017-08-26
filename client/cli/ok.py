@@ -79,9 +79,9 @@ def parse_input(command_input=None):
     testing = parser.add_argument_group('running tests')
     testing.add_argument('-q', '--question', type=str, action='append',
                         help="run tests for a specific question")
-    testing.add_argument('--suite', type=int, default=None,
+    testing.add_argument('--suite', type=str, default=None,
                         help="run cases from a specific suite")
-    testing.add_argument('--case', type=int, action='append',
+    testing.add_argument('--case', type=str, action='append',
                         help="run specific cases")
     testing.add_argument('-u', '--unlock', action='store_true',
                         help="unlock tests interactively")
@@ -89,6 +89,8 @@ def parse_input(command_input=None):
                         help="start the Python interpreter after a failed test")
     testing.add_argument('-v', '--verbose', action='store_true',
                         help="show all tests, not just passing tests")
+    testing.add_argument('-t', '--testing', nargs='?', type=str, const='mytests.rst', 
+                        help='run tests from rst file (default: mytests.rst)')
     testing.add_argument('--all', action='store_true',
                         help="run tests for all questions in config file")
     testing.add_argument('--submit', action='store_true',
@@ -99,6 +101,8 @@ def parse_input(command_input=None):
                         help="submit composition revision")
     testing.add_argument('--timeout', type=int, default=10,
                         help="set the timeout duration (in seconds) for running tests")
+    testing.add_argument('-cov', '--coverage', action='store_true',
+                        help="get suggestions on what lines to add tests for")
 
     # Experiments
     experiment = parser.add_argument_group('experiment options')
@@ -157,7 +161,6 @@ def parse_input(command_input=None):
 def main():
     """Run all relevant aspects of ok.py."""
     args = parse_input()
-
     log.setLevel(logging.DEBUG if args.debug else logging.ERROR)
     log.debug(args)
 

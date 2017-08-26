@@ -28,7 +28,7 @@ class ScoringProtocol(protocol_models.Protocol):
 
         ENV is used by the programatic API for Python doctests only.
         """
-        if not self.args.score:
+        if not self.args.score or self.args.testing:
             return
 
         format.print_line('~')
