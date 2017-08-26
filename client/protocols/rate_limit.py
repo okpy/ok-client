@@ -89,7 +89,7 @@ class RateLimitProtocol(models.Protocol):
         super().__init__(args, assignment)
 
     def run(self, messages):
-        if self.args.score or self.args.unlock:
+        if self.args.score or self.args.unlock or self.args.testing:
             return
         analytics = {}
         tests = self.assignment.specified_tests

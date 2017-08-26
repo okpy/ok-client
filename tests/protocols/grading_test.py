@@ -11,6 +11,7 @@ class GradingProtocolTest(unittest.TestCase):
         self.cmd_args.score = False
         self.cmd_args.unlock = False
         self.cmd_args.restore = False
+        self.cmd_args.testing = False
         self.assignment = mock.Mock()
         self.proto = grading.protocol(self.cmd_args, self.assignment)
 

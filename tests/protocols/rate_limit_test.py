@@ -1,4 +1,4 @@
-"""Tests the UnlockProtocol."""
+"""Tests the RateLimitProtocol."""
 from client.protocols import rate_limit
 from client.sources.common import models
 from client.exceptions import EarlyExit
@@ -16,6 +16,7 @@ class RateLimitProtocolTest(unittest.TestCase):
         self.cmd_args.score = False
         self.cmd_args.unlock = False
         self.cmd_args.restore = False
+        self.cmd_args.testing = False
         self.assignment = mock.Mock(spec=Assignment)
         self.assignment.src = ['foo.py', 'bar.py']
         self.proto = rate_limit.protocol(self.cmd_args, self.assignment,

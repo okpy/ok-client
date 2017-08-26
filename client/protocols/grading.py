@@ -30,7 +30,7 @@ class GradingProtocol(models.Protocol):
         significant for analytics. However, all tests must include the number
         passed, the number of locked tests and the number of failed tests.
         """
-        if self.args.score or self.args.unlock:
+        if self.args.score or self.args.unlock or self.args.testing:
             return
         tests = self.assignment.specified_tests
         for test in tests:
