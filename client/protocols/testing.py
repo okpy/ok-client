@@ -79,10 +79,8 @@ class TestingProtocol(models.Protocol):
         return test_results
 
     def analyze(self, suite, case, examples):
-        rfailed, rattempted = self.run_examples(examples)
+        failed, attempted = self.run_examples(examples)
         self.postcov.stop()
-        failed = rfailed
-        attempted = rattempted
         passed = attempted - failed
         format.print_test_progress_bar( '{} summary'.format(self.tstfile_name), 
                                         passed, failed, verbose=self.verb)
