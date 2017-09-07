@@ -191,9 +191,9 @@ def authenticate(cmd_args, endpoint='', force=False):
     access_token = None
 
     try:
-        if not force:
-            access_token = refresh_local_token(server)
-            assert access_token is not None
+        assert not force
+        access_token = refresh_local_token(server)
+        assert access_token is not None
     except (AssertionError, AuthenticationException) as e:
         print('Performing authentication')
         access_token = perform_oauth(get_code, cmd_args, endpoint)
