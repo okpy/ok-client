@@ -142,25 +142,17 @@ def update_storage(access_token, expires_in, refresh_token):
         }, fp)
 
 def refresh_local_token(server):
-    try:
-        cur_time = int(time.time())
-        access_token, expires_at, refresh_token = get_storage()
-        if cur_time < expires_at - 10:
-            return access_token
-        access_token, expires_in = make_refresh_post(server, refresh_token)
-
-        if not access_token and expires_in:
-            raise AuthenticationException(
-                "Authentication failed and returned an empty token.")
-
-        update_storage(access_token, expires_in, refresh_token)
+    cur_time = int(time.time())
+    access_token, expires_at, refresh_token = get_storage()
+    if cur_time < expires_at - 10:
         return access_token
-    except IOError:
-        return False
-    except AuthenticationException as e:
-        raise e  # Let the main script handle this error
-    except Exception:
-        return False
+    access_token, expires_in = make_refresh_post(server, refresh_token)
+    if not (access_token and expires_in):
+        raise AuthenticationException(
+            "Authentication failed and returned an empty token.")
+
+    update_storage(access_token, expires_in, refresh_token)
+    return access_token
 
 def perform_oauth(code_fn, *args, **kwargs):
     try:
@@ -193,13 +185,14 @@ def authenticate(cmd_args, endpoint='', force=False):
     try:
         assert not force
         access_token = refresh_local_token(server)
-        assert access_token is not None
-    except (AssertionError, AuthenticationException) as e:
+    except Exception:
         print('Performing authentication')
         access_token = perform_oauth(get_code, cmd_args, endpoint)
         email = display_student_email(cmd_args, access_token)
         if not email:
             log.warning('Could not get login email. Try logging in again.')
+
+    log.debug('Authenticated with access token={}'.format(access_token))
 
     return access_token
 
