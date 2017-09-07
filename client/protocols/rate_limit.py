@@ -74,6 +74,8 @@ reflecting on the solution process and how you implemented
 any fixes along the way.
 """
 
+RETRY_THRESHOLD = 0.5 # How long into the cooldown until we switch to RETRY_MSG
+
 
 ###########################
 # Rate Limiting Mechanism #
@@ -87,7 +89,7 @@ class RateLimitProtocol(models.Protocol):
         super().__init__(args, assignment)
 
     def run(self, messages):
-        if self.args.score or self.args.unlock:
+        if self.args.score or self.args.unlock or self.args.testing:
             return
         analytics = {}
         tests = self.assignment.specified_tests
@@ -110,7 +112,7 @@ class RateLimitProtocol(models.Protocol):
         hint = self.hints[attempts % len(self.hints)]
         if attempts and hint.cooldown > elapsed:
             files = ' '.join(self.assignment.src)
-            if elapsed <= 0.1 * hint.cooldown:
+            if elapsed <= RETRY_THRESHOLD * hint.cooldown:
                 raise EarlyExit(COOLDOWN_MSG + hint.text.format(files=files))
             else:
                 raise EarlyExit(hint.text.format(files=files) + RETRY_MSG)
