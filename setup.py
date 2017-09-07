@@ -39,5 +39,6 @@ setup(
     ],
     install_requires=[
         'requests==2.12.4',
+        'coverage==3.7.1'
     ],
 )
