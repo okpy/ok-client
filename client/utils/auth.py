@@ -88,6 +88,7 @@ def make_token_post(server, data):
             error='Authentication Failed',
             error_description=str(e))
     if 'error' in body:
+        log.error(body)
         raise OAuthException(
             error=body.get('error', 'Unknown Error'),
             error_description = body.get('error_description', ''))
@@ -188,10 +189,12 @@ def authenticate(cmd_args, endpoint='', force=False):
     server = server_url(cmd_args)
     network.check_ssl()
     access_token = None
-    if not force:
-        access_token = refresh_local_token(server)
 
-    if not access_token:
+    try:
+        if not force:
+            access_token = refresh_local_token(server)
+            assert access_token is not None
+    except (AssertionError, AuthenticationException) as e:
         print('Performing authentication')
         access_token = perform_oauth(get_code, cmd_args, endpoint)
         email = display_student_email(cmd_args, access_token)
