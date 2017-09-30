@@ -88,6 +88,7 @@ def make_token_post(server, data):
             error='Authentication Failed',
             error_description=str(e))
     if 'error' in body:
+        log.error(body)
         raise OAuthException(
             error=body.get('error', 'Unknown Error'),
             error_description = body.get('error_description', ''))
@@ -141,25 +142,17 @@ def update_storage(access_token, expires_in, refresh_token):
         }, fp)
 
 def refresh_local_token(server):
-    try:
-        cur_time = int(time.time())
-        access_token, expires_at, refresh_token = get_storage()
-        if cur_time < expires_at - 10:
-            return access_token
-        access_token, expires_in = make_refresh_post(server, refresh_token)
-
-        if not access_token and expires_in:
-            raise AuthenticationException(
-                "Authentication failed and returned an empty token.")
-
-        update_storage(access_token, expires_in, refresh_token)
+    cur_time = int(time.time())
+    access_token, expires_at, refresh_token = get_storage()
+    if cur_time < expires_at - 10:
         return access_token
-    except IOError:
-        return False
-    except AuthenticationException as e:
-        raise e  # Let the main script handle this error
-    except Exception:
-        return False
+    access_token, expires_in = make_refresh_post(server, refresh_token)
+    if not (access_token and expires_in):
+        raise AuthenticationException(
+            "Authentication failed and returned an empty token.")
+
+    update_storage(access_token, expires_in, refresh_token)
+    return access_token
 
 def perform_oauth(code_fn, *args, **kwargs):
     try:
@@ -188,15 +181,18 @@ def authenticate(cmd_args, endpoint='', force=False):
     server = server_url(cmd_args)
     network.check_ssl()
     access_token = None
-    if not force:
-        access_token = refresh_local_token(server)
 
-    if not access_token:
+    try:
+        assert not force
+        access_token = refresh_local_token(server)
+    except Exception:
         print('Performing authentication')
         access_token = perform_oauth(get_code, cmd_args, endpoint)
         email = display_student_email(cmd_args, access_token)
         if not email:
             log.warning('Could not get login email. Try logging in again.')
+
+    log.debug('Authenticated with access token={}'.format(access_token))
 
     return access_token
 

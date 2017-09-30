@@ -9,14 +9,14 @@ import importlib
 import collections
 from coverage import coverage
 import signal
-
 ###########################
 #    Testing Mechanism    #
 ###########################
 
 # Must get current dir for Travis to pass, among other reasons
 CURR_DIR = os.getcwd()
-# Users will generally name their test file the following name. 
+
+# Users will generally name their test file the following name.
 # If changing default name, change in ok.py args parse as well
 DEFAULT_TST_FILE = "mytests.rst"
 
@@ -39,8 +39,8 @@ def timeout(seconds_before_timeout):
     return decorate
 
 class TestingProtocol(models.Protocol):
-    """A Protocol that executes doctests as lists of Example objects, supports 
-    suite/case specificity, alternate file testing, and provides users with 
+    """A Protocol that executes doctests as lists of Example objects, supports
+    suite/case specificity, alternate file testing, and provides users with
     details such as cases passed and test coverage.
     """
     def __init__(self, args, assignment):
@@ -82,7 +82,7 @@ class TestingProtocol(models.Protocol):
         failed, attempted = self.run_examples(examples)
         self.postcov.stop()
         passed = attempted - failed
-        format.print_test_progress_bar( '{} summary'.format(self.tstfile_name), 
+        format.print_test_progress_bar( '{} summary'.format(self.tstfile_name),
                                         passed, failed, verbose=self.verb)
         # only support test coverage stats when running everything
         if not suite:
@@ -93,8 +93,8 @@ class TestingProtocol(models.Protocol):
                 else:
                     self.give_suggestions()
 
-        return {'suites_total' : self.num_suites, 'cases_total': self.num_cases, 
-                'exs_failed' : failed, 'exs_passed' : passed, 'attempted' : attempted, 
+        return {'suites_total' : self.num_suites, 'cases_total': self.num_cases,
+                'exs_failed' : failed, 'exs_passed' : passed, 'attempted' : attempted,
                 'actual_cov' : self.lines_exec, 'total_cov' : self.lines_total}
 
     def give_suggestions(self):
@@ -108,7 +108,7 @@ class TestingProtocol(models.Protocol):
             missing = [i for i in missing_post if i in missing_pre]
             if missing:
                 print('   File: {}'.format(file))
-                missing_string = '      Line(s): ' + ','.join(map(str, missing)) 
+                missing_string = '      Line(s): ' + ','.join(map(str, missing))
                 print(missing_string)
 
 
@@ -137,7 +137,7 @@ class TestingProtocol(models.Protocol):
                 case_ex[itemcase] = case_examples
         exs[suite] = case_ex
         return exs
-        
+
 
     def get_all_examples(self):
         # no suite/case flag, so parses all text into Example objects
@@ -161,7 +161,7 @@ class TestingProtocol(models.Protocol):
     # catch inf loops/ recur err
     @timeout(10)
     def run_examples(self, exs):
-        # runs the Example objects, keeps track of right/wrong etc 
+        # runs the Example objects, keeps track of right/wrong etc
         total_failed = 0
         total_attempted = 0
         case = 'shared'
@@ -233,7 +233,7 @@ class TestingProtocol(models.Protocol):
     def get_coverage(self, cov):
         # returns executable lines, executed_lines
         lines_run = 0
-        total_lines = 0 
+        total_lines = 0
         for file in self.clean_src:
             file_cov = cov.analysis2(file + '.py')
             lines = len(file_cov[1])
@@ -265,7 +265,7 @@ class TestingProtocol(models.Protocol):
     def run(self, messages, testloc=CURR_DIR):
         if self.args.score or self.args.unlock or not self.args.testing:
             return
-        # Note: All (and only) .py files given in the src will be tracked and 
+        # Note: All (and only) .py files given in the src will be tracked and
         # contribute to coverage statistics
         self.clean_src = [i[:-3] for i in self.assignment.src if i.endswith('.py')]
         # Since importing boosts coverage, we make an additional precov to know

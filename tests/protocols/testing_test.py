@@ -27,7 +27,7 @@ class TestingProtocolTest(unittest.TestCase):
     def callRun(self):
         messages = {}
         self.proto.run(messages, self.PATH)
-        print(self.PATH)
+        #print(self.PATH)
         self.assertIn('testing', messages)
         return messages['testing']
 
