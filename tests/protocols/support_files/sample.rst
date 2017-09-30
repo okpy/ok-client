@@ -39,11 +39,9 @@ Suite algebra
 
 	>>> x = 100
 	>>> y = 200
-<<<<<<< HEAD
 	>>> from hw1 import *
 	>>> from hw1_extra import *
-=======
->>>>>>> 56900cad24c55df0e4c85d308fda367ee4f61169
+
 
 	                                                     Case SQUare
 
@@ -63,11 +61,8 @@ Suite algebra
 Suite alpha
 	
 >>> why = 'not'
-<<<<<<< HEAD
 >>> from hw1 import *
 >>> from hw1_extra import *
-=======
->>>>>>> 56900cad24c55df0e4c85d308fda367ee4f61169
 
 Case zeus
 

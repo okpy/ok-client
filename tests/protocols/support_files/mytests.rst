@@ -7,11 +7,8 @@ IDEAL TEST FILE
 --------------------------------------------------------------------------------
 Suite lists
 
-<<<<<<< HEAD
 	>>> from hw1 import *
 	>>> from hw1_extra import *
-=======
->>>>>>> 56900cad24c55df0e4c85d308fda367ee4f61169
 	>>> master = [1, 2, 3]
 	>>> more = [4, 5, 6]
 	
@@ -28,13 +25,11 @@ Suite lists
 		6
 
 Suite algebra
-<<<<<<< HEAD
+
 	
 	>>> from hw1 import *
 	>>> from hw1_extra import *
-=======
 
->>>>>>> 56900cad24c55df0e4c85d308fda367ee4f61169
 	>>> x = 100
 	>>> y = 200
 
@@ -55,11 +50,9 @@ Suite algebra
 
 Suite alpha
 	
-<<<<<<< HEAD
+
 	>>> from hw1 import *
 	>>> from hw1_extra import *
-=======
->>>>>>> 56900cad24c55df0e4c85d308fda367ee4f61169
 	>>> why = 'not'
 
 	Case zeus
