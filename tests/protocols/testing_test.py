@@ -27,18 +27,19 @@ class TestingProtocolTest(unittest.TestCase):
     def callRun(self):
         messages = {}
         self.proto.run(messages, self.PATH)
-        #print(self.PATH)
+        print(self.PATH)
         self.assertIn('testing', messages)
         return messages['testing']
 
     def testTest(self):
         #can't test for coverage twice, doesn't reset properly
+        #{'mytests.rst': {'actual_cov': 7, 'attempted': 24, 'exs_passed': 23, 'total_cov': 7, 'cases_total': 6, 'suites_total': 3, 'exs_failed': 1}}
         #self.run_all(file='sample.rst', expected={'sample.rst': {'exs_failed': 1, 'total_cov': 7, 'attempted': 13, 'suites_total': 4, 'exs_passed': 12, 'actual_cov': 2, 'cases_total': 6}})
-        self.run_all(file=DEFAULT_TST_FILE, expected={'mytests.rst': {'total_cov': 7, 'actual_cov': 7, 'exs_failed': 1, 'suites_total': 3, 'exs_passed': 17, 'attempted': 18, 'cases_total': 6}})
+        self.run_all(file=DEFAULT_TST_FILE, expected={'mytests.rst': {'actual_cov': 7, 'cases_total': 6, 'exs_failed': 1, 'total_cov': 7, 'exs_passed': 23, 'suites_total': 3, 'attempted': 24}})
         self.run_suite_and_case(file=DEFAULT_TST_FILE, suite='algebra', 
-                                 case='double', expected={'mytests.rst': {'actual_cov': 0, 'suites_total': 3, 'total_cov': 0, 'exs_failed': 0, 'attempted': 5, 'exs_passed': 5, 'cases_total': 6}})
+                                 case='double', expected={'mytests.rst': {'suites_total': 3, 'cases_total': 6, 'actual_cov': 0, 'attempted': 7, 'exs_failed': 0, 'total_cov': 0, 'exs_passed': 7}})
         self.run_suite_and_case(file='sample.rst', suite='algebra', 
-                             case='double', expected={'sample.rst': {'cases_total': 6, 'total_cov': 0, 'exs_passed': 4, 'suites_total': 4, 'actual_cov': 0, 'exs_failed': 1, 'attempted': 5}})
+                             case='double', expected={'sample.rst': {'total_cov': 0, 'suites_total': 4, 'attempted': 7, 'actual_cov': 0, 'exs_failed': 1, 'exs_passed': 6, 'cases_total': 6}})
 
 
     def run_all(self, file, expected):

@@ -79,10 +79,8 @@ class TestingProtocol(models.Protocol):
         return test_results
 
     def analyze(self, suite, case, examples):
-        rfailed, rattempted = self.run_examples(examples)
+        failed, attempted = self.run_examples(examples)
         self.postcov.stop()
-        failed = rfailed
-        attempted = rattempted
         passed = attempted - failed
         format.print_test_progress_bar( '{} summary'.format(self.tstfile_name), 
                                         passed, failed, verbose=self.verb)
@@ -258,7 +256,8 @@ class TestingProtocol(models.Protocol):
                 to_import = [name for name in module_dict if not name.startswith('_')]
             globals().update({name: module_dict[name] for name in to_import})
         diff = globals().keys() - default.keys() - {'default'}
-        self.good_env = { key: globals()[key] for key in diff}
+        self.good_env = {}
+        #self.good_env = { key: globals()[key] for key in diff} (Uncomment for autoimport)
         for key in set(globals().keys()):
             if key not in default and key != "default":
                 del globals()[key]
@@ -271,8 +270,8 @@ class TestingProtocol(models.Protocol):
         self.clean_src = [i[:-3] for i in self.assignment.src if i.endswith('.py')]
         # Since importing boosts coverage, we make an additional precov to know
         # how much to subtract to get to the true coverage
-        self.precov = coverage(source = self.clean_src)
-        self.postcov = coverage(source = self.clean_src)
+        self.precov = coverage(source = [os.path.join(testloc, file + '.py') for file in self.clean_src])
+        self.postcov = coverage(source = [os.path.join(testloc, file + '.py') for file in self.clean_src])
         self.testloc = testloc
         self.postcov.start()
         self.precov.start()
