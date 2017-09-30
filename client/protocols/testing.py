@@ -73,7 +73,7 @@ class TestingProtocol(models.Protocol):
             # gets analytics to be returned
             test_results[self.tstfile_name] =  self.analyze(suite, case, exs)
         except KeyError as e:
-            raise EarlyExit('python3 ok: error: ' 
+          raise EarlyExit('python3 ok: error: ' 
                     'Suite/Case label must be valid.'
                     '(Suites: {}, Cases: {})'.format(self.num_suites, self.num_cases))
         return test_results
@@ -92,9 +92,8 @@ class TestingProtocol(models.Protocol):
                     print("Maximum coverage achieved! Great work!")
                 else:
                     self.give_suggestions()
-
         return {'suites_total' : self.num_suites, 'cases_total': self.num_cases, 
-                'exs_failed' : failed, 'exs_passed' : passed, 'attempted' : attempted, 
+                'exs_failed' : failed, 'exs_passed' : passed, 'attempted' : attempted,
                 'actual_cov' : self.lines_exec, 'total_cov' : self.lines_total}
 
     def give_suggestions(self):
@@ -134,7 +133,7 @@ class TestingProtocol(models.Protocol):
                 case_ex[itemcase] = case_examples
         exs[suite] = case_ex
         return exs
-        
+
 
     def get_all_examples(self):
         # no suite/case flag, so parses all text into Example objects
@@ -173,7 +172,7 @@ class TestingProtocol(models.Protocol):
                     total_failed += result.failed
                     total_attempted += result.attempted
             for case in exs[sui].keys():
-                if case != 'shared':    
+                if case != 'shared':
                     if not total_failed:
                         example_name = "Suite {}, Case {}".format(sui, case)
                         dtest = DocTest(exs[sui][case], final_env, example_name, None, None, None)
@@ -238,10 +237,10 @@ class TestingProtocol(models.Protocol):
             lines_run += lines - lines_not_run
         return total_lines, lines_run
 
-
     def run(self, messages, testloc=CURR_DIR):
         if self.args.score or self.args.unlock or not self.args.testing:
             return
+
         # Note: All (and only) .py files given in the src will be tracked and 
         # contribute to coverage statistics
         self.clean_src = [i[:-3] for i in self.assignment.src if i.endswith('.py')]
