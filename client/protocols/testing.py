@@ -80,7 +80,7 @@ class TestingProtocol(models.Protocol):
 
     def analyze(self, suite, case, examples):
         failed, attempted = self.run_examples(examples)
-        self.postcov.stop()
+        self.cov.stop()
         passed = attempted - failed
         format.print_test_progress_bar( '{} summary'.format(self.tstfile_name), 
                                         passed, failed, verbose=self.verb)
@@ -101,14 +101,11 @@ class TestingProtocol(models.Protocol):
         print("Consider adding tests for the following:")
         for file in self.clean_src:
             file += '.py'
-            cov_stats_post = self.postcov.analysis2(file)
-            cov_stats_pre = self.precov.analysis2(file)
-            missing_post = cov_stats_post[3]
-            missing_pre = cov_stats_pre[3]
-            missing = [i for i in missing_post if i in missing_pre]
-            if missing:
+            cov_stats = self.cov.analysis2(file)
+            missing_cov = cov_stats[3]
+            if missing_cov:
                 print('   File: {}'.format(file))
-                missing_string = '      Line(s): ' + ','.join(map(str, missing)) 
+                missing_string = '      Line(s): ' + ','.join(map(str, missing_cov)) 
                 print(missing_string)
 
 
@@ -223,10 +220,9 @@ class TestingProtocol(models.Protocol):
 
     def print_coverage(self):
         # prints the coverage summary by diffing the two coverage trackers
-        lines, post_exec = self.get_coverage(self.postcov)
-        lines, default_exec = self.get_coverage(self.precov)
-        self.lines_total = lines - default_exec
-        self.lines_exec = post_exec
+        lines, executed = self.get_coverage(self.cov)
+        self.lines_total = lines
+        self.lines_exec = executed
         format.print_coverage_bar( 'Coverage summary', 
             self.lines_exec, self.lines_total,verbose=self.verb)
 
@@ -242,25 +238,6 @@ class TestingProtocol(models.Protocol):
             lines_run += lines - lines_not_run
         return total_lines, lines_run
 
-    def execute_imports(self):
-        # imports py modules into good_env
-        # imports must be direct, no using exec(), for coverage to track lines
-        default = dict(globals())
-        sys.path.insert(0, self.testloc)
-        for mod in self.clean_src:
-            temp_mod = importlib.import_module(mod)
-            module_dict = temp_mod.__dict__
-            try:
-                to_import = temp_mod.__all__
-            except AttributeError:
-                to_import = [name for name in module_dict if not name.startswith('_')]
-            globals().update({name: module_dict[name] for name in to_import})
-        diff = globals().keys() - default.keys() - {'default'}
-        self.good_env = {}
-        #self.good_env = { key: globals()[key] for key in diff} (Uncomment for autoimport)
-        for key in set(globals().keys()):
-            if key not in default and key != "default":
-                del globals()[key]
 
     def run(self, messages, testloc=CURR_DIR):
         if self.args.score or self.args.unlock or not self.args.testing:
@@ -268,19 +245,10 @@ class TestingProtocol(models.Protocol):
         # Note: All (and only) .py files given in the src will be tracked and 
         # contribute to coverage statistics
         self.clean_src = [i[:-3] for i in self.assignment.src if i.endswith('.py')]
-        # Since importing boosts coverage, we make an additional precov to know
-        # how much to subtract to get to the true coverage
-        self.precov = coverage(source = [os.path.join(testloc, file + '.py') for file in self.clean_src])
-        self.postcov = coverage(source = [os.path.join(testloc, file + '.py') for file in self.clean_src])
+        self.cov = coverage(source=[testloc], include=[file + '.py' for file in self.clean_src])
         self.testloc = testloc
-        self.postcov.start()
-        self.precov.start()
-        self.execute_imports()
-        # we stop precov tracker here so we can later subract out the influence
-        # of executing imports (aka runs function definitions)
-        self.precov.stop()
+        self.cov.start()
         analytics = self.test(self.good_env, self.args.suite, self.args.case)
         messages['testing'] = analytics
 
 protocol = TestingProtocol
-
