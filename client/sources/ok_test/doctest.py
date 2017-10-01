@@ -65,16 +65,17 @@ class DoctestSuite(models.Suite):
                 log.info('Case {} is locked'.format(i))
                 results['locked'] += 1
                 continue
-
-            success = self._run_case(test_name, suite_number,
-                                     case, i + 1)
-            if not success and self.interactive:
-                self.console.interact()
-
-            if success:
-                results['passed'] += 1
+            try:
+                success = self._run_case(test_name, suite_number, case, i + 1)
+                if not success and self.interactive:
+                    self.console.interact()
+            except ConsoleException as e:
+                pass
             else:
-                results['failed'] += 1
+                if success:
+                    results['passed'] += 1
+                else:
+                    results['failed'] += 1
 
             if not success and not self.verbose:
                 # Stop at the first failed test

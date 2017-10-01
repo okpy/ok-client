@@ -221,13 +221,10 @@ class Console(object):
             if isinstance(line, str):
                 if current and (line.startswith(self.PS1) or not line):
                     # Previous prompt ends when PS1 or a blank line occurs
-                    try:
-                        if compare_all:
-                            self._compare(CodeAnswer(), '\n'.join(current))
-                        else:
-                            self.evaluate('\n'.join(current))
-                    except ConsoleException:
-                        return False
+                    if compare_all:
+                        self._compare(CodeAnswer(), '\n'.join(current))
+                    else:
+                        self.evaluate('\n'.join(current))
                     current = []
                 if line:
                     print(line)
@@ -235,10 +232,7 @@ class Console(object):
                 current.append(line)
             elif isinstance(line, CodeAnswer):
                 assert len(current) > 0, 'Answer without a prompt'
-                try:
-                    self._compare(line, '\n'.join(current))
-                except ConsoleException:
-                    return False
+                self._compare(line, '\n'.join(current))
                 current = []
         return True
 

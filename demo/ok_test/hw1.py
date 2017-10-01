@@ -2,7 +2,7 @@
 
 def square(x):
     """Return x squared."""
-    return x * x
+    return x *
 
 def double(x):
     """Return x doubled."""
