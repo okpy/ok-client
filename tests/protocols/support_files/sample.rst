@@ -39,6 +39,9 @@ Suite algebra
 
 	>>> x = 100
 	>>> y = 200
+	>>> from hw1 import *
+	>>> from hw1_extra import *
+
 
 	                                                     Case SQUare
 
@@ -58,6 +61,8 @@ Suite algebra
 Suite alpha
 	
 >>> why = 'not'
+>>> from hw1 import *
+>>> from hw1_extra import *
 
 Case zeus
 

@@ -7,9 +7,8 @@ import re
 import sys
 import importlib
 import collections
-import signal
-
 from coverage import coverage
+import signal
 
 ###########################
 #    Testing Mechanism    #
@@ -17,6 +16,7 @@ from coverage import coverage
 
 # Must get current dir for Travis to pass, among other reasons
 CURR_DIR = os.getcwd()
+
 # Users will generally name their test file the following name.
 # If changing default name, change in ok.py args parse as well
 DEFAULT_TST_FILE = "mytests.rst"
@@ -40,8 +40,8 @@ def timeout(seconds_before_timeout):
     return decorate
 
 class TestingProtocol(models.Protocol):
-    """A Protocol that executes doctests as lists of Example objects, supports
-    suite/case specificity, alternate file testing, and provides users with
+    """A Protocol that executes doctests as lists of Example objects, supports 
+    suite/case specificity, alternate file testing, and provides users with 
     details such as cases passed and test coverage.
     """
     def __init__(self, args, assignment):
@@ -67,23 +67,23 @@ class TestingProtocol(models.Protocol):
                 exs = self.get_suite_examples(suite, case)
             elif case:
                 # No support for cases without their suite
-                raise EarlyExit('python3 ok: error: '
+                raise EarlyExit('python3 ok: error: ' 
                     'Please specify suite for given case ({}).'.format(case[0]))
             else:
                 exs = self.get_all_examples()
             # gets analytics to be returned
             test_results[self.tstfile_name] =  self.analyze(suite, case, exs)
         except KeyError as e:
-            raise EarlyExit('python3 ok: error: '
+            raise EarlyExit('python3 ok: error: ' 
                     'Suite/Case label must be valid.'
                     '(Suites: {}, Cases: {})'.format(self.num_suites, self.num_cases))
         return test_results
 
     def analyze(self, suite, case, examples):
         failed, attempted = self.run_examples(examples)
-        self.postcov.stop()
+        self.cov.stop()
         passed = attempted - failed
-        format.print_test_progress_bar( '{} summary'.format(self.tstfile_name),
+        format.print_test_progress_bar( '{} summary'.format(self.tstfile_name), 
                                         passed, failed, verbose=self.verb)
         # only support test coverage stats when running everything
         if not suite:
@@ -93,8 +93,7 @@ class TestingProtocol(models.Protocol):
                     print("Maximum coverage achieved! Great work!")
                 else:
                     self.give_suggestions()
-
-        return {'suites_total' : self.num_suites, 'cases_total': self.num_cases,
+        return {'suites_total' : self.num_suites, 'cases_total': self.num_cases, 
                 'exs_failed' : failed, 'exs_passed' : passed, 'attempted' : attempted,
                 'actual_cov' : self.lines_exec, 'total_cov' : self.lines_total}
 
@@ -102,14 +101,11 @@ class TestingProtocol(models.Protocol):
         print("Consider adding tests for the following:")
         for file in self.clean_src:
             file += '.py'
-            cov_stats_post = self.postcov.analysis2(file)
-            cov_stats_pre = self.precov.analysis2(file)
-            missing_post = cov_stats_post[3]
-            missing_pre = cov_stats_pre[3]
-            missing = [i for i in missing_post if i in missing_pre]
-            if missing:
+            cov_stats = self.cov.analysis2(file)
+            missing_cov = cov_stats[3]
+            if missing_cov:
                 print('   File: {}'.format(file))
-                missing_string = '      Line(s): ' + ','.join(map(str, missing))
+                missing_string = '      Line(s): ' + ','.join(map(str, missing_cov)) 
                 print(missing_string)
 
 
@@ -224,17 +220,16 @@ class TestingProtocol(models.Protocol):
 
     def print_coverage(self):
         # prints the coverage summary by diffing the two coverage trackers
-        lines, post_exec = self.get_coverage(self.postcov)
-        lines, default_exec = self.get_coverage(self.precov)
-        self.lines_total = lines - default_exec
-        self.lines_exec = post_exec
-        format.print_coverage_bar( 'Coverage summary',
+        lines, executed = self.get_coverage(self.cov)
+        self.lines_total = lines
+        self.lines_exec = executed
+        format.print_coverage_bar( 'Coverage summary', 
             self.lines_exec, self.lines_total,verbose=self.verb)
 
     def get_coverage(self, cov):
         # returns executable lines, executed_lines
         lines_run = 0
-        total_lines = 0
+        total_lines = 0 
         for file in self.clean_src:
             file_cov = cov.analysis2(file + '.py')
             lines = len(file_cov[1])
@@ -243,44 +238,18 @@ class TestingProtocol(models.Protocol):
             lines_run += lines - lines_not_run
         return total_lines, lines_run
 
-    def execute_imports(self):
-        # imports py modules into good_env
-        # imports must be direct, no using exec(), for coverage to track lines
-        default = dict(globals())
-        sys.path.insert(0, self.testloc)
-        for mod in self.clean_src:
-            temp_mod = importlib.import_module(mod)
-            module_dict = temp_mod.__dict__
-            try:
-                to_import = temp_mod.__all__
-            except AttributeError:
-                to_import = [name for name in module_dict if not name.startswith('_')]
-            globals().update({name: module_dict[name] for name in to_import})
-        diff = globals().keys() - default.keys() - {'default'}
-        self.good_env = { key: globals()[key] for key in diff}
-        for key in set(globals().keys()):
-            if key not in default and key != "default":
-                del globals()[key]
 
     def run(self, messages, testloc=CURR_DIR):
         if self.args.score or self.args.unlock or not self.args.testing:
             return
-        # Note: All (and only) .py files given in the src will be tracked and
+
+        # Note: All (and only) .py files given in the src will be tracked and 
         # contribute to coverage statistics
         self.clean_src = [i[:-3] for i in self.assignment.src if i.endswith('.py')]
-        # Since importing boosts coverage, we make an additional precov to know
-        # how much to subtract to get to the true coverage
-        self.precov = coverage(source = self.clean_src)
-        self.postcov = coverage(source = self.clean_src)
+        self.cov = coverage(source=[testloc], include=[file + '.py' for file in self.clean_src])
         self.testloc = testloc
-        self.postcov.start()
-        self.precov.start()
-        self.execute_imports()
-        # we stop precov tracker here so we can later subract out the influence
-        # of executing imports (aka runs function definitions)
-        self.precov.stop()
+        self.cov.start()
         analytics = self.test(self.good_env, self.args.suite, self.args.case)
         messages['testing'] = analytics
 
 protocol = TestingProtocol
-
