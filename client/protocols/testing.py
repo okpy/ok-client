@@ -16,7 +16,8 @@ import signal
 
 # Must get current dir for Travis to pass, among other reasons
 CURR_DIR = os.getcwd()
-# Users will generally name their test file the following name. 
+
+# Users will generally name their test file the following name.
 # If changing default name, change in ok.py args parse as well
 DEFAULT_TST_FILE = "mytests.rst"
 
@@ -73,7 +74,7 @@ class TestingProtocol(models.Protocol):
             # gets analytics to be returned
             test_results[self.tstfile_name] =  self.analyze(suite, case, exs)
         except KeyError as e:
-          raise EarlyExit('python3 ok: error: ' 
+            raise EarlyExit('python3 ok: error: ' 
                     'Suite/Case label must be valid.'
                     '(Suites: {}, Cases: {})'.format(self.num_suites, self.num_cases))
         return test_results
@@ -157,7 +158,7 @@ class TestingProtocol(models.Protocol):
     # catch inf loops/ recur err
     @timeout(10)
     def run_examples(self, exs):
-        # runs the Example objects, keeps track of right/wrong etc 
+        # runs the Example objects, keeps track of right/wrong etc
         total_failed = 0
         total_attempted = 0
         case = 'shared'
@@ -236,6 +237,7 @@ class TestingProtocol(models.Protocol):
             total_lines += lines
             lines_run += lines - lines_not_run
         return total_lines, lines_run
+
 
     def run(self, messages, testloc=CURR_DIR):
         if self.args.score or self.args.unlock or not self.args.testing:

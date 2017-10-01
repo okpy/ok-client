@@ -7,6 +7,7 @@ IDEAL TEST FILE
 --------------------------------------------------------------------------------
 Suite lists
 
+
 	>>> from hw1 import *
 	>>> from hw1_extra import *
 	>>> master = [1, 2, 3]
@@ -25,6 +26,7 @@ Suite lists
 		6
 
 Suite algebra
+
 
 	
 	>>> from hw1 import *

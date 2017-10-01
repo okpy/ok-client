@@ -51,6 +51,7 @@ class TestingProtocolTest(unittest.TestCase):
         self.run_suite_and_case(file='sample.rst', suite='algebra', 
                              case='double', expected={'sample.rst': {'total_cov': 0, 'suites_total': 4, 'attempted': 7, 'actual_cov': 0, 'exs_failed': 1, 'exs_passed': 6, 'cases_total': 6}})
 
+
     def run_all(self, file, expected):
         self.cmd_args.testing = file
         self.cmd_args.suite = None
