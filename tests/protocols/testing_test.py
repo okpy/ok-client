@@ -34,7 +34,7 @@ class TestingProtocolTest(unittest.TestCase):
         self.PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'support_files')
 
     def callRun(self):
-        self.change_dir("protocols/support_files")
+        self.change_dir("tests/protocols/support_files")
         messages = {}
         self.proto.run(messages, self.PATH)
         self.assertIn('testing', messages)
