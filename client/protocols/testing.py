@@ -21,20 +21,29 @@ CURR_DIR = os.getcwd()
 # If changing default name, change in ok.py args parse as well
 DEFAULT_TST_FILE = "mytests.rst"
 
+def conditionally(dec, cond):
+    def resdec(f):
+        if not cond:
+            return f
+        return dec(f)
+    return resdec
+
+
 def timeout(seconds_before_timeout):
     """www.saltycrane.com/blog/2010/04/using-python-timeout-decorator-uploading-s3/"""
     def decorate(f):
         def handler(signum, frame):
             raise EarlyExit("Test examples timed out!")
         def new_f(*args, **kwargs):
-            old = signal.signal(signal.SIGALRM, handler)
-            signal.alarm(seconds_before_timeout)
-            try:
-                result = f(*args, **kwargs)
-            finally:
-                signal.signal(signal.SIGALRM, old)
-            signal.alarm(0)
-            return result
+            if os.name != 'nt':
+                old = signal.signal(signal.SIGALRM, handler)
+                signal.alarm(seconds_before_timeout)
+                try:
+                    result = f(*args, **kwargs)
+                finally:
+                    signal.signal(signal.SIGALRM, old)
+                signal.alarm(0)
+                return result
         new_f.__name__ = f.__name__
         return new_f
     return decorate
@@ -156,7 +165,7 @@ class TestingProtocol(models.Protocol):
         return exs
 
     # catch inf loops/ recur err
-    @timeout(10)
+    @conditionally(timeout(10), os.name != 'nt')
     def run_examples(self, exs):
         # runs the Example objects, keeps track of right/wrong etc
         total_failed = 0
