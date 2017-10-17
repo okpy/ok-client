@@ -88,7 +88,6 @@ def make_token_post(server, data):
             error='Authentication Failed',
             error_description=str(e))
     if 'error' in body:
-        log.error(body)
         raise OAuthException(
             error=body.get('error', 'Unknown Error'),
             error_description = body.get('error_description', ''))
@@ -204,7 +203,11 @@ def notebook_authenticate(cmd_args, force=False):
     network.check_ssl()
     access_token = None
     if not force:
-        access_token = refresh_local_token(server)
+        try:
+            access_token = refresh_local_token(server)
+        except OAuthException:
+            # Account for Invalid Grant Error During make_token_post
+            return notebook_authenticate(cmd_args, force=True)
 
     if not access_token:
         access_token = perform_oauth(
