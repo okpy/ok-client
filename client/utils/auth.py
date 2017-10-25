@@ -199,7 +199,7 @@ def authenticate(cmd_args, endpoint='', force=False):
 def notebook_authenticate(cmd_args, force=False, silent=True):
     """ Similiar to authenticate but prints student emails after
     all calls and uses a different way to get codes. If SILENT is True,
-    it will supprese the error messege and redirect to FORCE=True
+    it will suppress the error message and redirect to FORCE=True
     """
     server = server_url(cmd_args)
     network.check_ssl()
