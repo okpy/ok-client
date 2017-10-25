@@ -211,7 +211,7 @@ def notebook_authenticate(cmd_args, force=False, silent=True):
             # Account for Invalid Grant Error During make_token_post
             if not silent:
                 raise e
-            return notebook_authenticate(cmd_args, force=True)
+            return notebook_authenticate(cmd_args, force=True, silent=False)
 
     if not access_token:
         access_token = perform_oauth(
