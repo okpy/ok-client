@@ -186,6 +186,7 @@ class OkTest(models.Test):
             os.remove(self.file)
             os.rename(test_tmp, self.file)
         else:
+            # Use an atomic rename operation to prevent test corruption
             os.replace(test_tmp, self.file)
 
     @property
