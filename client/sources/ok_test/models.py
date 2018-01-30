@@ -179,8 +179,9 @@ class OkTest(models.Test):
         with open(test_tmp, 'w', encoding='utf-8') as f:
             f.write('test = {}\n'.format(json))
 
-        # Use an atomic rename operation to prevent test corruption
-        os.replace(test_tmp, self.file)
+        # Remove the file then rename instead of os.replace (ref issue #339)
+        os.remove(self.file)
+        os.rename(test_tmp, self.file)
 
     @property
     def unique_id_prefix(self):
