@@ -179,9 +179,14 @@ class OkTest(models.Test):
         with open(test_tmp, 'w', encoding='utf-8') as f:
             f.write('test = {}\n'.format(json))
 
-        # Remove the file then rename instead of os.replace (ref issue #339)
-        os.remove(self.file)
-        os.rename(test_tmp, self.file)
+        # Try to use os.replace, but if on Windows manually remove then rename
+        # (ref issue #339)
+        if os.name == 'nt':
+        # TODO(colin) Add additional error handling in case process gets killed mid remove/rename
+            os.remove(self.file)
+            os.rename(test_tmp, self.file)
+        else:
+            os.replace(test_tmp, self.file)
 
     @property
     def unique_id_prefix(self):
