@@ -258,8 +258,8 @@ class Suite(core.Serializable):
             print(''.join(output_log))
         if not success:
             short_name = self.test.get_short_name()
-            # TODO: Change when in notebook mode, re-enable
-            # print('Run only this test case with '
-            #     '"python3 ok -q {} --suite {} --case {}"'.format(
-            #         short_name, suite_number, case_number))
+            # TODO: Change when in notebook mode
+            print('Run only this test case with '
+                '"python3 ok -q {} --suite {} --case {}"'.format(
+                    short_name, suite_number, case_number))
         return success
