@@ -196,15 +196,22 @@ def authenticate(cmd_args, endpoint='', force=False):
 
     return access_token
 
-def notebook_authenticate(cmd_args, force=False):
+def notebook_authenticate(cmd_args, force=False, silent=True):
     """ Similiar to authenticate but prints student emails after
-    all calls and uses a different way to get codes.
+    all calls and uses a different way to get codes. If SILENT is True,
+    it will suppress the error message and redirect to FORCE=True
     """
     server = server_url(cmd_args)
     network.check_ssl()
     access_token = None
     if not force:
-        access_token = refresh_local_token(server)
+        try:
+            access_token = refresh_local_token(server)
+        except OAuthException as e:
+            # Account for Invalid Grant Error During make_token_post
+            if not silent:
+                raise e
+            return notebook_authenticate(cmd_args, force=True, silent=False)
 
     if not access_token:
         access_token = perform_oauth(

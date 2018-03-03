@@ -9,6 +9,8 @@ import time
 import os
 import unittest
 
+disabled = unittest.skip("rate limiting disabled")
+
 class RateLimitProtocolTest(unittest.TestCase):
     def setUp(self):
         os.remove('.ok_storage') if os.path.exists('.ok_storage') else None
@@ -45,6 +47,7 @@ class RateLimitProtocolTest(unittest.TestCase):
             self.callRun()
         self.assertTrue(storage.get(test.name, 'attempts', 0) == attempts, 'attempts not correct')
 
+    @disabled
     def testManyAttempts(self):
         self.make_attempt(self.test, 1)
         self.make_attempt(self.test, 2, succeeds=True)
@@ -59,6 +62,7 @@ class RateLimitProtocolTest(unittest.TestCase):
         time.sleep(4)
         self.make_attempt(self.test, 5, succeeds=True)
 
+    @disabled
     def testSuppressOnCorrect(self):
         self.make_attempt(self.test, 1)
         self.make_attempt(self.test, 2, succeeds=True)
@@ -71,6 +75,7 @@ class RateLimitProtocolTest(unittest.TestCase):
         time.sleep(2)
         self.make_attempt(self.test, 3, succeeds=True)
 
+    @disabled
     def testSuppressOnUnlock(self):
         # set unlock (-u)
         self.cmd_args.unlock = True

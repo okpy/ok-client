@@ -37,7 +37,7 @@ class GradingProtocol(models.Protocol):
             if self.args.suite and hasattr(test, 'suites'):
                 test.run_only = self.args.suite
                 try:
-                    suite = test.suites[self.args.suite - 1]
+                    suite = test.suites[int(self.args.suite) - 1]
                 except IndexError as e:
                     sys.exit(('python3 ok: error: '
                         'Suite number must be valid.({})'.format(len(test.suites))))
