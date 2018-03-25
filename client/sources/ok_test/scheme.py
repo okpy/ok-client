@@ -33,6 +33,10 @@ class SchemeConsole(interpreter.Console):
         Loads the Scheme module before loading any code.
         """
         self._import_scheme()
+        try:
+            self._output_fn = self.scheme.repl_str
+        except:
+            pass
         super().load(code, setup, teardown)
         self._frame = self.scheme.create_global_frame()
 
