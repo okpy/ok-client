@@ -20,7 +20,10 @@ log = logging.getLogger(__name__)
 CLIENT_ID = 'ok-client'
 # The client secret in an installed application isn't a secret.
 # See: https://developers.google.com/accounts/docs/OAuth2InstalledApp
-CLIENT_SECRET = 'EWKtcCp5nICeYgVyCPypjs3aLORqQ3H'
+# However, for other authentication providers such as Azure Active Directory
+# this might not be the case
+CLIENT_SECRET = os.getenv('OK_CLIENT_SECRET',
+                          'EWKtcCp5nICeYgVyCPypjs3aLORqQ3H')
 OAUTH_SCOPE = 'all'
 
 REFRESH_FILE = os.path.join(CONFIG_DIRECTORY, "auth_refresh")
