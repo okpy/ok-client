@@ -17,10 +17,21 @@ import traceback
 
 log = logging.getLogger(__name__)
 
+# The CLIENT_SECRET below is the secret for the ok-client app registered
+# on the ok-server; the secret value can be found at:
+# https://{root-url-for-your-ok-deployment}/admin/clients/ok-client
+#
+# In the case of the Google authentication provider, the client secret in an
+# installed application isn't a secret so it can be checked in
+# (see: https://developers.google.com/accounts/docs/OAuth2InstalledApp).
+# However, for other authentication providers such as Azure Active Directory
+# this might not be the case so it's also possible to configure the secret
+# via an environment variable set in the Jupyter Notebook.
+CLIENT_SECRET = os.getenv('OK_CLIENT_SECRET',
+                          'EWKtcCp5nICeYgVyCPypjs3aLORqQ3H')
+
 CLIENT_ID = 'ok-client'
-# The client secret in an installed application isn't a secret.
-# See: https://developers.google.com/accounts/docs/OAuth2InstalledApp
-CLIENT_SECRET = 'EWKtcCp5nICeYgVyCPypjs3aLORqQ3H'
+
 OAUTH_SCOPE = 'all'
 
 REFRESH_FILE = os.path.join(CONFIG_DIRECTORY, "auth_refresh")
