@@ -187,23 +187,39 @@ def main():
         # Instantiating assignment
         assign = assignment.load_assignment(args.config, args)
 
-        if args.authenticate:
-            # Authenticate and check for success
-            if not assign.authenticate(force=True):
-                exit(1)
-
         if args.tests:
             print('Available tests:')
             for name in assign.test_map:
                 print('    ' + name)
             exit(0)
 
-        msgs = messages.Messages()
-        for name, proto in assign.protocol_map.items():
-            log.info('Execute {}.run()'.format(name))
-            proto.run(msgs)
+        retry = True
+        while retry:
+            retry = False
+            if args.authenticate:
+                # Authenticate and check for success
+                if not assign.authenticate(force=True):
+                    exit(1)
 
-        msgs['timestamp'] = str(datetime.now())
+            try:
+                msgs = messages.Messages()
+                for name, proto in assign.protocol_map.items():
+                    log.info('Execute {}.run()'.format(name))
+                    proto.run(msgs)
+                msgs['timestamp'] = str(datetime.now())
+            except ex.AuthenticationException as e:
+                if not args.authenticate:
+                    args.authenticate = True
+                    retry = True
+                elif not args.no_browser:
+                    args.no_browser = True
+                    retry = True
+                if retry:
+                    msg = "without a browser" if args.no_browser else "with a browser"
+                    log.warning('Authentication exception occurred; will retry {0}'.format(msg), exc_info=True)
+                    print('Authentication error; will try to re-authenticate {0}...'.format(msg))
+                else:
+                    raise  # outer handler will be called
 
     except ex.LoadingException as e:
         log.warning('Assignment could not load', exc_info=True)
