@@ -2,6 +2,7 @@
 
 import argparse
 import client
+import distutils.sysconfig
 import os
 import shutil
 import sys
@@ -15,16 +16,15 @@ def abort(message):
     print(message + ' Aborting', file=sys.stderr)
     sys.exit(1)
 
+def is_venv():
+    return (hasattr(sys, 'real_prefix') or (hasattr(sys, 'base_prefix') and sys.base_prefix != sys.prefix))
+
 def find_site_packages_directory():
-    virtualenv = os.getenv('VIRTUAL_ENV')
+    virtualenv = not is_venv()
     if not virtualenv:
         abort('You must activate your virtualenv to publish.')
 
-    for path in sys.path:
-        if path.startswith(virtualenv) and 'site-packages' in path:
-            return path
-
-    abort('No site packages directory found.')
+    return distutils.sysconfig.get_python_lib()
 
 def write_tree(zipf, src_directory, dst_directory):
     """Write all .py files in a source directory to a destination directory
