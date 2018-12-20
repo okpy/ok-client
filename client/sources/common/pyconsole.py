@@ -4,6 +4,7 @@ from client import exceptions
 from client.sources.common import interpreter
 from client.utils import output
 from client.utils import timer
+from client.utils import debug
 import code
 import textwrap
 import traceback
@@ -68,7 +69,7 @@ class PythonConsole(interpreter.Console):
             raise interpreter.ConsoleException(e)
         else:
             printed_output = ''.join(output.get_log(log_id))
-            return result, printed_output
+            return result, debug.remove_debug(printed_output)
         finally:
             output.remove_log(log_id)
 
