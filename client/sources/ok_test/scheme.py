@@ -14,6 +14,7 @@ from client.sources.common import interpreter
 from client.sources.ok_test import doctest
 from client.utils import output
 from client.utils import timer
+from client.utils import debug
 import importlib
 import sys
 import textwrap
@@ -79,7 +80,7 @@ class SchemeConsole(interpreter.Console):
             raise interpreter.ConsoleException(e)
         else:
             printed_output = ''.join(output.get_log(log_id))
-            return result, printed_output
+            return result, debug.remove_debug(printed_output)
         finally:
             output.remove_log(log_id)
 

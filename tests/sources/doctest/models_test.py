@@ -90,6 +90,28 @@ class DoctestTest(unittest.TestCase):
             'locked': 0,
         }, test.run(None))
 
+    def testConstructor_debugThenReturn(self):
+        test = self.makeDoctest("""
+        >>> def foo():
+        ...     print('DEBUG: hi')
+        ...     print('Not a debug line, even though it contains "DEBUG:"')
+        ...     print("Starts a line, ", end="")
+        ...     print("DEBUG: this is not a debug line")
+        ...     print("DEBUG: This, however is a debug line")
+        ...     print("DEBUG must have a colon to be ignored")
+        ...     return 1
+        >>> foo()
+        Not a debug line, even though it contains "DEBUG:"
+        Starts a line, DEBUG: this is not a debug line
+        DEBUG must have a colon to be ignored
+        1
+        """)
+        self.assertEqual({
+            'passed': 1,
+            'failed': 0,
+            'locked': 0,
+        }, test.run(None))
+
     def testConstructor_printNoEndCharThenReturn(self):
         test = self.makeDoctest("""
         >>> def foo():
