@@ -41,7 +41,7 @@ class UnlockProtocol(models.Protocol):
         super().__init__(cmd_args, assignment)
         self.hash_key = assignment.name
         self.analytics = []
-        self.guidance_util = guidance.Guidance("", assignment=assignment)
+        self.guidance_util = guidance.Guidance("", assignment=assignment, suppress_warning_message=True)
 
     def run(self, messages):
         """Responsible for unlocking each test.
