@@ -41,6 +41,8 @@ Suite algebra
 		10000
 		>>> square(x - 99)
 		1
+		>>> debugsquare(x)
+		10000
 
 	Case double
 
