@@ -42,6 +42,12 @@ class PythonConsoleTest(unittest.TestCase):
             7
             """)
 
+    def testPass_debug(self):
+        self.calls_interpret(True,
+            """
+            >>> print('DEBUG: 7')
+            """)
+
     def testPass_printMultipleLines(self):
         self.calls_interpret(True,
             """
