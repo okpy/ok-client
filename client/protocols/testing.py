@@ -10,6 +10,8 @@ import collections
 from coverage import coverage
 import signal
 
+from client.utils.debug import DebugOutputChecker
+
 ###########################
 #    Testing Mechanism    #
 ###########################
@@ -60,7 +62,7 @@ class TestingProtocol(models.Protocol):
         self.verb = self.args.verbose
         # Initialize the doctest module objects that will do the testing/parse
         self.parser = DocTestParser()
-        self.runner = DocTestRunner(verbose=self.verb, optionflags=FAIL_FAST)
+        self.runner = DocTestRunner(verbose=self.verb, checker=DebugOutputChecker(), optionflags=FAIL_FAST)
         self.lines_exec = 0
         self.lines_total = 0
 
