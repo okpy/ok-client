@@ -20,8 +20,7 @@ def is_venv():
     return (hasattr(sys, 'real_prefix') or (hasattr(sys, 'base_prefix') and sys.base_prefix != sys.prefix))
 
 def find_site_packages_directory():
-    virtualenv = not is_venv()
-    if not virtualenv:
+    if not is_venv():
         abort('You must activate your virtualenv to publish.')
 
     return distutils.sysconfig.get_python_lib()
