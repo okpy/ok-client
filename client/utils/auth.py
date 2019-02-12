@@ -184,7 +184,7 @@ def server_url(cmd_args):
     scheme = 'http' if cmd_args.insecure else 'https'
     return '{}://{}'.format(scheme, cmd_args.server)
 
-def authenticate(cmd_args, endpoint='', force=False):
+def authenticate(cmd_args, endpoint='', force=False, no_browser=False):
     """Returns an OAuth token that can be passed to the server for
     identification. If FORCE is False, it will attempt to use a cached token
     or refresh the OAuth token.
@@ -198,7 +198,8 @@ def authenticate(cmd_args, endpoint='', force=False):
         access_token = refresh_local_token(server)
     except Exception:
         print('Performing authentication')
-        access_token = perform_oauth(get_code, cmd_args, endpoint)
+        code_fn = get_code_via_terminal if no_browser else get_code
+        access_token = perform_oauth(code_fn, cmd_args, endpoint)
         email = display_student_email(cmd_args, access_token)
         if not email:
             log.warning('Could not get login email. Try logging in again.')
