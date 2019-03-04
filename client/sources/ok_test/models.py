@@ -3,7 +3,6 @@ from client.sources.common import core
 from client.sources.common import models
 from client.utils import format
 from client.utils import output
-from client.utils import storage
 import os
 
 ##########
@@ -180,18 +179,15 @@ class OkTest(models.Test):
         with open(test_tmp, 'w', encoding='utf-8') as f:
             f.write('test = {}\n'.format(json))
 
-        try:
-            storage.replace_transactional(test_tmp, self.file)
-        except (NotImplementedError, OSError):
-            # Try to use os.replace, but if on Windows manually remove then rename
-            # (ref issue #339)
-            if os.name == 'nt':
-            # TODO(colin) Add additional error handling in case process gets killed mid remove/rename
-                os.remove(self.file)
-                os.rename(test_tmp, self.file)
-            else:
-                # Use an atomic rename operation to prevent test corruption
-                os.replace(test_tmp, self.file)
+        # Try to use os.replace, but if on Windows manually remove then rename
+        # (ref issue #339)
+        if os.name == 'nt':
+        # TODO(colin) Add additional error handling in case process gets killed mid remove/rename
+            os.remove(self.file)
+            os.rename(test_tmp, self.file)
+        else:
+            # Use an atomic rename operation to prevent test corruption
+            os.replace(test_tmp, self.file)
 
     @property
     def unique_id_prefix(self):
