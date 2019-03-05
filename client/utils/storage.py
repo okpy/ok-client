@@ -12,10 +12,10 @@ windll = None
 try:
     windll = ctypes.windll
     from ctypes.wintypes import BOOL, BOOLEAN, BYTE, DWORD, HANDLE, LARGE_INTEGER, LPCWSTR, LPWSTR, LPVOID, ULONG, WCHAR
-    set_foreign_function_type(windll.ktmw32.CreateTransaction, HANDLE, [LPVOID, LPVOID, DWORD, DWORD, DWORD, DWORD, LPWSTR]),
-    set_foreign_function_type(windll.ktmw32.CommitTransaction, BOOL, [HANDLE]),
-    set_foreign_function_type(windll.kernel32.MoveFileTransactedW, BOOL, [LPCWSTR, LPCWSTR, ctypes.WINFUNCTYPE(LARGE_INTEGER, LARGE_INTEGER, LARGE_INTEGER, LARGE_INTEGER, DWORD, DWORD, HANDLE, HANDLE, LPVOID), LPVOID, DWORD, HANDLE]),
-    set_foreign_function_type(windll.kernel32.CloseHandle, BOOL, [HANDLE]),
+    set_foreign_function_type(windll.ktmw32.CreateTransaction, HANDLE, [LPVOID, LPVOID, DWORD, DWORD, DWORD, DWORD, LPWSTR])
+    set_foreign_function_type(windll.ktmw32.CommitTransaction, BOOL, [HANDLE])
+    set_foreign_function_type(windll.kernel32.MoveFileTransactedW, BOOL, [LPCWSTR, LPCWSTR, ctypes.WINFUNCTYPE(LARGE_INTEGER, LARGE_INTEGER, LARGE_INTEGER, LARGE_INTEGER, DWORD, DWORD, HANDLE, HANDLE, LPVOID), LPVOID, DWORD, HANDLE])
+    set_foreign_function_type(windll.kernel32.CloseHandle, BOOL, [HANDLE])
 except (AttributeError, ImportError, OSError): pass
 
 ##################
