@@ -92,8 +92,7 @@ class Notebook:
             return
 
         if mode not in ['jupyter', 'jupyterlab']:
-            print("Invalid save mode. Use either \'jupyter\' or \'jupyterlab\'", end=' ')
-            return
+            print("Invalid save mode. Use either \'jupyter\' or \'jupyterlab\'")
 
         if mode == "jupyter":
             display(Javascript('IPython.notebook.save_checkpoint();'))
