@@ -9,12 +9,18 @@ from client.utils import auth as ok_auth
 log = logging.getLogger(__name__)
 
 class Notebook:
-    def __init__(self, filepath=None, cmd_args=None, debug=False):
+    def __init__(self, filepath=None, cmd_args=None, debug=False, mode='jupyter'):
         ok_logger = logging.getLogger('client')   # Get top-level ok logger
         ok_logger.setLevel(logging.DEBUG if debug else logging.ERROR)
         self.assignment = load_assignment(filepath, cmd_args)
         # Attempt a login with enviornment based tokens
         login_with_env(self.assignment)
+
+        if mode not in ["jupyter", "jupyterlab"]:
+            raise ValueError("Bad mode argument: should be either \'jupyter\' or \'jupyterlab\'")
+        self.mode = mode
+
+        
 
     def run(self, protocol, messages, **kwargs):
         if protocol not in self.assignment.protocol_map:
@@ -59,14 +65,14 @@ class Notebook:
         self.save(messages)
         return self.run('backup', messages)
 
-    def submit(self, mode="jupyter"):
+    def submit(self):
         messages = {}
         self.assignment.set_args(submit=True)
-        self.save(messages, mode=mode)
+        self.save(messages)
         return self.run('backup', messages)
 
-    def save(self, messages, delay=0.5, attempts=3, mode="jupyter"):
-        self.save_notebook(mode)
+    def save(self, messages, delay=0.5, attempts=3):
+        self.save_notebook()
         for _ in range(attempts):
             self.run('file_contents', messages)
             if validate_contents(messages['file_contents']):
@@ -77,12 +83,9 @@ class Notebook:
         log.warning("OK could not autosave the notebook. "
                     " Please ensure that the submission URL on OK appears complete")
 
-    def save_notebook(self, mode="jupyter"):
-        """ Saves the current notebook
-
-        mode -- str; Save in either Jupyter mode or JupyterLab mode
-
-        Injects JavaScript to save the notebook to file.
+    def save_notebook(self):
+        """ Saves the current notebook by
+        injecting JavaScript to save to .ipynb file.
         """
         try:
             from IPython.display import display, Javascript
@@ -91,13 +94,10 @@ class Notebook:
             print("Make sure to save your notebook before sending it to OK!")
             return
 
-        if mode not in ['jupyter', 'jupyterlab']:
-            print("Invalid save mode. Use either \'jupyter\' or \'jupyterlab\'")
-
-        if mode == "jupyter":
+        if self.mode == "jupyter":
             display(Javascript('IPython.notebook.save_checkpoint();'))
             display(Javascript('IPython.notebook.save_notebook();'))
-        elif mode == "jupyterlab":
+        elif self.mode == "jupyterlab":
             display(Javascript('document.querySelector(\'[data-command="docmanager:save"]\').click();'))   
                        
         print('Saving notebook...', end=' ')
