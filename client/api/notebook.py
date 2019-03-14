@@ -59,14 +59,14 @@ class Notebook:
         self.save(messages)
         return self.run('backup', messages)
 
-    def submit(self):
+    def submit(self, mode="jupyter"):
         messages = {}
         self.assignment.set_args(submit=True)
-        self.save(messages)
+        self.save(messages, mode=mode)
         return self.run('backup', messages)
 
-    def save(self, messages, delay=0.5, attempts=3):
-        self.save_notebook()
+    def save(self, messages, delay=0.5, attempts=3, mode="jupyter"):
+        self.save_notebook(mode)
         for _ in range(attempts):
             self.run('file_contents', messages)
             if validate_contents(messages['file_contents']):
@@ -77,7 +77,13 @@ class Notebook:
         log.warning("OK could not autosave the notebook. "
                     " Please ensure that the submission URL on OK appears complete")
 
-    def save_notebook(self):
+    def save_notebook(self, mode="jupyter"):
+        """ Saves the current notebook
+
+        mode -- str; Save in either Jupyter mode or JupyterLab mode
+
+        Injects JavaScript to save the notebook to file.
+        """
         try:
             from IPython.display import display, Javascript
         except ImportError:
@@ -85,8 +91,16 @@ class Notebook:
             print("Make sure to save your notebook before sending it to OK!")
             return
 
-        display(Javascript('IPython.notebook.save_checkpoint();'))
-        display(Javascript('IPython.notebook.save_notebook();'))
+        if mode not in ['jupyter', 'jupyterlab']:
+            print("Invalid save mode. Use either \'jupyter\' or \'jupyterlab\'", end=' ')
+            return
+
+        if mode == "jupyter":
+            display(Javascript('IPython.notebook.save_checkpoint();'))
+            display(Javascript('IPython.notebook.save_notebook();'))
+        elif mode == "jupyterlab":
+            display(Javascript('document.querySelector(\'[data-command="docmanager:save"]\').click();'))   
+                       
         print('Saving notebook...', end=' ')
         ipynbs = [path for path in self.assignment.src
                   if os.path.splitext(path)[1] == '.ipynb']
