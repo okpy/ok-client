@@ -104,7 +104,7 @@ class Notebook:
                 print("Saved '{}'.".format(ipynbs[0]))
             else:
                 log.warning("Timed out waiting for IPython save")
-                print("Could not automatically save {}")
+                print("Could not automatically save \'{}\'".format(ipynbs[0]))
                 print("Make sure your notebook"
                       " is correctly named and saved before submitting to OK!".format(ipynbs[0]))
                 return False                
