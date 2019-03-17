@@ -9,12 +9,18 @@ from client.utils import auth as ok_auth
 log = logging.getLogger(__name__)
 
 class Notebook:
-    def __init__(self, filepath=None, cmd_args=None, debug=False):
+    def __init__(self, filepath=None, cmd_args=None, debug=False, mode='jupyter'):
         ok_logger = logging.getLogger('client')   # Get top-level ok logger
         ok_logger.setLevel(logging.DEBUG if debug else logging.ERROR)
         self.assignment = load_assignment(filepath, cmd_args)
         # Attempt a login with enviornment based tokens
         login_with_env(self.assignment)
+
+        if mode not in ["jupyter", "jupyterlab"]:
+            raise ValueError("Bad mode argument: should be either \'jupyter\' or \'jupyterlab\'")
+        self.mode = mode
+
+        
 
     def run(self, protocol, messages, **kwargs):
         if protocol not in self.assignment.protocol_map:
@@ -78,6 +84,9 @@ class Notebook:
                     " Please ensure that the submission URL on OK appears complete")
 
     def save_notebook(self):
+        """ Saves the current notebook by
+        injecting JavaScript to save to .ipynb file.
+        """
         try:
             from IPython.display import display, Javascript
         except ImportError:
@@ -85,8 +94,12 @@ class Notebook:
             print("Make sure to save your notebook before sending it to OK!")
             return
 
-        display(Javascript('IPython.notebook.save_checkpoint();'))
-        display(Javascript('IPython.notebook.save_notebook();'))
+        if self.mode == "jupyter":
+            display(Javascript('IPython.notebook.save_checkpoint();'))
+            display(Javascript('IPython.notebook.save_notebook();'))
+        elif self.mode == "jupyterlab":
+            display(Javascript('document.querySelector(\'[data-command="docmanager:save"]\').click();'))   
+                       
         print('Saving notebook...', end=' ')
         ipynbs = [path for path in self.assignment.src
                   if os.path.splitext(path)[1] == '.ipynb']
