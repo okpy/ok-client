@@ -10,6 +10,7 @@ import io
 import os
 import re
 import subprocess
+import sys
 
 def get_sqlite_shell():
     sqlite_shell = None
@@ -148,22 +149,25 @@ class SqliteConsole(interpreter.Console):
             elif line.startswith(self.PS2):
                 test.append(line[len(self.PS2):])
         test = '\n'.join(test)
+        result, error = (None, None)
+        process = None
         args = ['sqlite3']
         sqlite_shell = get_sqlite_shell()
         if sqlite_shell:
-            stdin = io.StringIO(test)
-            stdout = io.StringIO()
-            stderr = io.StringIO()
-            sqlite_shell.main(*args, stdin=stdin, stdout=stdout, stderr=stderr)
-            result = stdout.getvalue()
-            error = stderr.getvalue()
-        else:
+            if self.timeout is None:
+                (stdin, stdout, stderr) = (io.StringIO(test), io.StringIO(), io.StringIO())
+                sqlite_shell.main(*args, stdin=stdin, stdout=stdout, stderr=stderr)
+                result, error = (stdout.getvalue(), stderr.getvalue())
+            else:
+                args[:] = [sys.executable] + subprocess._args_from_interpreter_flags() + ["--", sqlite_shell.__file__] + args[1:]
+        if result is None:
             process = subprocess.Popen(args,
                                         universal_newlines=True,
                                         stdin=subprocess.PIPE,
                                         stdout=subprocess.PIPE,
                                         stderr=subprocess.PIPE,
                                         env=env)
+        if process:
             try:
                 result, error = process.communicate(test, timeout=self.timeout)
             except subprocess.TimeoutExpired as e:
