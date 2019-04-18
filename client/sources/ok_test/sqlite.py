@@ -44,7 +44,7 @@ class SqliteConsole(interpreter.Console):
                 test, expected, actual = self._use_sqlite_cli(env)
             except interpreter.ConsoleException:
                 return False
-            print(format.indent(test, 'sqlite> '))  # TODO: show test with prompt
+            print(format.indent(test, self.PS1))  # TODO: show test with prompt
             print(actual)
             try:
                 self._diff_output(expected, actual)
