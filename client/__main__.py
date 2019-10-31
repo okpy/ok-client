@@ -21,22 +21,28 @@ def patch_requests():
     """
     config.create_config_directory()
     ca_certs_file = config.CERT_FILE
-    ca_certs_contents = requests.__loader__.get_data('requests/cacert.pem')
+    ca_certs_contents = None
+    try:
+        ca_certs_contents = requests.__loader__.get_data('requests/cacert.pem')
+    except OSError:
+        # TODO(kavigupta) not sure why this is coming up???
+        pass
 
-    should_write_certs = True
+    if ca_certs_contents is not None:
+        should_write_certs = True
 
-    if os.path.isfile(ca_certs_file):
-        with open(ca_certs_file, 'rb') as f:
-            existing_certs = f.read()
-            if existing_certs != ca_certs_contents:
-                should_write_certs = True
-                print("Updating local SSL certificates")
-            else:
-                should_write_certs = False
+        if os.path.isfile(ca_certs_file):
+            with open(ca_certs_file, 'rb') as f:
+                existing_certs = f.read()
+                if existing_certs != ca_certs_contents:
+                    should_write_certs = True
+                    print("Updating local SSL certificates")
+                else:
+                    should_write_certs = False
 
-    if should_write_certs:
-        with open(ca_certs_file, 'wb') as f:
-            f.write(ca_certs_contents)
+        if should_write_certs:
+            with open(ca_certs_file, 'wb') as f:
+                f.write(ca_certs_contents)
 
     os.environ['REQUESTS_CA_BUNDLE'] = ca_certs_file
 
