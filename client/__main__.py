@@ -21,14 +21,14 @@ def patch_requests():
     """
     config.create_config_directory()
     ca_certs_file = config.CERT_FILE
-    skip_everything_else = False
+    ca_certs_contents = None
     try:
         ca_certs_contents = requests.__loader__.get_data('requests/cacert.pem')
     except OSError:
         # TODO(kavigupta) not sure why this is coming up???
-        skip_everything_else = True
+        pass
 
-    if not skip_everything_else:
+    if ca_certs_contents is not None:
         should_write_certs = True
 
         if os.path.isfile(ca_certs_file):
