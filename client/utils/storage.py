@@ -26,7 +26,7 @@ SHELVE_FILE = '.ok_storage'
 SECURITY_KEY = 'uMWm4sviPK3LyPzgWYFn'.encode('utf-8')
 
 def mac(value):
-    mac = hmac.new(SECURITY_KEY, digestmod='md5')
+    mac = hmac.new(SECURITY_KEY)
     mac.update(repr(value).encode('utf-8'))
     return mac.hexdigest()
 
