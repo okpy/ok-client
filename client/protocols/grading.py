@@ -30,19 +30,19 @@ class GradingProtocol(models.Protocol):
         significant for analytics. However, all tests must include the number
         passed, the number of locked tests and the number of failed tests.
         """
-        if self.args.score or self.args.unlock:
+        if self.args.score or self.args.unlock or self.args.testing:
             return
         tests = self.assignment.specified_tests
         for test in tests:
             if self.args.suite and hasattr(test, 'suites'):
-                test.run_only = self.args.suite
+                test.run_only = int(self.args.suite)
                 try:
-                    suite = test.suites[self.args.suite - 1]
+                    suite = test.suites[int(self.args.suite) - 1]
                 except IndexError as e:
                     sys.exit(('python3 ok: error: '
                         'Suite number must be valid.({})'.format(len(test.suites))))
                 if self.args.case:
-                    suite.run_only = self.args.case
+                    suite.run_only = [int(c) for c in self.args.case]
         grade(tests, messages, env, verbose=self.args.verbose)
 
 

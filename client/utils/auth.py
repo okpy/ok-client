@@ -17,10 +17,21 @@ import traceback
 
 log = logging.getLogger(__name__)
 
+# The CLIENT_SECRET below is the secret for the ok-client app registered
+# on the ok-server; the secret value can be found at:
+# https://{root-url-for-your-ok-deployment}/admin/clients/ok-client
+#
+# In the case of the Google authentication provider, the client secret in an
+# installed application isn't a secret so it can be checked in
+# (see: https://developers.google.com/accounts/docs/OAuth2InstalledApp).
+# However, for other authentication providers such as Azure Active Directory
+# this might not be the case so it's also possible to configure the secret
+# via an environment variable set in the Jupyter Notebook.
+CLIENT_SECRET = os.getenv('OK_CLIENT_SECRET',
+                          'EWKtcCp5nICeYgVyCPypjs3aLORqQ3H')
+
 CLIENT_ID = 'ok-client'
-# The client secret in an installed application isn't a secret.
-# See: https://developers.google.com/accounts/docs/OAuth2InstalledApp
-CLIENT_SECRET = 'EWKtcCp5nICeYgVyCPypjs3aLORqQ3H'
+
 OAUTH_SCOPE = 'all'
 
 REFRESH_FILE = os.path.join(CONFIG_DIRECTORY, "auth_refresh")
@@ -88,6 +99,7 @@ def make_token_post(server, data):
             error='Authentication Failed',
             error_description=str(e))
     if 'error' in body:
+        log.error(body)
         raise OAuthException(
             error=body.get('error', 'Unknown Error'),
             error_description = body.get('error_description', ''))
@@ -141,25 +153,17 @@ def update_storage(access_token, expires_in, refresh_token):
         }, fp)
 
 def refresh_local_token(server):
-    try:
-        cur_time = int(time.time())
-        access_token, expires_at, refresh_token = get_storage()
-        if cur_time < expires_at - 10:
-            return access_token
-        access_token, expires_in = make_refresh_post(server, refresh_token)
-
-        if not access_token and expires_in:
-            raise AuthenticationException(
-                "Authentication failed and returned an empty token.")
-
-        update_storage(access_token, expires_in, refresh_token)
+    cur_time = int(time.time())
+    access_token, expires_at, refresh_token = get_storage()
+    if cur_time < expires_at - 10:
         return access_token
-    except IOError:
-        return False
-    except AuthenticationException as e:
-        raise e  # Let the main script handle this error
-    except Exception:
-        return False
+    access_token, expires_in = make_refresh_post(server, refresh_token)
+    if not (access_token and expires_in):
+        raise AuthenticationException(
+            "Authentication failed and returned an empty token.")
+
+    update_storage(access_token, expires_in, refresh_token)
+    return access_token
 
 def perform_oauth(code_fn, *args, **kwargs):
     try:
@@ -188,27 +192,37 @@ def authenticate(cmd_args, endpoint='', force=False):
     server = server_url(cmd_args)
     network.check_ssl()
     access_token = None
-    if not force:
-        access_token = refresh_local_token(server)
 
-    if not access_token:
+    try:
+        assert not force
+        access_token = refresh_local_token(server)
+    except Exception:
         print('Performing authentication')
         access_token = perform_oauth(get_code, cmd_args, endpoint)
         email = display_student_email(cmd_args, access_token)
         if not email:
             log.warning('Could not get login email. Try logging in again.')
 
+    log.debug('Authenticated with access token={}'.format(access_token))
+
     return access_token
 
-def notebook_authenticate(cmd_args, force=False):
+def notebook_authenticate(cmd_args, force=False, silent=True):
     """ Similiar to authenticate but prints student emails after
-    all calls and uses a different way to get codes.
+    all calls and uses a different way to get codes. If SILENT is True,
+    it will suppress the error message and redirect to FORCE=True
     """
     server = server_url(cmd_args)
     network.check_ssl()
     access_token = None
     if not force:
-        access_token = refresh_local_token(server)
+        try:
+            access_token = refresh_local_token(server)
+        except OAuthException as e:
+            # Account for Invalid Grant Error During make_token_post
+            if not silent:
+                raise e
+            return notebook_authenticate(cmd_args, force=True, silent=False)
 
     if not access_token:
         access_token = perform_oauth(
@@ -231,8 +245,7 @@ def get_code(cmd_args, endpoint=''):
     if cmd_args.no_browser:
         return get_code_via_terminal(cmd_args)
 
-    print("Please enter your bCourses email.")
-    email = input("bCourses email: ")
+    email = input("Please enter your bCourses email: ")
 
     host_name = REDIRECT_HOST
     try:

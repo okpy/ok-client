@@ -49,6 +49,13 @@ class CodeCaseTest(unittest.TestCase):
         self.console.interpret.return_value = True
         self.assertTrue(case.run())
 
+    def testRun_debug_success(self):
+        case = self.makeCase("""
+        > print("DEBUG: ignore this line")
+        """)
+        self.console.interpret.return_value = True
+        self.assertTrue(case.run())
+
     def testRun_fail(self):
         case = self.makeCase("""
         >>> 2 + 2

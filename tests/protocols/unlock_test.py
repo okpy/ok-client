@@ -205,7 +205,7 @@ class InteractTest(unittest.TestCase):
                 self.validateRecord(attempt, answer=self.SHORT_ANSWER, correct=True)
 
     EVAL_ANSWER = ['[1, 2, 3, 4]']
-    CORRECT_EVAL = ['[1,2,3,2+2]']
+    CORRECT_EVAL = ['[1,2,3,4]']
     INCORRECT_EVALS = ['[4,3,2,1]', '{1,2,3,4}', '[1,2,3,8/2]']
 
     def testEvaluatedInput_immediatelyCorrect(self):

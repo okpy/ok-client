@@ -9,7 +9,7 @@ your course.
 
 The ok client software was developed for CS 61A at UC Berkeley.
 
-[![Build Status](https://travis-ci.org/Cal-CS-61A-Staff/ok-client.svg?branch=master)](https://travis-ci.org/Cal-CS-61A-Staff/ok-client)
+[![Build Status](https://travis-ci.org/okpy/ok-client.svg?branch=master)](https://travis-ci.org/okpy/ok-client)
 [![PyPI Version](http://img.shields.io/pypi/v/okpy.svg)](https://pypi.python.org/pypi/okpy)
 
 ## Developer Instructions
@@ -20,10 +20,10 @@ The ok client software was developed for CS 61A at UC Berkeley.
 2. Install [virtualenv](http://docs.python-guide.org/en/latest/dev/virtualenvs/)
 3. Create a virtual environment:
 
-        virtualenv -p python3 .
+        virtualenv -p python3 env
 4. Activate the virtual environment:
 
-        source bin/activate
+        source env/bin/activate
 5. Install requirements and set up development environment:
 
         pip install -r requirements.txt
@@ -33,7 +33,7 @@ The ok client software was developed for CS 61A at UC Berkeley.
 
 Every time you begin, you should activate the virtual environment:
 
-    source bin/activate
+    source env/bin/activate
 
 All code for the client is found in the `client/` directory.
 

@@ -124,8 +124,13 @@ class DoctestSuiteTest(unittest.TestCase):
                 4
                 """
             },
+            {
+                'code': """
+                >>> print("DEBUG: hi")
+                """
+            },
         ])
-        self.callsRun(test, 2, 0, 0)
+        self.callsRun(test, 3, 0, 0)
 
     def testRun_lockedCases(self):
         test = self.makeSuite([

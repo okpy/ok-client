@@ -127,8 +127,10 @@ class Assignment(core.Serializable):
     # rate_limit    -> none
     # scoring       -> none
     # unlock        -> none
+    # testing       -> none
     _PROTOCOLS = [
-        "rate_limit",
+        "testing",
+        # "rate_limit", uncomment to turn rate limiting back on!
         "file_contents",
         "grading",
         "analytics",

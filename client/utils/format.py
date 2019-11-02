@@ -78,7 +78,45 @@ def print_progress_bar(header, passed, failed, locked, verbose=True):
 
     # Print [oook.....] progress bar
     total = passed + failed + locked
-    percent = round(100 * passed / total, 1) if total != 0 else 0.0
+    print_percent(passed, total)
+
+def print_coverage_bar(header, exec_lines, tot_lines, verbose=True):
+    print_line('-')
+    print(header)
+    percent = round(100 * exec_lines / tot_lines, 1) if tot_lines != 0 else 0.0
+    if verbose:
+        print('    Lines Tested: {}'.format(exec_lines))
+        print('    Total Lines: {}'.format(tot_lines))
+
+    else:
+        if percent < 80:
+            print('    {}% test coverage.'.format(percent))
+        else:
+            print('    {}% test coverage!'.format(percent))
+        return
+    # Print [oook.....] progress bar
+    print_percent(exec_lines, tot_lines)
+
+def print_test_progress_bar(header, passed, failed, verbose=True):
+    print_line('-')
+    print(header)
+    if verbose:
+        print('    Passed: {}'.format(passed))
+        print('    Failed: {}'.format(failed))
+    elif failed > 0:
+        print('    {} test examples passed before encountering '
+              'first failed test example'.format(passed))
+        return
+    else:
+        print('    {} test examples passed! No examples failed.'.format(passed))
+        return
+
+    # Print [oook.....] progress bar
+    total = passed + failed
+    print_percent(passed, total)
+    
+def print_percent(numer, denom):
+    percent = round(100 * numer / denom, 1) if denom != 0 else 0.0
     print('[{}k{}] {}% passed'.format(
         'o' * int(percent // 10),
         '.' * int(10 - (percent // 10)),
