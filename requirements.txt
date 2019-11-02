@@ -1,5 +1,5 @@
 # Client
-requests[security]==2.20.0
+requests[security]==2.12.4
 coverage==3.7.1
 
 # Tests
