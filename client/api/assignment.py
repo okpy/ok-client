@@ -237,8 +237,8 @@ class Assignment(core.Serializable):
                      '{}'.format(self.default_tests))
             bad_tests = sorted(test for test in self.default_tests if test not in self.test_map)
             if bad_tests:
-                error_message = "Required question(s) missing: {}. " \
-                    + "This often is the result of accidentally deleting the question's doctests or the entire function."
+                error_message = ("Required question(s) missing: {}. "
+                    "This often is the result of accidentally deleting the question's doctests or the entire function.")
                 raise ex.LoadingException(error_message.format(", ".join(bad_tests)))
             return [self.test_map[test] for test in self.default_tests]
         elif not questions:
