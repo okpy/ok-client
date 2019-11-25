@@ -1,7 +1,6 @@
 language: python
 
 python:
-  - "3.4"
   - "3.5"
   - "3.6"
   - "3.7"
@@ -13,7 +12,6 @@ install:
 cache:
   directories:
   - "$HOME/.cache/pip"
-  - lib/python3.4/site-packages
   - lib/python3.5/site-packages
   - lib/python3.6/site-packages
   - lib/python3.7/site-packages
