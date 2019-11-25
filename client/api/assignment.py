@@ -232,6 +232,11 @@ class Assignment(core.Serializable):
                 and len(self.default_tests) > 0:
             log.info('Using default tests (no questions specified): '
                      '{}'.format(self.default_tests))
+            bad_tests = sorted(test for test in self.default_tests if test not in self.test_map)
+            if bad_tests:
+                error_message = ("Required question(s) missing: {}. "
+                    "This often is the result of accidentally deleting the question's doctests or the entire function.")
+                raise ex.LoadingException(error_message.format(", ".join(bad_tests)))
             return [self.test_map[test] for test in self.default_tests]
         elif not questions:
             log.info('Using all tests (no questions specified and no default tests)')
