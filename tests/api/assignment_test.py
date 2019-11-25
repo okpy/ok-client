@@ -292,6 +292,29 @@ class AssignmentTest(unittest.TestCase):
         )), assign.test_map)
         self.assertEqual([self.mockTest], assign.specified_tests)
 
+    def testConstructor_questionDoesNotExist(self):
+        self.cmd_args.question = []
+        self.mockFindFiles.return_value = self.FILES
+        self.mockModule.load.return_value = collections.OrderedDict((
+            (self.FILE1, self.mockTest),
+            (self.FILE2, self.mockTest)
+        ))
+
+        try:
+            self.makeAssignment(default_tests=[self.QUESTION1, "question_that_does_not_exist"])
+        except ex.LoadingException as e:
+            self.assertIn("Required question(s) missing: question_that_does_not_exist", str(e))
+
+        try:
+            self.makeAssignment(default_tests=["question_that_does_not_exist"])
+        except ex.LoadingException as e:
+            self.assertIn("Required question(s) missing: question_that_does_not_exist", str(e))
+
+        try:
+            self.makeAssignment(default_tests=["question_that_does_not_exist", "another_nonexistent_question"])
+        except ex.LoadingException as e:
+            self.assertIn("Required question(s) missing: another_nonexistent_question, question_that_does_not_exist", str(e))
+
     def testConstructor_allTests_noSpecifiedTests(self):
         self.cmd_args.question = []
         self.cmd_args.all = True
