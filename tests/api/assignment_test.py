@@ -159,8 +159,7 @@ class AssignmentTest(unittest.TestCase):
         return assign
 
     def testConstructor_noTestSources(self):
-        self.assertRaises(ex.LoadingException, self.makeAssignment,
-                          tests={})
+        self.assertEqual(collections.OrderedDict(), self.makeAssignment().test_map)
 
     def testConstructor_sourceWithNoMatches(self):
         def selective_pattern_match(pattern):
@@ -178,6 +177,11 @@ class AssignmentTest(unittest.TestCase):
         self.assertEqual(collections.OrderedDict((
             (self.FILE1, self.mockTest),
         )), assign.test_map)
+
+    def testConstructor_noTestsLoaded(self):
+        self.mockFindFiles.return_value = []
+
+        self.assertEqual(collections.OrderedDict(), self.makeAssignment().test_map)
 
     def testConstructor_invalidSource(self):
         self.mockFindFiles.return_value = [self.FILE1]
