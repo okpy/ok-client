@@ -77,7 +77,7 @@ lambda_string_key_to_func = {
 }
 
 class Guidance:
-    def __init__(self, current_working_dir, assignment=None):
+    def __init__(self, current_working_dir, assignment=None, suppress_warning_message=False):
         """
         Initializing everything we need to the default values. If we catch
         an error when opening the JSON file, we flagged it as error.
@@ -99,7 +99,8 @@ class Guidance:
                 raise ValueError("JSON did not validate")
             self.guidance_json = self.guidance_json['db']
         except (OSError, IOError, ValueError):
-            log.warning("Failed to read .ok_guidance file. It may not exist")
+            if not suppress_warning_message:
+                log.warning("Failed to read .ok_guidance file. It may not exist")
             self.load_error = True
         log.debug("Guidance loaded with status: %s", not self.load_error)
 

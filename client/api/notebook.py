@@ -1,6 +1,6 @@
 import logging
 import json
-import os.path
+import os
 import time
 
 from client.api.assignment import load_assignment
@@ -9,10 +9,18 @@ from client.utils import auth as ok_auth
 log = logging.getLogger(__name__)
 
 class Notebook:
-    def __init__(self, filepath=None, cmd_args=None, debug=False):
+    def __init__(self, filepath=None, cmd_args=None, debug=False, mode='jupyter'):
         ok_logger = logging.getLogger('client')   # Get top-level ok logger
         ok_logger.setLevel(logging.DEBUG if debug else logging.ERROR)
         self.assignment = load_assignment(filepath, cmd_args)
+        # Attempt a login with enviornment based tokens
+        login_with_env(self.assignment)
+
+        if mode not in ["jupyter", "jupyterlab"]:
+            raise ValueError("Bad mode argument: should be either \'jupyter\' or \'jupyterlab\'")
+        self.mode = mode
+
+        
 
     def run(self, protocol, messages, **kwargs):
         if protocol not in self.assignment.protocol_map:
@@ -21,6 +29,8 @@ class Notebook:
         return self.assignment.protocol_map[protocol].run(messages, **kwargs)
 
     def auth(self, force=False, inline=True):
+        if not force and login_with_env(self.assignment):
+            return
         self.assignment.authenticate(force=force, inline=inline)
 
     def grade(self, *args, **kwargs):
@@ -58,11 +68,19 @@ class Notebook:
     def submit(self):
         messages = {}
         self.assignment.set_args(submit=True)
-        self.save(messages)
-        return self.run('backup', messages)
-
+        if self.save(messages):
+            return self.run('backup', messages)
+        else:
+            filename = self.assignment.src[0]
+            print("Making a best attempt to submit latest \'{}\',"
+                " last modified at {}".format(filename, time.ctime(os.path.getmtime(filename))))
+            return self.run('backup', messages)
+        
     def save(self, messages, delay=0.5, attempts=3):
-        self.save_notebook()
+        saved = self.save_notebook()
+        if not saved:
+            return None
+
         for _ in range(attempts):
             self.run('file_contents', messages)
             if validate_contents(messages['file_contents']):
@@ -74,6 +92,9 @@ class Notebook:
                     " Please ensure that the submission URL on OK appears complete")
 
     def save_notebook(self):
+        """ Saves the current notebook by
+        injecting JavaScript to save to .ipynb file.
+        """
         try:
             from IPython.display import display, Javascript
         except ImportError:
@@ -81,9 +102,14 @@ class Notebook:
             print("Make sure to save your notebook before sending it to OK!")
             return
 
-        display(Javascript('IPython.notebook.save_checkpoint();'))
-        display(Javascript('IPython.notebook.save_notebook();'))
+        if self.mode == "jupyter":
+            display(Javascript('IPython.notebook.save_checkpoint();'))
+            display(Javascript('IPython.notebook.save_notebook();'))
+        elif self.mode == "jupyterlab":
+            display(Javascript('document.querySelector(\'[data-command="docmanager:save"]\').click();'))   
+                       
         print('Saving notebook...', end=' ')
+
         ipynbs = [path for path in self.assignment.src
                   if os.path.splitext(path)[1] == '.ipynb']
         # Wait for first .ipynb to save
@@ -92,10 +118,28 @@ class Notebook:
                 print("Saved '{}'.".format(ipynbs[0]))
             else:
                 log.warning("Timed out waiting for IPython save")
-                print("Could not save your notebook. Make sure your notebook"
-                      " is saved before sending it to OK!")
+                print("Could not automatically save \'{}\'".format(ipynbs[0]))
+                print("Make sure your notebook"
+                      " is correctly named and saved before submitting to OK!".format(ipynbs[0]))
+                return False                
         else:
-            print()
+            print("No valid file sources found")
+        return True
+
+def login_with_env(assignment):
+    access_token = os.environ.get('OKPY_ACCESS_TOKEN')
+    if not access_token:
+        log.info("ACCESS_TOKEN did not exist in the environment")
+        return
+    student_email = ok_auth.display_student_email(assignment.cmd_args, access_token)
+    if student_email:
+        # Token is valid,
+        expires_in = int(os.environ.get('OKPY_EXPIRES_IN', 60))
+        refresh_token = os.environ.get('OKPY_REFRESH_TOKEN')
+
+        expires_at = int(time.time()) + expires_in
+        ok_auth.update_storage(access_token, expires_at, refresh_token)
+        return True
 
 def validate_contents(file_contents):
     """Ensures that all ipynb files in FILE_CONTENTS

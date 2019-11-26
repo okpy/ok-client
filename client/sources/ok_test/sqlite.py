@@ -6,9 +6,17 @@ from client.sources.ok_test import doctest
 from client.utils import format
 from client.utils import timer
 import importlib
+import io
 import os
 import re
 import subprocess
+import sys
+
+def get_sqlite_shell():
+    sqlite_shell = None
+    try: import sqlite_shell
+    except ImportError: pass
+    return sqlite_shell
 
 class SqliteConsole(interpreter.Console):
     PS1 = 'sqlite> '
@@ -37,7 +45,7 @@ class SqliteConsole(interpreter.Console):
                 test, expected, actual = self._use_sqlite_cli(env)
             except interpreter.ConsoleException:
                 return False
-            print(format.indent(test, 'sqlite> '))  # TODO: show test with prompt
+            print(format.indent(test, self.PS1))  # TODO: show test with prompt
             print(actual)
             try:
                 self._diff_output(expected, actual)
@@ -98,13 +106,20 @@ class SqliteConsole(interpreter.Console):
         bool; True if "sqlite3" is executable and the version is at least
         self.VERSION; False otherwise.
         """
-        # Modify PATH in subprocess to check current directory first for sqlite3
-        # executable.
-        try:
-            version = subprocess.check_output(['sqlite3', '--version'],
-                                              env=env).decode()
-        except (subprocess.CalledProcessError, FileNotFoundError):
-            return False
+        args = ['sqlite3', '--version']
+        sqlite_shell = get_sqlite_shell()
+        if sqlite_shell:
+            stdout = io.StringIO()
+            sqlite_shell.main(*args, stdin=io.StringIO(), stdout=stdout, stderr=io.StringIO())
+            version = stdout.getvalue()
+        else:
+            # Modify PATH in subprocess to check current directory first for sqlite3
+            # executable.
+            try:
+                version = subprocess.check_output(args,
+                                                  env=env).decode()
+            except (subprocess.CalledProcessError, FileNotFoundError):
+                return False
         version = version.split(' ')[0].split('.')
         version_info = tuple(int(num) for num in version)
         return version_info >= self.VERSION
@@ -134,18 +149,31 @@ class SqliteConsole(interpreter.Console):
             elif line.startswith(self.PS2):
                 test.append(line[len(self.PS2):])
         test = '\n'.join(test)
-        process = subprocess.Popen(['sqlite3'],
-                                    universal_newlines=True,
-                                    stdin=subprocess.PIPE,
-                                    stdout=subprocess.PIPE,
-                                    stderr=subprocess.PIPE,
-                                    env=env)
-        try:
-            result, error = process.communicate(test, timeout=self.timeout)
-        except subprocess.TimeoutExpired as e:
-            process.kill()
-            print('# Error: evaluation exceeded {} seconds.'.format(self.timeout))
-            raise interpreter.ConsoleException(exceptions.Timeout(self.timeout))
+        result, error = (None, None)
+        process = None
+        args = ['sqlite3']
+        sqlite_shell = get_sqlite_shell()
+        if sqlite_shell:
+            if self.timeout is None:
+                (stdin, stdout, stderr) = (io.StringIO(test), io.StringIO(), io.StringIO())
+                sqlite_shell.main(*args, stdin=stdin, stdout=stdout, stderr=stderr)
+                result, error = (stdout.getvalue(), stderr.getvalue())
+            else:
+                args[:] = [sys.executable] + subprocess._args_from_interpreter_flags() + ["--", sqlite_shell.__file__] + args[1:]
+        if result is None:
+            process = subprocess.Popen(args,
+                                        universal_newlines=True,
+                                        stdin=subprocess.PIPE,
+                                        stdout=subprocess.PIPE,
+                                        stderr=subprocess.PIPE,
+                                        env=env)
+        if process:
+            try:
+                result, error = process.communicate(test, timeout=self.timeout)
+            except subprocess.TimeoutExpired as e:
+                process.kill()
+                print('# Error: evaluation exceeded {} seconds.'.format(self.timeout))
+                raise interpreter.ConsoleException(exceptions.Timeout(self.timeout))
         return test, '\n'.join(expected), (error + '\n' + result).strip()
 
 class SqliteSuite(doctest.DoctestSuite):

@@ -1,3 +1,4 @@
+from client import exceptions
 from client.protocols.common import models
 from client.utils import network
 import client
@@ -177,7 +178,9 @@ class BackupProtocol(models.Protocol):
                 log.warning('%s error message: %s', ex.__class__.__name__,
                             response_json['message'])
 
-                if ex.response.status_code == 403 and 'download_link' in response_json['data']:
+                if ex.response.status_code == 401:  # UNAUTHORIZED (technically authorization != authentication, but oh well)
+                    raise exceptions.AuthenticationException(response_json.get('message'))  # raise this for the caller
+                elif ex.response.status_code == 403 and 'download_link' in response_json['data']:
                     retries = 0
                     error_msg = 'Aborting because OK may need to be updated.'
                 else:

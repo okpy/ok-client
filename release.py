@@ -11,7 +11,7 @@ from client.api import assignment
 from client.utils import auth
 
 GITHUB_TOKEN_FILE = '.github-token'
-GITHUB_REPO = 'Cal-CS-61A-Staff/ok-client'
+GITHUB_REPO = 'okpy/ok-client'
 OK_SERVER_URL = 'okpy.org'
 
 def abort(message=None):
@@ -97,6 +97,9 @@ if __name__ == '__main__':
     print('Latest version: {} ({})'.format(latest_release, latest_release_commit[:7]))
     print('New version: {}'.format(new_release))
 
+    # uninstall ``okpy`` in virtual env, if installed
+    shell('pip uninstall okpy')
+
     # run tests
     shell('nosetests tests')
 
@@ -175,7 +178,7 @@ if __name__ == '__main__':
 
     print('Updating version on {}...'.format(OK_SERVER_URL))
     args = assignment.Settings(server=OK_SERVER_URL)
-    access_token = auth.authenticate(args)
+    access_token = auth.authenticate(args, force=True)
     post_request('https://{}/api/v3/version/ok-client'.format(OK_SERVER_URL),
         headers={
             'Authorization': 'Bearer ' + access_token,

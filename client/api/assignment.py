@@ -121,13 +121,17 @@ class Assignment(core.Serializable):
     # backup        -> all other protocols
     # collaborate   -> file_contents, analytics
     # file_contents -> none
-    # grading       -> none
+    # grading       -> rate_limit
     # hinting       -> file_contents, analytics
     # lock          -> none
+    # rate_limit    -> none
     # scoring       -> none
     # trace         -> file_contents, analytics
     # unlock        -> none
+    # testing       -> none
     _PROTOCOLS = [
+        "testing",
+        # "rate_limit", uncomment to turn rate limiting back on!
         "file_contents",
         "grading",
         "analytics",
@@ -163,7 +167,7 @@ class Assignment(core.Serializable):
                 timeout=60,
             )
         """
-        self.cmd_args = Settings(**kwargs)
+        self.cmd_args.update(**kwargs)
 
     def authenticate(self, force=False, inline=False):
         if not inline:
@@ -233,6 +237,11 @@ class Assignment(core.Serializable):
                 and len(self.default_tests) > 0:
             log.info('Using default tests (no questions specified): '
                      '{}'.format(self.default_tests))
+            bad_tests = sorted(test for test in self.default_tests if test not in self.test_map)
+            if bad_tests:
+                error_message = ("Required question(s) missing: {}. "
+                    "This often is the result of accidentally deleting the question's doctests or the entire function.")
+                raise ex.LoadingException(error_message.format(", ".join(bad_tests)))
             return [self.test_map[test] for test in self.default_tests]
         elif not questions:
             log.info('Using all tests (no questions specified and no default tests)')
@@ -285,8 +294,15 @@ class Settings:
     def __init__(self, **kwargs):
         from client.cli.ok import parse_input
         self.args = parse_input([])
-        for k, v in kwargs.items():
-            setattr(self.args, k, v)
+        self.update(**kwargs)
 
     def __getattr__(self, attr):
         return getattr(self.args, attr)
+
+    def update(self, **kwargs):
+        for k, v in kwargs.items():
+            setattr(self.args, k, v)
+
+    def __repr__(self):
+        cls = type(self).__name__
+        return "{0}({1})".format(cls, vars(self.args))

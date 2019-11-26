@@ -11,8 +11,8 @@ setup(
     description=('ok.py supports programming projects by running tests, '
                 'tracking progress, and assisting in debugging.'),
     # long_description=long_description,
-    url='https://github.com/Cal-CS-61A-Staff/ok-client',
-    # download_url='https://github.com/Cal-CS-61A-Staff/ok/releases/download/v{}/ok'.format(VERSION),
+    url='https://github.com/okpy/ok-client',
+    # download_url='https://github.com/okpy/ok/releases/download/v{}/ok'.format(VERSION),
 
     license='Apache License, Version 2.0',
     keywords=['education', 'autograding'],
@@ -33,12 +33,12 @@ setup(
         ],
     },
     classifiers=[
-        'Programming Language :: Python :: 3.3',
         'Programming Language :: Python :: 3.4',
         'Programming Language :: Python :: 3.5',
         'Programming Language :: Python :: 3.6',
     ],
     install_requires=[
         'requests==2.12.4',
+        'coverage==4.4'
     ],
 )
