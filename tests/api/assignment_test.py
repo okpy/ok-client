@@ -179,11 +179,6 @@ class AssignmentTest(unittest.TestCase):
             (self.FILE1, self.mockTest),
         )), assign.test_map)
 
-    def testConstructor_noTestsLoaded(self):
-        self.mockFindFiles.return_value = []
-
-        self.assertRaises(ex.LoadingException, self.makeAssignment)
-
     def testConstructor_invalidSource(self):
         self.mockFindFiles.return_value = [self.FILE1]
         self.mockImportModule.side_effect = ImportError
