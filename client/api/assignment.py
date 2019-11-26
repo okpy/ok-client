@@ -205,9 +205,6 @@ class Assignment(core.Serializable):
 
                 log.info('Loaded {}'.format(test_name))
 
-        if not self.test_map:
-            raise ex.LoadingException('No tests loaded')
-
     def dump_tests(self):
         """Dumps all tests, as determined by their .dump() method.
 
