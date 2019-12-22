@@ -2,12 +2,17 @@
 provides a Python Tutor visualization.
 """
 
+import ast
 import datetime as dt
 import logging
 import json
 
+import networkx as nx
+
 from pytutor import generate_trace
 from pytutor import server
+
+from ast_scope import annotate
 
 from client.protocols.common import models
 from client.sources.doctest import models as doctest_models
@@ -91,6 +96,7 @@ class TraceProtocol(models.Protocol):
         messages['tracing']['end-trace'] = get_time()
         messages['tracing']['trace-len'] = len(json.loads(data).get('trace', [])) # includes the code since data is a str
 
+        data = json.dumps(remove_unused_globals(json.loads(data)))
         if data and self.args.trace_print:
             print(data)
         elif data:
@@ -102,6 +108,39 @@ class TraceProtocol(models.Protocol):
             print("There was an internal error while generating the trace.")
             messages['tracing']['error'] = True
 
+
+def collect_globals(data):
+    """
+    Data format specified here: https://github.com/pgbovine/OnlinePythonTutor/blob/master/v3/docs/opt-trace-format.md
+
+    Finds all the globals that are actually used in the current trace.
+    """
+    main_code = data['code']['main_code']
+    other_code = "\n\n".join(contents for name, contents in data['code'].items() if name not in {"main_code", "custom_modules"})
+    seed_globals = annotate(ast.parse(main_code)).global_scope.symbols_in_frame
+    graph = annotate(ast.parse(other_code)).static_dependency_graph
+    all_globals = set(
+        desc
+        for glob in seed_globals
+        for desc in (nx.descendants(graph, glob) if glob in graph.nodes else [glob])
+    )
+    return all_globals
+
+def remove_unused_globals(data):
+    # Data format specified here: https://github.com/pgbovine/OnlinePythonTutor/blob/master/v3/docs/opt-trace-format.md
+    global_vars = collect_globals(data)
+    for step in data['trace']:
+        step['globals'] = {
+            name : value
+                for name, value in step['globals'].items()
+                if name in global_vars
+        }
+        step['ordered_globals'] = [
+            name
+                for name in step['ordered_globals']
+                if name in global_vars
+        ]
+    return data
 
 def suite_to_code(suite):
     code_lines = []

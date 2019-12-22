@@ -39,6 +39,8 @@ setup(
     ],
     install_requires=[
         'requests==2.12.4',
-        'coverage==4.4'
+        'coverage==4.4',
+        'ast-scope==0.2.1',
+        'networkx==2.4'
     ],
 )
