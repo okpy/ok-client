@@ -122,9 +122,9 @@ def collect_globals(data):
     all_globals = set(
         desc
         for glob in seed_globals
-        for desc in (nx.descendants(graph, glob) if glob in graph.nodes else [glob])
+        for desc in (nx.descendants(graph, glob) if glob in graph.nodes else ())
     )
-    return all_globals
+    return all_globals | seed_globals
 
 def remove_unused_globals(data):
     # Data format specified here: https://github.com/pgbovine/OnlinePythonTutor/blob/master/v3/docs/opt-trace-format.md
