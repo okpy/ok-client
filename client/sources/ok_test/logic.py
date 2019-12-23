@@ -13,6 +13,7 @@ the following interface:
 
 from client import exceptions
 from client.sources.common import interpreter
+from client.sources.ok_test.scheme import SchemeConsole
 from client.sources.ok_test import doctest
 from client.utils import output
 from client.utils import timer
@@ -90,6 +91,9 @@ class LogicConsole(interpreter.Console):
         All mutable global variables should be reset.
         """
         self.logic.facts[:] = []
+
+    def normalize(self, response):
+        return str(self.logic.read_line(response))
 
 class LogicSuite(doctest.DoctestSuite):
     console_type = LogicConsole

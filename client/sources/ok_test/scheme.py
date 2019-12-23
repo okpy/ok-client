@@ -91,6 +91,9 @@ class SchemeConsole(interpreter.Console):
         except ImportError as e:
             raise exceptions.ProtocolException('Could not import scheme')
 
+    def normalize(self, response):
+        return str(self.scheme.read_line(response))
+
 class SchemeSuite(doctest.DoctestSuite):
     console_type = SchemeConsole
 

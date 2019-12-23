@@ -176,6 +176,11 @@ class SqliteConsole(interpreter.Console):
                 raise interpreter.ConsoleException(exceptions.Timeout(self.timeout))
         return test, '\n'.join(expected), (error + '\n' + result).strip()
 
+    @staticmethod
+    def normalize(response):
+        # no normalization for sql
+        return response
+
 class SqliteSuite(doctest.DoctestSuite):
     console_type = SqliteConsole
     # TODO: Ordered should be a property of cases, not entire suites.

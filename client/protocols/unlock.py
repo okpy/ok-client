@@ -87,7 +87,7 @@ class UnlockProtocol(models.Protocol):
                 break
         messages['unlock'] = self.analytics
 
-    def interact(self, unique_id, case_id, question_prompt, answer, choices=None, randomize=True):
+    def interact(self, unique_id, case_id, question_prompt, answer, *, normalizer, choices=None, randomize=True):
         """Reads student input for unlocking tests until the student
         answers correctly.
 
@@ -146,7 +146,7 @@ class UnlockProtocol(models.Protocol):
                 if choices and student_input in choice_map:
                     student_input = choice_map[student_input]
 
-                correct_answer = self._verify_student_input(student_input, line)
+                correct_answer = self._verify_student_input(student_input, line, normalizer)
                 if correct_answer:
                     input_lines.append(correct_answer)
                 else:
@@ -187,13 +187,15 @@ class UnlockProtocol(models.Protocol):
     # Private Methods #
     ###################
 
-    def _verify_student_input(self, student_input, locked):
+    def _verify_student_input(self, student_input, locked, normalizer):
         """If the student's answer is correct, returns the normalized answer.
         Otherwise, returns None.
+
+        normalizer: a function str -> str that 'normalizes' a student's output into a standardized form
         """
         guesses = [student_input]
         try:
-            guesses.append(repr(ast.literal_eval(student_input)))
+            guesses.append(normalizer(student_input))
         except Exception:
             pass
         if student_input.title() in self.SPECIAL_INPUTS:

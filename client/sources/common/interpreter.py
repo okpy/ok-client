@@ -81,7 +81,7 @@ class CodeCase(models.Case):
                     line.output = interact(unique_id,
                                            case_id + ' >  Prompt {}'.format(prompt_num),
                                            '\n'.join(current_prompt),
-                                           line.output, line.choices)
+                                           line.output, normalizer=self.console.normalize, choices=line.choices)
                     line.locked = False
                     current_prompt = []
             self.locked = False
