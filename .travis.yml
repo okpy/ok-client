@@ -27,8 +27,7 @@ matrix:
       before_install:
         - choco install python --version=3.7.2 --params "/InstallDir:C:\\Python"
         - export PATH="/c/Python:/c/Python/Scripts:$PATH"
-        - python -m ensurepip
-        - python -m pip install --upgrade pip wheel
+        - easy_install -U pip
         - pip install -r requirements.txt
     - os: windows
       python: "3.8"
@@ -36,8 +35,7 @@ matrix:
       before_install:
         - choco install python3 --version=3.8.0-b1 --pre --params "/InstallDir:C:\\Python"
         - export PATH="/c/Python:/c/Python/Scripts:$PATH"
-        - python -m ensurepip
-        - python -m pip install --upgrade pip wheel
+        - easy_install -U pip
         - pip install -r requirements.txt
 
 
