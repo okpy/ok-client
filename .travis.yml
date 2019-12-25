@@ -19,6 +19,11 @@ cache:
 
 script: nosetests --with-coverage tests
 
+os:
+  - windows
+  - linux
+  - osx
+
 notifications:
   email: false
   slack:
