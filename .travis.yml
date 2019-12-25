@@ -18,10 +18,15 @@ script: nosetests --with-coverage tests
 
 matrix:
   include:
-    - os: linux
-      language: python
-      install:
-        - pip install -r requirements.txt
+    - os: windows
+      language: sh
+      python:
+        - "3.7"
+        - "3.8"
+      before_install:
+        - choco install python3 --params "/InstallDir:C:\\Python"
+        - export PATH="/c/Python:/c/Python/Scripts:$PATH"
+        - python -m pip install --upgrade pip wheel
 
 
 notifications:
