@@ -16,17 +16,17 @@ cache:
 
 script: nosetests --with-coverage tests
 
+before_install: pip install -r requirements.txt
+
 matrix:
   include:
     - os: windows
       language: sh
-      python:
-        - "3.7"
-        - "3.8"
       before_install:
-        - choco install python3 --params "/InstallDir:C:\\Python"
+        - choco install python3.7 --params "/InstallDir:C:\\Python"
         - export PATH="/c/Python:/c/Python/Scripts:$PATH"
         - python -m pip install --upgrade pip wheel
+        - pip install -r requirements.txt
 
 
 notifications:
