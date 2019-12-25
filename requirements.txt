@@ -1,5 +1,5 @@
 # Client
-requests[security]==2.22
+requests[security]==2.22.0
 coverage==4.4
 certifi==2019.11.28
 
