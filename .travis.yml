@@ -1,25 +1,26 @@
+python:
+  - "3.5"
+  - "3.6"
+  - "3.7"
+  - "3.8"
 
-os: linux
-  language: python
-
-  python:
-    - "3.5"
-    - "3.6"
-    - "3.7"
-    - "3.8"
-
-  install:
-    - pip install -r requirements.txt
-
-  cache:
-    directories:
-      - "$HOME/.cache/pip"
-      - lib/python3.5/site-packages
-      - lib/python3.6/site-packages
-      - lib/python3.7/site-packages
-      - lib/python3.8/site-packages
+cache:
+  directories:
+  - "$HOME/.cache/pip"
+  - lib/python3.5/site-packages
+  - lib/python3.6/site-packages
+  - lib/python3.7/site-packages
+  - lib/python3.8/site-packages
 
 script: nosetests --with-coverage tests
+
+matrix:
+  include:
+    - os: linux
+        language: python
+        install:
+          - pip install -r requirements.txt
+
 
 notifications:
   email: false
