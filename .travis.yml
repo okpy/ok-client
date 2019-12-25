@@ -14,13 +14,15 @@ cache:
   - lib/python3.7/site-packages
   - lib/python3.8/site-packages
 
-script: nosetests --with-coverage tests
+install:
+    - pip install -r requirements.txt
 
-before_install: pip install -r requirements.txt
+script: nosetests --with-coverage tests
 
 matrix:
   include:
     - os: windows
+      python: "3.7"
       language: sh
       before_install:
         - choco install python3.7 --params "/InstallDir:C:\\Python"
