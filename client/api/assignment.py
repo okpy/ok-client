@@ -248,12 +248,7 @@ class Assignment(core.Serializable):
         specified_tests = []
         for question in questions:
             if question not in self.test_map:
-                print('Test "{}" not found.'.format(question))
-                print('Did you mean one of the following? '
-                      '(Names are case sensitive)')
-                for test in self.test_map:
-                    print('    {}'.format(test))
-                raise ex.LoadingException('Invalid test specified: {}'.format(question))
+                raise ex.InvalidTestInQuestionListException(list(self.test_map), question)
 
             log.info('Adding {} to specified tests'.format(question))
             if question not in specified_tests:
