@@ -39,6 +39,7 @@ setup(
     ],
     install_requires=[
         'requests==2.22.0',
-        'coverage==4.4'
+        'coverage==4.4',
+        'certifi==2019.11.28'
     ],
 )
