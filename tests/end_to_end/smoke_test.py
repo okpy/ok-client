@@ -6,6 +6,7 @@ import os
 
 SCRIPT = """
 source {envloc}/{folder}/activate;
+python ok
 python ok {args} > {stdoutloc} 2> {stderrloc}
 """
 
