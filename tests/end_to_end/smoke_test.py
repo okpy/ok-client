@@ -35,7 +35,7 @@ class SmokeTest(unittest.TestCase):
             stdoutloc=out_loc.replace("\\", "/"),
             stderrloc=err_loc.replace("\\", "/"),
         )
-        subprocess.check_call(command_line, shell=True, executable=os.environ['SHELL'], cwd=self.directory)
+        subprocess.check_output(os.getenv('SHELL', 'sh'), input=command_line.encode('utf-8'), cwd=self.directory)
         with open(out_loc) as out, open(err_loc) as err:
             return out.read(), err.read()
 
