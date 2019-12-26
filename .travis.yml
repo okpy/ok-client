@@ -27,6 +27,7 @@ matrix:
       before_install:
         - choco install python --version=3.7.2 --params "/InstallDir:C:\\Python"
         - export PATH="/c/Python:/c/Python/Scripts:$PATH"
+        - python --version
         - python -m pip install -U pip
         - virtualenv -p python3 env
         - source env/bin/activate
@@ -37,6 +38,7 @@ matrix:
       before_install:
         - choco install python3 --version=3.8.0-b1 --pre --params "/InstallDir:C:\\Python"
         - export PATH="/c/Python:/c/Python/Scripts:$PATH"
+        - python --version
         - python -m pip install -U pip
         - virtualenv -p python3 env
         - source env/bin/activate
