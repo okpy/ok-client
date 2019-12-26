@@ -40,6 +40,8 @@ class SmokeTest(unittest.TestCase):
 
     def testVersion(self):
         stdout, stderr = self.run_ok("--version")
+        print(stdout)
+        print(stderr)
         self.assertEqual(stderr, "")
         self.assertRegex(stdout, "^okpy==.*")
 
