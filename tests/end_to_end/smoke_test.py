@@ -7,7 +7,7 @@ import shlex
 
 SCRIPT = """
 source {envloc}/{folder}/activate;
-python ok {args} > {stdoutloc} 2> {stderrloc}
+python ok {args}
 """
 
 class SmokeTest(unittest.TestCase):
@@ -27,18 +27,18 @@ class SmokeTest(unittest.TestCase):
         publish.package_client(self.directory)
 
     def run_ok(self, *args):
-        _, out_loc = tempfile.mkstemp()
-        _, err_loc = tempfile.mkstemp()
         command_line = SCRIPT.format(
             envloc=shlex.quote(self.clean_env_loc),
             folder="scripts" if os.name == "nt" else "bin",
             args=" ".join(shlex.quote(arg) for arg in args),
-            stdoutloc=shlex.quote(out_loc),
-            stderrloc=shlex.quote(err_loc)
         )
-        subprocess.check_output(os.getenv('SHELL', 'sh'), input=command_line.encode('utf-8'), cwd=self.directory)
-        with open(out_loc) as out, open(err_loc) as err:
-            return out.read(), err.read()
+        proc = subprocess.run(
+            os.getenv('SHELL', 'sh'),
+            input=command_line.encode('utf-8'),
+            stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+            cwd=self.directory
+        )
+        return proc.stdout.decode('utf-8'), proc.stderr.decode('utf-8')
 
     def testVersion(self):
         stdout, stderr = self.run_ok("--version")
