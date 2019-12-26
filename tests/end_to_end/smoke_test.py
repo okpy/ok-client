@@ -14,30 +14,30 @@ class SmokeTest(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
-        cls.clean_env_loc = tempfile.mkdtemp()
+        cls.clean_env_dir = tempfile.TemporaryDirectory()
         cls.create_clean_env()
 
     @classmethod
     def create_clean_env(cls):
-        subprocess.check_call(["virtualenv", "-q", "-p", "python", cls.clean_env_loc])
+        subprocess.check_call(["virtualenv", "-q", "-p", "python", cls.clean_env_dir.name])
 
     def setUp(self):
         self.maxDiff = None # the errors are pretty useless if you don't do this
-        self.directory = tempfile.mkdtemp()
-        publish.package_client(self.directory)
+        self.directory = tempfile.TemporaryDirectory()
+        publish.package_client(self.directory.name)
 
     def run_ok(self, *args):
         command_line = SCRIPT.format(
-            envloc=shlex.quote(self.clean_env_loc),
+            envloc=shlex.quote(self.clean_env_dir.name),
             folder="scripts" if os.name == "nt" else "bin",
             args=" ".join(shlex.quote(arg) for arg in args),
         )
         with subprocess.Popen(
                 os.getenv('SHELL', 'sh'),
                 stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
-                cwd=self.directory) as proc:
-            stdout, stderr = proc.communicate(command_line.encode('utf-8'))
-        return stdout.decode('utf-8'), stderr.decode('utf-8')
+                cwd=self.directory.name, universal_newlines=True) as proc:
+            stdout, stderr = proc.communicate(command_line)
+        return stdout, stderr
 
     def testVersion(self):
         stdout, stderr = self.run_ok("--version")
