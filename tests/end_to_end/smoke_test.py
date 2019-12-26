@@ -3,6 +3,7 @@ import unittest
 import tempfile
 import subprocess
 import os
+import shlex
 
 SCRIPT = """
 source {envloc}/{folder}/activate;
@@ -13,7 +14,7 @@ class SmokeTest(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
-        cls.clean_env_loc = tempfile.TemporaryDirectory().name.replace("\\", "/")
+        cls.clean_env_loc = tempfile.mkdtemp()
         cls.create_clean_env()
 
     @classmethod
@@ -21,18 +22,18 @@ class SmokeTest(unittest.TestCase):
         subprocess.check_call(["virtualenv", "-q", "-p", "python", cls.clean_env_loc])
 
     def setUp(self):
-        self.directory = tempfile.TemporaryDirectory().name.replace("\\", "/")
+        self.directory = tempfile.mkdtemp()
         publish.package_client(self.directory)
 
     def run_ok(self, *args):
         _, out_loc = tempfile.mkstemp()
         _, err_loc = tempfile.mkstemp()
         command_line = SCRIPT.format(
-            envloc=self.clean_env_loc,
+            envloc=shlex.quote(self.clean_env_loc),
             folder="scripts" if os.name == "nt" else "bin",
-            args=" ".join(args),
-            stdoutloc=out_loc.replace("\\", "/"),
-            stderrloc=err_loc.replace("\\", "/"),
+            args=" ".join(shlex.quote(arg) for arg in args),
+            stdoutloc=shlex.quote(out_loc),
+            stderrloc=shlex.quote(err_loc)
         )
         subprocess.check_output(os.getenv('SHELL', 'sh'), input=command_line.encode('utf-8'), cwd=self.directory)
         with open(out_loc) as out, open(err_loc) as err:
