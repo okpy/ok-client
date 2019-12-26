@@ -25,8 +25,8 @@ class SmokeTest(unittest.TestCase):
         publish.package_client(self.directory)
 
     def run_ok(self, *args):
-        out_loc = tempfile.NamedTemporaryFile().name
-        err_loc = tempfile.NamedTemporaryFile().name
+        _, out_loc = tempfile.mkstemp()
+        _, err_loc = tempfile.mkstemp()
         command_line = SCRIPT.format(
             envloc=self.clean_env_loc,
             folder="scripts" if os.name == "nt" else "bin",
