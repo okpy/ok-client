@@ -22,6 +22,7 @@ class SmokeTest(unittest.TestCase):
         subprocess.check_call(["virtualenv", "-q", "-p", "python", cls.clean_env_loc])
 
     def setUp(self):
+        self.maxDiff = None # the errors are pretty useless if you don't do this
         self.directory = tempfile.mkdtemp()
         publish.package_client(self.directory)
 
