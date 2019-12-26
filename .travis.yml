@@ -40,7 +40,7 @@ matrix:
       language: sh
       before_install:
         - brew install pyenv
-        - pyenv install 3.7
+        - pyenv install 3.7.5
         - pip3 install virtualenv
         - virtualenv -p python3 ~/venv
         - source ~/venv/bin/activate
