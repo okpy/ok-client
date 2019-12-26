@@ -29,7 +29,7 @@ class SmokeTest(unittest.TestCase):
         err_loc = tempfile.NamedTemporaryFile().name
         command_line = SCRIPT.format(
             envloc=self.clean_env_loc,
-            folder="scripts" if os.name == "nt" else "bin"
+            folder="scripts" if os.name == "nt" else "bin",
             args=" ".join(args),
             stdoutloc=out_loc,
             stderrloc=err_loc,
