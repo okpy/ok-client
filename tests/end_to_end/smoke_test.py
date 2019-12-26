@@ -14,7 +14,7 @@ class SmokeTest(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
-        cls.clean_env_loc = tempfile.TemporaryDirectory().name
+        cls.clean_env_loc = tempfile.TemporaryDirectory().name.replace("\\", "/")
         cls.create_clean_env()
 
     @classmethod
@@ -22,7 +22,7 @@ class SmokeTest(unittest.TestCase):
         subprocess.check_call(["virtualenv", "-p", "python", cls.clean_env_loc])
 
     def setUp(self):
-        self.directory = tempfile.TemporaryDirectory().name
+        self.directory = tempfile.TemporaryDirectory().name.replace("\\", "/")
         publish.package_client(self.directory)
 
     def run_ok(self, *args):
@@ -32,8 +32,8 @@ class SmokeTest(unittest.TestCase):
             envloc=self.clean_env_loc,
             folder="scripts" if os.name == "nt" else "bin",
             args=" ".join(args),
-            stdoutloc=out_loc,
-            stderrloc=err_loc,
+            stdoutloc=out_loc.replace("\\", "/"),
+            stderrloc=err_loc.replace("\\", "/"),
         )
         subprocess.check_call(command_line, shell=True, executable=os.environ['SHELL'], cwd=self.directory)
         with open(out_loc) as out, open(err_loc) as err:
