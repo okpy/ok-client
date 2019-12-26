@@ -33,7 +33,7 @@ matrix:
         - python -m pip install virtualenv
         - python -m virtualenv -p python env
         - find env
-        - source env/bin/activate
+        - source env/Scripts/activate
         - python -m pip install -r requirements.txt
     - os: windows
       python: "3.8"
