@@ -31,7 +31,7 @@ matrix:
         - python --version
         - python -m pip install -U pip
         - python -m pip install virtualenv
-        - python -m virtualenv -p python3 env
+        - python -m virtualenv -p python env
         - source env/bin/activate
         - python -m pip install -r requirements.txt
     - os: windows
