@@ -32,13 +32,12 @@ class SmokeTest(unittest.TestCase):
             folder="scripts" if os.name == "nt" else "bin",
             args=" ".join(shlex.quote(arg) for arg in args),
         )
-        proc = subprocess.run(
-            os.getenv('SHELL', 'sh'),
-            input=command_line.encode('utf-8'),
-            stdout=subprocess.PIPE, stderr=subprocess.PIPE,
-            cwd=self.directory
-        )
-        return proc.stdout.decode('utf-8'), proc.stderr.decode('utf-8')
+        with subprocess.Popen(
+                os.getenv('SHELL', 'sh'),
+                stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+                cwd=self.directory) as proc:
+            stdout, stderr = proc.communicate(command_line.encode('utf-8'))
+        return stdout.decode('utf-8'), stderr.decode('utf-8')
 
     def testVersion(self):
         stdout, stderr = self.run_ok("--version")
