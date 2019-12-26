@@ -33,7 +33,7 @@ class SmokeTest(unittest.TestCase):
             stdoutloc=out_loc,
             stderrloc=err_loc,
         )
-        subprocess.call(command_line, shell=True, cwd=self.directory, executable='/bin/bash')
+        subprocess.call(["bash", "-c", command_line], cwd=self.directory)
         with open(out_loc) as out, open(err_loc) as err:
             return out.read(), err.read()
 
