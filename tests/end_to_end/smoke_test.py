@@ -6,7 +6,6 @@ import os
 
 SCRIPT = """
 source {envloc}/{folder}/activate;
-python ok
 python ok {args} > {stdoutloc} 2> {stderrloc}
 """
 
@@ -19,7 +18,7 @@ class SmokeTest(unittest.TestCase):
 
     @classmethod
     def create_clean_env(cls):
-        subprocess.check_call(["virtualenv", "-p", "python", cls.clean_env_loc])
+        subprocess.check_call(["virtualenv", "-q", "-p", "python", cls.clean_env_loc])
 
     def setUp(self):
         self.directory = tempfile.TemporaryDirectory().name.replace("\\", "/")
@@ -41,8 +40,6 @@ class SmokeTest(unittest.TestCase):
 
     def testVersion(self):
         stdout, stderr = self.run_ok("--version")
-        print(stdout)
-        print(stderr)
         self.assertEqual(stderr, "")
         self.assertRegex(stdout, "^okpy==.*")
 
