@@ -19,7 +19,7 @@ class SmokeTest(unittest.TestCase):
 
     @classmethod
     def create_clean_env(cls):
-        subprocess.check_call(["virtualenv", "-q", "-p", "python", cls.clean_env_loc])
+        subprocess.check_call(["virtualenv", "-p", "python", cls.clean_env_loc])
 
     def setUp(self):
         self.directory = tempfile.TemporaryDirectory().name
@@ -35,7 +35,7 @@ class SmokeTest(unittest.TestCase):
             stdoutloc=out_loc,
             stderrloc=err_loc,
         )
-        subprocess.call(command_line, shell=True, executable=os.environ['SHELL'], cwd=self.directory)
+        subprocess.check_call(command_line, shell=True, executable=os.environ['SHELL'], cwd=self.directory)
         with open(out_loc) as out, open(err_loc) as err:
             return out.read(), err.read()
 
