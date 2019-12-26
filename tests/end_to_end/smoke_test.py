@@ -3,39 +3,41 @@ import unittest
 import tempfile
 import subprocess
 import os
+import shlex
 
 SCRIPT = """
-source {envloc}/bin/activate;
-python ok {args} > {stdoutloc} 2> {stderrloc}
+source {envloc}/{folder}/activate;
+python ok {args}
 """
 
 class SmokeTest(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
-        cls.clean_env_loc = tempfile.TemporaryDirectory().name
+        cls.clean_env_dir = tempfile.TemporaryDirectory()
         cls.create_clean_env()
 
     @classmethod
     def create_clean_env(cls):
-        subprocess.check_call(["virtualenv", "-q", "-p", "python", cls.clean_env_loc])
+        subprocess.check_call(["virtualenv", "-q", "-p", "python", cls.clean_env_dir.name])
 
     def setUp(self):
-        self.directory = tempfile.TemporaryDirectory().name
-        publish.package_client(self.directory)
+        self.maxDiff = None # the errors are pretty useless if you don't do this
+        self.directory = tempfile.TemporaryDirectory()
+        publish.package_client(self.directory.name)
 
     def run_ok(self, *args):
-        out_loc = tempfile.NamedTemporaryFile().name
-        err_loc = tempfile.NamedTemporaryFile().name
         command_line = SCRIPT.format(
-            envloc=self.clean_env_loc,
-            args=" ".join(args),
-            stdoutloc=out_loc,
-            stderrloc=err_loc,
+            envloc=shlex.quote(self.clean_env_dir.name),
+            folder="scripts" if os.name == "nt" else "bin",
+            args=" ".join(shlex.quote(arg) for arg in args),
         )
-        subprocess.call(command_line, shell=True, cwd=self.directory, executable='/bin/bash')
-        with open(out_loc) as out, open(err_loc) as err:
-            return out.read(), err.read()
+        with subprocess.Popen(
+                os.getenv('SHELL', 'sh'),
+                stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+                cwd=self.directory.name, universal_newlines=True) as proc:
+            stdout, stderr = proc.communicate(command_line)
+        return stdout, stderr
 
     def testVersion(self):
         stdout, stderr = self.run_ok("--version")
