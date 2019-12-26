@@ -39,11 +39,14 @@ matrix:
       python: "3.7"
       language: sh
       before_install:
-        - brew install pyenv
-        - pyenv install 3.7.5
-        - pip3 install virtualenv
-        - virtualenv -p python3 ~/venv
-        - source ~/venv/bin/activate
+        - export PYV=3.7.5
+        - . scripts/osx-install.sh
+    - os: osx
+      python: "3.8"
+      language: sh
+      before_install:
+        - export PYV=3.8.0
+        - . scripts/osx-install.sh
 
 
 notifications:
