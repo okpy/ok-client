@@ -6,6 +6,8 @@ from client.sources.common.pyconsole import PythonConsole
 from client.sources.ok_test.scheme import SchemeConsole
 import mock
 import unittest
+import os
+import urllib.request
 
 class UnlockProtocolTest(unittest.TestCase):
     TEST = 'Test 1'
@@ -48,6 +50,14 @@ class InteractTest(unittest.TestCase):
     INCORRECT_ANSWERS = ['a', 'b', 'c']
     CHOICES = SHORT_ANSWER + INCORRECT_ANSWERS
 
+    @classmethod
+    def setUpClass(cls):
+        urllib.request.urlretrieve("https://cs61a.org/assets/interpreter/scheme", 'scheme')
+
+    @classmethod
+    def tearDownClass(cls):
+        os.remove('scheme')
+
     def setUp(self):
         self.cmd_args = mock.Mock()
         self.assignment = mock.Mock()
@@ -59,6 +69,7 @@ class InteractTest(unittest.TestCase):
 
         self.input_choices = []
         self.choice_number = 0
+
 
     def mockInput(self, prompt):
         self.choice_number += 1
