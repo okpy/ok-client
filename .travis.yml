@@ -36,6 +36,18 @@ matrix:
         - export PATH="/c/Python:/c/Python/Scripts:$PATH"
         - . scripts/windows-install.sh
     - os: osx
+      python: "3.5"
+      language: sh
+      before_install:
+        - export PYV=3.5.3
+        - . scripts/osx-install.sh
+    - os: osx
+      python: "3.6"
+      language: sh
+      before_install:
+        - export PYV=3.6.0
+        - . scripts/osx-install.sh
+    - os: osx
       python: "3.7"
       language: sh
       before_install:
