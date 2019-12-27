@@ -19,6 +19,48 @@ cache:
 
 script: nosetests --with-coverage tests
 
+matrix:
+  include:
+    - os: windows
+      python: "3.7"
+      language: sh
+      before_install:
+        - choco install python --version=3.7.2 --params "/InstallDir:C:\\Python"
+        - export PATH="/c/Python37:/c/Python37/Scripts:$PATH"
+        - . scripts/windows-install.sh
+    - os: windows
+      python: "3.8"
+      language: sh
+      before_install:
+        - choco install python3 --version=3.8.0 --pre --params "/InstallDir:C:\\Python"
+        - export PATH="/c/Python:/c/Python/Scripts:$PATH"
+        - . scripts/windows-install.sh
+    - os: osx
+      python: "3.5"
+      language: sh
+      before_install:
+        - export PYV=3.5.3
+        - . scripts/osx-install.sh
+    - os: osx
+      python: "3.6"
+      language: sh
+      before_install:
+        - export PYV=3.6.0
+        - . scripts/osx-install.sh
+    - os: osx
+      python: "3.7"
+      language: sh
+      before_install:
+        - export PYV=3.7.5
+        - . scripts/osx-install.sh
+    - os: osx
+      python: "3.8"
+      language: sh
+      before_install:
+        - export PYV=3.8.0
+        - . scripts/osx-install.sh
+
+
 notifications:
   email: false
   slack:
