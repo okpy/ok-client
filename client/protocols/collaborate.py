@@ -18,7 +18,7 @@ import webbrowser
 
 log = logging.getLogger(__name__)
 
-import client.utils.printer import print_error, print_warning, print_success
+from client.utils.printer import print_error, print_warning, print_success
 
 class CollaborateProtocol(models.Protocol):
 
