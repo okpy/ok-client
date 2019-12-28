@@ -23,15 +23,13 @@ matrix:
   include:
     - os: windows
       python: "3.7"
-      language: sh
+      language: bash
       before_install:
-        - export PYV=3.7.6
         - . scripts/windows-install.sh
     - os: windows
       python: "3.8"
-      language: sh
+      language: bash
       before_install:
-        - export PYV=3.8.1
         - . scripts/windows-install.sh
     - os: osx
       python: "3.5"
