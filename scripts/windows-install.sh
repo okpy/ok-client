@@ -1,9 +1,9 @@
 urlbase="https://www.python.org/ftp/python/"
 py_base_version="$1"
-if [ -n "$[py_base_version}" ]; then
+if [ -n "${py_base_version}" ]; then
 	py_base_version="$(printf "%s" "${TRAVIS_PYTHON_VERSION}" | sed 's/[][\\\.]/\\\0/g')"  # escape for sed
 fi
-py_full_version="$(curl -s -L --compressed "${urlbase}" | sed -n 's/.*<a href="\(${py_base_version}\(\.[0-9]\+\)*\)\/\?">.*/\1/p' | tail -n 1)"
+py_full_version="$(curl -s -L "${urlbase}" | sed -n "s/.*<a href=\"\(${py_base_version}\(\.[0-9]\+\)*\)\/\?\">.*/\1/p" | tail -n 1)"
 if [ -n "${py_full_version}" ]; then
 	arch_suffix=""
 	if [ "${HOSTTYPE}" = "x86_64" ]; then
@@ -16,9 +16,9 @@ if [ -n "${py_full_version}" ]; then
 	MSYS2_ARG_CONV_EXCL="*" "${installer}" /quiet PrependPath=1 InstallAllUsers=1 TargetDir="${targetdir}"
 	python="${targetdir}\python.exe"
 	rm -f -- "${installer}"
-	"${python}" -m venv env
+	"${python}" -m venv venv
 	(
-		. "env/Scripts/activate"
+		. "venv/Scripts/activate"
 		python -m pip install -U pip
 		python -m pip install -r requirements.txt
 	)
