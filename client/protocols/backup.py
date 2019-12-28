@@ -10,6 +10,8 @@ import requests
 
 log = logging.getLogger(__name__)
 
+from client.utils.printer import print_warning
+
 class BackupProtocol(models.Protocol):
 
     # Timeouts are specified in seconds.
@@ -26,7 +28,7 @@ class BackupProtocol(models.Protocol):
             return
 
         if self.args.local:
-            print("Cannot backup when running ok with --local.")
+            print_warning("Cannot backup when running ok with --local.")
             return
 
         if not self.args.insecure:
