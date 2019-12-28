@@ -1,6 +1,8 @@
 target="./python-setup.exe"
 curl -s -L -R -o "${target}" "https://www.python.org/ftp/python/${PYV}/python-${PYV}-amd64.exe"
-"${target}" //quiet PrependPath=1 InstallAllUsers=1
+export PYLOCATION = "/c/Python${PYV}"
+"${target}" //quiet PrependPath=1 InstallAllUsers=1 "TargetDir=${PYLOCATION}"
+export PATH="${PYLOCATION}:${PATH}"
 rm -f -- "${target}"
 python -m pip install -U pip
 python -m pip install virtualenv
