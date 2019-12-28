@@ -1,7 +1,7 @@
 target="./python-setup.exe"
 curl -s -L -R -o "${target}" "https://www.python.org/ftp/python/${PYV}/python-${PYV}-amd64.exe"
-export PYLOCATION="/c/Python${PYV}"
-"${target}" PrependPath=1 InstallAllUsers=1 "TargetDir=${PYLOCATION}"
+export PYLOCATION="/c/Python"
+"${target}" //quiet PrependPath=1 InstallAllUsers=1 "TargetDir=C:\\Python"
 find ${PYLOCATION}
 export PATH="${PYLOCATION}:${PATH}"
 rm -f -- "${target}"
