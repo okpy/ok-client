@@ -1,0 +1,72 @@
+name: CI
+
+on: [push, pull_request]
+
+jobs:
+  build:
+    name: ${{ matrix.name }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: true
+      matrix:
+        os: [windows-latest, macos-latest]
+        python-version: [3.5, 3.6, 3.7, 3.8]
+        exclude:
+          - os: windows-latest
+            python-version: 3.5
+          - os: windows-latest
+            python-version: 3.6
+    env:
+      VENV_DIR: env
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v1
+      with:
+        fetch-depth: 1
+    - name: "Caching (for Linux)"
+      uses: actions/cache@v1
+      if: startsWith(runner.os, 'linux')
+      with:
+        path: ~/.cache/pip
+        key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
+        restore-keys: ${{ runner.os }}-pip-
+    - name: "Caching (for Mac OS)"
+      uses: actions/cache@v1
+      if: startsWith(runner.os, 'macos')
+      with:
+        path: ~/Library/Caches/pip
+        key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
+        restore-keys: ${{ runner.os }}-pip-
+    - name: "Caching (for Windows)"
+      uses: actions/cache@v1
+      if: startsWith(runner.os, 'windows')
+      with:
+        path: ~\AppData\Local\pip\Cache
+        key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
+        restore-keys: ${{ runner.os }}-pip-
+    - name: Set up Python
+      uses: actions/setup-python@v1
+      with:
+        python-version: ${{ matrix.python-version }}
+    - name: Initialize environment
+      shell: bash
+      run: python -m venv "${VENV_DIR}"
+    - name: Install packages
+      shell: bash
+      run: |
+        case "${{ matrix.os }}" in
+          windows*) scripts="Scripts";;
+          *       ) scripts="bin";;
+        esac
+        . "${VENV_DIR}/${scripts}/activate"
+        echo "Using $(python --version)" 1>&2
+        python -m pip install -r requirements.txt
+    - name: Run tests
+      shell: bash
+      run: |
+        case "${{ matrix.os }}" in
+          windows*) scripts="Scripts";;
+          *       ) scripts="bin";;
+        esac
+        . "${VENV_DIR}/${scripts}/activate"
+        nosetests --with-coverage tests
