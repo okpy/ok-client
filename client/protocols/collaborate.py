@@ -18,6 +18,8 @@ import webbrowser
 
 log = logging.getLogger(__name__)
 
+import client.utils.printer import print_error, print_warning, print_success
+
 class CollaborateProtocol(models.Protocol):
 
     # Timeouts are specified in seconds.
@@ -102,7 +104,7 @@ class CollaborateProtocol(models.Protocol):
         # Send data to collaborate server
         response_data = self.send_messages(data, self.LONG_TIMEOUT)
         if 'error' in response_data or 'session' not in response_data:
-            print("There was an error while starting the session: {} Try again later"
+            print_error("There was an error while starting the session: {} Try again later"
                   .format(response_data.get('error')))
             log.warning("Error: {}".format(response_data.get('error')))
             return
@@ -120,7 +122,7 @@ class CollaborateProtocol(models.Protocol):
             self.fire_uid = self.fire_user['localId']
         except (ValueError, KeyError) as e:
             log.warning("Could not login", exc_info=True)
-            print("Could not login to the collaboration server.")
+            print_error("Could not login to the collaboration server.")
             return
 
         self.stream = (self.get_firebase()
@@ -146,7 +148,7 @@ class CollaborateProtocol(models.Protocol):
             log.error("There was an error with the server. Please try again later!")
             return
 
-        print("Tell your group members or course staff to go to {}"
+        print_success("Tell your group members or course staff to go to {}"
               .format(self.short_url))
 
         while True:
@@ -198,7 +200,7 @@ class CollaborateProtocol(models.Protocol):
         except (requests.exceptions.RequestException, requests.exceptions.BaseHTTPError, Exception) as ex:
             message = '{}: {}'.format(ex.__class__.__name__, str(ex))
             log.warning(message)
-            print("There was an error connecting to the server."
+            print_error("There was an error connecting to the server."
                   "Run with --debug for more details")
         return
 
@@ -245,7 +247,7 @@ class CollaborateProtocol(models.Protocol):
             self.log_event('grade', data)
             return self.run_tests(data)
         else:
-            print("Unknown action {}".format(action))
+            print_warning("Unknown action {}".format(action))
 
     def run_tests(self, data):
         backup = self.save(data)
@@ -305,7 +307,7 @@ class CollaborateProtocol(models.Protocol):
         if file_name not in self.assignment.src or file_name.endswith('.ok'):
             if file_name != 'submit':
                 logging.warning("Unknown filename {}".format(file_name))
-                print("Unknown file - Not saving {}".format(file_name))
+                print_error("Unknown file - Not saving {}".format(file_name))
                 return
 
         if not os.path.isfile(file_name):
@@ -315,7 +317,7 @@ class CollaborateProtocol(models.Protocol):
             # Backup the file
             log.debug("Backing up file")
             backup_dst = self.backup_file(file_name)
-            print("Backed up file to {}".format(backup_dst))
+            print_success("Backed up file to {}".format(backup_dst))
 
         log.debug("Beginning overwriting file")
         contents = data['file']
