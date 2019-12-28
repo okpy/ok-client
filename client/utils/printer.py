@@ -1,11 +1,17 @@
 
 from colorama import Fore, Style
 
-def print_error(text):
-    print(Fore.RED + text + Style.RESET_ALL)
+def print_colored(color):
+    def new_print(*args, **kwargs):
+        if len(args) == 0:
+            return print(*args, **kwargs)
+        if len(args) == 1:
+            [arg] = args
+            return print(color + arg + Style.RESET_ALL, **kwargs)
+        first, *middle, rest = args
+        return print(color + first, *middle, rest + Style.RESET_ALL, **kwargs)
+    return new_print
 
-def print_warning(text):
-    print(Fore.YELLOW + text + Style.RESET_ALL)
-
-def print_success(text):
-    print(Fore.GREEN + text + Style.RESET_ALL)
+print_error = print_colored(Fore.RED)
+print_warning = print_colored(Fore.YELLOW)
+print_success = print_colored(Fore.GREEN)

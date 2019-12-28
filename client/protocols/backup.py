@@ -10,7 +10,7 @@ import requests
 
 log = logging.getLogger(__name__)
 
-from client.utils.printer import print_warning
+from client.utils.printer import print_warning, print_success, print_error
 
 class BackupProtocol(models.Protocol):
 
@@ -48,7 +48,7 @@ class BackupProtocol(models.Protocol):
         log.info('Sending unsent messages')
 
         if not access_token:
-            print("Not authenticated. Cannot send {} to server".format(action))
+            print_error("Not authenticated. Cannot send {} to server".format(action))
             self.dump_unsent_messages(message_list)
             return
 
@@ -70,7 +70,7 @@ class BackupProtocol(models.Protocol):
         base_url = self.assignment.server_url + '/{}/{}/{}'
 
         if isinstance(response, dict):
-            print('{action} successful for user: {email}'.format(action=action.title(),
+            print_success('{action} successful for user: {email}'.format(action=action.title(),
                         email=response['data']['email']))
 
             submission_type = 'submissions' if self.args.submit else 'backups'
@@ -79,7 +79,7 @@ class BackupProtocol(models.Protocol):
                                   response['data']['key'])
 
             if self.args.submit or self.args.backup:
-                print('URL: {0}'.format(url))
+                print_success('URL: {0}'.format(url))
 
             if self.args.backup:
                 print('NOTE: this is only a backup. '
@@ -205,7 +205,7 @@ class BackupProtocol(models.Protocol):
 
         if current and error_msg:
             print()     # Preserve progress bar.
-            print('Could not', action.lower() + ':', error_msg)
+            print_error('Could not', action.lower() + ':', error_msg)
         elif not message_list:
             print('{action}... 100% complete'.format(action=action))
             return first_response
@@ -216,11 +216,11 @@ class BackupProtocol(models.Protocol):
         elif not error_msg:
             # No errors occurred, but could not complete request within TIMEOUT.
             print()     # Preserve progress bar.
-            print('Could not {} within {} seconds.'.format(action.lower(), timeout))
+            print_error('Could not {} within {} seconds.'.format(action.lower(), timeout))
         else:
             # If not all messages could be backed up successfully.
             print()     # Preserve progress bar.
-            print('Could not', action.lower() + ':', error_msg)
+            print_error('Could not', action.lower() + ':', error_msg)
 
     def send_messages(self, access_token, messages, timeout, current):
         """Send messages to server, along with user authentication."""
