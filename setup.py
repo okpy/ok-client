@@ -39,6 +39,7 @@ setup(
     ],
     install_requires=[
         'requests==2.12.4',
-        'coverage==4.4'
+        'coverage==4.4',
+        'colorama==0.4.3'
     ],
 )
