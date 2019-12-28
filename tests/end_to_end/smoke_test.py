@@ -47,4 +47,4 @@ class SmokeTest(unittest.TestCase):
     def testUpdate(self):
         stdout, stderr = self.run_ok("--update")
         self.assertEqual(stderr, "")
-        self.assertRegex(stdout, "Current version: v[0-9.]+\nOK is up to date")
+        self.assertRegex(stdout, r"Current version: v[0-9.]+\n\S*OK is up to date\S*")
