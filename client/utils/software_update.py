@@ -13,7 +13,7 @@ def check_version(server, version, filename, timeout=SHORT_TIMEOUT):
 
     address = VERSION_ENDPOINT.format(server=server)
 
-    print('Checking for software updates...')
+    log.info('Checking for software updates...')
     log.info('Existing OK version: %s', version)
     log.info('Checking latest version from %s', address)
 
