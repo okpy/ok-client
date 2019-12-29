@@ -11,11 +11,6 @@ jobs:
       matrix:
         os: [windows-latest, macos-latest]
         python-version: [3.5, 3.6, 3.7, 3.8]
-        exclude:
-          - os: windows-latest
-            python-version: 3.5
-          - os: windows-latest
-            python-version: 3.6
     env:
       VENV_DIR: env
     steps:
