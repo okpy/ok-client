@@ -4,9 +4,10 @@ import tempfile
 import subprocess
 import os
 import shlex
+import sys
 
 SCRIPT = """
-source {envloc}/{folder}/activate;
+. {envloc}/{folder}/activate;
 python ok {args}
 """
 
@@ -29,7 +30,7 @@ class SmokeTest(unittest.TestCase):
     def run_ok(self, *args):
         command_line = SCRIPT.format(
             envloc=shlex.quote(self.clean_env_dir.name),
-            folder="scripts" if os.name == "nt" else "bin",
+            folder="Scripts" if sys.platform == "win32" else "bin",
             args=" ".join(shlex.quote(arg) for arg in args),
         )
         with subprocess.Popen(
