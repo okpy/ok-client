@@ -13,7 +13,7 @@ if sys.version_info[:2] < (3, 4):
 
 from client.cli import ok
 from client.utils import config
-import requests
+import certifi
 
 def patch_requests():
     """ Customize the cacerts.pem file that requests uses.
@@ -21,7 +21,7 @@ def patch_requests():
     """
     config.create_config_directory()
     ca_certs_file = config.CERT_FILE
-    ca_certs_contents = requests.__loader__.get_data('requests/cacert.pem')
+    ca_certs_contents = certifi.__loader__.get_data('certifi/cacert.pem')
 
     should_write_certs = True
 
