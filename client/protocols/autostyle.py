@@ -36,12 +36,6 @@ class AutoStyleProtocol(models.Protocol):
 
         grading = messages['grading']
 
-        if not self.args.question:
-            log.info("-q flag was not specified")
-            print("*" * 69)
-            print("To use AutoStyle you must specify the -q flag!")
-            print("*" * 69)
-            return
         for question in self.args.question:
             if question in AutoStyleProtocol.ALLOW_QUESTIONS:
                 # Ensure that all tests have passed
