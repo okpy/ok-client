@@ -1,0 +1,116 @@
+name: CI
+
+on: [push, pull_request]
+
+jobs:
+  build:
+    name: ${{ matrix.name }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        name: [
+          Python 3.8 (Windows),
+          Python 3.8 (Macintosh),
+          Python 3.8 (Ubuntu),
+          Python 3.7 (Windows),
+          Python 3.7 (Macintosh),
+          Python 3.7 (Ubuntu),
+          Python 3.6 (Windows),
+          Python 3.6 (Macintosh),
+          Python 3.6 (Ubuntu),
+          Python 3.5 (Windows),
+          Python 3.5 (Macintosh),
+          Python 3.5 (Ubuntu),
+        ]
+        include:
+          - name: Python 3.8 (Windows)
+            os: windows-latest
+            python-version: 3.8
+          - name: Python 3.8 (Macintosh)
+            os: macos-latest
+            python-version: 3.8
+          - name: Python 3.8 (Ubuntu)
+            os: ubuntu-latest
+            python-version: 3.8
+          - name: Python 3.7 (Windows)
+            os: windows-latest
+            python-version: 3.7
+          - name: Python 3.7 (Macintosh)
+            os: macos-latest
+            python-version: 3.7
+          - name: Python 3.7 (Ubuntu)
+            os: ubuntu-latest
+            python-version: 3.7
+          - name: Python 3.6 (Windows)
+            os: windows-latest
+            python-version: 3.6
+          - name: Python 3.6 (Macintosh)
+            os: macos-latest
+            python-version: 3.6
+          - name: Python 3.6 (Ubuntu)
+            os: ubuntu-latest
+            python-version: 3.6
+          - name: Python 3.5 (Windows)
+            os: windows-latest
+            python-version: 3.5
+          - name: Python 3.5 (Macintosh)
+            os: macos-latest
+            python-version: 3.5
+          - name: Python 3.5 (Ubuntu)
+            os: ubuntu-latest
+            python-version: 3.5
+    env:
+      VENV_DIR: env
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v1
+      with:
+        fetch-depth: 1
+    - name: "Caching (for Linux)"
+      uses: actions/cache@v1
+      if: startsWith(runner.os, 'linux')
+      with:
+        path: ~/.cache/pip
+        key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
+        restore-keys: ${{ runner.os }}-pip-
+    - name: "Caching (for Macintosh)"
+      uses: actions/cache@v1
+      if: startsWith(runner.os, 'macos')
+      with:
+        path: ~/Library/Caches/pip
+        key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
+        restore-keys: ${{ runner.os }}-pip-
+    - name: "Caching (for Windows)"
+      uses: actions/cache@v1
+      if: startsWith(runner.os, 'windows')
+      with:
+        path: ~\AppData\Local\pip\Cache
+        key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
+        restore-keys: ${{ runner.os }}-pip-
+    - name: Set up Python
+      uses: actions/setup-python@v1
+      with:
+        python-version: ${{ matrix.python-version }}
+    - name: Initialize environment
+      shell: bash
+      run: python -m venv "${VENV_DIR}"
+    - name: Install packages
+      shell: bash
+      run: |
+        case "${{ matrix.os }}" in
+          windows*) scripts="Scripts";;
+          *       ) scripts="bin";;
+        esac
+        . "${VENV_DIR}/${scripts}/activate"
+        python -m pip install --default-timeout=1000 -r requirements.txt
+    - name: Run tests
+      shell: bash
+      run: |
+        case "${{ matrix.os }}" in
+          windows*) scripts="Scripts";;
+          *       ) scripts="bin";;
+        esac
+        . "${VENV_DIR}/${scripts}/activate"
+        echo "Using $(python --version) on ${{ matrix.os }}" 1>&2
+        nosetests --with-coverage tests
