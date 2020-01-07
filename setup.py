@@ -39,7 +39,8 @@ setup(
     ],
     install_requires=[
         'requests==2.22.0',
+        'certifi==2019.11.28',
         'coverage==4.4',
-        'certifi==2019.11.28'
+        'ast-scope==0.3.1'
     ],
 )
