@@ -11,7 +11,7 @@ import zipfile
 OK_ROOT = os.path.normpath(os.path.dirname(client.__file__))
 CONFIG_NAME = 'config.ok'
 
-EXTRA_PACKAGES = ['requests', 'coverage', 'certifi', 'urllib3', 'chardet', 'idna', 'pytutor', 'ast_scope', 'networkx']
+EXTRA_PACKAGES = ['requests', 'coverage', 'certifi', 'urllib3', 'chardet', 'idna', 'pytutor', 'ast_scope']
 
 def abort(message):
     print(message + ' Aborting', file=sys.stderr)

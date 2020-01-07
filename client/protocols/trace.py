@@ -7,8 +7,6 @@ import datetime as dt
 import logging
 import json
 
-import networkx as nx
-
 from pytutor import generate_trace
 from pytutor import server
 
@@ -108,6 +106,17 @@ class TraceProtocol(models.Protocol):
             print("There was an internal error while generating the trace.")
             messages['tracing']['error'] = True
 
+def reachable(graph, node):
+    seen = set()
+    def helper(node):
+        if node in seen:
+            return
+        seen.add(node)
+        for neighbor in graph.neighbors(node):
+            helper(neighbor)
+    helper(node)
+    return seen
+
 
 def collect_globals(data):
     """
@@ -122,9 +131,9 @@ def collect_globals(data):
     all_globals = set(
         desc
         for glob in seed_globals
-        for desc in (nx.descendants(graph, glob) if glob in graph.nodes else ())
+        for desc in (reachable(graph, glob) if glob in graph.nodes() else ())
     )
-    return all_globals | seed_globals
+    return all_globals
 
 def remove_unused_globals(data):
     # Data format specified here: https://github.com/pgbovine/OnlinePythonTutor/blob/master/v3/docs/opt-trace-format.md
