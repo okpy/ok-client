@@ -131,7 +131,7 @@ def collect_globals(data):
     all_globals = set(
         desc
         for glob in seed_globals
-        for desc in (reachable(graph, glob) if glob in graph.nodes() else ())
+        for desc in (reachable(graph, glob) if glob in graph.nodes() else [glob])
     )
     return all_globals
 
