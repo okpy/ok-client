@@ -41,6 +41,7 @@ setup(
         'requests==2.22.0',
         'certifi==2019.11.28',
         'coverage==4.4',
+        'pytutor==1.0.0',
         'ast-scope==0.3.1'
     ],
 )
