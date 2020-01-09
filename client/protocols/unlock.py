@@ -87,7 +87,7 @@ class UnlockProtocol(models.Protocol):
                 break
         messages['unlock'] = self.analytics
 
-    def interact(self, unique_id, case_id, question_prompt, answer, *, normalizer, choices=None, randomize=True):
+    def interact(self, unique_id, case_id, question_prompt, answer, choices=None, randomize=True, *, normalizer=lambda x: x):
         """Reads student input for unlocking tests until the student
         answers correctly.
 
