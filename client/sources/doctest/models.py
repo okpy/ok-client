@@ -19,7 +19,8 @@ class Doctest(models.Test):
     PS1 = '>>> '
     PS2 = '... '
 
-    SETUP = PS1 + 'from {} import *'
+    IMPORT_STRING = 'from {} import *'
+    SETUP = PS1 + IMPORT_STRING
     prompt_re = re.compile(r'(\s*)({}|{})'.format(PS1, '\.\.\. '))
 
     def __init__(self, file, verbose, interactive, timeout=None, **fields):
@@ -61,7 +62,7 @@ class Doctest(models.Test):
                 code.append(line[len(leading_space):])
         module = self.SETUP.format(importing.path_to_module_string(self.file))
         self.case = interpreter.CodeCase(self.console, module,
-                                             code='\n'.join(code))
+                                         code='\n'.join(code))
 
     def run(self, env):
         """Runs the suites associated with this doctest.
@@ -121,3 +122,15 @@ class Doctest(models.Test):
 
     def dump(self):
         """Doctests do not need to be dumped, since no state changes."""
+
+    def get_code(self):
+        """Render code for tracing."""
+        setup = self.IMPORT_STRING.format(importing.path_to_module_string(self.file))
+        data = {
+            self.name: {
+            'setup': setup + '\n',
+            'code': self.case.formatted_code(),
+            'teardown': '',
+            }
+        }
+        return data
