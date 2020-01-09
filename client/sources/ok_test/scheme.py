@@ -97,10 +97,11 @@ class SchemeConsole(interpreter.Console):
         # some errors are just printed
         with StringIO() as buf, redirect_stdout(buf), redirect_stderr(buf):
             parsed = self.scheme.read_line(response)
+            unparsed = self.scheme.repl_str(parsed)
             output = buf.getvalue()
         if output:
             raise RuntimeError(output)
-        return str(parsed)
+        return unparsed
 
 class SchemeSuite(doctest.DoctestSuite):
     console_type = SchemeConsole
