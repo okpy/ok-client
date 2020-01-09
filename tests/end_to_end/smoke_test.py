@@ -2,6 +2,7 @@ from client.cli import publish
 import unittest
 import tempfile
 import subprocess
+import json
 import os
 import shlex
 import sys
@@ -27,6 +28,10 @@ class SmokeTest(unittest.TestCase):
         self.directory = tempfile.TemporaryDirectory()
         publish.package_client(self.directory.name)
 
+    def add_file(self, name, contents):
+        with open(os.path.join(self.directory.name, name), "w") as f:
+            f.write(contents)
+
     def run_ok(self, *args):
         command_line = SCRIPT.format(
             envloc=shlex.quote(self.clean_env_dir.name),
@@ -49,3 +54,29 @@ class SmokeTest(unittest.TestCase):
         stdout, stderr = self.run_ok("--update")
         self.assertEqual(stderr, "")
         self.assertRegex(stdout, "Current version: v[0-9.]+\nChecking for software updates...\nOK is up to date")
+
+    def testRunNoArgument(self):
+        self.add_file("test.ok", json.dumps(
+            {
+                "name": "Test Assignment",
+                "endpoint": "cal/cs61a/fa19/test",
+                "src": [
+                    "test.py"
+                ],
+                "tests": {
+                    "test.py": "doctest"
+                },
+                "default_tests": [],
+                "protocols": [
+                    "restore",
+                    "file_contents",
+                    "unlock",
+                    "grading",
+                    "analytics",
+                    "backup"
+                ]
+            }
+        ))
+        stdout, stderr = self.run_ok("--local")
+        self.assertEqual(stderr, "")
+        self.assertRegex(stdout, ".*0 test cases passed! No cases failed.*")
