@@ -19,8 +19,6 @@ import importlib
 import sys
 import textwrap
 import traceback
-from io import StringIO
-from contextlib import redirect_stdout, redirect_stderr
 
 class SchemeConsole(interpreter.Console):
     PS1 = 'scm> '
@@ -94,14 +92,7 @@ class SchemeConsole(interpreter.Console):
             raise exceptions.ProtocolException('Could not import scheme')
 
     def normalize(self, response):
-        # some errors are just printed
-        with StringIO() as buf, redirect_stdout(buf), redirect_stderr(buf):
-            parsed = self.scheme.read_line(response)
-            unparsed = self.scheme.repl_str(parsed)
-            output = buf.getvalue()
-        if output:
-            raise RuntimeError(output)
-        return unparsed
+        return str(self.scheme.read_line(response))
 
 class SchemeSuite(doctest.DoctestSuite):
     console_type = SchemeConsole
