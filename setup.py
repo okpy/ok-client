@@ -38,8 +38,11 @@ setup(
         'Programming Language :: Python :: 3.6',
     ],
     install_requires=[
-        'requests==2.12.4',
+        'requests==2.22.0',
+        'certifi==2019.11.28',
         'coverage==4.4',
+        'pytutor==1.0.0',
+        'ast-scope==0.3.1'
         'colorama==0.4.3'
     ],
 )
