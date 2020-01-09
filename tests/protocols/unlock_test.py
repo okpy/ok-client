@@ -276,13 +276,14 @@ class InteractTest(unittest.TestCase):
 
     def testSchemeInput_multiple(self):
         # make sure that it isn't parsing one token at a time
-        self.input_choices = ['a']
+        self.input_choices = ['a', 'a + b']
         actual_answer = ['a + b']
         self.callsInteract(actual_answer, actual_answer, normalizer=self.scheme_console().normalize)
 
-        self.checkNumberOfAttempts(1)
+        self.checkNumberOfAttempts(2)
 
-        self.validateRecord(self.proto.analytics[0], answer=actual_answer, correct=True)
+        self.validateRecord(self.proto.analytics[0], answer=['a'], correct=False)
+        self.validateRecord(self.proto.analytics[1], answer=['a + b'], correct=True)
 
     def testSpecialInputs_correct(self):
         # list of (answer, student_input)
