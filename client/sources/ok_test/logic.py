@@ -93,7 +93,7 @@ class LogicConsole(interpreter.Console):
         self.logic.facts[:] = []
 
     def normalize(self, response):
-        return str(self.logic.read_line(response))
+        return self.logic.repl_str(self.logic.read_line(response))
 
 class LogicSuite(doctest.DoctestSuite):
     console_type = LogicConsole
