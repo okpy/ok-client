@@ -98,12 +98,14 @@ class DoctestTest(unittest.TestCase):
         ...     print("Starts a line, ", end="")
         ...     print("DEBUG: this is not a debug line")
         ...     print("DEBUG: This, however is a debug line")
-        ...     print("DEBUG must have a colon to be ignored")
+        ...     print("DEBUG with just a space is fine")
+        ...     print("DEBUG_must have a colon or a space to be ignored")
+        ...     print("debug lowercase is ignored")
         ...     return 1
         >>> foo()
         Not a debug line, even though it contains "DEBUG:"
         Starts a line, DEBUG: this is not a debug line
-        DEBUG must have a colon to be ignored
+        DEBUG_must have a colon or a space to be ignored
         1
         """)
         self.assertEqual({

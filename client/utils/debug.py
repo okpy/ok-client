@@ -4,7 +4,7 @@ import re
 from doctest import OutputChecker
 
 def remove_debug(printed_output):
-    return re.sub(r'^DEBUG:.*\n', '', printed_output, flags=re.MULTILINE)
+    return re.sub(r'^DEBUG[: ].*\n', '', printed_output, flags=re.MULTILINE | re.IGNORECASE)
 
 class DebugOutputChecker(OutputChecker):
     def __init__(self):
