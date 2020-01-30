@@ -63,12 +63,13 @@ class TraceProtocol(models.Protocol):
                     usage_base = "Usage: python3 ok -q {} --suite {} --trace"
                     print(usage_base.format(self.args.question[0], eligible_suite_nums[0]))
                 return
-            if self.args.suite not in data:
+            suite = int(self.args.suite)
+            if suite not in data:
                 with format.block('*'):
                     print("Suite {} is not traceable.".format(self.args.suite))
                 return
 
-            suite = data[self.args.suite] # only trace this one suite
+            suite = data[suite] # only trace this one suite
             case_arg = self.args.case
             if case_arg:
                 case_num = case_arg[0]-1
@@ -77,7 +78,7 @@ class TraceProtocol(models.Protocol):
                         print("You can specify a specific case to test.")
                         print("Cases: 1-{}".format(len(suite)))
                         usage_base = "Usage: python3 ok -q {} --suite {} --case 1 --trace"
-                        print(usage_base.format(self.args.question[0], self.args.suite))
+                        print(usage_base.format(self.args.question[0], suite))
                         return
                 suite = [suite[case_arg[0]-1]]
         else:
