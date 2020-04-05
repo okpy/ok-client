@@ -5,6 +5,8 @@ from client.sources.common import interpreter
 from client.utils import output
 from client.utils import timer
 from client.utils import debug
+
+import ast
 import code
 import textwrap
 import traceback
@@ -73,3 +75,6 @@ class PythonConsole(interpreter.Console):
         finally:
             output.remove_log(log_id)
 
+    @staticmethod
+    def normalize(response):
+        return repr(ast.literal_eval(response))

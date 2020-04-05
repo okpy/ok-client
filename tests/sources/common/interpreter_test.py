@@ -9,6 +9,7 @@ class CodeCaseTest(unittest.TestCase):
         self.console = mock.Mock(interpreter.Console)
         self.console.PS1 = '> '
         self.console.PS2 = '. '
+        self.console.normalize = lambda x: x
 
     def makeCase(self, code, setup='', teardown=''):
         return interpreter.CodeCase(self.console, setup, teardown, code=code)
@@ -72,6 +73,7 @@ class UnlockTest(unittest.TestCase):
         self.console = mock.Mock(interpreter.Console)
         self.console.PS1 = '> '
         self.console.PS2 = '. '
+        self.console.normalize = lambda x: x
 
         self.mock_answer = ['mock']
         self.interact_fn = mock.Mock(return_value=self.mock_answer)
@@ -139,6 +141,7 @@ class LockTest:
         self.console = mock.Mock(interpreter.Console)
         self.console.PS1 = '> '
         self.console.PS2 = '. '
+        self.console.normalize = lambda x: x
 
         self.hash_fn = mock.Mock(return_value=self.ANSWER)
 
@@ -203,6 +206,7 @@ class ToJsonTest:
 
     def setUp(self):
         self.console = mock.Mock(interpreter.Console)
+        self.console.normalize = lambda x: x
         self.interact_fn = mock.Mock(side_effect=lambda x, y: x)
 
     def makeCase(self, **fields):

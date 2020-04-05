@@ -2,8 +2,12 @@
 
 from client.protocols import unlock
 from client.sources.common import models
+from client.sources.common.pyconsole import PythonConsole
+from client.sources.ok_test.scheme import SchemeConsole
 import mock
 import unittest
+import os
+import urllib.request
 
 class UnlockProtocolTest(unittest.TestCase):
     TEST = 'Test 1'
@@ -46,6 +50,14 @@ class InteractTest(unittest.TestCase):
     INCORRECT_ANSWERS = ['a', 'b', 'c']
     CHOICES = SHORT_ANSWER + INCORRECT_ANSWERS
 
+    @classmethod
+    def setUpClass(cls):
+        urllib.request.urlretrieve("https://cs61a.org/assets/interpreter/scheme", 'scheme')
+
+    @classmethod
+    def tearDownClass(cls):
+        os.remove('scheme')
+
     def setUp(self):
         self.cmd_args = mock.Mock()
         self.assignment = mock.Mock()
@@ -57,6 +69,7 @@ class InteractTest(unittest.TestCase):
 
         self.input_choices = []
         self.choice_number = 0
+
 
     def mockInput(self, prompt):
         self.choice_number += 1
@@ -84,9 +97,9 @@ class InteractTest(unittest.TestCase):
             choices = None
 
         self.assertRaises(expected_error, self.proto.interact,
-                          unique_id, case_id, prompt, answer)
+                          unique_id, case_id, prompt, answer, normalizer=lambda x: x)
 
-    def callsInteract(self, expected, answer, choices=None, unique_id=None,
+    def callsInteract(self, expected, answer, normalizer=lambda x: x, choices=None, unique_id=None,
                 case_id=None, prompt=None, randomize=True):
         if not unique_id:
             unique_id = self.UNIQUE_ID
@@ -98,7 +111,7 @@ class InteractTest(unittest.TestCase):
             choices = None
 
         self.assertEqual(expected, self.proto.interact(unique_id, case_id,
-                         prompt, answer, choices=choices, randomize=randomize))
+                         prompt, answer, normalizer=normalizer, choices=choices, randomize=randomize))
 
     def validateRecord(self, record, answer, correct, prompt=None,
                        unique_id=None, case_id=None):
@@ -210,7 +223,7 @@ class InteractTest(unittest.TestCase):
 
     def testEvaluatedInput_immediatelyCorrect(self):
         self.input_choices = list(self.CORRECT_EVAL)
-        self.callsInteract(self.EVAL_ANSWER, self.EVAL_ANSWER)
+        self.callsInteract(self.EVAL_ANSWER, self.EVAL_ANSWER, normalizer=PythonConsole.normalize)
 
         self.checkNumberOfAttempts(1)
         attempt = self.proto.analytics[0]
@@ -219,7 +232,7 @@ class InteractTest(unittest.TestCase):
 
     def testEvaluatedInput_multipleFailsBeforeSuccess(self):
         self.input_choices = self.INCORRECT_EVALS + self.CORRECT_EVAL
-        self.callsInteract(self.EVAL_ANSWER, self.EVAL_ANSWER)
+        self.callsInteract(self.EVAL_ANSWER, self.EVAL_ANSWER, normalizer=PythonConsole.normalize)
 
         self.checkNumberOfAttempts(1 + len(self.INCORRECT_EVALS))
         for attempt_number, attempt in enumerate(self.proto.analytics):
@@ -228,6 +241,49 @@ class InteractTest(unittest.TestCase):
                                     correct=False)
             else:
                 self.validateRecord(attempt, answer=self.EVAL_ANSWER, correct=True)
+
+    def scheme_console(self):
+        console = SchemeConsole(interactive=True, verbose=False)
+        console.load('')
+        return console
+
+    def testSchemeInput_parensNotRemoved(self):
+        self.input_choices = ['(1)', '1']
+        self.callsInteract(['1'], ['1'], normalizer=self.scheme_console().normalize)
+
+        self.checkNumberOfAttempts(2)
+
+        self.validateRecord(self.proto.analytics[0], answer=['(1)'], correct=False)
+        self.validateRecord(self.proto.analytics[1], answer=['1'], correct=True)
+
+    def testSchemeInput_trueFalseNil(self):
+        self.input_choices = ['(true (false false true nil) nil hi)']
+        actual_answer = ['(#t (#f #f #t ()) () hi)']
+        self.callsInteract(actual_answer, actual_answer, normalizer=self.scheme_console().normalize)
+
+        self.checkNumberOfAttempts(1)
+
+        self.validateRecord(self.proto.analytics[0], answer=actual_answer, correct=True)
+
+    def testSchemeInput_doesntParse(self):
+        self.input_choices = ['#[print]']
+        actual_answer = ['#[print]']
+        self.callsInteract(actual_answer, actual_answer, normalizer=self.scheme_console().normalize)
+
+        self.checkNumberOfAttempts(1)
+
+        self.validateRecord(self.proto.analytics[0], answer=actual_answer, correct=True)
+
+    def testSchemeInput_multiple(self):
+        # make sure that it isn't parsing one token at a time
+        self.input_choices = ['a', 'a + b']
+        actual_answer = ['a + b']
+        self.callsInteract(actual_answer, actual_answer, normalizer=self.scheme_console().normalize)
+
+        self.checkNumberOfAttempts(2)
+
+        self.validateRecord(self.proto.analytics[0], answer=['a'], correct=False)
+        self.validateRecord(self.proto.analytics[1], answer=['a + b'], correct=True)
 
     def testSpecialInputs_correct(self):
         # list of (answer, student_input)
