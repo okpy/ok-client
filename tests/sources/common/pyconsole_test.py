@@ -48,6 +48,31 @@ class PythonConsoleTest(unittest.TestCase):
             >>> print('DEBUG: 7')
             """)
 
+    def testPass_debug_with_space(self):
+        self.calls_interpret(True,
+            """
+            >>> print('DEBUG 7')
+            """)
+
+    def testPass_debug_with_no_space_or_colon(self):
+        self.calls_interpret(True,
+            """
+            >>> print('DEBUGGING')
+            DEBUGGING
+            """)
+
+    def testPass_debug_case_insensitive(self):
+        self.calls_interpret(True,
+            """
+            >>> print('debug: 7')
+            """)
+
+    def testPass_debug_case_mixed(self):
+        self.calls_interpret(True,
+            """
+            >>> print('DebuG: 7')
+            """)
+
     def testPass_printMultipleLines(self):
         self.calls_interpret(True,
             """
