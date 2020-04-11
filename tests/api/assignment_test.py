@@ -416,7 +416,7 @@ class AssignmentGradeTest(unittest.TestCase):
         "name": "Homework 1",
         "endpoint": "",
         "tests": {
-            "q1.py": "ok_test"
+            "q1.py": "ok_test,lint_test"
         },
         "protocols": []
     }

@@ -195,7 +195,8 @@ class Assignment(core.Serializable):
                 for file in sorted(glob.glob(file_pattern)):
                     try:
                         module = importlib.import_module(self._TESTS_PACKAGE + '.' + source)
-                    except ImportError:
+                    except ImportError as e:
+                        print(e)
                         raise ex.LoadingException('Invalid test source: {}'.format(source))
 
                     test_name = file

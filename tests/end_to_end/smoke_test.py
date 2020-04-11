@@ -7,6 +7,47 @@ import os
 import shlex
 import sys
 
+TEST_OK_FILE = {
+    "name": "Test Assignment",
+    "endpoint": "cal/cs61a/fa19/test",
+    "src": [
+        "test.py"
+    ],
+    "tests": {
+        "test.py": "doctest,lint_test"
+    },
+    "default_tests": [
+        "test1"
+    ],
+    "protocols": [
+        "restore",
+        "file_contents",
+        "unlock",
+        "grading",
+        "analytics",
+        "backup"
+    ]
+}
+
+TEST_FILE = '''
+def f(x):
+    """
+    >>> f(2)
+    4
+    >>> f(3)
+    9
+    """
+    return x ** 2
+def g(x):
+    """
+    >>> g(2)
+    4
+    >>> g(3)
+    9
+    """
+    return x ** 3
+'''
+
 SCRIPT = """
 . {envloc}/{folder}/activate;
 python ok {args}
@@ -32,12 +73,16 @@ class SmokeTest(unittest.TestCase):
         with open(os.path.join(self.directory.name, name), "w") as f:
             f.write(contents)
 
+    def add_ok_file(self):
+        self.add_file("test.ok", json.dumps(TEST_OK_FILE))
+
     def run_ok(self, *args):
         command_line = SCRIPT.format(
             envloc=shlex.quote(self.clean_env_dir.name),
             folder="Scripts" if sys.platform == "win32" else "bin",
             args=" ".join(shlex.quote(arg) for arg in args),
         )
+        print(command_line)
         with subprocess.Popen(
                 os.getenv('SHELL', 'sh'),
                 stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
@@ -56,27 +101,22 @@ class SmokeTest(unittest.TestCase):
         self.assertRegex(stdout, "Current version: v[0-9.]+\nChecking for software updates...\nOK is up to date")
 
     def testRunNoArgument(self):
-        self.add_file("test.ok", json.dumps(
-            {
-                "name": "Test Assignment",
-                "endpoint": "cal/cs61a/fa19/test",
-                "src": [
-                    "test.py"
-                ],
-                "tests": {
-                    "test.py": "doctest"
-                },
-                "default_tests": [],
-                "protocols": [
-                    "restore",
-                    "file_contents",
-                    "unlock",
-                    "grading",
-                    "analytics",
-                    "backup"
-                ]
-            }
-        ))
+        self.add_ok_file()
+        self.add_file("test.py", "")
         stdout, stderr = self.run_ok("--local")
+        self.assertEqual(stderr, "")
+        self.assertRegex(stdout, ".*0 test cases passed! No cases failed.*")
+
+    def testPassingTest(self):
+        self.add_ok_file()
+        self.add_file("test.py", TEST_FILE)
+        stdout, stderr = self.run_ok("-q", "f", "--local")
+        self.assertEqual(stderr, "")
+        self.assertRegex(stdout, ".*1 test cases passed! No cases failed.*")
+
+    def testFailingTest(self):
+        self.add_ok_file()
+        self.add_file("test.py", TEST_FILE)
+        stdout, stderr = self.run_ok("-q", "g", "--local")
         self.assertEqual(stderr, "")
         self.assertRegex(stdout, ".*0 test cases passed! No cases failed.*")
