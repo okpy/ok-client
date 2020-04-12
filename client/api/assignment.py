@@ -188,7 +188,7 @@ class Assignment(core.Serializable):
         with open(path) as f:
             contents = f.read()
 
-        return contents == ""
+        return contents.strip() == ""
 
     def _load_tests(self):
         """Loads all tests specified by test_map."""
