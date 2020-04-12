@@ -181,6 +181,15 @@ class Assignment(core.Serializable):
     def get_identifier(self):
         return auth.get_identifier(self.cmd_args, endpoint=self.endpoint)
 
+    def is_empty_init(self, path):
+        if os.path.basename(path) != '__init__.py':
+            return False
+
+        with open(path) as f:
+            contents = f.read()
+
+        return contents.strip() == ""
+
     def _load_tests(self):
         """Loads all tests specified by test_map."""
         log.info('Loading tests')
@@ -193,6 +202,8 @@ class Assignment(core.Serializable):
                     parameter = ''
 
                 for file in sorted(glob.glob(file_pattern)):
+                    if self.is_empty_init(file):
+                        continue
                     try:
                         module = importlib.import_module(self._TESTS_PACKAGE + '.' + source)
                     except ImportError:
