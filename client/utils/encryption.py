@@ -3,36 +3,27 @@ Thin wrapper around the pypi `encryption` library that fixes the block mode and 
 for encrypted text to be stored in that allows for easily determining the difference between an encrypted and
 non-encrypted file.
 """
-import json
-import os
 import base64
 
-from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
-from cryptography.hazmat.backends import default_backend
+from cryptography.fernet import Fernet, InvalidToken
 
 HEADER_TEXT = "OKPY ENCRYPTED FILE FOLLOWS\n" + "-" * 100 + "\n"
-CIPHERTEXT_HEADER = b"0" * 8
 
 
-def generate_key():
+def generate_key() -> bytes:
     """
     Generates a random key
     """
-    return os.urandom(32)
+    return Fernet.generate_key()
 
 
 def encrypt(data: str, key: bytes) -> str:
     """
     Encrypt the given data using the given key. Tag the result so that it is clear that this is an encrypted file.
     """
-    iv = os.urandom(16)
-    cipher = get_cipher(iv, key)
-    encryptor = cipher.encryptor()
-    data_as_bytes = CIPHERTEXT_HEADER + data.encode('utf-8')
-    ciphertext = encryptor.update(data_as_bytes) + encryptor.finalize()
+    data_as_bytes = data.encode('utf-8')
 
-    encoded_ciphertext = HEADER_TEXT + json.dumps(
-        dict(iv=base64.b64encode(iv).decode('ascii'), ciphertext=base64.b64encode(ciphertext).decode('ascii')))
+    encoded_ciphertext = HEADER_TEXT + base64.b64encode(Fernet(key).encrypt(data_as_bytes)).decode('ascii')
     return encoded_ciphertext
 
 
@@ -48,29 +39,11 @@ def decrypt(encoded_ciphertext: str, key: bytes) -> str:
     if not encoded_ciphertext.startswith(HEADER_TEXT):
         raise ValueError("Invalid ciphertext: does not start with the header")
     encoded_ciphertext = encoded_ciphertext[len(HEADER_TEXT):]
+    encoded_ciphertext = base64.b64decode(encoded_ciphertext.encode('ascii'))
     try:
-        encoded_dictionary = json.loads(encoded_ciphertext)
-    except json.JSONDecodeError:
-        raise ValueError("Invalid ciphertext: is not valid json")
-
-    if encoded_dictionary.keys() != {'iv', 'ciphertext'}:
-        raise ValueError("Invalid ciphertext: keys are not 'iv' and 'ciphertext'")
-
-    iv = base64.b64decode(encoded_dictionary['iv'].encode('ascii'))
-    ciphertext = base64.b64decode(encoded_dictionary['ciphertext'].encode('ascii'))
-
-    cipher = get_cipher(iv, key)
-    decryptor = cipher.decryptor()
-    data = decryptor.update(ciphertext) + decryptor.finalize()
-    if not data.startswith(CIPHERTEXT_HEADER):
+        return Fernet(key).decrypt(encoded_ciphertext).decode('utf-8')
+    except InvalidToken:
         raise InvalidKeyException("Invalid key: {}".format(key))
-    data = data[len(CIPHERTEXT_HEADER):]
-    return data.decode('utf-8')
-
-
-def get_cipher(iv, key):
-    backend = default_backend()
-    return Cipher(algorithms.AES(key), modes.CTR(iv), backend=backend)
 
 
 class InvalidKeyException(Exception):
