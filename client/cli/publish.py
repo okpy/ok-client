@@ -14,7 +14,8 @@ CONFIG_NAME = 'config.ok'
 EXTRA_PACKAGES = [
     'requests', 'certifi', 'urllib3', 'chardet', 'idna', # requests/certifi and recursive deps
     'coverage', # coverage and recursive deps
-    'pytutor', 'ast_scope', 'attr' # pytutor and recursive deps
+    'pytutor', 'ast_scope', 'attr', # pytutor and recursive deps
+    'cryptography'
 ]
 
 def abort(message):
