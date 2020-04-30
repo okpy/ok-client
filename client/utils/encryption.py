@@ -1,5 +1,5 @@
 """
-Thin wrapper around the pypi `encryption` library that fixes the block mode and cipher, along with a standard format
+Thin wrapper around the pypi `encryption` library that uses Fernet, along with a standard format
 for encrypted text to be stored in that allows for easily determining the difference between an encrypted and
 non-encrypted file.
 """
