@@ -1,5 +1,6 @@
 """This module contains code related to controlling and writing to stdout."""
 
+import io
 import os
 import sys
 
@@ -9,7 +10,7 @@ class _OutputLogger(object):
 
     def __init__(self, stdout=sys.stdout):
         self._current_stream = self._stdout = stdout
-        self._devnull = open(os.devnull, 'w')
+        self._devnull = io.open(os.devnull, 'w', encoding=getattr(stdout, 'encoding', 'utf-8'))
         self._logs = {}
         self._num_logs = 0
 
