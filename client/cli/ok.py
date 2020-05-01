@@ -57,9 +57,11 @@ import logging
 import os
 import sys
 import struct
+import colorama
 
 from client.utils.printer import print_error
 
+colorama.init()
 LOGGING_FORMAT = '%(levelname)s  | %(filename)s:%(lineno)d | %(message)s'
 logging.basicConfig(format=LOGGING_FORMAT)
 log = logging.getLogger('client')   # Get top-level logger
