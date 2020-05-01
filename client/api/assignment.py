@@ -181,29 +181,41 @@ class Assignment(core.Serializable):
     def get_identifier(self):
         return auth.get_identifier(self.cmd_args, endpoint=self.endpoint)
 
+    def is_empty_init(self, path):
+        if os.path.basename(path) != '__init__.py':
+            return False
+
+        with open(path) as f:
+            contents = f.read()
+
+        return contents.strip() == ""
+
     def _load_tests(self):
         """Loads all tests specified by test_map."""
         log.info('Loading tests')
-        for file_pattern, source in self.tests.items():
-            # Separate filepath and parameter
-            if ':' in file_pattern:
-                file_pattern, parameter = file_pattern.split(':', 1)
-            else:
-                parameter = ''
+        for file_pattern, sources in self.tests.items():
+            for source in sources.split(","):
+                # Separate filepath and parameter
+                if ':' in file_pattern:
+                    file_pattern, parameter = file_pattern.split(':', 1)
+                else:
+                    parameter = ''
 
-            for file in sorted(glob.glob(file_pattern)):
-                try:
-                    module = importlib.import_module(self._TESTS_PACKAGE + '.' + source)
-                except ImportError:
-                    raise ex.LoadingException('Invalid test source: {}'.format(source))
+                for file in sorted(glob.glob(file_pattern)):
+                    if self.is_empty_init(file):
+                        continue
+                    try:
+                        module = importlib.import_module(self._TESTS_PACKAGE + '.' + source)
+                    except ImportError:
+                        raise ex.LoadingException('Invalid test source: {}'.format(source))
 
-                test_name = file
-                if parameter:
-                    test_name += ':' + parameter
+                    test_name = file
+                    if parameter:
+                        test_name += ':' + parameter
 
-                self.test_map.update(module.load(file, parameter, self))
+                    self.test_map.update(module.load(file, parameter, self))
 
-                log.info('Loaded {}'.format(test_name))
+                    log.info('Loaded {}'.format(test_name))
 
     def dump_tests(self):
         """Dumps all tests, as determined by their .dump() method.

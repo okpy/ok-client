@@ -94,7 +94,7 @@ class GuidanceProtocolTest(unittest.TestCase):
             choices = None
 
         self.assertEqual(expected, self.proto.interact(unique_id, case_id,
-                         prompt, answer, choices=choices, randomize=randomize))
+                         prompt, answer, normalizer=lambda x: x, choices=choices, randomize=randomize))
 
     def validateRecord(self, record, answer, correct, prompt=None,
                        unique_id=None, case_id=None, guidance_msg=None):

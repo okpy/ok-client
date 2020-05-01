@@ -40,9 +40,14 @@ setup(
     install_requires=[
         'requests==2.22.0',
         'certifi==2019.11.28',
+        'urllib3==1.25.7',
+        'chardet==3.0.4',
+        'idna==2.8',
         'coverage==4.4',
         'pytutor==1.0.0',
-        'ast-scope==0.3.1'
+        'ast-scope==0.3.1',
+        'attrs==19.3.0',
+        'cryptography==2.8',
         'colorama==0.4.3'
     ],
 )
