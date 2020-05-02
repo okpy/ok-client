@@ -46,7 +46,6 @@ setup(
         'coverage==4.4',
         'pytutor==1.0.0',
         'ast-scope==0.3.1',
-        'attrs==19.3.0',
-        'cryptography==2.8'
+        'attrs==19.3.0'
     ],
 )
