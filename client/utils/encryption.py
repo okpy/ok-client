@@ -1,30 +1,34 @@
 """
-Thin wrapper around the pypi `encryption` library that uses Fernet, along with a standard format
+Thin wrapper around pyaes that fixes a mode and encryption style, along with a standard format
 for encrypted text to be stored in that allows for easily determining the difference between an encrypted and
 non-encrypted file.
 """
 import base64
+import os
 
-from cryptography.fernet import Fernet, InvalidToken
+import pyaes
 
 HEADER_TEXT = "OKPY ENCRYPTED FILE FOLLOWS\n" + "-" * 100 + "\n"
+
+# used to ensure that the key us correct (helps detect incorrect key usage)
+PLAINTEXT_PADDING = b"0" * 16
 
 
 def generate_key() -> str:
     """
     Generates a random key
     """
-    return Fernet.generate_key().decode('ascii')
+    return to_safe_string(os.urandom(32))
 
 
 def encrypt(data: str, key: str) -> str:
     """
     Encrypt the given data using the given key. Tag the result so that it is clear that this is an encrypted file.
     """
-    data_as_bytes = data.encode('utf-8')
+    data_as_bytes = PLAINTEXT_PADDING + data.encode('utf-8')
 
-    ciphertext = Fernet(key.encode('ascii')).encrypt(data_as_bytes)
-    encoded_ciphertext = HEADER_TEXT + base64.b64encode(ciphertext).decode('ascii')
+    ciphertext = aes_mode_of_operation(key).encrypt(data_as_bytes)
+    encoded_ciphertext = HEADER_TEXT + to_safe_string(ciphertext)
     return encoded_ciphertext
 
 
@@ -39,12 +43,26 @@ def decrypt(encoded_ciphertext: str, key: str) -> str:
     """
     if not encoded_ciphertext.startswith(HEADER_TEXT):
         raise ValueError("Invalid ciphertext: does not start with the header")
-    encoded_ciphertext = encoded_ciphertext[len(HEADER_TEXT):]
-    encoded_ciphertext = base64.b64decode(encoded_ciphertext.encode('ascii'))
-    try:
-        return Fernet(key.encode('ascii')).decrypt(encoded_ciphertext).decode('utf-8')
-    except InvalidToken:
-        raise InvalidKeyException("Invalid key: {}".format(key))
+
+    ciphertext_no_header = encoded_ciphertext[len(HEADER_TEXT):]
+    ciphertext_no_header_bytes = from_safe_string(ciphertext_no_header)
+    padded_plaintext = aes_mode_of_operation(key).decrypt(ciphertext_no_header_bytes)
+    if not padded_plaintext.startswith(PLAINTEXT_PADDING):
+        raise InvalidKeyException
+    plaintext = padded_plaintext[len(PLAINTEXT_PADDING):]
+    return plaintext.decode('utf-8')
+
+
+def to_safe_string(unsafe_bytes: bytes) -> str:
+    return base64.b64encode(unsafe_bytes).decode('ascii')
+
+
+def from_safe_string(safe_string: str) -> bytes:
+    return base64.b64decode(safe_string.encode('ascii'))
+
+
+def aes_mode_of_operation(key):
+    return pyaes.AESModeOfOperationCTR(from_safe_string(key))
 
 
 class InvalidKeyException(Exception):
