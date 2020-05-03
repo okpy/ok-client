@@ -1,6 +1,8 @@
+import uuid
+
 from client import exceptions as ex
 from client.sources.common import core
-from client.utils import auth, format
+from client.utils import auth, format, encryption
 from client.protocols.grading import grade
 import client
 import collections
@@ -101,6 +103,84 @@ class Assignment(core.Serializable):
         test_name = tests[0].name
         grade(tests, messages, env)
         return messages['grading'][test_name]
+
+    ##############
+    # Encryption #
+    ##############
+
+    def generate_encryption_key(self, keys_file):
+        data = [(filename, encryption.generate_key()) for filename in self._get_files()]
+        with open(keys_file, "w") as f:
+            json.dump(data, f)
+
+    def encrypt(self, keys_file):
+        """
+        Encrypt each question and test, with the given keys file, which contains (file, key) pairs
+        """
+        with open(keys_file) as f:
+            keys = dict(json.load(f))
+        for file in self._get_files():
+            if file in keys:
+                self._encrypt_file(file, keys[file])
+
+    def decrypt(self, keys):
+        for file in self._get_files():
+            for key in keys:
+                self._decrypt_file(file, key)
+
+    def _decrypt_file(self, path, key):
+        """
+        Decrypt the given file in place with the given key.
+        If the key does not match, do not change the file contents
+        """
+        def decrypt(ciphertext):
+            if not encryption.is_encrypted(ciphertext):
+                return ciphertext
+            try:
+                plaintext = encryption.decrypt(ciphertext, key)
+                print("decrypted", path, "with", key)
+                return plaintext
+            except encryption.InvalidKeyException:
+                return ciphertext
+
+        self._in_place_edit(path, decrypt)
+
+    def _encrypt_file(self, path, key):
+        """
+        Encrypt the given file in place with the given key.
+        This is idemnipotent but if you try to encrypt the same file with multiple keys it errors.
+        """
+        def encrypt(data):
+            if encryption.is_encrypted(data):
+                try:
+                    data = encryption.decrypt(data, key)
+                except encryption.InvalidKeyException:
+                    raise ValueError("Attempt to re-encrypt file with an invalid key")
+            return encryption.encrypt(data, key)
+
+        self._in_place_edit(path, encrypt)
+
+    @staticmethod
+    def _in_place_edit(path, func):
+        """
+        Edit the given file in place, atomically. `func` is a function that modifies the data in the file.
+        """
+        with open(path) as f:
+            data = f.read()
+        ciphertext = func(data)
+        temporary_file = "." + uuid.uuid4().hex
+        with open(temporary_file, "w") as f:
+            f.write(ciphertext)
+        # atomic rename
+        os.rename(temporary_file, path)
+
+    def _get_files(self):
+        """
+        Get all the test and submission source files associated with this assignment, deduplicated
+        """
+        tests = [k for k, v in self.tests.items() if v == 'ok_test']
+        src = list(self.src)
+        return sorted(set(tests + src))
 
     @property
     def server_url(self):

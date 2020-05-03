@@ -208,6 +208,33 @@ class OkTest(models.Test):
                 extracted_code[ind+1] = suite_code
         return extracted_code
 
+
+class EncryptedOKTest(models.Test):
+    name = core.String()
+    points = core.Float()
+    partner = core.String(optional=True)
+
+    def warn(self, method):
+        return print("Cannot {} {}: test is encrypted".format(method, self.name))
+
+    def run(self, env):
+        self.warn('run')
+        return {'failed': 1, 'locked': 0, 'passed': 0}
+
+    def score(self):
+        self.warn('score')
+        return 0
+
+    def unlock(self, interact):
+        self.warn('unlock')
+
+    def lock(self, hash_fn):
+        self.warn('lock')
+
+    def dump(self):
+        self.warn('save the test')
+
+
 class Suite(core.Serializable):
     type = core.String()
     scored = core.Boolean(default=True)
