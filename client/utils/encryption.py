@@ -54,11 +54,12 @@ def decrypt(encoded_ciphertext: str, key: str) -> str:
 
 
 def to_safe_string(unsafe_bytes: bytes) -> str:
-    return base64.b64encode(unsafe_bytes).decode('ascii')
+    # use 9 instead of = for padding so that the string looks more homogenous
+    return base64.b32encode(unsafe_bytes).decode('ascii').replace("=", "9").lower()
 
 
 def from_safe_string(safe_string: str) -> bytes:
-    return base64.b64decode(safe_string.encode('ascii'))
+    return base64.b32decode(safe_string.upper().replace("9", "=").encode('ascii'))
 
 
 def aes_mode_of_operation(key):
