@@ -1,5 +1,5 @@
 """
-Thin wrapper around the pypi `encryption` library that uses Fernet, along with a standard format
+Thin wrapper around pyaes that fixes a mode and encryption style, along with a standard format
 for encrypted text to be stored in that allows for easily determining the difference between an encrypted and
 non-encrypted file.
 """
@@ -9,7 +9,10 @@ import os
 import pyaes
 
 HEADER_TEXT = "OKPY ENCRYPTED FILE FOLLOWS\n" + "-" * 100 + "\n"
+
+# used to ensure that the key us correct (helps detect incorrect key usage)
 PLAINTEXT_PADDING = b"0" * 16
+
 
 def generate_key() -> str:
     """
@@ -24,7 +27,7 @@ def encrypt(data: str, key: str) -> str:
     """
     data_as_bytes = PLAINTEXT_PADDING + data.encode('utf-8')
 
-    ciphertext = mode(key).encrypt(data_as_bytes)
+    ciphertext = aes_mode_of_operation(key).encrypt(data_as_bytes)
     encoded_ciphertext = HEADER_TEXT + to_safe_string(ciphertext)
     return encoded_ciphertext
 
@@ -43,7 +46,7 @@ def decrypt(encoded_ciphertext: str, key: str) -> str:
 
     ciphertext_no_header = encoded_ciphertext[len(HEADER_TEXT):]
     ciphertext_no_header_bytes = from_safe_string(ciphertext_no_header)
-    padded_plaintext = mode(key).decrypt(ciphertext_no_header_bytes)
+    padded_plaintext = aes_mode_of_operation(key).decrypt(ciphertext_no_header_bytes)
     if not padded_plaintext.startswith(PLAINTEXT_PADDING):
         raise InvalidKeyException
     plaintext = padded_plaintext[len(PLAINTEXT_PADDING):]
@@ -58,7 +61,7 @@ def from_safe_string(safe_string: str) -> bytes:
     return base64.b64decode(safe_string.encode('ascii'))
 
 
-def mode(key):
+def aes_mode_of_operation(key):
     return pyaes.AESModeOfOperationCTR(from_safe_string(key))
 
 
