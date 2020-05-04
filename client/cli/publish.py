@@ -16,6 +16,7 @@ EXTRA_PACKAGES = [
     'coverage', # coverage and recursive deps
     'pytutor', 'ast_scope', 'attr', # pytutor and recursive deps
     'pyaes',
+    'colorama',
 ]
 
 def abort(message):

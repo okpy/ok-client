@@ -81,7 +81,7 @@ class SmokeTest(unittest.TestCase):
     def testUpdate(self):
         stdout, stderr = self.run_ok("--update")
         self.assertEqual(stderr, "")
-        self.assertRegex(stdout, "Current version: v[0-9.]+\nChecking for software updates...\nOK is up to date")
+        self.assertRegex(stdout, "Current version: v[0-9.]+\nOK is up to date")
 
     def testRunNoArgument(self):
         self.add_file("test.ok", json.dumps(
@@ -107,7 +107,7 @@ class SmokeTest(unittest.TestCase):
         ))
         stdout, stderr = self.run_ok("--local")
         self.assertEqual(stderr, "")
-        self.assertRegex(stdout, ".*0 test cases passed! No cases failed.*")
+        self.assertRegex(stdout, "0 test cases passed! No cases failed")
 
     def testEncrypt(self):
         with open("demo/ok_test/config.ok") as f:

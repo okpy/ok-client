@@ -15,6 +15,8 @@ import logging
 import random
 import requests
 
+from client.utils.printer import print_error
+
 log = logging.getLogger(__name__)
 
 #####################
@@ -124,7 +126,7 @@ class HintingProtocol(protocol_models.Protocol):
                 except (requests.exceptions.RequestException, requests.exceptions.BaseHTTPError):
                     log.debug("Network error while fetching hint", exc_info=True)
                     hint_info['fetch_error'] = True
-                    print("\r\nNetwork Error while generating hint. Try again later")
+                    print_error("\r\nNetwork Error while generating hint. Try again later")
                     response = None
                     continue
 

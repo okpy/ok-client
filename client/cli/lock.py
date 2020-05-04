@@ -7,6 +7,8 @@ import client
 import logging
 import os.path
 
+from client.utils.printer import print_error
+
 log = logging.getLogger(__name__)
 
 CLIENT_ROOT = os.path.dirname(client.__file__)
@@ -38,7 +40,7 @@ def main():
         lock.protocol(args, assign).run(msgs)
     except (ex.LoadingException, ex.SerializeException) as e:
         log.warning('Assignment could not instantiate', exc_info=True)
-        print('Error: ' + str(e).strip())
+        print_error('Error: ' + str(e).strip())
         exit(1)
     except (KeyboardInterrupt, EOFError):
         log.info('Quitting...')
