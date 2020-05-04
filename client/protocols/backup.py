@@ -1,3 +1,5 @@
+from display_timedelta import display_timedelta
+
 from client import exceptions
 from client.protocols.common import models
 from client.utils import network
@@ -21,6 +23,7 @@ class BackupProtocol(models.Protocol):
     BACKUP_FILE = ".ok_messages"
     BACKUP_ENDPOINT = '{server}/api/v3/backups/'
     REVISION_ENDPOINT = '{server}/api/v3/revision/'
+    ASSIGNMENT_ENDPOINT = '{server}/api/v3/assignment/'
 
     def run(self, messages):
         if not self.assignment.endpoint:
@@ -208,6 +211,13 @@ class BackupProtocol(models.Protocol):
             print_error('Could not', action.lower() + ':', error_msg)
         elif not message_list:
             print('{action}... 100% complete'.format(action=action))
+            due_date = self.get_due_date(access_token, timeout)
+            now = datetime.datetime.now(tz=datetime.timezone.utc)
+            time_to_deadline = due_date - now
+            if time_to_deadline < datetime.timedelta(0):
+                print_error("{action} past deadline by".format(action=action), display_timedelta(-time_to_deadline))
+            elif time_to_deadline < datetime.timedelta(hours=10):
+                print_warning("Assignment is due in", display_timedelta(time_to_deadline))
             return first_response
         elif not send_all:
             # Do not display any error messages if --backup or --submit are not
@@ -250,5 +260,14 @@ class BackupProtocol(models.Protocol):
             params=address_params, json=data, timeout=timeout)
         response.raise_for_status()
         return response.json()
+
+    def get_due_date(self, access_token, timeout):
+        address = self.ASSIGNMENT_ENDPOINT.format(server=self.assignment.server_url) + self.assignment.endpoint
+        response = requests.get(address,
+                                headers={'Authorization': 'Bearer {}'.format(access_token)},
+                                timeout=timeout)
+        utc_date_string = response.json()['data']['due_date']
+        return datetime.datetime.strptime(utc_date_string, '%Y-%m-%dT%H:%M:%S').replace(tzinfo=datetime.timezone.utc)
+
 
 protocol = BackupProtocol
