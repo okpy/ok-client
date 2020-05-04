@@ -48,6 +48,7 @@ setup(
         'ast-scope==0.3.1',
         'attrs==19.3.0',
         'pyaes==1.6.1',
-        'colorama==0.4.3'
+        'colorama==0.4.3',
+        'display-timedelta==1.0',
     ],
 )

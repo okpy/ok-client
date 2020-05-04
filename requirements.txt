@@ -15,6 +15,8 @@ attrs==19.3.0
 pyaes==1.6.1
 # Coloring
 colorama==0.4.3
+# Displaying Timedelta
+display-timedelta==1.0
 
 # Tests
 nose==1.3.3
