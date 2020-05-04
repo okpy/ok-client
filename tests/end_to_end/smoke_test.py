@@ -127,7 +127,7 @@ class SmokeTest(unittest.TestCase):
         with open(keyfile) as f:
             keys = dict(json.load(f))
 
-        self.assertEqual(set(keys), {'hw1.py', 'tests/q1.py', 'tests/q2.py'})
+        self.assertEqual(set(keys), {'hw1.py', os.path.join('tests', 'q1.py'), os.path.join('tests', 'q2.py')})
         _, stderr = self.run_ok('--encrypt', keyfile)
         self.assertEqual("", stderr)
 
