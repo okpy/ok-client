@@ -70,7 +70,9 @@ class InvalidTestInQuestionListException(LoadingException):
             output += ['    {}'.format(test)]
         return "\n".join(output)
 
-
+class ForceDecryptionException(Exception):
+    def __init__(self, keys):
+        self.keys = keys
 
 
 class SerializeException(LoadingException):

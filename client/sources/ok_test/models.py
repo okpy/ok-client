@@ -9,6 +9,7 @@ import os
 ##########
 # Models #
 ##########
+from client.utils.printer import print_error
 
 
 class OkTest(models.Test):
@@ -213,9 +214,12 @@ class EncryptedOKTest(models.Test):
     name = core.String()
     points = core.Float()
     partner = core.String(optional=True)
-
     def warn(self, method):
-        return print("Cannot {} {}: test is encrypted".format(method, self.name))
+        print_error("Cannot {} {}: test is encrypted".format(method, self.name))
+        keys_string = input("Please paste the key to decrypt this test: ")
+        keys = keys_string.strip().split()
+        if keys:
+            raise ex.ForceDecryptionException(keys)
 
     def run(self, env):
         self.warn('run')

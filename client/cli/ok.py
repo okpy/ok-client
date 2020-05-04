@@ -219,10 +219,7 @@ def main():
             exit(0)
 
         if args.decrypt is not None:
-            assign.decrypt(args.decrypt)
-            # do not dump tests back out, this could overwrite any changes that may have been made
-            assign = None
-            exit(0)
+            raise ex.ForceDecryptionException(args.decrypt)
 
         if args.tests:
             print('Available tests:')
@@ -259,6 +256,11 @@ def main():
                 else:
                     raise  # outer handler will be called
 
+    except ex.ForceDecryptionException as e:
+        assign.decrypt(e.keys)
+        # do not dump tests back out, this could overwrite any changes that may have been made
+        assign = None
+        exit(0)
     except ex.LoadingException as e:
         log.warning('Assignment could not load', exc_info=True)
         print_error('Error loading assignment: ' + str(e))
