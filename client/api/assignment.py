@@ -159,7 +159,7 @@ class Assignment(core.Serializable):
     def _encrypt_file(self, path, key):
         """
         Encrypt the given file in place with the given key.
-        This is idemnipotent but if you try to encrypt the same file with multiple keys it errors.
+        This is idempotent but if you try to encrypt the same file with multiple keys it errors.
         """
         def encrypt(data):
             if encryption.is_encrypted(data):
