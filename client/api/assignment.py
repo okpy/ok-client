@@ -178,7 +178,7 @@ class Assignment(core.Serializable):
         """
         Get all the test and submission source files associated with this assignment, deduplicated
         """
-        tests = [k for k, v in self.tests.items() if v == 'ok_test']
+        tests = [file for k, v in self.tests.items() for file in glob.glob(k) if v == 'ok_test']
         src = list(self.src)
         return sorted(set(tests + src))
 
