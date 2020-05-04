@@ -183,7 +183,7 @@ class Assignment(core.Serializable):
         with open(temporary_file, "w") as f:
             f.write(ciphertext)
         # atomic rename
-        os.rename(temporary_file, path)
+        os.replace(temporary_file, path)
 
     def _get_files(self):
         """
