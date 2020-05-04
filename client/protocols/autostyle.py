@@ -5,6 +5,8 @@ import logging
 import requests
 import webbrowser
 
+from client.utils.printer import print_error
+
 log = logging.getLogger(__name__)
 
 
@@ -45,16 +47,12 @@ class AutoStyleProtocol(models.Protocol):
                     return
                 elif results['failed'] or results['locked']:
                     log.warning("Has not passed all tests")
-                    print("*" * 69)
-                    print(
+                    print_error(
                         "To use AutoStyle you must have a correct solution for {0}!".format(question))
-                    print("*" * 69)
                     return
             else:
                 log.info("Not an autostyle question")
-                print("*" * 69)
-                print("Make sure the question you are using is an AutoStyle question!")
-                print("*" * 69)
+                print_error("Make sure the question you are using is an AutoStyle question!")
                 return
 
         print("Once you begin you must finish the experiment in one sitting. This will take at most 2 hours.")

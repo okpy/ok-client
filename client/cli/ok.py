@@ -57,7 +57,11 @@ import logging
 import os
 import sys
 import struct
+import colorama
 
+from client.utils.printer import print_error
+
+colorama.init()
 LOGGING_FORMAT = '%(levelname)s  | %(filename)s:%(lineno)d | %(message)s'
 logging.basicConfig(format=LOGGING_FORMAT)
 log = logging.getLogger('client')   # Get top-level logger
@@ -89,7 +93,7 @@ def parse_input(command_input=None):
                         help="start the Python interpreter after a failed test")
     testing.add_argument('-v', '--verbose', action='store_true',
                         help="show all tests, not just passing tests")
-    testing.add_argument('-t', '--testing', nargs='?', type=str, const='mytests.rst', 
+    testing.add_argument('-t', '--testing', nargs='?', type=str, const='mytests.rst',
                         help='run tests from rst file (default: mytests.rst)')
     testing.add_argument('--all', action='store_true',
                         help="run tests for all questions in config file")
@@ -226,22 +230,22 @@ def main():
                 if retry:
                     msg = "without a browser" if args.no_browser else "with a browser"
                     log.warning('Authentication exception occurred; will retry {0}'.format(msg), exc_info=True)
-                    print('Authentication error; will try to re-authenticate {0}...'.format(msg))
+                    print_error('Authentication error; will try to re-authenticate {0}...'.format(msg))
                 else:
                     raise  # outer handler will be called
 
     except ex.LoadingException as e:
         log.warning('Assignment could not load', exc_info=True)
-        print('Error loading assignment: ' + str(e))
+        print_error('Error loading assignment: ' + str(e))
     except ex.AuthenticationException as e:
         log.warning('Authentication exception occurred', exc_info=True)
-        print('Authentication error: {0}'.format(e))
+        print_error('Authentication error: {0}'.format(e))
     except ex.EarlyExit as e:
         log.warning('OK exited early (non-error)')
-        print(str(e))
+        print_error(str(e))
     except ex.OkException as e:
         log.warning('General OK exception occurred', exc_info=True)
-        print('Error: ' + str(e))
+        print_error('Error: ' + str(e))
     except KeyboardInterrupt:
         log.info('KeyboardInterrupt received.')
     finally:

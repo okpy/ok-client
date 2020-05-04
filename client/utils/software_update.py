@@ -2,6 +2,8 @@ import logging
 import os
 import requests
 
+from client.utils.printer import print_error, print_success
+
 log = logging.getLogger(__name__)
 
 VERSION_ENDPOINT = 'https://{server}/api/v3/version/ok-client'
@@ -13,7 +15,7 @@ def check_version(server, version, filename, timeout=SHORT_TIMEOUT):
 
     address = VERSION_ENDPOINT.format(server=server)
 
-    print('Checking for software updates...')
+    log.info('Checking for software updates...')
     log.info('Existing OK version: %s', version)
     log.info('Checking latest version from %s', address)
 
@@ -21,20 +23,20 @@ def check_version(server, version, filename, timeout=SHORT_TIMEOUT):
         response = requests.get(address, timeout=timeout)
         response.raise_for_status()
     except (requests.exceptions.RequestException, requests.exceptions.BaseHTTPError) as e:
-        print('Network error when checking for updates.')
+        print_error('Network error when checking for updates.')
         log.warning('Network error when checking version from %s: %s', address,
                     str(e), stack_info=True)
         return False
 
     response_json = response.json()
     if not _validate_api_response(response_json):
-        print('Error while checking updates: malformed server response')
+        print_error('Error while checking updates: malformed server response')
         log.info('Malformed response from %s: %s', address, response.text)
         return False
 
     current_version = response_json['data']['results'][0]['current_version']
     if current_version == version:
-        print('OK is up to date')
+        print_success('OK is up to date')
         return True
 
     download_link = response_json['data']['results'][0]['download_link']
@@ -45,7 +47,7 @@ def check_version(server, version, filename, timeout=SHORT_TIMEOUT):
         response = requests.get(download_link, timeout=timeout)
         response.raise_for_status()
     except (requests.exceptions.RequestException, requests.exceptions.BaseHTTPError) as e:
-        print('Error when downloading new version of OK')
+        print_error('Error when downloading new version of OK')
         log.warning('Error when downloading new version of OK: %s', str(e),
                     stack_info=True)
         return False
@@ -56,11 +58,11 @@ def check_version(server, version, filename, timeout=SHORT_TIMEOUT):
     try:
         _write_zip(filename, zip_binary)
     except IOError as e:
-        print('Error when downloading new version of OK')
+        print_error('Error when downloading new version of OK')
         log.warning('Error writing to %s: %s', filename, str(e))
         return False
     else:
-        print('Updated to version: {}'.format(current_version))
+        print_success('Updated to version: {}'.format(current_version))
         log.info('Successfully wrote to %s', filename)
         return True
 

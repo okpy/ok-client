@@ -55,6 +55,23 @@ class Timeout(OkException):
 class LoadingException(OkException):
     """Exception related to loading assignments."""
 
+class InvalidTestInQuestionListException(LoadingException):
+    def __init__(self, valid_tests, question):
+        super().__init__(self.compute_message(valid_tests, question))
+        self.valid_tests = valid_tests
+        self.question = question
+
+    @staticmethod
+    def compute_message(valid_tests, question):
+        output = []
+        output += ['Test "{}" not found'.format(question)]
+        output += ['Did you mean one of the following? (Names are case sensitive)']
+        for test in valid_tests:
+            output += ['    {}'.format(test)]
+        return "\n".join(output)
+
+
+
 
 class SerializeException(LoadingException):
     """Exceptions related to de/serialization."""

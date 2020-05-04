@@ -441,7 +441,12 @@ class AssignmentGradeTest(unittest.TestCase):
         assign = self.makeAssignmentWithTestCode('')
         with self.assertRaises(ex.LoadingException) as cm:
             assign.grade('no_such_test')
-        self.assertEqual('Invalid test specified: no_such_test', str(cm.exception))
+        lines = [
+            'Test "no_such_test" not found',
+            "Did you mean one of the following? (Names are case sensitive)",
+            "    q1"
+        ]
+        self.assertEqual(lines, str(cm.exception).split("\n"))
 
     def testGrade_userSuppliedEnvironment(self):
         assign = self.makeAssignmentWithTestCode("""
