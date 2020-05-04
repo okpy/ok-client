@@ -215,9 +215,9 @@ class BackupProtocol(models.Protocol):
             now = datetime.datetime.now(tz=datetime.timezone.utc)
             time_to_deadline = due_date - now
             if time_to_deadline < datetime.timedelta(0):
-                print_error("Submitted Past deadline by", display_timedelta(-time_to_deadline))
+                print_error("Submitted past deadline by", display_timedelta(-time_to_deadline))
             elif time_to_deadline < datetime.timedelta(hours=10):
-                print_warning("Assigment is due in", display_timedelta(time_to_deadline))
+                print_warning("Assignment is due in", display_timedelta(time_to_deadline))
             return first_response
         elif not send_all:
             # Do not display any error messages if --backup or --submit are not
