@@ -9,6 +9,7 @@ import os
 ##########
 # Models #
 ##########
+from client.utils.printer import print_error
 
 
 class OkTest(models.Test):
@@ -207,6 +208,36 @@ class OkTest(models.Test):
                 # Store with 1 indexed name
                 extracted_code[ind+1] = suite_code
         return extracted_code
+
+
+class EncryptedOKTest(models.Test):
+    name = core.String()
+    points = core.Float()
+    partner = core.String(optional=True)
+    def warn(self, method):
+        print_error("Cannot {} {}: test is encrypted".format(method, self.name))
+        keys_string = input("Please paste the key to decrypt this test: ")
+        keys = keys_string.strip().split()
+        if keys:
+            raise ex.ForceDecryptionException(keys)
+
+    def run(self, env):
+        self.warn('run')
+        return {'failed': 1, 'locked': 0, 'passed': 0}
+
+    def score(self):
+        self.warn('score')
+        return 0
+
+    def unlock(self, interact):
+        self.warn('unlock')
+
+    def lock(self, hash_fn):
+        self.warn('lock')
+
+    def dump(self):
+        self.warn('save the test')
+
 
 class Suite(core.Serializable):
     type = core.String()

@@ -11,6 +11,8 @@ import copy
 import logging
 import os
 
+from client.utils import encryption
+
 log = logging.getLogger(__name__)
 
 SUITES = {
@@ -36,6 +38,13 @@ def load(file, parameter, assign):
     if not os.path.isfile(file) or ext != '.py':
         log.info('Cannot import {} as an OK test'.format(file))
         raise ex.LoadingException('Cannot import {} as an OK test'.format(file))
+
+    if os.path.exists(file):
+        with open(file) as f:
+            data = f.read()
+            if encryption.is_encrypted(data):
+                name = os.path.basename(filename)
+                return {name: models.EncryptedOKTest(name=name, points=1)}
 
     try:
         test = importing.load_module(file).test
