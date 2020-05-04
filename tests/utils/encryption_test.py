@@ -32,3 +32,7 @@ class EncryptionTest(unittest.TestCase):
         ciphertext = encryption.encrypt(data, key1)
         self.assertTrue(encryption.is_encrypted(ciphertext))
         self.assertRaises(encryption.InvalidKeyException, lambda: encryption.decrypt(ciphertext, key2))
+
+    def key_characters_test(self):
+        for _ in range(100):
+            self.assertRegex(encryption.generate_key(), "^[0-9a-z]+$")
