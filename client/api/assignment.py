@@ -13,6 +13,8 @@ import logging
 import os
 import textwrap
 
+from client.utils.printer import print_success, print_error
+
 log = logging.getLogger(__name__)
 
 CONFIG_EXTENSION = '*.ok'
@@ -124,26 +126,35 @@ class Assignment(core.Serializable):
                 self._encrypt_file(file, keys[file])
 
     def decrypt(self, keys):
+        any_success = False
         for file in self._get_files():
             for key in keys:
-                self._decrypt_file(file, key)
+                success = self._decrypt_file(file, key)
+                any_success = any_success or success
+        if not any_success:
+            print_error("Unable to decrypt any file with the keys", *keys)
 
     def _decrypt_file(self, path, key):
         """
         Decrypt the given file in place with the given key.
         If the key does not match, do not change the file contents
         """
+        success = False
+
         def decrypt(ciphertext):
             if not encryption.is_encrypted(ciphertext):
                 return ciphertext
             try:
                 plaintext = encryption.decrypt(ciphertext, key)
-                print("decrypted", path, "with", key)
+                nonlocal success
+                success = True
+                print_success("decrypted", path, "with", key)
                 return plaintext
             except encryption.InvalidKeyException:
                 return ciphertext
 
         self._in_place_edit(path, decrypt)
+        return success
 
     def _encrypt_file(self, path, key):
         """
