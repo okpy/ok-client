@@ -131,14 +131,14 @@ class SmokeTest(unittest.TestCase):
         _, stderr = self.run_ok('--encrypt', keyfile)
         self.assertEqual("", stderr)
 
-        for path in "hw1.py", "tests/q1.py", "tests/q2.py":
+        for path in "hw1.py", os.path.join("tests", "q1.py"), os.path.join("tests", "q2.py"):
             with open(os.path.join(self.directory.name, path)) as f:
                 encryption.decrypt(f.read(), keys[path])
 
-        _, stderr = self.run_ok('--decrypt', keys["hw1.py"], keys["tests/q1.py"])
+        _, stderr = self.run_ok('--decrypt', keys["hw1.py"], keys[os.path.join("tests", "q1.py")])
         self.assertEqual("", stderr)
 
-        for path in "hw1.py", "tests/q1.py":
+        for path in "hw1.py", os.path.join("tests", "q1.py"):
             with open(os.path.join(self.directory.name, path)) as f:
                 actual = f.read()
             with open(os.path.join("demo/ok_test", path)) as f:
@@ -147,4 +147,4 @@ class SmokeTest(unittest.TestCase):
             self.assertEqual(actual, expected)
 
         with open(os.path.join(self.directory.name, "tests/q2.py")) as f:
-            encryption.decrypt(f.read(), keys["tests/q2.py"])
+            encryption.decrypt(f.read(), keys[os.path.join("tests", "q2.py")])
