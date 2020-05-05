@@ -1,5 +1,7 @@
 import uuid
 
+import requests
+
 from client import exceptions as ex
 from client.sources.common import core
 from client.utils import auth, format, encryption
@@ -13,7 +15,7 @@ import logging
 import os
 import textwrap
 
-from client.utils.printer import print_success, print_error
+from client.utils.printer import print_success, print_error, print_warning
 
 log = logging.getLogger(__name__)
 
@@ -61,6 +63,7 @@ def _get_config(config):
 class Assignment(core.Serializable):
     name = core.String()
     endpoint = core.String(optional=True, default='')
+    decryption_keypage = core.String(optional=True, default='')
     src = core.List(type=str, optional=True)
     tests = core.Dict(keys=str, values=str, ordered=True)
     default_tests = core.List(type=str, optional=True)
@@ -126,13 +129,33 @@ class Assignment(core.Serializable):
                 self._encrypt_file(file, keys[file])
 
     def decrypt(self, keys):
-        any_success = False
+        decrypted_files, undecrypted_files = self.attempt_decryption(keys)
+        if not undecrypted_files + decrypted_files:
+            print_warning("All files are already decrypted")
+        elif undecrypted_files:
+            print_error("Unable to decrypt any file with the keys", *keys)
+            print_error("    Non-decrypted files:", *undecrypted_files)
+
+    def attempt_decryption(self, keys):
+        if self.decryption_keypage:
+            response = requests.get(self.decryption_keypage)
+            response.raise_for_status()
+            keys_data = response.content.decode('utf-8')
+            keys = keys + encryption.get_keys(keys_data)
+        decrypted_files = []
+        undecrypted_files = []
         for file in self._get_files():
+            with open(file) as f:
+                if not encryption.is_encrypted(f.read()):
+                    continue
             for key in keys:
                 success = self._decrypt_file(file, key)
-                any_success = any_success or success
-        if not any_success:
-            print_error("Unable to decrypt any file with the keys", *keys)
+                if success:
+                    decrypted_files.append(file)
+                    break
+            else:
+                undecrypted_files.append(file)
+        return decrypted_files, undecrypted_files
 
     def _decrypt_file(self, path, key):
         """
