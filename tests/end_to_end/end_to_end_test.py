@@ -52,8 +52,14 @@ class EndToEndTest(unittest.TestCase):
             stdout, stderr = proc.communicate(command_line)
         return stdout, stderr
 
-    def copy_examples(self):
-        shutil.copytree('demo/ok_test/', self.directory.name, dirs_exist_ok=True)
+    def copy_examples(self, path='demo/ok_test'):
+        for file in os.listdir(path):
+            src = os.path.join(path, file)
+            dst = os.path.join(self.directory.name, file)
+            if os.path.isfile(src):
+                shutil.copy(src, dst)
+            else:
+                shutil.copytree(src, dst)
 
     def rel_path(self, path):
         return os.path.join(self.directory.name, *path.split("/"))
