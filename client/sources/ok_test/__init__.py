@@ -42,11 +42,11 @@ def load(file, parameter, assign):
     if os.path.exists(file):
         with open(file) as f:
             data = f.read()
-            if encryption.is_encrypted(data):
-                decrypted, _ = assign.attempt_decryption([])
-                if file not in decrypted:
-                    name = os.path.basename(filename)
-                    return {name: models.EncryptedOKTest(name=name, points=1)}
+        if encryption.is_encrypted(data):
+            decrypted, _ = assign.attempt_decryption([])
+            if file not in decrypted:
+                name = os.path.basename(filename)
+                return {name: models.EncryptedOKTest(name=name, points=1)}
 
     try:
         test = importing.load_module(file).test
