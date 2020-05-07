@@ -80,6 +80,10 @@ class EndToEndTest(unittest.TestCase):
             expected = f.read()
         self.assertEqual(actual, expected)
 
+    def assertOnlyInvalidGrant(self, stderr):
+        if stderr:
+            self.assertEqual("ERROR  | auth.py:102 | {'error': 'invalid_grant'}", stderr.strip())
+
     def encrypt_all(self, *paths):
         keyfile = self.rel_path("keyfile")
         _, stderr = self.run_ok("--generate-encryption-key", keyfile)

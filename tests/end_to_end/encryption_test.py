@@ -60,15 +60,15 @@ class EncryptionTest(EndToEndTest):
 
         self.set_decrypt_endpoint("https://google.com/404")
 
-        stdout, stderr = self.run_ok()
+        stdout, stderr = self.run_ok('--no-browser')
         self.assertIn("Please paste the key", stdout)
-        self.assertEqual("", stderr)
+        self.assertOnlyInvalidGrant(stderr)
 
         self.set_decrypt_endpoint(self.get_endpoint_returning(",".join(keys.values())))
 
-        stdout, stderr = self.run_ok()
+        stdout, stderr = self.run_ok('--no-browser')
         self.assertNotIn("Please paste the key", stdout)
-        self.assertEqual("", stderr)
+        self.assertOnlyInvalidGrant(stderr)
 
         for path in "hw1.py", "tests/q1.py", "tests/q2.py":
             self.assertSameAsDemo(path)
