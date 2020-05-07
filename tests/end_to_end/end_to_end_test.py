@@ -6,6 +6,7 @@ import sys
 import tempfile
 import unittest
 import json
+from urllib.parse import urlencode
 
 from client.cli import publish
 from client.utils import encryption
@@ -89,3 +90,10 @@ class EndToEndTest(unittest.TestCase):
         _, stderr = self.run_ok('--encrypt', keyfile)
         self.assertEqual("", stderr)
         return keys
+
+    @staticmethod
+    def get_endpoint_returning(data):
+        """
+        Return a URL that when you call GET on it it returns the given data as part of the response
+        """
+        return "http://httpbin.org/get?{}".format(urlencode(dict(data=data)))
