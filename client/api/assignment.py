@@ -16,6 +16,7 @@ import os
 import textwrap
 
 from client.utils.printer import print_success, print_error, print_warning
+from client.utils.storage import replace_transactional
 
 log = logging.getLogger(__name__)
 
@@ -209,7 +210,7 @@ class Assignment(core.Serializable):
         with open(temporary_file, "w") as f:
             f.write(ciphertext)
         # atomic rename
-        os.replace(temporary_file, path)
+        replace_transactional(temporary_file, path)
 
     def _get_files(self):
         """
