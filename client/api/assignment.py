@@ -13,7 +13,7 @@ import logging
 import os
 import textwrap
 
-from client.utils.printer import print_success, print_error
+from client.utils.printer import print_success, print_error, print_warning
 
 log = logging.getLogger(__name__)
 
@@ -126,13 +126,31 @@ class Assignment(core.Serializable):
                 self._encrypt_file(file, keys[file])
 
     def decrypt(self, keys):
-        any_success = False
+        decrypted_files, undecrypted_files = self.attempt_decryption(keys)
+        if not undecrypted_files + decrypted_files:
+            print_warning("All files are already decrypted")
+        elif undecrypted_files:
+            if keys:
+                print_error("Unable to decrypt some files with the keys", ", ".join(keys))
+            else:
+                print_error("Unable to decrypt some files")
+            print_error("    Non-decrypted files:", *undecrypted_files)
+
+    def attempt_decryption(self, keys):
+        decrypted_files = []
+        undecrypted_files = []
         for file in self._get_files():
+            with open(file) as f:
+                if not encryption.is_encrypted(f.read()):
+                    continue
             for key in keys:
                 success = self._decrypt_file(file, key)
-                any_success = any_success or success
-        if not any_success:
-            print_error("Unable to decrypt any file with the keys", *keys)
+                if success:
+                    decrypted_files.append(file)
+                    break
+            else:
+                undecrypted_files.append(file)
+        return decrypted_files, undecrypted_files
 
     def _decrypt_file(self, path, key):
         """
