@@ -5,6 +5,7 @@ non-encrypted file.
 """
 import base64
 import os
+import re
 
 import pyaes
 
@@ -13,12 +14,29 @@ HEADER_TEXT = "OKPY ENCRYPTED FILE FOLLOWS\n" + "-" * 100 + "\n"
 # used to ensure that the key us correct (helps detect incorrect key usage)
 PLAINTEXT_PADDING = b"0" * 16
 
+# matches keys
+KEY_PATTERN = r"[a-z2-7]{52}9999"
+
 
 def generate_key() -> str:
     """
     Generates a random key
     """
     return to_safe_string(os.urandom(32))
+
+
+def is_valid_key(key: str) -> bool:
+    """
+    Returns if this is a valid key
+    """
+    return re.match("^" + KEY_PATTERN + "$", key) is not None
+
+
+def get_keys(document: str) -> list:
+    """
+    Gets all valid keys in the given document
+    """
+    return re.findall(KEY_PATTERN, document)
 
 
 def encrypt(data: str, key: str) -> str:

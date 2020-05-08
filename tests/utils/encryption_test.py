@@ -36,3 +36,18 @@ class EncryptionTest(unittest.TestCase):
     def key_characters_test(self):
         for _ in range(100):
             self.assertRegex(encryption.generate_key(), "^[0-9a-z]+$")
+            self.assertTrue(encryption.is_valid_key(encryption.generate_key()))
+
+    def find_single_key_test(self):
+        key = encryption.generate_key()
+        self.assertEqual([key], encryption.get_keys(
+            "some text some text some text {} some text some text some text".format(key)))
+        self.assertEqual([key], encryption.get_keys(key))
+
+        self.assertEqual([key] * 7, encryption.get_keys(key * 7))
+
+    def find_multiple_key_test(self):
+        key_a, key_b, key_c = [encryption.generate_key() for _ in range(3)]
+        self.assertEqual([key_a, key_b, key_c], encryption.get_keys(
+            "Key A: {}, Key B: {}, Key C: {}".format(key_a, key_b, key_c)))
+        self.assertEqual([key_a, key_c, key_b, key_a], encryption.get_keys(key_a + key_c + key_b + key_a))
