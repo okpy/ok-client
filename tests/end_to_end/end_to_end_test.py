@@ -13,7 +13,7 @@ from client.utils import encryption
 
 SCRIPT = """
 . {envloc}/{folder}/activate;
-echo -n | python ok {args}
+yes '' | python ok {args}
 """
 
 

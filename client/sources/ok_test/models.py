@@ -216,10 +216,7 @@ class EncryptedOKTest(models.Test):
     partner = core.String(optional=True)
     def warn(self, method):
         print_error("Cannot {} {}: test is encrypted".format(method, self.name))
-        try:
-            keys_string = input("Please paste the key to decrypt this test: ")
-        except EOFError:
-            keys_string = ""
+        keys_string = input("Please paste the key to decrypt this test: ")
         keys = keys_string.strip().split()
         if keys:
             raise ex.ForceDecryptionException(keys)

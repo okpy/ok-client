@@ -245,10 +245,7 @@ def get_code(cmd_args, endpoint=''):
     if cmd_args.no_browser:
         return get_code_via_terminal(cmd_args)
 
-    try:
-        email = input("Please enter your school email (.edu): ")
-    except EOFError:
-        email = ""
+    email = input("Please enter your school email (.edu): ")
 
     host_name = REDIRECT_HOST
     try:
@@ -345,10 +342,7 @@ def get_code_via_terminal(cmd_args, email=None,
     print()
     print(paste_msg)
     print()
-    try:
-        code = input('Paste your code here: ')
-    except EOFError:
-        code = ""
+    code = input('Paste your code here: ')
     return make_code_post(server_url(cmd_args), code, redirect_uri)
 
 def get_info(cmd_args, access_token):
