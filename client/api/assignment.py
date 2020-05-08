@@ -21,6 +21,7 @@ log = logging.getLogger(__name__)
 
 CONFIG_EXTENSION = '*.ok'
 
+
 def load_assignment(filepath=None, cmd_args=None):
     config = _get_config(filepath)
     if not isinstance(config, dict):
@@ -28,6 +29,7 @@ def load_assignment(filepath=None, cmd_args=None):
     if cmd_args is None:
         cmd_args = Settings()
     return Assignment(cmd_args, **config)
+
 
 def _get_config(config):
     if config is None:
@@ -44,7 +46,7 @@ def _get_config(config):
         config = configs[0]
     elif not os.path.isfile(config):
         raise ex.LoadingException(
-                'Could not find config file: {}'.format(config))
+            'Could not find config file: {}'.format(config))
 
     try:
         with open(config, 'r') as f:
@@ -133,8 +135,11 @@ class Assignment(core.Serializable):
         if not undecrypted_files + decrypted_files:
             print_warning("All files are already decrypted")
         elif undecrypted_files:
-            print_error("Unable to decrypt any file with the keys", *keys)
-            print_error("    Non-decrypted files:", *undecrypted_files)
+            if keys:
+                print_error("Unable to decrypt some files with the keys", ", ".join(keys))
+            else:
+                print_error("Unable to decrypt some files")
+        print_error("    Non-decrypted files:", *undecrypted_files)
 
     def attempt_decryption(self, keys):
         if self.decryption_keypage:
@@ -187,6 +192,7 @@ class Assignment(core.Serializable):
         Encrypt the given file in place with the given key.
         This is idempotent but if you try to encrypt the same file with multiple keys it errors.
         """
+
         def encrypt(data):
             if encryption.is_encrypted(data):
                 try:
@@ -368,7 +374,7 @@ class Assignment(core.Serializable):
             bad_tests = sorted(test for test in self.default_tests if test not in self.test_map)
             if bad_tests:
                 error_message = ("Required question(s) missing: {}. "
-                    "This often is the result of accidentally deleting the question's doctests or the entire function.")
+                                 "This often is the result of accidentally deleting the question's doctests or the entire function.")
                 raise ex.LoadingException(error_message.format(", ".join(bad_tests)))
             return [self.test_map[test] for test in self.default_tests]
         elif not questions:
@@ -402,6 +408,7 @@ class Assignment(core.Serializable):
         format.print_line('=')
         print()
 
+
 class Settings:
     """Command-line arguments that are set programmatically instead of by
     parsing the command line. For example:
@@ -414,6 +421,7 @@ class Settings:
         )
         assignment = Assignment(args)
     """
+
     def __init__(self, **kwargs):
         from client.cli.ok import parse_input
         self.args = parse_input([])
