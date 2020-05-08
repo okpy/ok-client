@@ -11,7 +11,7 @@ import pyaes
 
 HEADER_TEXT = "OKPY ENCRYPTED FILE FOLLOWS\n" + "-" * 100 + "\n"
 
-# used to ensure that the key us correct (helps detect incorrect key usage)
+# used to ensure that the key is correct (helps detect incorrect key usage)
 PLAINTEXT_PADDING = b"0" * 16
 
 # matches keys
