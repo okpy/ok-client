@@ -143,13 +143,16 @@ class Assignment(core.Serializable):
 
     def attempt_decryption(self, keys):
         if self.decryption_keypage:
-            response = requests.get(self.decryption_keypage)
-            if response.status_code != 200:
+            try:
+                response = requests.get(self.decryption_keypage)
+                response.raise_for_status()
+                keys_data = response.content.decode('utf-8')
+                keys = keys + encryption.get_keys(keys_data)
+            except Exception as e:
                 print_error(
-                    "Could not load decryption page {}: {}.".format(self.decryption_keypage, response.status_code))
+                    "Could not load decryption page {}: {}.".format(self.decryption_keypage, e))
                 print_error("You can pass in a key directly by running python3 ok --decrypt [KEY]")
-            keys_data = response.content.decode('utf-8')
-            keys = keys + encryption.get_keys(keys_data)
+
         decrypted_files = []
         undecrypted_files = []
         for file in self._get_files():

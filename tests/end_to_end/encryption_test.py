@@ -65,7 +65,7 @@ class EncryptionTest(EndToEndTest):
 
         stdout, stderr = self.run_ok('--decrypt')
         self.assertEqual('', stderr)
-        self.assertRegex(stdout, "Could not load decryption page .*: 404.\n"
+        self.assertRegex(stdout, "Could not load decryption page .*: 404 Client Error: Not Found for url: .*.\n"
                                  r"You can pass in a key directly by running python3 ok --decrypt \[KEY\]")
 
         for path in "hw1.py", "tests/q1.py", "tests/q2.py":
