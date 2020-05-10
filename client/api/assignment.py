@@ -1,5 +1,7 @@
 import uuid
 
+import requests
+
 from client import exceptions as ex
 from client.sources.common import core
 from client.utils import auth, format, encryption
@@ -61,6 +63,7 @@ def _get_config(config):
 class Assignment(core.Serializable):
     name = core.String()
     endpoint = core.String(optional=True, default='')
+    decryption_keypage = core.String(optional=True, default='')
     src = core.List(type=str, optional=True)
     tests = core.Dict(keys=str, values=str, ordered=True)
     default_tests = core.List(type=str, optional=True)
@@ -137,6 +140,17 @@ class Assignment(core.Serializable):
             print_error("    Non-decrypted files:", *undecrypted_files)
 
     def attempt_decryption(self, keys):
+        if self.decryption_keypage:
+            try:
+                response = requests.get(self.decryption_keypage)
+                response.raise_for_status()
+                keys_data = response.content.decode('utf-8')
+                keys = keys + encryption.get_keys(keys_data)
+            except Exception as e:
+                print_error(
+                    "Could not load decryption page {}: {}.".format(self.decryption_keypage, e))
+                print_error("You can pass in a key directly by running python3 ok --decrypt [KEY]")
+
         decrypted_files = []
         undecrypted_files = []
         for file in self._get_files():
