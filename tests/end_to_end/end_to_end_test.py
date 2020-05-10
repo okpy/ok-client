@@ -89,3 +89,8 @@ class EndToEndTest(unittest.TestCase):
         _, stderr = self.run_ok('--encrypt', keyfile)
         self.assertEqual("", stderr)
         return keys
+
+    def assertRegex(self, text, expected_regex, normalize_path=False, **kwargs):
+        if normalize_path:
+            text = text.replace("\\", "/")
+        super().assertRegex(text, expected_regex, **kwargs)
