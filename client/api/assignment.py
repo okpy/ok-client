@@ -136,7 +136,7 @@ class Assignment(core.Serializable):
             if keys:
                 print_error("Unable to decrypt some files with the keys", ", ".join(keys))
             else:
-                print_error("Unable to decrypt some files")
+                print_error("No keys found, could not decrypt any files")
             print_error("    Non-decrypted files:", *undecrypted_files)
 
     def attempt_decryption(self, keys):

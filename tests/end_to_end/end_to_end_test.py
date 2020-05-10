@@ -101,3 +101,8 @@ class EndToEndTest(unittest.TestCase):
         Return a URL that when you call GET on it it returns the given data as part of the response
         """
         return "http://httpbin.org/get?{}".format(urlencode(dict(data=data)))
+
+    def assertRegex(self, text, expected_regex, normalize_path=False, **kwargs):
+        if normalize_path:
+            text = text.replace("\\", "/")
+        super().assertRegex(text, expected_regex, **kwargs)
