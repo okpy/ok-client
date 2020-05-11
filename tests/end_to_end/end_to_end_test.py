@@ -44,7 +44,7 @@ class EndToEndTest(unittest.TestCase):
         command_line = SCRIPT.format(
             envloc=shlex.quote(self.clean_env_dir.name),
             folder="Scripts" if sys.platform == "win32" else "bin",
-            args=" ".join(shlex.quote(arg) for arg in args),
+            args=" ".join(shlex.quote(str(arg)) for arg in args),
         )
         with subprocess.Popen(
                 os.getenv('SHELL', 'sh'),
@@ -84,7 +84,7 @@ class EndToEndTest(unittest.TestCase):
         if stderr:
             self.assertEqual("ERROR  | auth.py:102 | {'error': 'invalid_grant'}", stderr.strip())
 
-    def encrypt_all(self, *paths):
+    def encrypt_all(self, *paths, padding=None):
         keyfile = self.rel_path("keyfile")
         _, stderr = self.run_ok("--generate-encryption-key", keyfile)
         self.assertEqual('', stderr)

@@ -30,6 +30,40 @@ class EncryptionTest(EndToEndTest):
 
         self.assertEncrypted("tests/q2.py", keys)
 
+    def testEncryptPadded(self):
+        self.copy_examples()
+
+        keyfile = self.rel_path("keyfile")
+        _, stderr = self.run_ok("--generate-encryption-key", keyfile)
+        self.assertEqual('', stderr)
+        with open(keyfile) as f:
+            keys = dict(json.load(f))
+
+        _, stderr = self.run_ok("--encrypt", keyfile, "--encrypt-padding", 20)
+        self.assertIn("Cannot pad data of length", stderr)
+
+        _, stderr = self.run_ok("--encrypt", keyfile, "--encrypt-padding", 10 ** 4)
+        self.assertEqual("", stderr)
+
+        for path in "hw1.py", "tests/q1.py", "tests/q2.py":
+            self.assertEncrypted(path, keys)
+
+        content_lengths = []
+        for path in "hw1.py", "tests/q1.py", "tests/q2.py":
+            with open(self.rel_path(path)) as f:
+                content_lengths.append(len(f.read()))
+
+        self.assertEqual(1, len(set(content_lengths)))
+
+        _, stderr = self.run_ok('--decrypt', keys["hw1.py"], keys[self.pi_path("tests/q1.py")])
+        self.assertEqual("", stderr)
+
+        for path in "hw1.py", self.pi_path("tests/q1.py"):
+            self.assertSameAsDemo(path)
+
+        self.assertEncrypted("tests/q2.py", keys)
+
+
     def testDecryptMessages(self):
         self.copy_examples()
         keys = self.encrypt_all("hw1.py", "tests/q1.py", "tests/q2.py")
