@@ -39,11 +39,32 @@ def get_keys(document: str) -> list:
     return re.findall(KEY_PATTERN, document)
 
 
-def encrypt(data: str, key: str) -> str:
+def encode_and_pad(data: str, to_length: int) -> bytes:
+    """
+    Pads the given data sequence to the given length with null characters.
+
+    Returns a sequence of bytes.
+    """
+    encoded = data.encode('utf-8')
+    if to_length is None:
+        return encoded
+    if len(encoded) > to_length:
+        raise ValueError("Cannot pad data of length {} to size {}".format(len(encoded), to_length))
+    return encoded + b"\0" * (to_length - len(encoded))
+
+
+def un_pad_and_decode(padded : bytes) -> str:
+    """
+    Un-pads the given data sequence by stripping trailing null characters and recodes it at utf-8.
+    """
+    return padded.rstrip(b"\0").decode('utf-8')
+
+
+def encrypt(data: str, key: str, pad_length: int = None) -> str:
     """
     Encrypt the given data using the given key. Tag the result so that it is clear that this is an encrypted file.
     """
-    data_as_bytes = PLAINTEXT_PADDING + data.encode('utf-8')
+    data_as_bytes = PLAINTEXT_PADDING + encode_and_pad(data, pad_length)
 
     ciphertext = aes_mode_of_operation(key).encrypt(data_as_bytes)
     encoded_ciphertext = HEADER_TEXT + to_safe_string(ciphertext)
@@ -68,7 +89,8 @@ def decrypt(encoded_ciphertext: str, key: str) -> str:
     if not padded_plaintext.startswith(PLAINTEXT_PADDING):
         raise InvalidKeyException
     plaintext = padded_plaintext[len(PLAINTEXT_PADDING):]
-    return plaintext.decode('utf-8')
+    plaintext = un_pad_and_decode(plaintext)
+    return plaintext
 
 
 def to_safe_string(unsafe_bytes: bytes) -> str:

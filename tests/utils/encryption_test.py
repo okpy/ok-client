@@ -3,9 +3,9 @@ import unittest
 
 
 class EncryptionTest(unittest.TestCase):
-    def assertInverses(self, data):
+    def assertInverses(self, data, padding=None):
         key = encryption.generate_key()
-        ciphertext = encryption.encrypt(data, key)
+        ciphertext = encryption.encrypt(data, key, padding)
         self.assertTrue(encryption.is_encrypted(ciphertext))
         self.assertEqual(
             encryption.decrypt(ciphertext, key),
@@ -15,8 +15,30 @@ class EncryptionTest(unittest.TestCase):
     def encrypt_empty_test(self):
         self.assertInverses('')
 
-    def encrypt_non_ascii(self):
+    def encrypt_empty_with_padding_test(self):
+        self.assertInverses('', 0)
+        self.assertInverses('', 200)
+        self.assertInverses('', 800)
+
+    def encrypt_non_ascii_test(self):
         self.assertInverses('ठीक है अजगर')
+
+    def encrypt_non_ascii_with_padding_test(self):
+        data = 'ίδιο μήκος'
+        self.assertInverses(data, 200)
+        self.assertInverses(data, 800)
+
+    def encrypt_exact_size_test(self):
+        self.assertInverses("hi", 2)
+        self.assertRaises(ValueError, lambda: encryption.encrypt("hi", encryption.generate_key(), 1))
+        # accented i in sí, longer than 2 characters
+        self.assertRaises(ValueError, lambda: encryption.encrypt("sí", encryption.generate_key(), 2))
+        self.assertInverses("hi", 3)
+
+    def pad_to_same_size_test(self):
+        ct1 = encryption.encrypt("hi", encryption.generate_key(), 1000)
+        ct2 = encryption.encrypt("hi" * 400, encryption.generate_key(), 1000)
+        self.assertEqual(len(ct1), len(ct2))
 
     def encryption_decryption_fuzz_test(self):
         import random
