@@ -60,5 +60,5 @@ def load(file, parameter, assign):
                                     assign.cmd_args.verbose,
                                     assign.cmd_args.interactive,
                                     assign.cmd_args.timeout, **test)}
-    except ex.SerializeException:
-        raise ex.LoadingException('Cannot load OK test {}'.format(file))
+    except ex.SerializeException as e:
+        raise ex.LoadingException('Cannot load OK test {}: {}'.format(file, e))
