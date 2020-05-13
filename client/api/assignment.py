@@ -118,7 +118,7 @@ class Assignment(core.Serializable):
         with open(keys_file, "w") as f:
             json.dump(data, f)
 
-    def encrypt(self, keys_file):
+    def encrypt(self, keys_file, padding):
         """
         Encrypt each question and test, with the given keys file, which contains (file, key) pairs
         """
@@ -126,7 +126,7 @@ class Assignment(core.Serializable):
             keys = dict(json.load(f))
         for file in self._get_files():
             if file in keys:
-                self._encrypt_file(file, keys[file])
+                self._encrypt_file(file, keys[file], padding)
 
     def decrypt(self, keys):
         decrypted_files, undecrypted_files = self.attempt_decryption(keys)
@@ -188,7 +188,7 @@ class Assignment(core.Serializable):
         self._in_place_edit(path, decrypt)
         return success
 
-    def _encrypt_file(self, path, key):
+    def _encrypt_file(self, path, key, padding):
         """
         Encrypt the given file in place with the given key.
         This is idempotent but if you try to encrypt the same file with multiple keys it errors.
@@ -199,7 +199,7 @@ class Assignment(core.Serializable):
                     data = encryption.decrypt(data, key)
                 except encryption.InvalidKeyException:
                     raise ValueError("Attempt to re-encrypt file with an invalid key")
-            return encryption.encrypt(data, key)
+            return encryption.encrypt(data, key, padding)
 
         self._in_place_edit(path, encrypt)
 
