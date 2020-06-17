@@ -39,7 +39,7 @@ setup(
     ],
     install_requires=[
         'requests==2.22.0',
-        'certifi>=2019.11.28',
+        'certifi==2019.11.28',
         'urllib3==1.25.7',
         'chardet==3.0.4',
         'idna==2.8',
