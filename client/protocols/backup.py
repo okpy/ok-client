@@ -212,12 +212,13 @@ class BackupProtocol(models.Protocol):
         elif not message_list:
             print('{action}... 100% complete'.format(action=action))
             due_date = self.get_due_date(access_token, timeout)
-            now = datetime.datetime.now(tz=datetime.timezone.utc)
-            time_to_deadline = due_date - now
-            if time_to_deadline < datetime.timedelta(0):
-                print_error("{action} past deadline by".format(action=action), display_timedelta(-time_to_deadline))
-            elif time_to_deadline < datetime.timedelta(hours=10):
-                print_warning("Assignment is due in", display_timedelta(time_to_deadline))
+            if due_date is not None:
+                now = datetime.datetime.now(tz=datetime.timezone.utc)
+                time_to_deadline = due_date - now
+                if time_to_deadline < datetime.timedelta(0):
+                    print_error("{action} past deadline by".format(action=action), display_timedelta(-time_to_deadline))
+                elif time_to_deadline < datetime.timedelta(hours=10):
+                    print_warning("Assignment is due in", display_timedelta(time_to_deadline))
             return first_response
         elif not send_all:
             # Do not display any error messages if --backup or --submit are not
@@ -266,7 +267,10 @@ class BackupProtocol(models.Protocol):
         response = requests.get(address,
                                 headers={'Authorization': 'Bearer {}'.format(access_token)},
                                 timeout=timeout)
-        utc_date_string = response.json()['data']['due_date']
+        response_data = response.json()['data']
+        if 'due_date' not in response_data:
+            return
+        utc_date_string = response_data['due_date']
         return datetime.datetime.strptime(utc_date_string, '%Y-%m-%dT%H:%M:%S').replace(tzinfo=datetime.timezone.utc)
 
 
