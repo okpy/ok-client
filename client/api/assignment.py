@@ -131,7 +131,7 @@ class Assignment(core.Serializable):
     def decrypt(self, keys):
         decrypted_files, undecrypted_files = self.attempt_decryption(keys)
         if not undecrypted_files + decrypted_files:
-            print_warning("All files are already decrypted")
+            print_success("All files are decrypted")
         elif undecrypted_files:
             if keys:
                 print_error("Unable to decrypt some files with the keys", ", ".join(keys))
