@@ -83,11 +83,11 @@ class EncryptionTest(EndToEndTest):
 
         stdout, stderr = self.run_ok('--decrypt', *keys.values())
         self.assertEqual("", stderr)
-        self.assertIn("All files are already decrypted", stdout)
+        self.assertIn("All files are decrypted", stdout)
 
         stdout, stderr = self.run_ok('--decrypt')
         self.assertEqual("", stderr)
-        self.assertIn("All files are already decrypted", stdout)
+        self.assertIn("All files are decrypted", stdout)
 
     def testDecryptWithEndpoints(self):
         self.copy_examples()
