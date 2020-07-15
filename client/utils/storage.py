@@ -1,3 +1,4 @@
+import os
 import ctypes
 import shelve # persistance
 import hmac # security
@@ -30,14 +31,22 @@ def mac(value):
     mac.update(repr(value).encode('utf-8'))
     return mac.hexdigest()
 
+def open_db():
+    try:
+        return shelve.open(SHELVE_FILE)
+    except:
+        os.unlink(SHELVE_FILE)
+        return shelve.open(SHELVE_FILE)
+
+
 def contains(root, key):
     key = '{}-{}'.format(root, key)
-    with shelve.open(SHELVE_FILE) as db:
+    with open_db() as db:
         return key in db
 
 def store(root, key, value):
     key = '{}-{}'.format(root, key)
-    with shelve.open(SHELVE_FILE) as db:
+    with open_db() as db:
         db[key] = {'value': value, 'mac': mac(value)}
     return value
 
@@ -45,7 +54,7 @@ def get(root, key, default=None):
     if not contains(root, key):
         return default
     key = '{}-{}'.format(root, key)
-    with shelve.open(SHELVE_FILE) as db:
+    with open_db() as db:
         data = db[key]
         if not hmac.compare_digest(data['mac'], mac(data['value'])):
             raise ProtocolException('{} was tampered.  Reverse changes, or redownload assignment'.format(SHELVE_FILE))
