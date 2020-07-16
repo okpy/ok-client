@@ -35,7 +35,11 @@ def open_db():
     try:
         return shelve.open(SHELVE_FILE)
     except:
-        os.unlink(SHELVE_FILE)
+        # just catch everything because there are a variety of errors that a corrupt db can cause
+        # if there is some other error that will happen on the retry hopefully
+        for name in os.listdir("."):
+            if name.startswith(SHELVE_FILE):
+                os.rename(name, name + ".corrupt")
         return shelve.open(SHELVE_FILE)
 
 
