@@ -43,6 +43,7 @@ Finally, to log out and log in under a different email, use --authenticate:
 
 Visit https://okpy.org to view your backups and submissions.
 """
+import resource
 
 from client import exceptions as ex
 from client.api import assignment
@@ -105,6 +106,8 @@ def parse_input(command_input=None):
                         help="submit composition revision")
     testing.add_argument('--timeout', type=int, default=10,
                         help="set the timeout duration (in seconds) for running tests")
+    testing.add_argument('--max-memory', type=int, default=1024,
+                        help="set the maximal memory usage (in mebibytes) for running tests")
     testing.add_argument('-cov', '--coverage', action='store_true',
                         help="get suggestions on what lines to add tests for")
 
@@ -187,6 +190,9 @@ def main():
     args = parse_input()
     log.setLevel(logging.DEBUG if args.debug else logging.ERROR)
     log.debug(args)
+
+    _, hard = resource.getrlimit(resource.RLIMIT_AS)
+    resource.setrlimit(resource.RLIMIT_AS, (2 ** 20 * args.max_memory, hard))
 
     # Checking user's Python bit version
     bit_v = (8 * struct.calcsize("P"))
