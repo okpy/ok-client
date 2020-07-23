@@ -45,19 +45,21 @@ def encode_and_pad(data: str, to_length: int) -> bytes:
 
     Returns a sequence of bytes.
     """
-    encoded = data.encode('utf-8')
+    encoded = data.encode("utf-8")
     if to_length is None:
         return encoded
     if len(encoded) > to_length:
-        raise ValueError("Cannot pad data of length {} to size {}".format(len(encoded), to_length))
+        raise ValueError(
+            "Cannot pad data of length {} to size {}".format(len(encoded), to_length)
+        )
     return encoded + b"\0" * (to_length - len(encoded))
 
 
-def un_pad_and_decode(padded : bytes) -> str:
+def un_pad_and_decode(padded: bytes) -> str:
     """
     Un-pads the given data sequence by stripping trailing null characters and recodes it at utf-8.
     """
-    return padded.rstrip(b"\0").decode('utf-8')
+    return padded.rstrip(b"\0").decode("utf-8")
 
 
 def encrypt(data: str, key: str, pad_length: int = None) -> str:
@@ -83,23 +85,23 @@ def decrypt(encoded_ciphertext: str, key: str) -> str:
     if not encoded_ciphertext.startswith(HEADER_TEXT):
         raise ValueError("Invalid ciphertext: does not start with the header")
 
-    ciphertext_no_header = encoded_ciphertext[len(HEADER_TEXT):]
+    ciphertext_no_header = encoded_ciphertext[len(HEADER_TEXT) :]
     ciphertext_no_header_bytes = from_safe_string(ciphertext_no_header)
     padded_plaintext = aes_mode_of_operation(key).decrypt(ciphertext_no_header_bytes)
     if not padded_plaintext.startswith(PLAINTEXT_PADDING):
         raise InvalidKeyException
-    plaintext = padded_plaintext[len(PLAINTEXT_PADDING):]
+    plaintext = padded_plaintext[len(PLAINTEXT_PADDING) :]
     plaintext = un_pad_and_decode(plaintext)
     return plaintext
 
 
 def to_safe_string(unsafe_bytes: bytes) -> str:
     # use 9 instead of = for padding so that the string looks more homogenous
-    return base64.b32encode(unsafe_bytes).decode('ascii').replace("=", "9").lower()
+    return base64.b32encode(unsafe_bytes).decode("ascii").replace("=", "9").lower()
 
 
 def from_safe_string(safe_string: str) -> bytes:
-    return base64.b32decode(safe_string.upper().replace("9", "=").encode('ascii'))
+    return base64.b32decode(safe_string.upper().replace("9", "=").encode("ascii"))
 
 
 def aes_mode_of_operation(key):
