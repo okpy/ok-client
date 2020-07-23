@@ -3,6 +3,8 @@ Thin wrapper around pyaes that fixes a mode and encryption style, along with a s
 for encrypted text to be stored in that allows for easily determining the difference between an encrypted and
 non-encrypted file.
 """
+from typing import Tuple
+
 import base64
 import os
 import re
@@ -40,9 +42,11 @@ def get_keys(document: str) -> list:
 
 def encode_and_pad(data: str, to_length: int) -> bytes:
     """
-    Pads the given data sequence to the given length with null characters.
+    Encodes as utf-8 and pads the given data sequence to the given length with
+        null characters.
 
-    Returns a sequence of bytes.
+    Padding is to preserve the IND-CPA of messages of different lengths, by
+        making sure to pad to a common length.
     """
     encoded = data.encode("utf-8")
     if to_length is None:
@@ -56,20 +60,25 @@ def encode_and_pad(data: str, to_length: int) -> bytes:
 
 def un_pad_and_decode(padded: bytes) -> str:
     """
-    Un-pads the given data sequence by stripping trailing null characters and recodes it at utf-8.
+    Un-pads the given data sequence by stripping trailing null characters and
+        recodes it at utf-8.
     """
     return padded.rstrip(b"\0").decode("utf-8")
 
 
-def hash_key(key):
+def hash_key(key : str) -> str:
     """
-    Hashes the given key using SHA-256, so we can quickly determine if a ciphertext
-        matches a given key.
+    Hashes the given key using SHA-256, so we can quickly determine if a
+        ciphertext matches a given key.
     """
     return hashlib.sha256(key.encode("utf-8")).hexdigest()
 
 
-def dump_ct(iv, ciphertext, hashed_key):
+def dump_ct(iv : bytes, ciphertext : bytes, hashed_key : str) -> str:
+    """
+    Dump the given initialization vector, ciphertext, and hashed key into a
+        single string. Add a header.
+    """
     return HEADER_TEXT + json.dumps(
         dict(
             iv=to_safe_string(iv),
@@ -79,7 +88,7 @@ def dump_ct(iv, ciphertext, hashed_key):
     )
 
 
-def load_ct(string):
+def load_ct(string : str) -> Tuple[bytes, bytes, str]:
     """
     Takes a string created by dump_ct and undoes the transformation, resulting
         in a tuple (iv, ciphertext, hashed_key)
@@ -89,7 +98,7 @@ def load_ct(string):
 
     string = string[len(HEADER_TEXT) :]
 
-    result = json.loads(string)
+    result = json.loads(string.strip())
     return (
         from_safe_string(result["iv"]),
         from_safe_string(result["ciphertext"]),
@@ -140,7 +149,7 @@ def from_safe_string(safe_string: str) -> bytes:
     return base64.b32decode(safe_string.upper().replace("9", "=").encode("ascii"))
 
 
-def aes_mode_of_operation(key, iv):
+def aes_mode_of_operation(key : str, iv : bytes) -> pyaes.AESModeOfOperationCBC:
     return pyaes.AESModeOfOperationCBC(from_safe_string(key), iv)
 
 
