@@ -211,6 +211,10 @@ def main():
         # Instantiating assignment
         assign = assignment.load_assignment(args.config, args)
 
+        if assign.decryption_keypage:
+            # do not allow running locally if decryption keypage is provided
+            args.local = False
+
         if args.generate_encryption_key:
             assign.generate_encryption_key(args.generate_encryption_key)
             exit(0)
