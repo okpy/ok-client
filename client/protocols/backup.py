@@ -212,7 +212,7 @@ class BackupProtocol(models.Protocol):
         elif not message_list:
             print('{action}... 100% complete'.format(action=action))
             due_date = self.get_due_date(access_token, timeout)
-            if due_date is not None:
+            if due_date is not None and action != "Revise":
                 now = datetime.datetime.now(tz=datetime.timezone.utc)
                 time_to_deadline = due_date - now
                 if time_to_deadline < datetime.timedelta(0):
