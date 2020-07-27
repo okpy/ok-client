@@ -6,13 +6,17 @@ from client.utils import network
 import client
 import datetime
 import logging
+import time
 import os
 import pickle
 import requests
 
+from filelock import Timeout, FileLock
+
 log = logging.getLogger(__name__)
 
 from client.utils.printer import print_warning, print_success, print_error
+from client.utils.output import DisableLog
 
 class BackupProtocol(models.Protocol):
 
@@ -92,6 +96,53 @@ class BackupProtocol(models.Protocol):
         self.dump_unsent_messages(message_list + subm_messages)
         print()
 
+    def _update_last_autobackup_time(self, between):
+        """
+        Updates the last autobackup time in TIME_PATH
+        """
+        LOCK_PATH = ".ok_backup_time.lock"
+        TIME_PATH = ".ok_backup_time"
+        try:
+            with FileLock(LOCK_PATH, timeout=1):
+                try:
+                    with open(TIME_PATH) as f:
+                        last_time = datetime.datetime.fromtimestamp(int(f.read()))
+                    if datetime.datetime.now() - last_time < between:
+                        return False
+                except FileNotFoundError:
+                    pass
+                with open(TIME_PATH, "w") as f:
+                    f.write(str(int(datetime.datetime.now().timestamp())))
+                return True
+        except Timeout:
+            return False
+
+    def _safe_run(self, messages, between):
+        """
+        Run a backup, if and only if an autobackup has not been attempted more than `between` time ago.
+
+            between: a timedelta of how long to wait between backups
+        """
+
+        if not self._update_last_autobackup_time(between):
+            return
+
+        # with DisableLog():
+        try:
+            self.run(messages, nointeract=True)
+        except Exception as e:
+            print(e)
+            return
+
+
+    def run_in_loop(self, messages_fn, period, synchronous):
+        self.run(messages_fn())
+        if not synchronous:
+            if os.fork() != 0:
+                return
+        while True:
+            self._safe_run(messages_fn(), between=period)
+            time.sleep(5)
 
     @classmethod
     def load_unsent_messages(cls):

@@ -107,7 +107,8 @@ def parse_input(command_input=None):
                         help="set the timeout duration (in seconds) for running tests")
     testing.add_argument('-cov', '--coverage', action='store_true',
                         help="get suggestions on what lines to add tests for")
-
+    testing.add_argument('--autobackup', action='store_true',
+                        help="back up your work every minute in the background")
     # Debugging
     debugging = parser.add_argument_group('debugging tools for students')
 
@@ -232,6 +233,10 @@ def main():
             print('Available tests:')
             for name in assign.test_map:
                 print('    ' + name)
+            exit(0)
+
+        if args.autobackup:
+            assign.autobackup()
             exit(0)
 
         force_authenticate = args.authenticate

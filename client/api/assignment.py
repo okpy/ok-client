@@ -1,11 +1,14 @@
 import uuid
 
+from datetime import timedelta
+
 import requests
 
 from client import exceptions as ex
 from client.sources.common import core
 from client.utils import auth, format, encryption
 from client.protocols.grading import grade
+from client.cli.common import messages
 import client
 import collections
 import glob
@@ -356,6 +359,24 @@ class Assignment(core.Serializable):
                 log.warning('Unable to dump {}: {}'.format(test.name, str(e)))
             else:
                 log.info('Dumped {}'.format(test.name))
+
+    def autobackup(self):
+        backup = self._get_protocol("BackupProtocol")
+        get_contents = self._get_protocol("FileContentsProtocol")
+        if backup is None:
+            print_error("Error: autobackup specified by backup protocol not found")
+            return
+        def messages_fn():
+            msgs = messages.Messages()
+            get_contents.run(msgs)
+            return msgs
+        backup.run_in_loop(messages_fn, timedelta(minutes=1), synchronous=False)
+
+    def _get_protocol(self, type_name):
+        for protocol in self.protocol_map.values():
+            if type(protocol).__name__ == type_name:
+                return protocol
+        return None
 
     def _resolve_specified_tests(self, questions, all_tests=False):
         """For each of the questions specified on the command line,
