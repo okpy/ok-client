@@ -17,7 +17,8 @@ EXTRA_PACKAGES = [
     'pytutor', 'ast_scope', 'attr', # pytutor and recursive deps
     'pyaes',
     'colorama',
-    'display_timedelta'
+    'display_timedelta',
+    'filelock.py'
 ]
 
 def abort(message):
