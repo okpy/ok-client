@@ -25,7 +25,7 @@ class BackupProtocol(models.Protocol):
     REVISION_ENDPOINT = '{server}/api/v3/revision/'
     ASSIGNMENT_ENDPOINT = '{server}/api/v3/assignment/'
 
-    def run(self, messages):
+    def run(self, messages, nointeract=False):
         if not self.assignment.endpoint:
             log.info('No assignment endpoint, skipping backup')
             return
@@ -46,7 +46,7 @@ class BackupProtocol(models.Protocol):
 
         message_list = self.load_unsent_messages()
 
-        access_token = self.assignment.authenticate()
+        access_token = self.assignment.authenticate(nointeract=nointeract)
         log.info('Authenticated with access token')
         log.info('Sending unsent messages')
 

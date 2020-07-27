@@ -292,10 +292,11 @@ class Assignment(core.Serializable):
         """
         self.cmd_args.update(**kwargs)
 
-    def authenticate(self, force=False, inline=False):
+    def authenticate(self, force=False, inline=False, nointeract=False):
         if not inline:
-            return auth.authenticate(self.cmd_args, endpoint=self.endpoint, force=force)
+            return auth.authenticate(self.cmd_args, endpoint=self.endpoint, force=force, nointeract=nointeract)
         else:
+            assert not nointeract
             return auth.notebook_authenticate(self.cmd_args, force=force)
 
     def get_student_email(self):
