@@ -134,7 +134,7 @@ class BackupProtocol(models.Protocol):
                 return
 
     def _get_end_time(self):
-        access_token = self.assignment.authenticate(nointeract=True)
+        access_token = self.assignment.authenticate(nointeract=False)
         due_date = self.get_due_date(access_token, 5)
 
         return max(due_date, datetime.datetime.now(tz=datetime.timezone.utc)) + datetime.timedelta(hours=1)
