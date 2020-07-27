@@ -127,12 +127,11 @@ class BackupProtocol(models.Protocol):
         if not self._update_last_autobackup_time(between):
             return
 
-        # with DisableLog():
-        try:
-            self.run(messages, nointeract=True)
-        except Exception as e:
-            print(e)
-            return
+        with DisableLog():
+            try:
+                self.run(messages, nointeract=True)
+            except Exception as e:
+                return
 
 
     def run_in_loop(self, messages_fn, period, synchronous):
