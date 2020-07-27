@@ -133,13 +133,21 @@ class BackupProtocol(models.Protocol):
             except Exception as e:
                 return
 
+    def _get_end_time(self):
+        access_token = self.assignment.authenticate(nointeract=True)
+        due_date = self.get_due_date(access_token, 5)
+
+        return max(due_date, datetime.datetime.now(tz=datetime.timezone.utc)) + datetime.timedelta(hours=1)
+
 
     def run_in_loop(self, messages_fn, period, synchronous):
+        end_time = self._get_end_time()
+
         self.run(messages_fn())
         if not synchronous:
             if os.fork() != 0:
                 return
-        while True:
+        while datetime.datetime.now(tz=datetime.timezone.utc) < end_time:
             self._safe_run(messages_fn(), between=period)
             time.sleep(5)
 
