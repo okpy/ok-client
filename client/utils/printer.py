@@ -2,6 +2,7 @@ from colorama import Fore, Style
 
 def print_colored(color):
     def new_print(*args, **kwargs):
+        args = [str(arg) for arg in args]
         if len(args) == 0:
             return print(*args, **kwargs)
         if len(args) == 1:
