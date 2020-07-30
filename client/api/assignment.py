@@ -293,6 +293,7 @@ class Assignment(core.Serializable):
         self.cmd_args.update(**kwargs)
 
     def authenticate(self, force=False, inline=False, nointeract=False):
+        nointeract = nointeract or self.cmd_args.nointeract
         if not inline:
             return auth.authenticate(self.cmd_args, endpoint=self.endpoint, force=force, nointeract=nointeract)
         else:

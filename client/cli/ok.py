@@ -164,6 +164,8 @@ def parse_input(command_input=None):
     server = parser.add_argument_group('server options')
     server.add_argument('--local', action='store_true',
                         help="disable any network activity")
+    server.add_argument('--nointeract', action='store_true',
+                        help="disable prompts to user")
     server.add_argument('--server', type=str,
                         default='okpy.org',
                         help="set the server address")
@@ -204,6 +206,9 @@ def main():
     assign = None
     try:
         if args.get_token:
+            if args.nointeract:
+                print_error("Cannot pass in --get-token and --nointeract, the only way to get a token is by interaction")
+                exit(1)
             access_token = auth.authenticate(args, force=True)
             print("Token: {}".format(access_token))
             exit(not access_token)  # exit with error if no access_token
@@ -239,6 +244,9 @@ def main():
         while retry:
             retry = False
             if force_authenticate:
+                if args.nointeract:
+                    print_error("Cannot pass in --authenticate and --nointeract")
+                    exit(1)
                 # Authenticate and check for success
                 if not assign.authenticate(force=True):
                     exit(1)
