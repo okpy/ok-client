@@ -184,10 +184,11 @@ def server_url(cmd_args):
     scheme = 'http' if cmd_args.insecure else 'https'
     return '{}://{}'.format(scheme, cmd_args.server)
 
-def authenticate(cmd_args, endpoint='', force=False):
+def authenticate(cmd_args, endpoint='', force=False, nointeract=False):
     """Returns an OAuth token that can be passed to the server for
     identification. If FORCE is False, it will attempt to use a cached token
-    or refresh the OAuth token.
+    or refresh the OAuth token. If NOINTERACT is true, it will return None
+    rather than prompting the user.
     """
     server = server_url(cmd_args)
     network.check_ssl()
@@ -197,6 +198,8 @@ def authenticate(cmd_args, endpoint='', force=False):
         assert not force
         access_token = refresh_local_token(server)
     except Exception:
+        if nointeract:
+            return access_token
         print('Performing authentication')
         access_token = perform_oauth(get_code, cmd_args, endpoint)
         email = display_student_email(cmd_args, access_token)
@@ -207,7 +210,7 @@ def authenticate(cmd_args, endpoint='', force=False):
 
     return access_token
 
-def notebook_authenticate(cmd_args, force=False, silent=True):
+def notebook_authenticate(cmd_args, force=False, silent=True, nointeract=False):
     """ Similiar to authenticate but prints student emails after
     all calls and uses a different way to get codes. If SILENT is True,
     it will suppress the error message and redirect to FORCE=True
@@ -223,6 +226,9 @@ def notebook_authenticate(cmd_args, force=False, silent=True):
             if not silent:
                 raise e
             return notebook_authenticate(cmd_args, force=True, silent=False)
+
+    if nointeract:
+        return None
 
     if not access_token:
         access_token = perform_oauth(
