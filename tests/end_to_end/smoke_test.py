@@ -13,7 +13,7 @@ class SmokeTest(EndToEndTest):
     def testUpdate(self):
         stdout, stderr = self.run_ok("--update")
         self.assertEqual(stderr, "")
-        self.assertRegex(stdout, "Current version: v[0-9.]+\nOK is up to date")
+        self.assertRegex(stdout, "Current version: v[0-9.]+\n(OK is up to date|Updated to version: v[0-9.]+)")
 
     def testRunNoArgument(self):
         self.add_file("test.ok", json.dumps(
