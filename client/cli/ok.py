@@ -107,7 +107,8 @@ def parse_input(command_input=None):
                         help="set the timeout duration (in seconds) for running tests")
     testing.add_argument('-cov', '--coverage', action='store_true',
                         help="get suggestions on what lines to add tests for")
-
+    testing.add_argument('--autobackup', action='store_true',
+                        help="back up your work every minute in the background")
     # Debugging
     debugging = parser.add_argument_group('debugging tools for students')
 
@@ -164,6 +165,8 @@ def parse_input(command_input=None):
     server = parser.add_argument_group('server options')
     server.add_argument('--local', action='store_true',
                         help="disable any network activity")
+    server.add_argument('--nointeract', action='store_true',
+                        help="disable prompts to user")
     server.add_argument('--server', type=str,
                         default='okpy.org',
                         help="set the server address")
@@ -204,12 +207,19 @@ def main():
     assign = None
     try:
         if args.get_token:
+            if args.nointeract:
+                print_error("Cannot pass in --get-token and --nointeract, the only way to get a token is by interaction")
+                exit(1)
             access_token = auth.authenticate(args, force=True)
             print("Token: {}".format(access_token))
             exit(not access_token)  # exit with error if no access_token
 
         # Instantiating assignment
         assign = assignment.load_assignment(args.config, args)
+
+        if assign.decryption_keypage:
+            # do not allow running locally if decryption keypage is provided
+            args.local = False
 
         if args.generate_encryption_key:
             assign.generate_encryption_key(args.generate_encryption_key)
@@ -230,11 +240,18 @@ def main():
                 print('    ' + name)
             exit(0)
 
+        if args.autobackup:
+            assign.autobackup()
+            exit(0)
+
         force_authenticate = args.authenticate
         retry = True
         while retry:
             retry = False
             if force_authenticate:
+                if args.nointeract:
+                    print_error("Cannot pass in --authenticate and --nointeract")
+                    exit(1)
                 # Authenticate and check for success
                 if not assign.authenticate(force=True):
                     exit(1)

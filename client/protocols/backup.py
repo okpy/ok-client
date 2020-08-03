@@ -6,13 +6,17 @@ from client.utils import network
 import client
 import datetime
 import logging
+import time
 import os
 import pickle
 import requests
 
+from filelock import Timeout, FileLock
+
 log = logging.getLogger(__name__)
 
 from client.utils.printer import print_warning, print_success, print_error
+from client.utils.output import DisableLog
 
 class BackupProtocol(models.Protocol):
 
@@ -25,7 +29,7 @@ class BackupProtocol(models.Protocol):
     REVISION_ENDPOINT = '{server}/api/v3/revision/'
     ASSIGNMENT_ENDPOINT = '{server}/api/v3/assignment/'
 
-    def run(self, messages):
+    def run(self, messages, nointeract=False):
         if not self.assignment.endpoint:
             log.info('No assignment endpoint, skipping backup')
             return
@@ -46,7 +50,7 @@ class BackupProtocol(models.Protocol):
 
         message_list = self.load_unsent_messages()
 
-        access_token = self.assignment.authenticate()
+        access_token = self.assignment.authenticate(nointeract=nointeract)
         log.info('Authenticated with access token')
         log.info('Sending unsent messages')
 
@@ -92,6 +96,60 @@ class BackupProtocol(models.Protocol):
         self.dump_unsent_messages(message_list + subm_messages)
         print()
 
+    def _update_last_autobackup_time(self, between):
+        """
+        Updates the last autobackup time in TIME_PATH
+        """
+        LOCK_PATH = ".ok_backup_time.lock"
+        TIME_PATH = ".ok_backup_time"
+        try:
+            with FileLock(LOCK_PATH, timeout=1):
+                try:
+                    with open(TIME_PATH) as f:
+                        last_time = datetime.datetime.fromtimestamp(int(f.read()))
+                    if datetime.datetime.now() - last_time < between:
+                        return False
+                except FileNotFoundError:
+                    pass
+                with open(TIME_PATH, "w") as f:
+                    f.write(str(int(datetime.datetime.now().timestamp())))
+                return True
+        except Timeout:
+            return False
+
+    def _safe_run(self, messages, between):
+        """
+        Run a backup, if and only if an autobackup has not been attempted more than `between` time ago.
+
+            between: a timedelta of how long to wait between backups
+        """
+
+        if not self._update_last_autobackup_time(between):
+            return
+
+        with DisableLog():
+            try:
+                self.run(messages, nointeract=True)
+            except Exception as e:
+                return
+
+    def _get_end_time(self):
+        access_token = self.assignment.authenticate(nointeract=False)
+        due_date = self.get_due_date(access_token, 5)
+
+        return max(due_date, datetime.datetime.now(tz=datetime.timezone.utc)) + datetime.timedelta(hours=1)
+
+
+    def run_in_loop(self, messages_fn, period, synchronous):
+        end_time = self._get_end_time()
+
+        self.run(messages_fn())
+        if not synchronous:
+            if os.fork() != 0:
+                return
+        while datetime.datetime.now(tz=datetime.timezone.utc) < end_time:
+            self._safe_run(messages_fn(), between=period)
+            time.sleep(5)
 
     @classmethod
     def load_unsent_messages(cls):
@@ -212,7 +270,7 @@ class BackupProtocol(models.Protocol):
         elif not message_list:
             print('{action}... 100% complete'.format(action=action))
             due_date = self.get_due_date(access_token, timeout)
-            if due_date is not None:
+            if due_date is not None and action != "Revise":
                 now = datetime.datetime.now(tz=datetime.timezone.utc)
                 time_to_deadline = due_date - now
                 if time_to_deadline < datetime.timedelta(0):
