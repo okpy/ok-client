@@ -50,5 +50,6 @@ setup(
         'pyaes==1.6.1',
         'colorama==0.4.3',
         'display-timedelta==1.1',
+        'filelock==3.0.12',
     ],
 )
