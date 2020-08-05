@@ -13,7 +13,9 @@ from client.utils import encryption
 
 SCRIPT = """
 . {envloc}/{folder}/activate;
-yes '' | python ok {args}
+python ok {args}
+# get rid of background commands
+ps | grep python | xargs python3 -c 'import sys; print(sys.argv[1]) if len(sys.argv) > 1 else None' | xargs -r kill
 """
 
 
