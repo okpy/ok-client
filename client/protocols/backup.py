@@ -137,7 +137,7 @@ class BackupProtocol(models.Protocol):
         access_token = self.assignment.authenticate(nointeract=False)
         due_date = self.get_due_date(access_token, 5)
         if due_date is None:
-            due_date = datetime.datetim.min
+            due_date = datetime.datetime.min
 
         return max(due_date, datetime.datetime.now(tz=datetime.timezone.utc)) + datetime.timedelta(hours=1)
 
