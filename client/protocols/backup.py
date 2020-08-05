@@ -7,6 +7,7 @@ import client
 import datetime
 import logging
 import time
+import os
 from multiprocessing import Process
 import pickle
 import requests
