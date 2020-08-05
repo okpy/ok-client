@@ -119,7 +119,7 @@ class EncryptionTest(EndToEndTest):
 
         self.set_decrypt_endpoint(self.get_endpoint_returning(",".join(keys.values())))
 
-        stdout, stderr = self.run_ok('--no-browser')
+        stdout, stderr = self.run_ok('--no-browser', '--nointeract')
         self.assertNotIn("Please paste the key", stdout)
         self.assertOnlyInvalidGrant(stderr)
 
