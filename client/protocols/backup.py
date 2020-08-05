@@ -7,7 +7,7 @@ import client
 import datetime
 import logging
 import time
-import os
+from multiprocessing import Process
 import pickle
 import requests
 
@@ -146,9 +146,14 @@ class BackupProtocol(models.Protocol):
         end_time = self._get_end_time()
 
         self.run(messages_fn())
-        if not synchronous:
-            if os.fork() != 0:
-                return
+
+        if synchronous:
+            self._run_sync(messages_fn, period)
+        else:
+            p = Process(target=self._run_sync, args=(messages_fn, period))
+            p.start()
+
+    def _run_sync(self, messages_fn, period):
         while datetime.datetime.now(tz=datetime.timezone.utc) < end_time:
             self._safe_run(messages_fn(), between=period)
             time.sleep(5)
