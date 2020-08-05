@@ -117,12 +117,6 @@ class EncryptionTest(EndToEndTest):
 
         keys = self.encrypt_all("hw1.py", "tests/q1.py", "tests/q2.py")
 
-        self.set_decrypt_endpoint("https://google.com/404")
-
-        stdout, stderr = self.run_ok('--no-browser')
-        self.assertIn("Please paste the key", stdout)
-        self.assertOnlyInvalidGrant(stderr)
-
         self.set_decrypt_endpoint(self.get_endpoint_returning(",".join(keys.values())))
 
         stdout, stderr = self.run_ok('--no-browser')
