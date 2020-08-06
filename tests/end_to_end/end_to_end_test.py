@@ -81,10 +81,13 @@ class EndToEndTest(unittest.TestCase):
         self.assertEqual(actual, expected)
 
     def assertOnlyInvalidGrant(self, stderr):
-        for line in stderr.split("\n"):
-            if not line:
-                continue
-            self.assertRegex(r"ERROR  \| auth.py:.* \| \{'error': 'invalid_grant'\}", line.strip())
+        try:
+            for line in stderr.split("\n"):
+                if not line:
+                    continue
+                self.assertRegex(r"ERROR  \| auth.py:.* \| \{'error': 'invalid_grant'\}", line.strip())
+        except:
+            raise AssertionError("Stderr: {}".format(stderr))
 
     def encrypt_all(self, *paths, padding=None):
         keyfile = self.rel_path("keyfile")
