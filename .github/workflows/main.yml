@@ -4,6 +4,7 @@ on: [push, pull_request]
 
 jobs:
   build:
+    timeout-minutes: 2
     name: ${{ matrix.name }}
     runs-on: ${{ matrix.os }}
     strategy:
@@ -113,4 +114,4 @@ jobs:
         esac
         . "${VENV_DIR}/${scripts}/activate"
         echo "Using $(python --version) on ${{ matrix.os }}" 1>&2
-        timeout 60 nosetests --with-coverage tests
+        nosetests --with-coverage tests
