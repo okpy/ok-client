@@ -16,7 +16,7 @@ SCRIPT = """
 python ok {args}
 # get rid of background commands
 sleep 0.1&
-ps | egrep 'python|sleep' | xargs python -c 'import sys; print(sys.argv[1]) if len(sys.argv) > 1 else None' > | xargs kill
+ps | egrep 'python|sleep' | python -c 'from fileinput import input; [print(x.strip().split()[0]) for x in input()]' | xargs kill
 """
 
 
