@@ -15,8 +15,10 @@ SCRIPT = """
 . {envloc}/{folder}/activate;
 python ok {args}
 # get rid of background commands
-sleep 0.1&
-ps | egrep 'python|sleep' | python -c 'from fileinput import input; [print(x.strip().split()[0]) for x in input()]' | xargs kill
+x=$(mktemp)
+ps | grep 'python' > $x
+var=$(cat $x | python -c 'from fileinput import input; [print(x.strip().split()[0]) for x in input()]')
+test "$var" && xargs kill $var
 """
 
 
