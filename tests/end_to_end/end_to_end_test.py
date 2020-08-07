@@ -15,7 +15,8 @@ SCRIPT = """
 . {envloc}/{folder}/activate;
 python ok {args}
 # get rid of background commands
-ps | grep python | xargs python -c 'import sys; print(sys.argv[1]) if len(sys.argv) > 1 else None' | xargs kill || true
+sleep 0.1&
+ps | egrep 'python|sleep' | xargs python -c 'import sys; print(sys.argv[1]) if len(sys.argv) > 1 else None' > | xargs kill
 """
 
 
