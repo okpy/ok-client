@@ -1,9 +1,8 @@
 import json
-import unittest
 
 from tests.end_to_end.end_to_end_test import EndToEndTest
 
-@unittest.skip("temporarily disabled")
+
 class SmokeTest(EndToEndTest):
 
     def testVersion(self):
