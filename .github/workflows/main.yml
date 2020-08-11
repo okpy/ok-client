@@ -105,6 +105,7 @@ jobs:
         . "${VENV_DIR}/${scripts}/activate"
         python -m pip install --default-timeout=1000 -r requirements.txt
     - name: Run tests
+      timeout-minutes: 5
       shell: bash
       run: |
         case "${{ matrix.os }}" in
