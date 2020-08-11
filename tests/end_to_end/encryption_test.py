@@ -1,9 +1,11 @@
 import json
 import tempfile
+import unittest
 
 from tests.end_to_end.end_to_end_test import EndToEndTest
 
 
+@unittest.skip("temporarily disabled")
 class EncryptionTest(EndToEndTest):
     def set_decrypt_endpoint(self, url):
         with open(self.rel_path("config.ok")) as f:
