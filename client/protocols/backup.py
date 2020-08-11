@@ -8,6 +8,8 @@ import datetime
 import logging
 import time
 import os
+import sys
+from subprocess import Popen
 import pickle
 import requests
 
@@ -136,17 +138,23 @@ class BackupProtocol(models.Protocol):
     def _get_end_time(self):
         access_token = self.assignment.authenticate(nointeract=False)
         due_date = self.get_due_date(access_token, 5)
+        if due_date is None:
+            due_date = datetime.datetime.min.replace(tzinfo=datetime.timezone.utc)
 
         return max(due_date, datetime.datetime.now(tz=datetime.timezone.utc)) + datetime.timedelta(hours=1)
 
 
     def run_in_loop(self, messages_fn, period, synchronous):
-        end_time = self._get_end_time()
-
-        self.run(messages_fn())
         if not synchronous:
-            if os.fork() != 0:
-                return
+            self.run(messages_fn())
+            args = sys.argv[:]
+            args.append("--autobackup-actual-run-sync")
+            Popen([sys.executable, *args])
+            return
+        end_time = self._get_end_time()
+        self._run_sync(messages_fn, period, end_time)
+
+    def _run_sync(self, messages_fn, period, end_time):
         while datetime.datetime.now(tz=datetime.timezone.utc) < end_time:
             self._safe_run(messages_fn(), between=period)
             time.sleep(5)
