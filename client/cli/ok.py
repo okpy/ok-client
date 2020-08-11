@@ -109,10 +109,10 @@ def parse_input(command_input=None):
                         help="get suggestions on what lines to add tests for")
     testing.add_argument('--autobackup', action='store_true',
                         help="back up your work every minute in the background")
+    # runs an autobackup in the foreground. Used by `--autobackup`,
+    # if you specify this other options will be ignored.
     testing.add_argument('--autobackup-actual-run-sync', action='store_true',
-                        help="back up your work every minute in the foreground "
-                             "[do not prompt, this is used internally by --autobackup]. "
-                             "if this is passed in any other command arguments are returned.")
+                        help=argparse.SUPPRESS)
     # Debugging
     debugging = parser.add_argument_group('debugging tools for students')
 
@@ -227,6 +227,7 @@ def main():
 
         if args.autobackup_actual_run_sync:
             assign.autobackup(run_sync=True)
+            # do not dump tests back out, this overwrites any changes that may have been made
             assign = None
             exit(0)
 
