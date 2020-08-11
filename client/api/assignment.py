@@ -422,7 +422,7 @@ class Assignment(core.Serializable):
             log.info('Loaded protocol "{}"'.format(proto))
 
     def _print_header(self):
-        if self.cmd_args.autobackup_actual_run_sync:
+        if getattr(self.cmd_args, 'autobackup_actual_run_sync', False):
             return
         format.print_line('=')
         print('Assignment: {}'.format(self.name))
