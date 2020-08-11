@@ -8,8 +8,6 @@ import datetime
 import logging
 import time
 import os
-import sys
-from subprocess import Popen
 import pickle
 import requests
 
@@ -145,16 +143,12 @@ class BackupProtocol(models.Protocol):
 
 
     def run_in_loop(self, messages_fn, period, synchronous):
-        if not synchronous:
-            self.run(messages_fn())
-            args = sys.argv[:]
-            args.append("--autobackup-actual-run-sync")
-            Popen([sys.executable, *args])
-            return
         end_time = self._get_end_time()
-        self._run_sync(messages_fn, period, end_time)
 
-    def _run_sync(self, messages_fn, period, end_time):
+        self.run(messages_fn())
+        if not synchronous:
+            if os.fork() != 0:
+                return
         while datetime.datetime.now(tz=datetime.timezone.utc) < end_time:
             self._safe_run(messages_fn(), between=period)
             time.sleep(5)

@@ -360,7 +360,7 @@ class Assignment(core.Serializable):
             else:
                 log.info('Dumped {}'.format(test.name))
 
-    def autobackup(self, run_sync):
+    def autobackup(self):
         backup = self._get_protocol("BackupProtocol")
         get_contents = self._get_protocol("FileContentsProtocol")
         if backup is None:
@@ -370,7 +370,7 @@ class Assignment(core.Serializable):
             msgs = messages.Messages()
             get_contents.run(msgs)
             return msgs
-        backup.run_in_loop(messages_fn, timedelta(minutes=1), synchronous=run_sync)
+        backup.run_in_loop(messages_fn, timedelta(minutes=1), synchronous=False)
 
     def _get_protocol(self, type_name):
         for protocol in self.protocol_map.values():
@@ -422,8 +422,6 @@ class Assignment(core.Serializable):
             log.info('Loaded protocol "{}"'.format(proto))
 
     def _print_header(self):
-        if self.cmd_args.autobackup_actual_run_sync:
-            return
         format.print_line('=')
         print('Assignment: {}'.format(self.name))
         print('OK, version {}'.format(client.__version__))
