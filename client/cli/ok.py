@@ -288,6 +288,8 @@ def main():
 
     except ex.ForceDecryptionException as e:
         assign.decrypt(e.keys)
+        # begin an autobackup
+        assign.autobackup(run_sync=False)
         # do not dump tests back out, this could overwrite any changes that may have been made
         assign = None
         exit(0)
