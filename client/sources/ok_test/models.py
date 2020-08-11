@@ -214,8 +214,11 @@ class EncryptedOKTest(models.Test):
     name = core.String()
     points = core.Float()
     partner = core.String(optional=True)
+    nointeract = core.Boolean(optional=True, default=False)
     def warn(self, method):
         print_error("Cannot {} {}: test is encrypted".format(method, self.name))
+        if self.nointeract:
+            return
         keys_string = input("Please paste the key to decrypt this test: ")
         keys = keys_string.strip().split()
         if keys:

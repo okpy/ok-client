@@ -46,7 +46,7 @@ def load(file, parameter, assign):
             decrypted, _ = assign.attempt_decryption([])
             if file not in decrypted:
                 name = os.path.basename(filename)
-                return {name: models.EncryptedOKTest(name=name, points=1)}
+                return {name: models.EncryptedOKTest(name=name, points=1, nointeract=assign.cmd_args.nointeract)}
 
     try:
         test = importing.load_module(file).test
