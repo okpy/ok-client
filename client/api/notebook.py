@@ -102,6 +102,8 @@ class Notebook:
             print("Make sure to save your notebook before sending it to OK!")
             return
 
+        last_saved = os.path.getmtime(filename)
+
         if self.mode == "jupyter":
             display(Javascript('IPython.notebook.save_checkpoint();'))
             display(Javascript('IPython.notebook.save_notebook();'))
@@ -114,7 +116,7 @@ class Notebook:
                   if os.path.splitext(path)[1] == '.ipynb']
         # Wait for first .ipynb to save
         if ipynbs:
-            if wait_for_save(ipynbs[0]):
+            if wait_for_save(ipynbs[0], last_saved):
                 print("Saved '{}'.".format(ipynbs[0]))
             else:
                 log.warning("Timed out waiting for IPython save")
@@ -155,14 +157,13 @@ def validate_contents(file_contents):
             return False
     return True
 
-def wait_for_save(filename, timeout=5):
-    """Waits for FILENAME to update, waiting up to TIMEOUT seconds.
+def wait_for_save(filename, since, timeout=5):
+    """Waits for FILENAME to update since SINCE, waiting up to TIMEOUT seconds.
     Returns True if a save was detected, and False otherwise.
     """
-    modification_time = os.path.getmtime(filename)
     start_time = time.time()
     while time.time() < start_time + timeout:
-        if (os.path.getmtime(filename) > modification_time and
+        if (os.path.getmtime(filename) > since and
             os.path.getsize(filename) > 0):
             return True
         time.sleep(0.2)
