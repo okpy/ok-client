@@ -101,7 +101,7 @@ class Doctest(models.Test):
         if success:
             return {'passed': 1, 'failed': 0, 'locked': 0}
         else:
-            return {'passed': 0, 'failed': 1, 'locked': 0}
+            return {'passed': 0, 'failed': 1, 'locked': 0, 'failed_outputs': [''.join(output_log)]}
 
     def score(self):
         format.print_line('-')

@@ -37,8 +37,8 @@ class ConceptSuite(ok_models.Suite):
                 results['locked'] += 1
                 continue
 
-            success = self._run_case(test_name, suite_number,
-                                     case, i + 1)
+            success, output = self._run_case(test_name, suite_number,
+                                             case, i + 1)
             assert success, 'Concept case should never fail while grading'
             results['passed'] += 1
         return results
