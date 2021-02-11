@@ -164,11 +164,13 @@ class DoctestTest(unittest.TestCase):
         >>> 2 + 2
         5
         """)
+        results = test.run(None)
+        self.assertEqual(len(results.pop('failed_outputs')), 1)
         self.assertEqual({
             'passed': 0,
             'failed': 1,
             'locked': 0,
-        }, test.run(None))
+        }, results)
 
     def testRun_completeFail(self):
         test = self.makeDoctest("""
@@ -177,11 +179,13 @@ class DoctestTest(unittest.TestCase):
         >>> 2 + 2
         5
         """)
+        results = test.run(None)
+        self.assertEqual(len(results.pop('failed_outputs')), 1)
         self.assertEqual({
             'passed': 0,
             'failed': 1,
             'locked': 0,
-        }, test.run(None))
+        }, results)
 
     def testRun_solitaryPS1(self):
         test = self.makeDoctest("""
@@ -191,11 +195,13 @@ class DoctestTest(unittest.TestCase):
         >>> 1
         1
         """)
+        results = test.run(None)
+        self.assertEqual(len(results.pop('failed_outputs')), 1)
         self.assertEqual({
             'passed': 0,
             'failed': 1,
             'locked': 0,
-        }, test.run(None))
+        }, results)
 
     def testRun_solitaryPS2(self):
         test = self.makeDoctest("""

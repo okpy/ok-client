@@ -24,7 +24,7 @@ class HintingProtocol(protocol_models.Protocol):
     """A protocol that provides rubber duck debugging and hints if applicable.
     """
 
-    HINT_SERVER = "http://localhost:5000/"
+    HINT_SERVER = "https://hinting.cs61a.org/"
     HINT_ENDPOINT = 'api/hints'
     SMALL_EFFORT = 2
     WAIT_ATTEMPTS = 5
@@ -32,7 +32,7 @@ class HintingProtocol(protocol_models.Protocol):
                              'cal/cs61a/fa17/lab10']
 
     def run(self, messages):
-        """Determine if a student is elgible to recieve a hint. Based on their
+        """Determine if a student is eligible to recieve a hint. Based on their
         state, poses reflection questions.
 
         After more attempts, ask if students would like hints. If so, query
@@ -71,37 +71,31 @@ class HintingProtocol(protocol_models.Protocol):
                 continue
             stats = questions[question]
             is_solved = stats['solved'] == True
-            hint_info = messages['hinting']["question"] = {'question': question, 'prompts': {}, 'reflection': {}}
+            hint_info = messages['hinting']["question"] = {'name': question, 'prompts': {}, 'reflection': {}}
 
             # Determine a users eligibility for a prompt
 
             # If the user just solved this question, provide a reflection prompt
             if is_solved:
-                hint_info['elgible'] = False
+                hint_info['eligible'] = False
                 hint_info['disabled'] = 'solved'
                 if self.args.hint:
                     print("This question has already been solved.")
                 continue
             elif stats['attempts'] < self.SMALL_EFFORT:
-                log.info("Question %s is not elgible: Attempts: %s, Solved: %s",
+                log.info("Question %s is not eligible: Attempts: %s, Solved: %s",
                          question, stats['attempts'], is_solved)
-                hint_info['elgible'] = False
+                hint_info['eligible'] = False
                 if self.args.hint:
                     hint_info['disabled'] = 'attempt-count'
                     print("You need to make a few more attempts before the hint system is enabled")
                     continue
             else:
                 # Only prompt every WAIT_ATTEMPTS attempts to avoid annoying user
-                if stats['attempts'] % self.WAIT_ATTEMPTS != 0:
-                    hint_info['disabled'] = 'timer'
-                    hint_info['elgible'] = False
-                    log.info('Waiting for %d more attempts before prompting',
-                             stats['attempts'] % self.WAIT_ATTEMPTS)
-                else:
-                    hint_info['elgible'] = not is_solved
+                hint_info['eligible'] = not is_solved
 
             if not self.args.hint:
-                if hint_info['elgible']:
+                if hint_info['eligible']:
                     with format.block("-"):
                         print("To get hints, try using python3 ok --hint -q {}".format(question))
                     hint_info['suggested'] = True
@@ -125,24 +119,23 @@ class HintingProtocol(protocol_models.Protocol):
                     print_error("\r\nNetwork Error while generating hint. Try again later")
                     continue
 
-                if response:
-                    hint_info['response'] = response
+                hint_info['response'] = response
 
-                    hint = response.get('message')
-                    post_prompt = response.get('post_prompt')
-                    system_error = response.get('system_error')
-                    log.info("Hint server response: {}".format(response))
-                    if not hint:
-                        if system_error:
-                            print("{}".format(system_error))
-                        else:
-                            print("Sorry. No hints found for the current code. Try again making after some changes")
-                        continue
+                hint = response.get('message')
+                post_prompt = response.get('post_prompt')
+                system_error = response.get('system_error')
+                log.info("Hint server response: {}".format(response))
+                if not hint:
+                    if system_error:
+                        print("{}".format(system_error))
+                    else:
+                        print("Sorry. No hints found for the current code. Try again making after some changes")
+                    continue
 
-                    # Provide padding for the the hint
-                    print("\n{}".format(hint.rstrip()))
+                # Provide padding for the the hint
+                print("\n{}".format(hint.rstrip()))
 
-                    prompt.explanation_msg(post_prompt)
+                prompt.explanation_msg(post_prompt)
 
     def query_server(self, messages, test):
         user = self.assignment.get_identifier()

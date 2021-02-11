@@ -48,6 +48,7 @@ class OkTest(unittest.TestCase):
             'passed': passed,
             'failed': failed,
             'locked': locked,
+            'failed_outputs': [],
         }, test.run(None))
         self.mockSuite1.return_value.run.assert_called_with(self.NAME, 1, None)
         self.mockSuite2.return_value.run.assert_called_with(self.NAME, 2, None)
@@ -128,6 +129,7 @@ class OkTest(unittest.TestCase):
             'passed': 0,
             'failed': 0,
             'locked': 0,
+            'failed_outputs': [],
         }, test.run(None))
 
     def testRun_correctResults(self):
