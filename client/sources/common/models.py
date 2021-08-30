@@ -36,6 +36,7 @@ class Case(core.Serializable):
 
     hidden = core.Boolean(default=False)
     locked = core.Boolean(optional=True)
+    multiline = core.Boolean(optional=True)
 
     def run(self):
         """Subclasses should override this method for running a test case.

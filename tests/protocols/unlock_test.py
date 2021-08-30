@@ -68,11 +68,13 @@ class InteractTest(unittest.TestCase):
         self.proto._input = self.mockInput
 
         self.input_choices = []
+        self.output_prompts = []
         self.choice_number = 0
 
 
     def mockInput(self, prompt):
         self.choice_number += 1
+        self.output_prompts.append(prompt)
         return self.input_choices[self.choice_number - 1]
 
     def mockVerify(self, guess, locked):
@@ -100,7 +102,7 @@ class InteractTest(unittest.TestCase):
                           unique_id, case_id, prompt, answer, normalizer=lambda x: x)
 
     def callsInteract(self, expected, answer, normalizer=lambda x: x, choices=None, unique_id=None,
-                case_id=None, prompt=None, randomize=True):
+                      case_id=None, prompt=None, randomize=True, multiline=False):
         if not unique_id:
             unique_id = self.UNIQUE_ID
         if not case_id:
@@ -110,8 +112,9 @@ class InteractTest(unittest.TestCase):
         if not choices:
             choices = None
 
-        self.assertEqual(expected, self.proto.interact(unique_id, case_id,
-                         prompt, answer, normalizer=normalizer, choices=choices, randomize=randomize))
+        self.assertEqual(expected, self.proto.interact(unique_id, case_id, prompt, answer,
+                                                       normalizer=normalizer, choices=choices, randomize=randomize,
+                                                       multiline=multiline))
 
     def validateRecord(self, record, answer, correct, prompt=None,
                        unique_id=None, case_id=None):
@@ -192,6 +195,26 @@ class InteractTest(unittest.TestCase):
                     correct=False)
             else:
                 self.validateRecord(attempt, answer=self.LONG_ANSWER, correct=True)
+
+    def testForceMultipleLineMultipleFailsBeforeSuccess(self):
+        self.input_choices = self.INCORRECT_ANSWERS + self.SHORT_ANSWER
+        self.callsInteract(self.SHORT_ANSWER, self.SHORT_ANSWER, multiline=True)
+
+        self.assertEqual(1 + len(self.INCORRECT_ANSWERS), len(self.output_prompts))
+        for prompt in self.output_prompts:
+            # check that we're using the multiline prompt
+            self.assertIn("(line 1)", prompt)
+
+        self.checkNumberOfAttempts(1 + len(self.INCORRECT_ANSWERS))
+        for attempt_number, attempt in enumerate(self.proto.analytics):
+            if attempt_number < len(self.INCORRECT_ANSWERS):
+                self.validateRecord(attempt,
+                                    answer=[self.INCORRECT_ANSWERS[attempt_number]],
+                                    correct=False)
+            else:
+                self.validateRecord(attempt,
+                                    answer=self.SHORT_ANSWER,
+                                    correct=True)
 
     def testMultipleChoice_immediatelyCorrect(self):
         self.input_choices = ['0']
