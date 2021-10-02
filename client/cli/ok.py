@@ -152,6 +152,8 @@ def parse_input(command_input=None):
                         help="write scores to a file")
     grading.add_argument('--config', type=str,
                         help="use a specific configuration file")
+    grading.add_argument('--ignore-empty', action='store_true',
+                        help="ignore empty doctests")
 
     # Encrypt
     crypt = parser.add_argument_group('encryption')
