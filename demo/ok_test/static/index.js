@@ -1,16 +1,22 @@
-const code = 
-`
-def identity(x):
-    return x
-`;
+const answer1 = 'A';
+const answer2 = 'B'
 
+const options = ['A', 'B', 'C', 'D']
 const save = () => {
+    const whichChecked = () => {
+        options.forEach(option => {
+            if (document.getElementById(option).checked) {
+                return option
+            }
+        });
+        return 'E';
+    }
     const data = {
-        'q1': {
-            'code': code
+        'identity': {
+            'code': whichChecked()
         },
-        'q2': {
-            'code' : code
+        'negate': {
+            'code' : whichChecked()
         }
     };
     fetch("/save", {

@@ -75,6 +75,7 @@ CLIENT_ROOT = os.path.dirname(client.__file__)
 
 def parse_input(command_input=None):
     """Parses command line input."""
+    print("parse input")
     parser = argparse.ArgumentParser(
         prog='python3 ok',
         description=__doc__,
