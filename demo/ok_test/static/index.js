@@ -4,11 +4,11 @@ const answer2 = 'B'
 const options = ['A', 'B', 'C', 'D']
 const save = () => {
     const whichChecked = () => {
-        options.forEach(option => {
-            if (document.getElementById(option).checked) {
-                return option
+        for (const opt of options) {
+            if (document.getElementById(opt).checked) {
+                return opt;
             }
-        });
+        }
         return 'E';
     }
     const data = {
