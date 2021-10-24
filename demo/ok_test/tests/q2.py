@@ -13,6 +13,7 @@ test = {
             'Domain is strings. Range is strings'
           ],
           'hidden': False,
+          'multiline': False,
           'question': 'What is the domain and range of the double function?'
         }
       ],
@@ -26,7 +27,8 @@ test = {
           >>> double(3)
           6
           """,
-          'hidden': False
+          'hidden': False,
+          'multiline': False
         },
         {
           'code': r"""
@@ -34,7 +36,8 @@ test = {
           -8
           # explanation: doubling a negative number
           """,
-          'hidden': False
+          'hidden': False,
+          'multiline': False
         }
       ],
       'scored': True,

@@ -3,36 +3,39 @@
 import os
 import logging
 import webbrowser
+import importlib
 
 from flask.helpers import send_from_directory
 from flask import request, Flask, render_template
 from threading import Timer
-import os
+from datetime import datetime
 
 from client.api.assignment import load_assignment
+from client.cli.common import messages
+
 
 app = Flask(__name__, template_folder=f'{os.getcwd()}/static')
+gargs = [None]
 
 mcq_file_name = "mcq.py"
 ok_file_name = "config.ok"
 
 q1_code = """
-# MCQ identity
 def identity(x):
     return None
 """
 
 q2_code = """
-# MCQ negate
 def negate(x):
     return None
 """
-questions = {'q1': q1_code, 'q2': q2_code}
-
+questions = {'identity': q1_code, 'negate': q2_code}
+question_tests = {'identity': 'identity(1)', 'negate': 'negate(-2)'}
 def initialize_files():
     # typically will be done on 61a/88 end (not here)
     with open(mcq_file_name, "w+") as f:
         for question in questions:
+            f.write(f'# {question}')
             f.write(questions[question] + "\n")
 
 def write_mcq_prob_locally(prob_name, mcq_answer):
@@ -62,9 +65,23 @@ def save_code():
             write_mcq_prob_locally(question, data[question]['code'])
     # return {}
     # do some grading stuff
+    args = gargs[0] # should be class variable later
+    assign = load_assignment(args.config, args)
+    msgs = messages.Messages()
+    proto_name = "grading"
+    module = importlib.import_module(assign._PROTOCOL_PACKAGE + '.' + proto_name)
+
+    proto = module.protocol(assign.cmd_args, assign)
+    log.info('Loaded protocol "{}"'.format(proto_name))
+    log.info('Execute {}.run()'.format(proto_name))
+    proto.run(msgs)
+    msgs['timestamp'] = str(datetime.now())
     feedback = 'Correct!'
-    # return {}
-    return render_template('index.html', opt1=4, feedback=feedback)
+    print("finish save code")
+    # now instead of printing the grading results, we need to send them back as a response to our JS save()
+    # and then create an html element with feedback
+    return {}
+    # return render_template('index.html', opt1=4, feedback=feedback)
 
 # @app.route("/<path:path>")
 # def main(path):
@@ -86,11 +103,12 @@ def index():
     print("index")
     print(os.getcwd())
     # return render_template(f'{os.getcwd()}/static/index.html')
-    return render_template('index.html', opt1=2, feedback=None)
+    return render_template('index.html', q1=question_tests['identity'], q2=question_tests['negate'], feedback=None)
 
 def open_in_browser(args):
     initialize_files()
     port = 3000
+    gargs[0] = args
     Timer(1, open_browser).start()
     app.run(port=port)
 

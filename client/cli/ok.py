@@ -230,6 +230,9 @@ def main():
             browser_probs.open_in_browser(args)
             exit(0)
         # Instantiating assignment
+        print("args below")
+        print(args.config)
+        print(args)
         assign = assignment.load_assignment(args.config, args)
 
         if assign.decryption_keypage:
@@ -267,6 +270,7 @@ def main():
 
         force_authenticate = args.authenticate
         retry = True
+        print("before while ")
         while retry:
             retry = False
             if force_authenticate:
@@ -280,6 +284,7 @@ def main():
             try:
                 msgs = messages.Messages()
                 for name, proto in assign.protocol_map.items():
+                    print(proto)
                     log.info('Execute {}.run()'.format(name))
                     proto.run(msgs)
                 msgs['timestamp'] = str(datetime.now())
