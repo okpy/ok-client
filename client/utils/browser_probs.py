@@ -6,7 +6,7 @@ import webbrowser
 import importlib
 
 from flask.helpers import send_from_directory
-from flask import request, Flask, render_template
+from flask import request, Flask, render_template, jsonify
 from threading import Timer
 from datetime import datetime
 
@@ -75,12 +75,13 @@ def save_code():
     log.info('Loaded protocol "{}"'.format(proto_name))
     log.info('Execute {}.run()'.format(proto_name))
     proto.run(msgs)
+    print(msgs)
     msgs['timestamp'] = str(datetime.now())
     feedback = 'Correct!'
     print("finish save code")
     # now instead of printing the grading results, we need to send them back as a response to our JS save()
     # and then create an html element with feedback
-    return {}
+    return jsonify({"feedback": feedback})
     # return render_template('index.html', opt1=4, feedback=feedback)
 
 # @app.route("/<path:path>")
