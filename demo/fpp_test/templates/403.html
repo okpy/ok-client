@@ -1,0 +1,10 @@
+{% extends "base.html" %}
+
+{% block base_content %}
+    {% if custom_message %}
+      <p>{{ custom_message }}</p>
+    {% else %}  
+      <h1>Forbidden</h1>
+      <p>Please contact Nate if you see this page. Extra debug info to pass along - {{ current_user.id }}</p>
+    {% endif %}  
+{% endblock %}

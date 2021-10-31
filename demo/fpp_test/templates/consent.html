@@ -1,0 +1,67 @@
+{% extends "base.html" %}
+
+{% block base_content %}
+    <div class="row">
+        <div class="col-sm-12">
+            <div class="card">
+                <div class="card-header">
+                    <h3> Terms of Consent </h3>
+                </div>
+                <div class="card-body">
+                    <form action="" method="post" novalidate>
+                        {{ form.hidden_tag() }}
+                        {# <p>Please read the <a style="cursor:pointer;" data-toggle="modal" data-target="#consentModal">Terms of Consent</a> and then select one of the following.</p> #}
+                        <p>My name is Nathaniel Weinman. I am a graduate student at the University of California, Berkeley, working with my faculty advisors Marti Hearst and Armando Fox in the Department of Electrical Engineering and Computer Science. We are planning to conduct a research study, which I invite you to take part in.</p>
+                        <p>You are being invited to participate in this study because you are enrolled in CS88.</p>
+                        <h4>Purpose</h4>
+                        <p>The purpose of this study is to better understand how to better teach computer science concepts though the use of different types of problems.</p>
+                        <h4>Procedures</h4>
+                        <p>If you agree to be in this study, your interactions with this system will be anonymously logged. This system will host a range of programming-related problems related to your CS88 curriculum. Though your email address will be used to log in, it will not be stored directly.</p>
+                        <p>The data will be aggregated and used by researchers to understand how working with different problem types affected skill and knowledge acquisition. This aggregated data may be shared with instructors during the class to highlight common challenges or misconceptions.</p>
+                        <p>The researchers and instructor will not be able to tie any particular data to a specific student. This data collected for research will not affect your grade in the class, nor your standing with the researchers or instructors.</p>
+                        <h4>Participation</h4>
+                        <p>Participation in this research is fully voluntary. You must be 18 years of age or older and enrolled in CS88 to participate in this research. You will still be able to use the system even if not participating.</p>
+                        <h4>Questions</h4>
+                        <p>If you have any questions or concerns about this study, you may contact Nathaniel Weinman at 917-539-1456 or nathaniel_weinman@berkeley.edu.</p>
+                        <p>If you have any questions or concerns about your rights and treatment as a research subject, you may contact the office of UC Berkeley’s Committee for the Protection of Human Subjects at 510-642-7461 or subjects@berkeley.edu</p>
+                        <h4>Consent</h4>
+
+                        {% for subfield in form.consent %}
+                            <div>{{ subfield }} {{ subfield.label }}</div>
+                        {% endfor %}
+                        {% for error in form.consent.errors %}
+                            <div id="wrong" class="alert alert-danger">
+                                {{ error }}
+                            </div>
+                        {% endfor %}
+                        <p>{{ form.submit(class_="btn btn-primary") }}</p>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="consentModal" tabindex="-1" role="dialog" aria-labelledby="consentModalLabel" aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="consentModalLabel">Terms of Consent</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <img src="/static/images/consent_spring19.png"></img>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+
+{% block scripts %}
+<script src="https://code.jquery.com/jquery-3.2.1.slim.min.js" integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN" crossorigin="anonymous"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js" integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q" crossorigin="anonymous"></script>
+{% endblock %}

@@ -1,0 +1,122 @@
+{% extends 'base_problem.html' %}
+
+
+{% block content %}
+<!-- Psuedocode -->
+<!-- <div id="pseudocode" class="row mt-4">
+    <div class="col-sm-12">
+    <div class="card">
+        <div class="card-header">
+            <h4>Pseudocode</h4>
+        </div>
+        <div class="card-body">
+            <pre>{{ pseudocode }}</pre>
+        </div>
+    </div>
+    </div>
+</div>
+ -->
+
+<div class="row mt-4">
+    <div class="col-sm-12">
+        <div class="card">
+            <div class="card-header">
+                <h3>Review</h3>
+                {{ question | safe}}
+            </div>
+            <div class="card-body">
+            {{ problem_description | safe}}
+            <br/>
+            {%  if kind == radio %}
+                {% for key, choice in choices %}
+                    <div class="form-check">
+                        <input class="form-check-input" type="radio" name="comprehensionCheck" id={{ key }}>
+                        <label class="form-check-label" for={{ key }}>
+                           {{ choice | safe }}
+                        </label>
+                    </div>
+                {% endfor %}
+            {% endif %}
+
+            <div class="row mt-4 float-right">
+                <div class="col sm-6">
+                </div>
+                <div class="col-sm-12">
+                    <button id="move-on" type="button" class="btn btn-success" style="display:none"> Move On</button>
+                    <button id="submit" type="button" class="btn btn-primary">Submit</button>
+                </div>
+            </div>
+
+            <div class="row mt-4">
+                <div class="col sm-3">
+                    <div id="wrong" class="alert alert-danger" style="display:none">
+                        Your answer isn't correct. Try again!
+                    </div>
+                    <div id="correct" class="alert alert-success" style="display:none">
+                        Correct! Feel free to move on.
+                    </div>
+                </div>
+            </div>
+
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+
+{% block scripts %}
+<script src="/static/js/jquery-3.3.1.min.js"></script>
+<script>
+    var problemName = `{{ problem_name | safe }}`;
+    // TODO: Temporary hack because I'm too lazy to make another template or find a better solution
+    var correct_answer = {{ correct_answer }};
+    correct_answer = correct_answer.toString();
+    $("#problem-statement").hide();
+
+    function storeQuestionStatus(status) {
+        $.ajax({
+            type: 'post',
+            data: {'question_name': problemName, 'status': status},
+            url: '/update_user_question_history/',
+            dataType: 'html',
+        })
+    }
+
+    $(document).ready(function() {
+        logComprehension('load');
+        storeQuestionStatus(1);
+        $("#submit").click(function() {
+            logComprehension('submit');
+            {% if kind == radio %}
+                wrong = $("#wrong");
+                correct = $("#correct");
+                wrong.hide();
+                correct.hide();
+                var checked = $('input[name="comprehensionCheck"]:checked')
+                var answer = checked.attr('id');
+                if (answer === correct_answer) {
+                    correct.show();
+                    $("#move-on").show();
+                    storeQuestionStatus(3);
+                } else {
+                    wrong.show();
+                }
+            {% endif %}
+        })
+        $("#move-on").click(function() {
+            logComprehension('move_on');
+            window.location = `{{ next_problem }}`
+        })
+    });
+
+    var logComprehension = function(type, logLevel) {
+        // TODO: Something with blanks?
+        logEvent('comprehension', problemName, type, $('input[name=comprehensionCheck]:checked').attr('id') || -1, logLevel)
+    }
+
+    $('input').change(function(){
+        logComprehension('select', 'INFO')
+    })
+</script>
+{% endblock %}

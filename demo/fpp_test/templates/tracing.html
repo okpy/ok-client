@@ -1,0 +1,210 @@
+{% extends 'base_problem.html' %}
+{% block css %}
+    <link href="/static/vendors/parsons/parsons.css" rel="stylesheet"/>
+    <style type="text/css">
+        #code{
+            border: 1px solid #eee;
+            height: 350px;
+            position: relative;
+        }
+        input{
+            padding: 1px !important;
+        }
+    </style>
+{% endblock %}
+
+{% block content %}
+<div class="row mt-4">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-header">
+                <h4>Code</h4>
+            </div>
+            <div class="card-body">
+                <div calss="row">
+                    <div class="col-md-12">
+                        <div id="code"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mt-4">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-header">
+                <h4>What Would Python Return?</h4>
+            </div>
+            <ul class="list-group list-group-flush">
+                <li class="list-group-item">Make sure you're using the correct types (e.g. 'my string')</li>
+                <li class="list-group-item" id="errors" style="display: none">
+                    <div id="errors_body" class="card-body card-padding bgm-amber"></div>
+                </li>
+                {% for input in test_inputs %}
+                    <li class="list-group-item">
+                        {{ input }}:&nbsp;&nbsp;
+                        <input type="text" name="{{ input }}">
+                    </li>
+                {% endfor %}
+                    <li class="list-group-item">
+                        <div class="row-mt-4 float-left">
+                                <button id="go_back" type="button" class="btn btn-secondary">Back to Problem List</button>
+                        </div>
+                        <div class="row-mt-4 float-right">
+                                <button id="move_on" type="button" class="btn btn-success" style="display:none">View Function Explanation</button>
+                                <button id="submit" type="button" class="btn btn-primary">Check Answers</button>
+                        </div>
+                    </li>
+            </ul>
+        </div>
+        {# <div class="row mb-4"></div> #}
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="/static/js/jquery-3.3.1.min.js"></script>
+<script src="/static/vendors/ace/ace.js"></script>
+<script src="/static/vendors/ace/ext-language_tools.js"></script>
+
+<script>
+    var problemName = "{{ problem_name | safe }}";
+    var problemHash = "{{ problem_hash }}";
+    var submitCount = 0;
+    var lastSubmit = '';
+    var moveOnTimeout = false;
+
+    var editor;
+    function make_editor(editor_name) {
+        ace.require("ace/etc/language_tools");
+        editor_name = ace.edit(editor_name);
+        {% if language == 'ruby' %}
+            editor_name.session.setMode("ace/mode/ruby");
+        {% else %}
+            editor_name.session.setMode("ace/mode/python");
+        {% endif %}
+        editor_name.setTheme("ace/theme/tomorrow");
+        editor_name.setOptions({
+            enableBasicAutocompletion: true,
+            enableSnippets: false,
+            enableLiveAutocompletion: true,
+            useSoftTabs: true,
+            tabSize: 4,
+            fontSize: 13,
+            readOnly: true
+        });
+        return editor_name;
+    }
+
+    function storeQuestionStatus(status) {
+        $.ajax({
+            type: 'post',
+            data: {'question_name': problemHash, 'status': status},
+            url: '/update_user_question_history/',
+            dataType: 'html',
+        })
+    }
+
+    function loadAce() {
+        editor = make_editor("code");
+        editor.setValue(`{{ obscure_code | safe}}`, 1)
+    }
+    loadAce();
+
+    function getAnswers() {
+        inputs = []
+        $('input[type=text]').each(function() {
+            inputs.push({
+                'id': this.name,
+                'input': this.value,
+            })
+        });
+        return JSON.stringify(inputs);
+    }
+
+    $(document).ready(function() {
+        logEvent('tracing', problemName, 'load', '')
+        console.log('updating status?')
+        console.log(problemName);
+        storeQuestionStatus(1);
+        $('input[type=text]').each(function(index, elmt) {
+            $(elmt).focus(function() {
+                $(elmt).removeClass('testcase pass');
+                $(elmt).removeClass('testcase fail');
+            })
+        })
+
+        $('#submit').click(function() {
+            answers = getAnswers();
+            if (lastSubmit != answers) {
+                submitCount++;
+                lastSubmit = submitCount;
+            }
+            if (submitCount >= 0 && moveOnTimeout) {
+                enableMoveOn();
+            }
+            logEvent('tracing', problemName, 'submit', answers);
+            logEvent('tracing', problemName, 'backup_submit', answers);
+            $.ajax({
+                type: 'post',
+                data: {
+                    'answers': answers,
+                    'code': editor.getValue(),
+                },
+                url: '/submit_tracing/',
+                dataType: 'html',
+                success: function(response, status) {
+                    var data = JSON.parse(response);
+                    $("#errors").show();
+                    var success_count = data.test_results.filter(
+                        function(x) { return x === "testcase pass"}).length;
+                    var total_count = data.test_results.length;
+                    if (total_count === success_count) {
+                        test_results = '<div class="testcase pass"><span class="msg">All answers correct</span></div>';
+                        storeQuestionStatus(3);
+                        enableMoveOn();
+                    } else {
+                        test_results = '<div class="testcase fail"><span class="msg">' + success_count.toString() +
+                        '/' + (total_count).toString() + ' answers correct</span></div>'
+                    }
+
+                    $('input[type=text]').each(function(index, elmt) {
+                        $(elmt).addClass(data.test_results[index]);
+                    })
+                    $("#errors_body").html(test_results);
+                }
+            })
+        });
+        $("#move_on").click(function() {
+            logEvent('tracing', problemName, 'move_on', getAnswers())
+            sleep(1).then(() => {
+                window.location = `{{ next_problem|safe }}` + `&correct_only=1`;
+            })
+        })
+
+        $("#go_back").click(function() {
+            sleep(1).then(() => {
+                window.location = `{{ back_url|safe }}`;
+            })
+        })
+
+        {% if not back_url %}
+            $("#go_back").hide();
+        {% endif %}
+    })
+    var enableMoveOn = function() {
+        if ($("#move_on").is(":hidden")) {
+            storeQuestionStatus(2);
+            $("#move_on").show();
+        }
+    }
+    var enableMoveOnTimeout = function() {
+        moveOnTimeout = true;
+        if (submitCount >= 0 && moveOnTimeout) {
+            enableMoveOn();
+        }
+    }
+</script>
+{% endblock %}

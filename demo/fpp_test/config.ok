@@ -1,0 +1,24 @@
+{
+    "name": "Homework 1",
+    "endpoint": "ok/test/su16/ex",
+    "src": [
+        "hw1.py",
+        "mcq.py", 
+        "fpp/fpp_q1.py"
+    ],
+    "tests": {
+        "tests/[!_]*.py": "ok_test"
+    },
+    "default_tests": [
+        "q2",
+        "mcq"
+    ],
+    "protocols": [
+        "file_contents",
+        "unlock",
+        "grading",
+        "scoring",
+        "analytics",
+        "backup"
+    ]
+}

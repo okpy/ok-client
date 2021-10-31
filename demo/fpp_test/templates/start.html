@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+
+    <title>SWE Interview Workshop</title>
+
+    <link href="/static/css/bootstrap.css" rel="stylesheet"/>
+    {% block css %} {% endblock %}
+</head>
+
+<body>
+
+    <nav class="navbar navbar-expand-md navbar-dark bg-dark mb-4">
+        <a class="navbar-brand" href="#">SWE Interview Workshop</a>
+    </nav>
+
+    <div class="container">
+
+        <div class="card">
+            <div class="card-header">
+                Choose your flow
+            </div>
+            <div class="card-body">
+                <div class="col-sm-12">
+                    <button id="flow-1" type="button" class="btn btn-primary">Blanks Pilot Pilot</button>
+                    {# <button id="flow-2" type="button" class="btn btn-primary">Flow 2</button> #}
+                    {# <button id="flow-5" type="button" class="btn btn-primary">Pilot</button> #}
+                    <button id="flow-6" type="button" class="btn btn-primary">Simple</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</body>
+
+<script src="/static/js/jquery-3.3.1.min.js"></script>
+
+<script>
+    function setFlow(data) {
+        $.ajax({
+            type: 'post',
+            data: data,
+            url: '/set_flow/',
+            dataType: 'html',
+            success: function (response, status) {
+                window.location = response
+            }
+        })
+    }
+    // {% if demo_flow %}
+    //     setFlow({"flow_id": "workshop_session_1_demo"})
+    // {% else %}
+    //     setFlow({"flow_id": "workshop_session_1"})
+    // {% endif %}
+    $(document).ready(function() {
+        $("#flow-1").click(function() {
+            var data = {
+                // "flow_id": "blanks_pilot"
+                "flow_id": "blanks_explr_pilot"
+            };
+            setFlow(data);
+        });
+        $("#flow-2").click(function() {
+            var data = {
+                "flow_id": "workshop_session_3_code_arrangement"
+            };
+            setFlow(data);
+        });
+        $("#flow-3").click(function() {
+            var data = {
+                "flow_id": "flow3"
+            };
+            setFlow(data);
+        });
+        $("#flow-4").click(function() {
+            var data = {
+                "flow_id": "workshop_session_1"
+            };
+            setFlow(data);
+        });
+        $("#flow-5").click(function() {
+            var data = {
+                "flow_id": "pilot_study_v1"
+            };
+            setFlow(data);
+        });
+        $("#flow-6").click(function() {
+            var data = {
+                "flow_id": "simple_flow"
+            };
+            setFlow(data);
+        });
+    })
+</script>

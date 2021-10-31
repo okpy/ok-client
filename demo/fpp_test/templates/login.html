@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+
+{% block base_content %}
+    <div class="row">
+        <div class="col-sm-12">
+            <div class="card">
+                <div class="card-header">
+                    <h3> Register/Log In </h3>
+                </div>
+                <div class="card-body">
+                    <form action="" method="post" novalidate>
+                        {{ form.hidden_tag() }}
+                        <p>
+                            {{ form.student_id.label }}<br>
+                            {{ form.student_id(size=32 )}}
+                            {% for error in form.student_id.errors %}
+                                <div id="wrong" class="alert alert-danger">
+                                    {{ error }}
+                                </div>
+                            {% endfor %}
+                        </p>
+                        <p>
+                            {{ form.student_id2.label }}<br>
+                            {{ form.student_id2(size=32 )}}
+                            {% for error in form.student_id2.errors %}
+                                <div id="wrong" class="alert alert-danger">
+                                    {{ error }}
+                                </div>
+                            {% endfor %}
+                        </p>
+                        <p>{{ form.submit(class_="btn btn-primary") }}</p>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}

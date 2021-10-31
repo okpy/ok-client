@@ -1,0 +1,107 @@
+{% extends 'base.html' %}
+{% block css %}
+    <link href="/static/vendors/parsons/parsons.css" rel="stylesheet"/>
+    <style type="text/css">
+        #editor{
+            border: 1px solid #eee;
+            height: 350px;
+            position: relative;
+        }
+    </style>
+{% endblock %}
+
+{% block base_content %}
+    {% for problem in problems %}
+
+        <div class="row mt-4">
+            <div class="col-sm-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h4>{{ problem.name | safe }}</h4>
+                    </div>
+                    <ul class="list-group list-group-flush">
+                        {% for component in problem.components %}
+                            <li class="list-group-item">
+                                {% if component.type == 'problem_description' %}
+                                    {{ component.text | safe }}
+                                {% elif component.type == 'image' %}
+                                    <img src="{{ component.path }}"/>
+                                    <figcaption class="small text-muted">{{ component.subscript | safe }}</figcaption>
+                                {% elif component.type == 'multiple_choice' %}
+                                    <form>
+                                        {{ component.text | safe }}<br>
+                                        {% for choice in component.choices %}
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="radio" name="comprehensionCheck" id={{ component.name + "-" + choice.replace(' ', '_') }}>
+                                                <label class="form-check-label" for={{ component.name + "-" + choice.replace(' ', '_') }}>{{ choice | safe }}</label>
+                                            </div>
+                                        {% endfor %}
+                                    </form>
+                                {% elif component.type == 'free_form_prompt' %}
+                                    {{ component.text | safe }}&nbsp;&nbsp;<input type="text" name="{{ component.name }}">
+                                {% elif component.type == 'free_form_prompt_large' %}
+                                    {{ component.text | safe }}<textarea class="col-12" rows="2" name="{{ component.name }}" >{{ component.default_text or '' | safe }}</textarea>
+                                {% endif %}
+                            </li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            </div>
+        </div>
+    {% endfor %}
+
+    <div class="row mt-4 mb-5 float-right">
+        <div class="col-sm-12">
+            <button id="submit" type="button" class="btn btn-primary">Submit and Move On</button>
+        </div>
+    </div>
+{% endblock %}
+
+{% block scripts %}
+<script src="/static/js/jquery-3.3.1.min.js"></script>
+<script>
+    var problemName = "{{ problem_name | safe }}";
+
+    function storeQuestionStatus(status) {
+        $.ajax({
+            type: 'post',
+            data: {'question_name': problemName, 'status': status},
+            url: '/update_user_question_history/',
+            dataType: 'html',
+        })
+    }
+
+    $(document).ready(function() {
+        logEvent('multi', problemName, 'load', '');
+        storeQuestionStatus(1);
+        $('#submit').click(function() {
+            storeQuestionStatus(3);
+            inputs = []
+            $('input[type=radio]:checked').each(function() {
+                inputs.push({
+                    'id': this.id.split('-')[0],
+                    'id-input': this.id,
+                })
+            })
+            $('input[type=text]').each(function() {
+                inputs.push({
+                    'id': this.name,
+                    'input': this.value,
+                })
+            })
+            $('textarea').each(function() {
+                inputs.push({
+                    'id': this.name,
+                    'input': this.value,
+                })
+            })
+            logEvent('multi', problemName, 'submit', JSON.stringify(inputs));
+            logEvent('multi', problemName, 'backup_submit', JSON.stringify(inputs));
+
+            sleep(2).then(() => {
+                window.location = `{{ next_problem }}`
+            })
+        })
+    })
+</script>
+{% endblock %}

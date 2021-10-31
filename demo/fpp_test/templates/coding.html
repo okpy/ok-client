@@ -1,0 +1,274 @@
+{% extends 'base_problem.html' %}
+{% block css %}
+    <link href="/static/vendors/parsons/parsons.css" rel="stylesheet"/>
+    <style type="text/css">
+        #editor{
+            border: 1px solid #eee;
+            height: 350px;
+            position: relative;
+        }
+    </style>
+{% endblock %}
+
+{% block content %}
+    <!-- Psuedocode -->
+    <div id="pseudocode" class="row mt-4">
+        <div class="col-sm-12">
+        <div class="card">
+            <div class="card-header">
+                <h4>Pseudocode</h4>
+            </div>
+            <div class="card-body">
+                <pre>{{ pseudocode }}</pre>
+            </div>
+        </div>
+        </div>
+    </div>
+
+    {% if show_approach_input %}
+        <div id="approach" class="row mt-4">
+            <div class="col-sm-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h4>Your Approach</h4>
+                    </div>
+                    <div class="card-body">
+                        Before starting on implementing code below, please describe
+                        your approach to the problem. This description should be in
+                        enough detail that an interviewer who knows the problem
+                        could tell if you are on the right track. It does not need
+                        to be at the level of pseudocode, however.<br><br>
+                        <textarea id="approach-text" class="col-12" rows="6"></textarea>
+                    </div>
+                </div>
+            </div>
+        </div>
+    {% endif %}
+
+    <div class="row mt-4">
+        <div class="col-sm-12">
+            <div class="card">
+                <div class="card-header">
+                    <h4>Your Solution</h4>
+                </div>
+                <div class="card-body">
+                    <div id="editor"></div>
+                    <div class="row mt-4 float-left">
+                        <div class="col-sm-12">
+                            <button id="go_back" type="button" class="btn btn-secondary">Back to Problem List</button>
+                        </div>
+                    </div>
+                    <div class="row mt-4 float-right">
+                        <div class="col-sm-12">
+                            <button id="move-on" type="button" class="btn btn-success" style="display:none">View Instructor Solution</button>
+                            <button id="submit" type="button" class="btn btn-primary">Run Tests</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row mt-4">
+        <div class="col-sm-12">
+            <div class="card">
+                <div class="card-header">
+                    <h4> Test Cases </h4>
+                </div>
+                <div id ="test_description">
+                    <div class="card-body">
+                        Test results will appear here after clicking 'Run Tests' above.
+                    </div>
+                </div>
+                <div id="errors" style="display: none">
+                    <div id="errors_body" class="card-body card-padding bgm-amber"></div>
+                </div>
+            </div>
+            <div class="row mb-4"></div>
+        </div>
+    </div>
+{% endblock %}
+
+{% block scripts %}
+    <script src="/static/js/jquery-3.3.1.min.js"></script>
+    <script src="/static/vendors/ace/ace.js"></script>
+    <script src="/static/vendors/ace/ext-language_tools.js"></script>
+    <script src="/static/js/prettify.js"></script>
+    <script src="/static/js/underscore-min.js"></script>
+
+    <script>
+    var problemName = "{{ problem_name | safe }}";
+    {% if not is_algorithm_implementation %}
+        $("#pseudocode").hide();
+    {% endif %}
+
+    var submitCount = 0;
+    var lastSubmit = '';
+    var moveOnTimeout = false;
+
+    // The "first" change is actually adding the given code, so don't log that one.
+    var setupChangeOccured = false;
+    var firstChangeLogged = false;
+
+    var editorText;
+    var editor;
+
+    function storeQuestionStatus(status) {
+        $.ajax({
+            type: 'post',
+            data: {'question_name': problemName, 'status': status},
+            url: '/update_user_question_history/',
+            dataType: 'html',
+        })
+    }
+
+    function loadAce() {
+        ace.require("ace/etc/language_tools");
+        editor = ace.edit("editor");
+        {% if language == 'ruby' %}
+            editor.session.setMode("ace/mode/ruby");
+        {% else %}
+            editor.session.setMode("ace/mode/python");
+        {% endif %}
+        // Log the first action in the editor
+        editor.session.on('change', function() {
+            if (!setupChangeOccured) {
+                setupChangeOccured = true;
+            }
+            else if (!firstChangeLogged) {
+                logCoding('begin_coding', codeAndApproach());
+                firstChangeLogged = true;
+            }
+        })
+        function logEditorUpdate() {
+            if (editorText != codeAndApproach()) {
+                logCoding('editor_update', codeAndApproach(), 'LowPri');
+            }
+            editorText = codeAndApproach();
+        }
+        // Log on every newline (close analogue to Parsons Problems drag event)
+        editor.session.on('change', function(edit) {
+            if (edit.lines.length > 1) logEditorUpdate();
+        });
+        // Also log after a participant has been making changes but stops for 5 seconds.
+        editor.session.on('change', _.debounce(logEditorUpdate, 5000));
+
+        editor.setTheme("ace/theme/tomorrow");
+        editor.setOptions({
+            enableBasicAutocompletion: true,
+            enableSnippets: false,
+            enableLiveAutocompletion: true,
+            useSoftTabs: true,
+            tabSize: 4,
+            fontSize: 13
+        });
+        var initialCode = `{{ initial_code | safe }}`;
+        editor.setValue(initialCode, 1);
+        logCoding('load', codeAndApproach());
+        storeQuestionStatus(1);
+    }
+
+    $(document).ready(function() {
+        loadAce();
+
+        // Functionality for submitting code.
+        function submitCode() {
+            console.log('Submitting Code')
+            logCoding('submit', codeAndApproach());
+            $("#test_description").hide();
+            $("#errors").hide()
+            var submittedCode = editor.getValue() + '\n';
+            var params = {
+                "problem_name": problemName,
+                "submitted_code": submittedCode,
+            };
+            if (lastSubmit != submittedCode) {
+                submitCount++;
+                lastSubmit = submittedCode;
+            }
+            if (submitCount >= 0 && moveOnTimeout) {
+                enableMoveOn();
+            }
+            $.ajax({
+                type: 'post',
+                data: params,
+                url: '/submit/',
+                dataType: 'html',
+                success: function (response, status) {
+                    var data = JSON.parse(response);
+                    $("#errors").show();
+                    var success_count = (data.test_results.match(/testcase pass/g) || []).length;
+                    var error_count = (data.test_results.match(/testcase fail/g) || []).length;
+                    error_count += (data.test_results.match(/testcase error/g) || []).length;
+                    var test_results;
+                    if (error_count === 0) {
+                        test_results = '<div class="testcase pass"><span class="msg">All tests passed</span></div>';
+                        enableMoveOn();
+                        storeQuestionStatus(3);
+                    } else {
+                        test_results = '<div class="testcase fail"><span class="msg"> Failed Test #' + (success_count+error_count).toString() + '</span></div>'
+                    }
+                    $("#errors_body").html(test_results + data.test_results);
+                    logCoding('results', data.test_results)
+                }
+            })
+        }
+
+        $("#submit").click(_.throttle(submitCode, 500));
+
+        $("#move-on").click(function() {
+            // Deregisters beforeunload handler to avoid double logging
+            $(window).on("beforeunload", function() {});
+            logCoding('move_on', codeAndApproach());
+            sleep(1).then(() => {
+                window.location = `{{ next_problem|safe }}`
+            })
+        })
+        $("#go_back").click(function() {
+            sleep(1).then(() => {
+                window.location = `{{ back_url|safe }}`;
+            })
+        })
+
+        {% if not back_url %}
+            $("#go_back").hide();
+        {% endif %}
+
+        {% if not is_testable %}
+            $("#submit").hide();
+            enableMoveOn();
+        {% endif %}
+    })
+
+    $(window).on("beforeunload", function (e) {
+        logCoding('unload', codeAndApproach());
+    });
+
+
+    var enableMoveOn = function() {
+        if ($("#move-on").is(":hidden")) {
+            storeQuestionStatus(2);
+            $("#move-on").show();
+        }
+    }
+
+    var enableMoveOnTimeout = function() {
+        moveOnTimeout = true;
+        if (submitCount >= 0 && moveOnTimeout) {
+            enableMoveOn();
+        }
+    }
+
+    var codeAndApproach = function() {
+        return JSON.stringify({
+            'approach': $('#approach-text').val(),
+            'code': editor.getValue(),
+        })
+    }
+
+    var logCoding = function(type, current_state, log_level) {
+        logEvent('coding', problemName, type, current_state || '', log_level)
+    }
+    </script>
+
+{% endblock %}

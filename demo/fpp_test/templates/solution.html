@@ -1,0 +1,135 @@
+{% extends 'base_problem.html' %}
+
+{% block css %}
+    <style type="text/css">
+        #your_solution, #correct_solution{
+            border: 1px solid #eee;
+            height: 350px;
+            position: relative;
+        }
+    </style>
+{% endblock %}
+
+{% block content %}
+
+<!-- Pseudocode -->
+<div id="pseudocode" class="row mt-4">
+    <div class="col-sm-12">
+    <div class="card">
+        <div class="card-header">
+            <h4>Pseudocode</h4>
+        </div>
+        <div class="card-body">
+            <pre>{{ pseudocode }}</pre>
+        </div>
+    </div>
+    </div>
+</div>
+
+<div class="row mt-4">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-header">
+                <h4> Solution </h4>
+            </div>
+        <div class="card-body">
+            <div class="row">
+                {% if not correct_only %}
+                <div class="col md-6 sm-12">
+                    <h4><p class= "text-center">Your Solution</p></h4>
+                    <div id="your_solution"></div>
+                </div>
+                <div class="col-md-6 sm-12">
+                    <h4><p class= "text-center">Instructor Solution</p></h4>
+                {% else %}
+                <div class="col-md-12">
+                {% endif %}
+                    <div id="correct_solution"></div>
+                        <div class="row mt-4 float-right">
+                            <div class="col-md-6 sm-12">
+                                {% if disable_new_tab %}
+                                    <button id="move_on" type="button" class="btn btn-secondary" onclick="window.location = '{{ next_problem }}'">
+                                        Back to Problems
+                                    </button>
+                                {% else %}
+                                    <button id="move_on" type="button" class="btn btn-success" onclick="window.open('{{ next_problem }}', '_blank')">
+                                        Move On
+                                    </button>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+         </div>
+        <div class="row mb-4"></div>
+    </div>
+</div>
+
+{% endblock%}
+
+
+{% block scripts %}
+    <script src="/static/js/jquery-3.3.1.min.js"></script>
+    <script src="/static/vendors/ace/ace.js"></script>
+    <script src="/static/vendors/ace/ext-language_tools.js"></script>
+
+    <script>
+        var problemName = "{{ problem_name | safe }}";
+        {% if not is_algorithm_implementation %}
+            $("#pseudocode").hide();
+        {% endif %}
+        var editor;
+        var editor2;
+        function make_editor(editor_name) {
+            ace.require("ace/etc/language_tools");
+            editor_name = ace.edit(editor_name);
+            {% if language == 'ruby' %}
+                editor_name.session.setMode("ace/mode/ruby");
+            {% else %}
+                editor_name.session.setMode("ace/mode/python");
+            {% endif %}
+            editor_name.setTheme("ace/theme/tomorrow");
+            editor_name.setOptions({
+                enableBasicAutocompletion: true,
+                enableSnippets: false,
+                enableLiveAutocompletion: true,
+                useSoftTabs: true,
+                tabSize: 4,
+                fontSize: 13,
+                readOnly: true
+            });
+            return editor_name;
+        }
+
+        function loadAce() {
+            if ($('#your_solution').length) {
+                editor = make_editor("your_solution");
+                var mostRecentCode;
+                if (Cookies.get(problemName)) {
+                    mostRecentCode = JSON.parse(Cookies.get(problemName))['code'];
+                } else {
+                    mostRecentCode = `{{ most_recent_code }}`;
+                }
+                editor.setValue(mostRecentCode, 1)
+            }
+
+            editor2 = make_editor("correct_solution");
+            editor2.setValue(`{{ solution | safe}}`, 1)
+        }
+        loadAce();
+
+        $(document).ready(function() {
+            logEvent('solution', problemName, 'load', '', null)
+            $("#move_on").click(function() {
+                $(window).on("beforeunload", function() {});
+                logEvent('solution', problemName, 'move_on', '', null)
+            })
+            $(window).on("beforeunload", function (e) {
+                logEvent('unload', problemName, 'unload', '', null);
+            });
+        })
+
+
+    </script>
+{% endblock %}

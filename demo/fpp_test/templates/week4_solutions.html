@@ -1,0 +1,49 @@
+{% extends 'base.html' %}
+{% block css %}
+    <link href="/static/vendors/parsons/parsons.css" rel="stylesheet"/>
+    <style type="text/css">
+        #editor{
+            border: 1px solid #eee;
+            height: 350px;
+            position: relative;
+        }
+    </style>
+{% endblock %}
+
+{% block base_content %}
+    <div class="row mt-4">
+        <div class="col-sm-12">
+            <div class="card">
+                <div class="card-header">
+                    <h4>Week 1/4 Problems</h4>
+                </div>
+                <ul class="list-group list-group-flush">
+                    <li class="list-group-item">
+                        <a href="/solution/?problem_name=dfs_detect_cycle&next=week4_solutions&disable_new_tab=1">DFS Detect Cycle - Solution</a>
+                    </li>
+                    <li class="list-group-item">
+                        <a href="/solution/?problem_name=trie_word_break&next=week4_solutions&disable_new_tab=1">Trie Word Break - Solution</a>
+                    </li>
+                    <li class="list-group-item">
+                        <a href="/solution/?problem_name=trie_fuzzy_match&next=week4_solutions&disable_new_tab=1">Trie Fuzzy Match - Solution</a>
+                    </li>
+                    <li class="list-group-item">
+                        <a href="solution/?problem_name=trie_collapsible&next=week4_solutions&disable_new_tab=1">Trie Collapsible - Solution</a>
+                    </li>
+                    <li class="list-group-item">
+                        <a href="/solution/?problem_name=dfs_mark_nodes_in_cycle&next=week4_solutions&disable_new_tab=1">DFS Mark Nodes in Cycle - Solution</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+
+{% block scripts %}
+<script src="/static/js/jquery-3.3.1.min.js"></script>
+<script>
+    $(document).ready(function() {
+        logEvent('week3_resume', '', 'load', '');
+    })
+</script>
+{% endblock %}

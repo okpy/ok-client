@@ -1,0 +1,54 @@
+{% extends 'base.html' %}
+{% block css %}
+    <link href="/static/vendors/parsons/parsons.css" rel="stylesheet"/>
+    <style type="text/css">
+        #editor{
+            border: 1px solid #eee;
+            height: 350px;
+            position: relative;
+        }
+    </style>
+{% endblock %}
+
+{% block base_content %}
+    <div class="row mt-4">
+        <div class="col-sm-12">
+            <div class="card">
+                <div class="card-header">
+                    <h4>Week 2 Problems</h4>
+                </div>
+                <ul class="list-group list-group-flush">
+                    <li class="list-group-item">
+                        <a href="/{{ problem_type }}/?problem_name=dfs_impl&next=week2_resume">DFS</a>
+                        <a class="float-right ml-auto" href="/solution/?problem_name=dfs_impl&next=week2_resume&disable_new_tab=1">Solution</a>
+                    </li>
+                    <li class="list-group-item">
+                        <a href="/{{ problem_type }}/?problem_name=dfs_num_islands&next=week2_resume">DFS - Num Islands</a>
+                        <a class="float-right ml-auto" href="/solution/?problem_name=dfs_num_islands&next=week2_resume&disable_new_tab=1">Solution</a>
+                    </li>
+                    <li class="list-group-item">
+                        <a href="/{{ problem_type }}/?problem_name=dfs_all_paths&next=week2_resume">DFS - All Paths</a>
+                        <a class="float-right ml-auto" href="/solution/?problem_name=dfs_all_paths&next=week2_resume&disable_new_tab=1">Solution</a>
+                    </li>
+                    <li class="list-group-item">
+                        <a href="/{{ problem_type }}/?problem_name=topological_sort&next=week2_resume">Topoplogical Sort</a>
+                        <a class="float-right ml-auto" href="solution/?problem_name=topological_sort&next=week2_resume&disable_new_tab=1">Solution</a>
+                    </li>
+                    <li class="list-group-item">
+                        <a href="/{{ problem_type }}/?problem_name=topological_sort_alphabet&next=week2_resume">Topological Sort - Alphabet Reconstruction</a>
+                        <a class="float-right ml-auto" href="/solution/?problem_name=topological_sort_alphabet&next=week2_resume&disable_new_tab=1">Solution</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+
+{% block scripts %}
+<script src="/static/js/jquery-3.3.1.min.js"></script>
+<script>
+    $(document).ready(function() {
+        logEvent('week2_resume', '', 'load', '');
+    })
+</script>
+{% endblock %}

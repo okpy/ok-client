@@ -1,0 +1,57 @@
+{% extends 'base.html' %}
+{% block css %}
+    <link href="/static/vendors/parsons/parsons.css" rel="stylesheet"/>
+    <style type="text/css">
+        #editor{
+            border: 1px solid #eee;
+            height: 350px;
+            position: relative;
+        }
+    </style>
+{% endblock %}
+
+{% block base_content %}
+    <div class="row mt-4">
+        <div class="col-sm-12">
+            <div class="card">
+                <div class="card-header">
+                    <h4>{{ problem_set }} Problems</h4>
+                </div>
+                <ul class="list-group list-group-flush">
+                    <li class="list-group-item">
+                        Click on one of the problems below to get started.
+                    </li>
+                    {% for human_name, system_name, type, solution_url in problems %}
+                        <li class="list-group-item">
+                            <a href="/{{type}}/{{system_name}}?final={{curr_route}}">{{human_name}}</a>
+                            <span class="float-right ml-auto">
+                                {% if solution_url %}
+                                    &nbsp;&middot;&nbsp;<a href="{{ solution_url }}">Instructor Solution</a>
+{#                                 {% else %}
+                                     &nbsp;&middot;&nbsp;<a class="text-muted">Instructor Solution</a> #}
+                                {% endif %}
+                            </span>
+                            <span class="float-right ml-auto">
+                                {{ problems_to_status[system_name]}}
+                            </span>
+                        </li>
+                    {% endfor %}
+                    {% if final_hash %}
+                        <li class="list-group-item">
+                            okpy secret key: <code>{{ final_hash }}</code>
+                        </li>
+                    {% endif %}
+                </ul>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+
+{% block scripts %}
+<script src="/static/js/jquery-3.3.1.min.js"></script>
+<script>
+    $(document).ready(function() {
+        logEvent('problem_status', '{{curr_route}}', 'load', '');
+    })
+</script>
+{% endblock %}

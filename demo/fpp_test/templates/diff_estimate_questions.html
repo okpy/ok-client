@@ -1,0 +1,42 @@
+{% extends "base_problem.html" %}
+
+{% block content %}
+    <div class="row mt-4">
+        <div class="col-sm-12">
+            <div class="card">
+                <div class="card-header">
+                    <h3> Interface Selection </h3>
+                </div>
+                <div class="card-body">
+                    <div class="col-sm-12">
+                        I would like to solve this problem as...<br><br>
+                        <button id="parsons" type="button" class="btn btn-primary"
+                        >Parsons</button>&nbsp;&nbsp;
+                        <button id="coding" type="button" class="btn btn-primary">Coding</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+
+{% block scripts %}
+    <script src="/static/js/jquery-3.3.1.min.js"></script>
+
+    <script>
+        submitCount = 0;
+        $(document).ready(function() {
+            $("#parsons").click(function() {
+                sleep(1).then(() => {
+                    window.location = `/multi/{{ multi_name }}?disable_new_tab=1&next=code_arrangement%2F{{ problem_name | urlencode }}&final={{ final }}`
+                });
+            });
+
+            $("#coding").click(function() {
+                sleep(1).then(() => {
+                    window.location = `/multi/{{ multi_name }}?disable_new_tab=1&next=coding%2F{{ problem_name | urlencode }}&final={{ final }}`
+                });
+            });
+        })
+    </script>
+{% endblock %}

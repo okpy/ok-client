@@ -1,0 +1,267 @@
+{% extends 'base_problem.html' %}
+{% block css %}
+    <link rel="stylesheet" href="/static/vendors/parsons/parsons.css"/>
+    <link rel="stylesheet" href="/static/css/prettify.css"/>
+
+    <style type="text/css">
+    .line-number {
+        float: right !important;
+        font-size: 80%;
+    }
+    </style>
+{% endblock %}
+
+{% block content %}
+    <div class="row mt-4">
+        <div class="col-sm-12">
+            <div class="card">
+                <div class="card-body">
+                    <div id="starter-code" class="sortable-code"></div>
+                    <div id="parsons-solution" class="sortable-code"></div>
+                    <div style="clear:both"></div>
+                    <div class="row-mt-4 float-left">
+                            <button id="go_back" type="button" class="btn btn-secondary">Back to Problem List</button>
+                    </div>
+                     <div class="row float-right">
+                        <div class="col-sm-12">
+                            {# <button id="move-on" type="button" class="btn btn-success"  style="display:none">View Instructor Solution</button> #}
+                            <a id="save" type="button" class="btn btn-primary" href="#">Download Solution</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {# <div class="row mt-4">
+        <div class="col-sm-12">
+            <div class="card">
+                <div class="card-header">
+                    <h4> Test Cases </h4>
+                </div>
+                <div id ="test_description">
+                    <div class="card-body">
+                        Test results will appear here after clicking 'Run Tests' above.
+                    </div>
+                </div>
+                <div id="errors" style="display: none">
+                    <div id="errors_body" class="card-body card-padding bgm-amber"></div>
+                </div>
+            </div>
+            <div class="row mb-4"></div>
+        </div>
+    </div> #}
+{% endblock %}
+
+{% block scripts %}
+    <script src="/static/js/jquery-3.3.1.min.js"></script>
+    <script src="/static/js/jquery-ui.js"></script>
+    <script src="/static/js/jquery.ui.touch-punch.min.js"></script>
+    <script src="/static/js/prettify.js"></script>
+    <script src="/static/js/skulpt.js"></script>
+    <script src="/static/js/skulpt-stdlib.js"></script>
+    <script src="/static/js/underscore-min.js"></script>
+    <script src="/static/js/lis.js"></script>
+    <script src="/static/vendors/parsons/parsons_frames.js"></script>
+
+    <script>
+    var ParsonsGlobal = {};
+    var problemName = `{{ problem_name | safe }}`;
+    var currText = '';
+    ParsonsGlobal.initial = `{{ code_lines | safe }}`;
+    var submitCount = 0;
+    var lastSubmit = '';
+    var moveOnTimeout = false;
+
+    function storeQuestionStatus(status) {
+        $.ajax({
+            type: 'post',
+            data: {'question_name': problemName, 'status': status},
+            url: '/update_user_question_history/',
+            dataType: 'html',
+        })
+    }
+
+    $(document).ready(function(){
+        ParsonsGlobal.widget = new ParsonsWidget({
+            'sortableId': 'parsons-solution',
+            // TODO(nweinman): Add functionality to also log drags on src-side of Parsons.
+            'onSortableUpdate': (event, ui) => {
+                logParsons('drag', 'LowPri');
+                setLineNumbers();
+            },
+            'trashId': 'starter-code',
+            'max_wrong_lines': 1,
+            'can_indent': false,
+        });
+        ParsonsGlobal.widget.init(ParsonsGlobal.initial);
+        ParsonsGlobal.widget.alphabetize();
+
+
+
+        logParsons('load');
+        storeQuestionStatus(1);
+
+        // Use focus and blur to determine when a user updates text-box input, and log on completion.
+        // This results in many fewer logs than per-character input!
+        $('.text-box').on('focus', function() {
+            currText = $(this).val();
+        });
+        $('.text-box').on('blur', function() {
+            if ($(this).val() != currText) {
+                logParsons('textUpdate', 'LowPri');
+            }
+        });
+
+        {% if code_skeleton %}
+            // Hide the drag-from bin.
+            $("#starter-code").hide();
+            $("#parsons-solution").width("97%")
+            $("#parsons-solution > p").hide();
+            // Disable dragging on the remaining one.
+            $("ul").sortable();
+            $("ul").sortable("disable");
+            $("li").css("cursor", "default");
+        {% endif %}
+
+
+        function submitParsons() {
+            logParsons('submit');
+            $("#test_description").hide();
+            $("#errors").hide();
+            var submittedCode = JSON.parse(getSolutionCode())['code'] + '\n'
+            var params = {
+                "problem_name": problemName,
+                "submitted_code": submittedCode,
+            };
+            if (lastSubmit != submittedCode) {
+                submitCount++;
+                lastSubmit = submittedCode;
+            }
+            if (submitCount >= 0 && moveOnTimeout) {
+                enableMoveOn();
+            }
+            $.ajax({
+                type: 'post',
+                data: params,
+                url: '/submit/',
+                dataType: 'html',
+                success: function (response, status) {
+                    var data = JSON.parse(response);
+                    $("#errors").show();
+                    var success_count = (data.test_results.match(/testcase pass/g) || []).length;
+                    var error_count = (data.test_results.match(/testcase fail/g) || []).length;
+                    error_count += (data.test_results.match(/testcase error/g) || []).length;
+                    var test_results;
+                    if (error_count === 0) {
+                        test_results = '<div class="testcase pass"><span class="msg">All tests passed</span></div>';
+                        enableMoveOn();
+                        storeQuestionStatus(3);
+                    } else {
+                        test_results = '<div class="testcase fail"><span class="msg"> Failed Test #' + (success_count+error_count).toString() + '</span></div>'
+                    }
+                    $("#errors_body").html(test_results + data.test_results);
+                }
+            })
+        }
+
+        function downloadJSON() {
+            var student_solution = JSON.parse(getSolutionCode())['code'];
+            console.log(student_solution)
+            var data = "text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(student_solution));
+            $('#save').attr("href", "data:"+data);
+            $('#save').attr("download", "data.json");
+        }
+
+        $("#submit").click(_.throttle(submitParsons, 500));
+        $("#save").click(_.throttle(downloadJSON, 500));
+
+        $("#move-on").click(function() {
+            // Deregisters beforeunload handler to avoid double logging
+            $(window).on("beforeunload", function() {});
+            logParsons('move_on');
+            sleep(1).then(() => {
+                window.location = `{{ next_problem|safe }}`
+            })
+        });
+
+        $("#go_back").click(function() {
+            sleep(1).then(() => {
+                window.location = `{{ back_url|safe }}`;
+            });
+        });
+
+        {% if not back_url %}
+            $("#go_back").hide();
+        {% endif %}
+    });
+
+
+    $(window).on("beforeunload", function (e) {
+        logParsons('unload');
+    });
+
+    var enableMoveOn = function() {
+        if ($("#move-on").is(":hidden")) {
+            storeQuestionStatus(2);
+            $("#move-on").show();
+        }
+    };
+
+    var enableMoveOnTimeout = function() {
+        moveOnTimeout = true;
+        if (submitCount >= 0 && moveOnTimeout) {
+            enableMoveOn();
+        }
+    }
+
+    // Credit to https://stackoverflow.com/questions/1248849/converting-sanitised-html-back-to-displayable-html
+    String.prototype.deentitize = function() {
+        var ret = this.replace(/&gt;/g, '>');
+        ret = ret.replace(/&lt;/g, '<');
+        ret = ret.replace(/&quot;/g, '"');
+        ret = ret.replace(/&apos;/g, "'");
+        ret = ret.replace(/&amp;/g, '&');
+        return ret;
+    };
+
+    // TODO: Do this a better way?
+    var decodeHtmlEntity = function(x) {
+      return x.replace(/&#(\d+);/g, function(match, dec) {
+        return String.fromCharCode(dec);
+      });
+    };
+
+    var logParsons = function(type, logLevel) {
+        // TODO: Something with blanks?
+        logEvent('parsons', problemName, type, getSolutionCode(), logLevel)
+    };
+
+    var getSolutionCode = function() {
+        // Removes line numbers so they don't pollute solutionCode
+        $(".line-number").remove();
+
+        var solutionCode = ParsonsGlobal.widget.solutionCode();
+        // solutionCode = decodeHtmlEntity(solutionCode.deentitize());
+
+        // var solutionCode = decodeHtmlEntity(ParsonsGlobal.widget.solutionCode().deentitize());
+        setLineNumbers();
+        return JSON.stringify({
+            'code': solutionCode,
+        })
+    };
+
+    var setLineNumbers = function() {
+        // Removes all line numbers
+        // $(".line-number").remove();
+        // var lines = $("#ul-parsons-solution").children('li');
+        // lines.each(function() {
+        //     var line = $(this);
+        //     var lineNumber = line.index() + 1;
+        //     line.append('<code class="line-number"> ' + lineNumber + '</code>')
+        // })
+    }
+
+    </script>
+
+{% endblock %}

@@ -1,0 +1,54 @@
+{% extends "base_problem.html" %}
+
+{% block content %}
+    <div class="row mt-4">
+        <div class="col-sm-12">
+            <div class="card">
+                <div class="card-header">
+                    <h3> Interface Selection </h3>
+                </div>
+                <div class="card-body">
+                    <div class="col-sm-12">
+                        I would like to solve this problem...<br><br>
+                        <button id="flow-1" type="button" class="btn btn-primary">With Blanks</button>&nbsp;&nbsp;
+                        <button id="flow-2" type="button" class="btn btn-primary">Without Blanks</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+
+{% block scripts %}
+    <script src="/static/js/jquery-3.3.1.min.js"></script>
+
+    <script>
+        function setFlow(data) {
+            $.ajax({
+                type: 'post',
+                data: data,
+                url: '/set_flow/',
+                dataType: 'html',
+                success: function (response, status) {
+                    window.location = response
+                }
+            })
+        }
+
+        $(document).ready(function() {
+            $("#flow-1").click(function() {
+                var data = {
+                    "flow_id": "{{ hard_flow }}"
+                };
+                setFlow(data);
+            });
+
+            $("#flow-2").click(function() {
+                var data = {
+                    "flow_id": "{{ easy_flow }}"
+                };
+                setFlow(data);
+            });
+        })
+    </script>
+{% endblock %}

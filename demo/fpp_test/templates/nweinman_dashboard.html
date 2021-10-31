@@ -1,0 +1,126 @@
+{% extends 'base.html' %}
+{% block css %}
+    <link href="/static/vendors/parsons/parsons.css" rel="stylesheet"/>
+    <style type="text/css">
+        #editor{
+            border: 1px solid #eee;
+            height: 350px;
+            position: relative;
+        }
+    </style>
+{% endblock %}
+
+{% block base_content %}
+    <div class="row mt-4">
+        <div class="col-sm-12">
+            <div class="card">
+                <div class="card-header">
+                    <h4>Per-Week Stats</h4>
+                </div>
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th scope="col">Week Number</th>
+                            <th scope="col">All Problems</th>
+                            <th scope="col">1</th>
+                            <th scope="col">2</th>
+                            <th scope="col">3</th>
+                            <th scope="col">4</th>
+                            <th scope="col">5</th>
+                            <th scope="col">6</th>
+                            <th scope="col">7</th>
+                            <th scope="col">8</th>
+                            <th scope="col">9</th>
+                            <th scope="col">10</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for lab, problem_stats in per_week_stats.items() %}
+                            <tr>
+                                <th scope="row">{{ lab }}</th>
+                                <td>{{ problem_stats[-1] }}
+                                {% for stat in problem_stats %}
+                                    <td>{{ stat }}</td>
+                                {% endfor %}
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+
+    <div class="row mt-4">
+        <div class="col-sm-12">
+            <div class="card">
+                <div class="card-header">
+                    <h4>Per-Interface Stats</h4>
+                </div>
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th scope="col">Parsons Status</th>
+                            <th scope="col">Tracing Status</th>
+                            <th scope="col">Coding Status</th>
+                            <th scope="col">Avg. Parsons Submits</th>
+                            <th scope="col">Avg. Tracing Submits</th>
+                            <th scope="col">Avg. Coding Submits</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <th scope="row">{{ per_interface_stats[0] }}</th>
+                            {% for stat in per_interface_stats[1:] %}
+                                <td>{{ stat }}</td>
+                            {% endfor %}
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <div class="row mt-4">
+        <div class="col-sm-12">
+            <div class="card">
+                <div class="card-header">
+                    <h4>User Stats</h4>
+                </div>
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th scope="col">User</th>
+                            <th scope="col"># started</th>
+                            <th scope="col"># seen sol</th>
+                            <th scope="col"># solved</th>
+                            <th scope="col">Parson submits</th>
+                            <th scope="col">Tracing submits</th>
+                            <th scope="col">Coding submits</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <th scope="row">Totals: {{ agg_stats[0] }}</th>
+                            {% for stat in agg_stats[1:] %}
+                                <td>{{ stat }}</td>
+                            {% endfor %}
+                        </tr>
+                        {% for user_stats in stats %}
+                            <tr>
+                                <th scope="row">{{ user_stats[0] }}</th>
+                                {% for stat in user_stats[1:] %}
+                                    <td>{{ stat }}</td>
+                                {% endfor %}
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+
+{% block scripts %}
+<script src="/static/js/jquery-3.3.1.min.js"></script>
+{% endblock %}

@@ -1,0 +1,96 @@
+{% extends 'base.html' %}
+{% block css %}
+    <link href="/static/vendors/parsons/parsons.css" rel="stylesheet"/>
+    <style type="text/css">
+        #editor{
+            border: 1px solid #eee;
+            height: 350px;
+            position: relative;
+        }
+    </style>
+{% endblock %}
+
+{% block base_content %}
+    <div class="row mt-4">
+        <div class="col-sm-12">
+            <div class="card">
+                <div class="card-header">
+                    <h4>Tree Recursion Problems</h4>
+                </div>
+                <ul class="list-group list-group-flush">
+                    <li class="list-group-item">
+                        Return 3 Demo:
+                        <a href="/code_arrangement/demo_parsons?disable_timer&next=sigcse-demo">Parsons Problem</a>
+                        &middot;
+                        <a href="/code_arrangement/demo_blanks?disable_timer&next=sigcse-demo">Blank-Variable Parsons</a>
+                        &middot;
+                        <a href="/coding/demo?disable_timer&next=sigcse-demo">Coding</a>
+                    </li>
+                    <li class="list-group-item">
+                        K-Odd Plusses:
+                        <a href="/code_arrangement/19sum_blank_pilots/plusses?disable_timer&next=sigcse-demo">Parsons Problem</a>
+                        &middot;
+                        <a href="/code_arrangement/19sum_blank_pilots/plusses_blanks?disable_timer&next=sigcse-demo">Blank-Variable Parsons</a>
+                        &middot;
+                        <a href="/coding/19sum_blank_pilots/plusses?disable_timer&next=sigcse-demo">Coding</a>
+                        <a class="float-right ml-auto" href="/solution/c25388ad48de9a488225767338e4f9ae?next=sigcse-demo&disable_new_tab=1&correct_only">Solution</a>
+                    </li>
+                    <li class="list-group-item">
+                        Coin Game:
+                        <a href="/code_arrangement/19sum_blank_pilots/coin_game?disable_timer&next=sigcse-demo">Parsons Problem</a>
+                        &middot;
+                        <a href="/code_arrangement/19sum_blank_pilots/coin_game_blanks?disable_timer&next=sigcse-demo">Blank-Variable Parsons</a>
+                        &middot;
+                        <a href="/coding/19sum_blank_pilots/coin_game?disable_timer&next=sigcse-demo">Coding</a>
+                        <a class="float-right ml-auto" href="/solution/92327dd16ff8856e10872426e0526523?next=sigcse-demo&disable_new_tab=1&correct_only">Solution</a>
+                    </li>
+                    <li class="list-group-item">
+                        Fizz Buzz:
+                        <a href="/code_arrangement/19s_algo_study/fizz_buzz?disable_timer&next=sigcse-demo">Parsons Problem</a>
+                        &middot;
+                        <a href="/code_arrangement/19s_algo_study/fizz_buzz_blanks?disable_timer&next=sigcse-demo">Blank-Variable Parsons</a>
+                        &middot;
+                        <a href="/coding/19s_algo_study/fizz_buzz?disable_timer&next=sigcse-demo">Coding</a>
+                        <a class="float-right ml-auto" href="/solution/788fdd24ac6190b7da12003a12aca55b?next=sigcse-demo&disable_new_tab=1&correct_only">Solution</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </div>
+    <div class="row mt-4">
+        <div class="col-sm-12">
+            <div class="card mt-4">
+                <div class="card-header">
+                    <h4>Other Demo Problems</h4>
+                </div>
+                <ul class="list-group list-group-flush">
+                    <li class="list-group-item">
+                        Checking Account:
+                        <a href="/code_arrangement/19f_ssi/account?disable_timer&next=sigcse-demo">Parsons Problem</a>
+                        &middot;
+                        <a href="/code_arrangement/19f_ssi/account_blanks?disable_timer&next=sigcse-demo">Targeted Faded Parsons</a>
+                        <a class="float-right ml-auto" href="solution/c92b66e403e36e1c97178efd8273294f?next=sigcse-demo&disable_new_tab=1&correct_only">Solution</a>
+                    </li>
+                    <li class="list-group-item">
+                        Large Factorial:
+                        <a href="/code_arrangement/cs88_sp20/large_factorial?disable_timer&next=sigcse-demo">Parsons Problem</a>
+                        &middot;
+                        <a href="/code_arrangement/cs88_sp20/large_factorial_blank?disable_timer&next=sigcse-demo">Blank-Variable Parsons</a>
+                        &middot;
+                        <a href="/coding/cs88_sp20/large_factorial?disable_timer&next=sigcse-demo">Coding</a>
+                        <a class="float-right ml-auto" href="solution/b08837fe9c77e527febbaba8ac22f03a?next=sigcse-demo&disable_new_tab=1&correct_only">Solution</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+
+{% block scripts %}
+<script src="/static/js/jquery-3.3.1.min.js"></script>
+<script>
+    $(document).ready(function() {
+        logEvent('week2_resume', '', 'load', '');
+    })
+</script>
+{% endblock %}

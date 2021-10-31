@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+
+{% block base_content %}
+    <h4>Git fetch output:</h4>
+    <pre>{{ fetch_output|safe }}</pre>
+    <h4>Git pull output:</h4>
+    <pre>{{ pull_output|safe }}</pre>
+
+    <form action="/cs88/shutdown_server" method="post">
+      <input type="submit" value="Restart server with git changes.">
+    </form>
+
+{% endblock %}

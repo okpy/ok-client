@@ -1,0 +1,62 @@
+{% extends 'base.html' %}
+{% block css %}
+    <link href="/static/vendors/parsons/parsons.css" rel="stylesheet"/>
+    <style type="text/css">
+        #editor{
+            border: 1px solid #eee;
+            height: 350px;
+            position: relative;
+        }
+    </style>
+{% endblock %}
+
+{% block base_content %}
+    <div class="row mt-4">
+        <div class="col-sm-12">
+            <div class="card">
+                <div class="card-header">
+                    <h4>Week 3 Problems</h4>
+                </div>
+                <ul class="list-group list-group-flush">
+                    <li class="list-group-item">
+                        <a href="/{{ problem_type }}/?problem_name=trie_impl&next=week3_resume">Trie</a>
+                        <a class="float-right ml-auto" href="/solution/?problem_name=trie_impl&next=week3_resume&disable_new_tab=1">Solution</a>
+                    </li>
+                    <li class="list-group-item">
+                        <a href="/{{ problem_type }}/?problem_name=trie_list_words&next=week3_resume">Trie - List Words</a>
+                        <a class="float-right ml-auto" href="/solution/?problem_name=trie_list_words&next=week3_resume&disable_new_tab=1">Solution</a>
+                    </li>
+                    <li class="list-group-item">
+                        <a href="/{{ problem_type }}/?problem_name=trie_prefix_suffix&next=week3_resume">Trie - Prefix Suffix Lookup</a>
+                        <a class="float-right ml-auto" href="/solution/?problem_name=trie_prefix_suffix&next=week3_resume&disable_new_tab=1">Solution</a>
+                    </li>
+                    <li class="list-group-item">
+                        <a href="/{{ problem_type }}/?problem_name=huffman_impl&next=week3_resume">Huffman Coding</a>
+                        <a class="float-right ml-auto" href="solution/?problem_name=huffman_impl&next=week3_resume&disable_new_tab=1">Solution</a>
+                    </li>
+                    <li class="list-group-item">
+                        <a href="/{{ problem_type }}/?problem_name=huffman_saved_bits&next=week3_resume">Huffman Coding - Saved Bits</a>
+                        <a class="float-right ml-auto" href="/solution/?problem_name=huffman_saved_bits&next=week3_resume&disable_new_tab=1">Solution</a>
+                    </li>
+                    <li class="list-group-item">
+                        <a href="/{{ problem_type }}/?problem_name=binary_search_1&next=week3_resume">Binary Search</a>
+                        <a class="float-right ml-auto" href="/solution/?problem_name=binary_search_1&next=week3_resume&disable_new_tab=1">Solution</a>
+                    </li>
+                    <li class="list-group-item">
+                        <a href="/{{ problem_type }}/?problem_name=binary_search_2&next=week3_resume">Binary Search - Missing Number</a>
+                        <a class="float-right ml-auto" href="/solution/?problem_name=binary_search_2&next=week3_resume&disable_new_tab=1">Solution</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+
+{% block scripts %}
+<script src="/static/js/jquery-3.3.1.min.js"></script>
+<script>
+    $(document).ready(function() {
+        logEvent('week3_resume', '', 'load', '');
+    })
+</script>
+{% endblock %}
