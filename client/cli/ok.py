@@ -51,6 +51,7 @@ from client.utils import auth
 from client.utils import output
 from client.utils import software_update
 from client.utils import browser_probs
+from client.utils import fpp_probs
 from datetime import datetime
 import argparse
 import client
@@ -193,6 +194,8 @@ def parse_input(command_input=None):
     # option for opening in browser
     server.add_argument('--browser', action='store_true',
                         help="update ok and exit")
+    server.add_argument('--fpp', action='store_true',
+                        help="update ok and exit")                      
 
     return parser.parse_args(command_input)
 
@@ -229,6 +232,10 @@ def main():
             print("HANDLE BROWSER HERE")
             browser_probs.open_in_browser(args)
             exit(0)
+        
+        if args.fpp:
+            print("HANDLE FPP HERE")
+            fpp_probs.open_in_browser(args)
         # Instantiating assignment
         print("args below")
         print(args.config)
