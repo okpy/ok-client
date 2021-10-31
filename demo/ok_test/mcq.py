@@ -1,6 +1,6 @@
 # identity
 def identity(x):
-  return 'B'
+  return 'A'
 
 # negate
 def negate(x):

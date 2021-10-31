@@ -6,28 +6,28 @@
   </head>
 <body>
   <code>{{ q1 }}</code><br>
-  <input type="radio" id="q1-A">
+  <input type="radio" name="q1" id="q1-A">
   <label for="q1-A">
     <code>
       2
     </code>
   </label>
 
-  <input type="radio" id="q1-B">
+  <input type="radio" name="q1" id="q1-B">
   <label for="q1-B">
     <code>
       1
     </code>
   </label>
 
-  <input type="radio" id="q1-C">
+  <input type="radio" name="q1" id="q1-C">
   <label for="q1-C">
     <code>
       -1
     </code>
   </label>
 
-  <input type="radio" id="q1-D">
+  <input type="radio" name="q1" id="q1-D">
     <label for="q1-D">
       <code>
         Error
@@ -35,39 +35,34 @@
     </label>
   
   <br><code>{{ q2 }}</code><br>
-    <input type="radio" id="q2-A">
+    <input type="radio" name="q2" id="q2-A">
     <label for="q2-A">
       <code>
         2
       </code>
     </label>
   
-    <input type="radio" id="q2-B">
+    <input type="radio" name="q2" id="q2-B">
     <label for="q2-B">
       <code>
         1
       </code>
     </label>
   
-    <input type="radio" id="q2-C">
+    <input type="radio" name="q2" id="q2-C">
     <label for="q2-C">
       <code>
         -1
       </code>
     </label>
   
-    <input type="radio" id="q2-D">
+    <input type="radio" name="q2" id="q2-D">
       <label for="q2-D">
         <code>
           Error
         </code>
       </label>
   
-  <button onclick="save()"> Save code </button><br>
-  {% if feedback %}
-    <span>{{ feedback }}</span><br>
-  {% else %}
-    <span>No feedback yet</span><br>
-  {% endif %}
+  <button id="save_button" onclick="save()"> Save code </button><br>
 </body>
 </html>
