@@ -236,6 +236,7 @@ def main():
         if args.fpp:
             print("HANDLE FPP HERE")
             fpp_probs.open_in_browser(args)
+            exit(0)
         # Instantiating assignment
         print("args below")
         print(args.config)

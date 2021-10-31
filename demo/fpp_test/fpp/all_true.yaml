@@ -27,19 +27,19 @@ code_lines: |
 initial_code: |
   def all_true(arg1, arg2, arg3):
       # Enter your code here.
-solution: |
-  def all_true(arg1, arg2, arg3):
-  	# arg1 and arg2 and arg3 will evaluate to the
-  	# first False-y value if there are any.
-  	# But, if they're all Truth-y, it will evaluate
-  	# to arg3. To make sure the function always
-  	# returns returns True, we can add an
-  	# and True.
-  	# It will work the same with False-y values,
-  	# but will then return the last Truth-y value,
-  	# now always True, if all the arguments are Truth-y.
-  	return arg1 and arg2 and arg3 and True
-test_fn: all_true
+# solution: |
+#   def all_true(arg1, arg2, arg3):
+#   	# arg1 and arg2 and arg3 will evaluate to the
+#   	# first False-y value if there are any.
+#   	# But, if they're all Truth-y, it will evaluate
+#   	# to arg3. To make sure the function always
+#   	# returns returns True, we can add an
+#   	# and True.
+#   	# It will work the same with False-y values,
+#   	# but will then return the last Truth-y value,
+#   	# now always True, if all the arguments are Truth-y.
+#   	return arg1 and arg2 and arg3 and True
+# test_fn: all_true
 
 test_cases:
   - fn_args: [True, True, True]

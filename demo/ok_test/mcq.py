@@ -1,8 +1,8 @@
 # identity
 def identity(x):
-  return 'A'
+    return None
 
 # negate
 def negate(x):
-  return 'A'
+    return None
 
