@@ -3,15 +3,14 @@
     "endpoint": "ok/test/su16/ex",
     "src": [
         "hw1.py",
-        "mcq.py", 
-        "fpp/fpp_q1.py"
+        "fpp/all_true.py"
     ],
     "tests": {
-        "tests/[!_]*.py": "ok_test"
+        "tests/[!_]*.py": "ok_test",
+        "fpp/all_true.py": "doctest"
     },
     "default_tests": [
-        "q2",
-        "mcq"
+        "q2"
     ],
     "protocols": [
         "file_contents",

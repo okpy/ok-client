@@ -12,7 +12,6 @@ from pathlib import PosixPath
 
 # PROBLEM_PATHS = ['problems/', 'app/cs88_parsons/problems/']
 PROBLEM_PATHS = ['fpp/']
-print(os.getcwd())
 def load_config_file(paths):
   """
   Loads a YAML file.
@@ -28,11 +27,8 @@ def load_config_file(paths):
   for path in paths:
     try:
       with open(os.path.abspath(path), 'r') as file:
-        print(path)
         # investigate safe load later
-        print("file is ", file)
         config = yaml.load(file, Loader=Loader)
-        print(config)
         # config = yaml.safe_load(file)
       if type(config) == dict:
         config = defaultdict(lambda: None, config)
@@ -55,7 +51,6 @@ def load_config(file_name):
   config_files = []
   for path in PROBLEM_PATHS:
     config_files.append(os.path.join(os.path.abspath(path), file_name + ".yaml"))
-  print(config_files)
   return load_config_file(config_files)
 
 
