@@ -16,12 +16,13 @@ problem_description: |
   </code></pre>
   
 code_lines: |
-  def return_truthy():#0given
+  def all_true(arg1, arg2, arg3):#0given
   # Blanks like !BLANK can be filled in with any Python code #1given #blankthis
   bool = False #1given
   num = 0 #1given
-  bool = not !BLANK
-  num = !BLANK + !BLANK #blank #blank1
+  if !BLANK:
+  return !BLANK #blank
+  return !BLANK #blank
   return num and bool
 
 initial_code: |

@@ -1,8 +1,8 @@
 def all_true(arg1, arg2, arg3):
   """
-  Always returns true
+  Return True iff all the args are truthy and False otherwise.
   >>> all_true(0, 1, 2)
-  True
+  False
   >>> all_true(1, 2, 3)
   True
   >>> all_true(True, 2, 3)

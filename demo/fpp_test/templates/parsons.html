@@ -156,18 +156,19 @@
                 success: function (response, status) {
                     var data = JSON.parse(response);
                     $("#errors").show();
-                    var success_count = (data.test_results.match(/testcase pass/g) || []).length;
-                    var error_count = (data.test_results.match(/testcase fail/g) || []).length;
-                    error_count += (data.test_results.match(/testcase error/g) || []).length;
+                    var success_count = data.test_results.passed;
+                    var error_count = data.test_results.failed;
+                    // error_count += (data.test_results.match(/testcase error/g) || []).length;
                     var test_results;
                     if (error_count === 0) {
                         test_results = '<div class="testcase pass"><span class="msg">All tests passed</span></div>';
                         enableMoveOn();
                         storeQuestionStatus(3);
                     } else {
-                        test_results = '<div class="testcase fail"><span class="msg"> Failed Test #' + (success_count+error_count).toString() + '</span></div>'
+                        test_results = '<div class="testcase fail"> Failed ' + (error_count).toString() +  ' Tests </div>';
+                        // '<div class="testcase fail"><span class="msg"> Failed Test #' + (success_count+error_count).toString() + '</span></div>'
                     }
-                    $("#errors_body").html(test_results + data.test_results);
+                    $("#errors_body").html(test_results);
                 }
             })
         }
