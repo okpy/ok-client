@@ -84,9 +84,8 @@ def submit():
     print("1")
     pre_test_code = problem_config['pre_test_code'] or ''
     test_code = problem_config['test_code'] or ''
-    print(submitted_code)
+    print(f"Saved code: \n{submitted_code}")
     write_fpp_prob_locally(problem_name, submitted_code)
-    print("wrote locally")
     #   try:
     #     grader_results = submit_to_grader(
     #         pre_test_code + submitted_code + test_code,
@@ -101,10 +100,9 @@ def submit():
     # print(current_user.sid_hash, current_user.consent, correct)
     # print('\n')
 
-    feedback = grade_and_backup()
-    test_results = '<div class="testcase {}"><span class="msg">{}</span></div>'.format("success", str("demo!"))
-    correct = 0
-    return jsonify({'feedback': feedback, 'test_results': test_results})
+    # test_results = '<div class="testcase {}"><span class="msg">{}</span></div>'.format("success", str("demo!"))
+    test_results = grade_and_backup(problem_name)
+    return jsonify({'test_results': test_results})
     # return "hi"
     # return json.dumps({'feedback': feedback, 'test_results': test_results})
 
@@ -130,11 +128,10 @@ def write_fpp_prob_locally(prob_name, code):
         for line in code_lines:
             f.write(line + "\n")
 
-def grade_and_backup():
+def grade_and_backup(problem_name):
     args = gargs[0] # should be class variable later
     print("before load assign")
     assign = load_assignment(args.config, args)
-    print("after load assign")
 
     msgs = messages.Messages()
     # proto_name = "grading"
@@ -144,15 +141,16 @@ def grade_and_backup():
     # log.info('Loaded protocol "{}"'.format(proto_name))
     # log.info('Execute {}.run()'.format(proto_name))
     # proto.run(msgs)
-    print(msgs)
     msgs['timestamp'] = str(datetime.now())
-    print(msgs)
     for name, proto in assign.protocol_map.items():
         print(name)
         log.info('Execute {}.run()'.format(name))
         proto.run(msgs)
     msgs['timestamp'] = str(datetime.now())
-    feedback = 'Correct!'
+    feedback = {}
+    scores = msgs['grading'][problem_name]
+    feedback['passed'] = scores['passed']
+    feedback['failed'] = scores['failed']
     return feedback
     
 def open_browser():
