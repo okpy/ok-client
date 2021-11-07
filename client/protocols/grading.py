@@ -30,6 +30,7 @@ class GradingProtocol(models.Protocol):
         significant for analytics. However, all tests must include the number
         passed, the number of locked tests and the number of failed tests.
         """
+        print("grading proto")
         if self.args.score or self.args.unlock or self.args.testing:
             return
         tests = self.assignment.specified_tests
@@ -59,6 +60,8 @@ def grade(questions, messages, env=None, verbose=True):
     # The environment in which to run the tests.
     for test in questions:
         log.info('Running tests for {}'.format(test.name))
+        print("testType", type(test))
+        print("env is ", env)
         results = test.run(env)
 
         # if correct once, set persistent flag
@@ -68,8 +71,10 @@ def grade(questions, messages, env=None, verbose=True):
         passed += results['passed']
         failed += results['failed']
         locked += results['locked']
-        analytics[test.name] = results
+        # TODO: Insert test case into results 
 
+        analytics[test.name] = results
+        print(test.get_code()[test.name]['code'], "grade code")
         if not verbose and (failed > 0 or locked > 0):
             # Stop at the first failed test
             break

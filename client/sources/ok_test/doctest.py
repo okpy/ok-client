@@ -17,6 +17,9 @@ class DoctestSuite(models.Suite):
     def __init__(self, test, verbose, interactive, timeout=None, **fields):
         super().__init__(test, verbose, interactive, timeout, **fields)
         self.skip_locked_cases = True
+        print(self.cases)
+        print(test)
+        print("init")
         self.console = self.console_type(verbose, interactive, timeout)
 
     def post_instantiation(self):

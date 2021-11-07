@@ -47,7 +47,7 @@ class PythonConsole(interpreter.Console):
         try:
             try:
                 result = timer.timed(self.timeout, eval, (code, self._frame))
-            except SyntaxError:
+            except SyntaxError as e:
                 timer.timed(self.timeout, exec, (code, self._frame))
                 result = None
         except RuntimeError as e:

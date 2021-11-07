@@ -130,8 +130,13 @@ def write_fpp_prob_locally(prob_name, code):
 
 def grade_and_backup(problem_name):
     args = gargs[0] # should be class variable later
-    print("before load assign")
+    args.question = ['all_true']
+    print("before load")
     assign = load_assignment(args.config, args)
+    print(assign.specified_tests)
+    for t in assign.specified_tests:
+        print("t is ", t)
+        print(t.get_code())
 
     msgs = messages.Messages()
     # proto_name = "grading"
@@ -141,13 +146,12 @@ def grade_and_backup(problem_name):
     # log.info('Loaded protocol "{}"'.format(proto_name))
     # log.info('Execute {}.run()'.format(proto_name))
     # proto.run(msgs)
-    msgs['timestamp'] = str(datetime.now())
     for name, proto in assign.protocol_map.items():
-        print(name)
         log.info('Execute {}.run()'.format(name))
         proto.run(msgs)
     msgs['timestamp'] = str(datetime.now())
     feedback = {}
+    # print(msgs['grading'], "grading")
     scores = msgs['grading'][problem_name]
     feedback['passed'] = scores['passed']
     feedback['failed'] = scores['failed']
@@ -159,7 +163,6 @@ def open_browser():
 
 
 def open_in_browser(args):
-    print("open in browser")
     gargs[0] = args
     port = 3000
     Timer(1, open_browser).start()

@@ -6,5 +6,5 @@ def square(x):
 
 def double(x):
     """Return x doubled."""
-    return 2* x # Incorrect
+    return 3* x # Incorrect
 

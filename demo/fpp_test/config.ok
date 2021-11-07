@@ -7,7 +7,7 @@
     ],
     "tests": {
         "tests/[!_]*.py": "ok_test",
-        "fpp/all_true.py": "doctest"
+        "fpp/all_true.py:all_true": "doctest"
     },
     "default_tests": [
         "q2",

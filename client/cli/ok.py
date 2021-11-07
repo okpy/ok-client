@@ -239,10 +239,10 @@ def main():
             exit(0)
         # Instantiating assignment
         print("args below")
-        print(args.config)
+        print("config", args.config)
         print(args)
         assign = assignment.load_assignment(args.config, args)
-
+        print(assign.specified_tests)
         if assign.decryption_keypage:
             # do not allow running locally if decryption keypage is provided
             args.local = False
@@ -292,7 +292,9 @@ def main():
             try:
                 msgs = messages.Messages()
                 for name, proto in assign.protocol_map.items():
-                    print(proto)
+                    print(name)
+                    print(" ")
+                    # print(msgs)
                     log.info('Execute {}.run()'.format(name))
                     proto.run(msgs)
                 msgs['timestamp'] = str(datetime.now())

@@ -65,7 +65,7 @@ class Doctest(models.Test):
         self.case = interpreter.CodeCase(self.console, module,
                                          code='\n'.join(code))
 
-    def run(self, env):
+    def run(self, env, ):
         """Runs the suites associated with this doctest.
 
         NOTE: env is intended only for use with the programmatic API to support
@@ -97,6 +97,7 @@ class Doctest(models.Test):
         output.remove_log(log_id)
 
         if not success or self.verbose:
+            print("here i print")
             print(''.join(output_log))
 
         if not success and self.interactive:
