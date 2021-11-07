@@ -44,10 +44,10 @@ class GradingProtocol(models.Protocol):
                         'Suite number must be valid.({})'.format(len(test.suites))))
                 if self.args.case:
                     suite.run_only = [int(c) for c in self.args.case]
-        grade(tests, messages, env, verbose=self.args.verbose)
+        grade(tests, messages, env, verbose=self.args.verbose, fpp=self.args.fpp)
 
 
-def grade(questions, messages, env=None, verbose=True):
+def grade(questions, messages, env=None, verbose=True, fpp=False):
     format.print_line('~')
     print('Running tests')
     print()
@@ -62,7 +62,7 @@ def grade(questions, messages, env=None, verbose=True):
         log.info('Running tests for {}'.format(test.name))
         print("testType", type(test))
         print("env is ", env)
-        results = test.run(env)
+        results = test.run(env, fpp)
 
         # if correct once, set persistent flag
         if results['failed'] == 0 and results['locked'] == 0:
@@ -78,10 +78,12 @@ def grade(questions, messages, env=None, verbose=True):
         if not verbose and (failed > 0 or locked > 0):
             # Stop at the first failed test
             break
-
-    format.print_progress_bar('Test summary', passed, failed, locked,
+    
+    # could add more custom fpp here
+    if not fpp:
+        format.print_progress_bar('Test summary', passed, failed, locked,
                               verbose=verbose)
-    print()
+        print()
 
     messages['grading'] = analytics
 

@@ -280,7 +280,6 @@ class Assignment(core.Serializable):
         self._print_header()
         self._load_tests()
         self._load_protocols()
-        print("cmd args q", self.cmd_args.question)
         self.specified_tests = self._resolve_specified_tests(
             self.cmd_args.question, self.cmd_args.all)
 

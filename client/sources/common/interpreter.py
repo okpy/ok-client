@@ -40,13 +40,8 @@ class CodeCase(models.Case):
 
     def run(self):
         """Implements the GradedTestCase interface."""
-        print("setup in run", self.setup)
-        print("console is", self.console)
         self.console.load(self.lines, setup=self.setup, teardown=self.teardown)
-        a = self.console.interpret()
-
-        print("interp is", a)
-        return a
+        return self.console.interpret()
 
     def lock(self, hash_fn):
         assert self.locked != False, 'called lock when self.lock = False'
@@ -301,7 +296,6 @@ class Console(object):
                 printed += self._output_fn(value)
             output = printed.splitlines()
             actual = CodeAnswer(output=output)
-            print("actual is ", actual.dump())
 
         if not self.skip_locked_cases and expected.locked:
             if '\n'.join(expected.output) != locking.lock(self.hash_key, actual.dump()):

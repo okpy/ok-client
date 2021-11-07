@@ -23,6 +23,7 @@ class Doctest(models.Test):
     SETUP = PS1 + IMPORT_STRING
     prompt_re = re.compile(r'(\s*)({}|{})'.format(PS1, '\.\.\. '))
 
+    FPP_OUTFILE = "./fpp/test_log"
     def __init__(self, file, verbose, interactive, timeout=None, ignore_empty=False, **fields):
         super().__init__(**fields)
         self.file = file
@@ -65,7 +66,7 @@ class Doctest(models.Test):
         self.case = interpreter.CodeCase(self.console, module,
                                          code='\n'.join(code))
 
-    def run(self, env, ):
+    def run(self, env, fpp=False):
         """Runs the suites associated with this doctest.
 
         NOTE: env is intended only for use with the programmatic API to support
@@ -96,8 +97,11 @@ class Doctest(models.Test):
         output_log = output.get_log(log_id)
         output.remove_log(log_id)
 
-        if not success or self.verbose:
-            print("here i print")
+        if fpp:
+            print("reached fpp")
+            with open(self.FPP_OUTFILE, "w") as f:
+                f.write(''.join(output_log))
+        elif not success or self.verbose:
             print(''.join(output_log))
 
         if not success and self.interactive:

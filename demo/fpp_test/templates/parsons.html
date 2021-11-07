@@ -158,6 +158,7 @@
                     $("#errors").show();
                     var success_count = data.test_results.passed;
                     var error_count = data.test_results.failed;
+                    var doctest_logs = data.test_results.doctest_logs;
                     // error_count += (data.test_results.match(/testcase error/g) || []).length;
                     var test_results;
                     if (error_count === 0) {
@@ -166,7 +167,8 @@
                         storeQuestionStatus(3);
                     } else {
                         test_results = '<div class="testcase fail"> Failed ' + (error_count).toString() +  ' Tests </div>';
-                        // '<div class="testcase fail"><span class="msg"> Failed Test #' + (success_count+error_count).toString() + '</span></div>'
+                        test_results += '<div class="testcase fail"><span style="white-space: pre-line"> ' + doctest_logs +  '  </span></div>';
+
                     }
                     $("#errors_body").html(test_results);
                 }

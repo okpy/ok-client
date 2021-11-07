@@ -16,6 +16,8 @@ from datetime import datetime
 import importlib
 import logging
 
+# centralize this rather than writing it in models.py
+FPP_OUTFILE = "./fpp/test_log"
 # done in Nate's init
 read_semaphore = Semaphore(12)
 # db.init_app(app)
@@ -155,6 +157,8 @@ def grade_and_backup(problem_name):
     scores = msgs['grading'][problem_name]
     feedback['passed'] = scores['passed']
     feedback['failed'] = scores['failed']
+    with open(FPP_OUTFILE, "r") as f:
+        feedback['doctest_logs'] = "".join(f.readlines())
     return feedback
     
 def open_browser():
