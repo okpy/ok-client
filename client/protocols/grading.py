@@ -59,7 +59,11 @@ def grade(questions, messages, env=None, verbose=True, fpp=False):
     # The environment in which to run the tests.
     for test in questions:
         log.info('Running tests for {}'.format(test.name))
-        results = test.run(env, fpp)
+        # TODO: sloppy 
+        if fpp:
+            results = test.run(env, fpp)
+        else:
+            results = test.run(env)
 
         # if correct once, set persistent flag
         if results['failed'] == 0 and results['locked'] == 0:
@@ -68,7 +72,6 @@ def grade(questions, messages, env=None, verbose=True, fpp=False):
         passed += results['passed']
         failed += results['failed']
         locked += results['locked']
-        # TODO: Insert test case into results 
 
         analytics[test.name] = results
         if not verbose and (failed > 0 or locked > 0):

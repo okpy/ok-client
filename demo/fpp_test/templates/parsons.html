@@ -196,10 +196,26 @@
         {% endif %}
     });
 
+    var start = new Date().getTime();
 
     $(window).on("beforeunload", function (e) {
         logParsons('unload');
+        var end = new Date().getTime();
+        millis_so_far += (start - end)
     });
+    
+    var start = new Date().getTime();
+    var millis_so_far = 0;
+    $(window).on("blur", function () {
+        console.log("blur")
+        var end = new Date().getTime();
+        millis_so_far += (start - end);
+        // what does blur actually do?
+    })
+    $(window).on("focus", function () {
+        console.log("focus")
+        start = new Date().getTime();
+    })
 
     var enableMoveOn = function() {
         if ($("#move-on").is(":hidden")) {

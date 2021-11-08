@@ -33,16 +33,21 @@ class CodeCase(models.Case):
         if self.setup:
             ass_name = self.setup.split()[2]
             # makes the from  _ import * setup useless but I don't want to break other functionality by rewriting
+            # self.setup += f"\n      >>> import {ass_name}"
+            # self.setup += "\n      >>> from importlib import reload"
+            # self.setup += f"\n      >>> {ass_name} = reload({ass_name})"
+            # self.setup += f"\n      >>> from {ass_name} import *"
+            self.setup = textwrap.dedent(self.setup)
             self.setup += f"\n>>> import {ass_name}"
             self.setup += "\n>>> from importlib import reload"
             self.setup += f"\n>>> {ass_name} = reload({ass_name})"
             self.setup += f"\n>>> from {ass_name} import *"
-
         self.teardown = teardown
 
     def post_instantiation(self):
         self.code = textwrap.dedent(self.code)
         self.setup = textwrap.dedent(self.setup)
+        print("setup is \n", self.setup)
 
         self.teardown = textwrap.dedent(self.teardown)
 

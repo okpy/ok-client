@@ -25,21 +25,6 @@ async function save () {
             'code' : whichChecked(1)
         }
     };
-    // fetch("/save", {
-    //     method: "POST", 
-    //     body: JSON.stringify(data),
-    //     headers: {
-    //         'Content-Type': 'application/json'
-    //     }
-    //   }).then(res => {
-    //     // const feedback = res.json();
-        
-    //     console.log(res['feedback']);
-    //     console.log("before");
-
-    //     console.log("Saved code!", res);
-    //     console.log("after");
-    // });
     fetch("/save", {
         method: "POST", 
         body: JSON.stringify(data),

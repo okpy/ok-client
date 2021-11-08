@@ -76,7 +76,6 @@ CLIENT_ROOT = os.path.dirname(client.__file__)
 
 def parse_input(command_input=None):
     """Parses command line input."""
-    print("parse input")
     parser = argparse.ArgumentParser(
         prog='python3 ok',
         description=__doc__,
@@ -229,20 +228,14 @@ def main():
             exit(not access_token)  # exit with error if no access_token
         
         if args.browser:
-            print("HANDLE BROWSER HERE")
             browser_probs.open_in_browser(args)
             exit(0)
         
         if args.fpp:
-            print("HANDLE FPP HERE")
             fpp_probs.open_in_browser(args)
             exit(0)
         # Instantiating assignment
-        print("args below")
-        print("config", args.config)
-        print(args)
         assign = assignment.load_assignment(args.config, args)
-        print(assign.specified_tests)
         if assign.decryption_keypage:
             # do not allow running locally if decryption keypage is provided
             args.local = False
@@ -278,7 +271,6 @@ def main():
 
         force_authenticate = args.authenticate
         retry = True
-        print("before while ")
         while retry:
             retry = False
             if force_authenticate:
@@ -292,9 +284,6 @@ def main():
             try:
                 msgs = messages.Messages()
                 for name, proto in assign.protocol_map.items():
-                    print(name)
-                    print(" ")
-                    # print(msgs)
                     log.info('Execute {}.run()'.format(name))
                     proto.run(msgs)
                 msgs['timestamp'] = str(datetime.now())
