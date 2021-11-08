@@ -18,7 +18,6 @@ class FileContentsProtocol(models.Protocol):
         RETURNS:
         dict; a mapping of source filepath -> contents as strings.
         """
-        print("file proto")
         files = {}
         # TODO(albert): move this to AnalyticsProtocol
         if self.args.submit:
@@ -30,7 +29,6 @@ class FileContentsProtocol(models.Protocol):
                 log.warning('File {} does not exist'.format(file))
             else:
                 contents = self.read_file(file)
-                print(contents)
                 log.info('Loaded contents of {} to send to server'.format(file))
             files[file] = contents
 

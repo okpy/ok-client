@@ -2,6 +2,10 @@
 Doctests for all_true
 
 >>> from fpp.all_true import *
+>>> import fpp.all_true
+>>> from importlib import reload
+>>> fpp.all_true = reload(fpp.all_true)
+>>> from fpp.all_true import *
 >>> all_true(0, 1, 2)
 
 # Error: expected

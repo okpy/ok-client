@@ -98,7 +98,6 @@ class Doctest(models.Test):
         output.remove_log(log_id)
 
         if fpp:
-            print("reached fpp")
             with open(self.FPP_OUTFILE, "w") as f:
                 f.write(''.join(output_log))
         elif not success or self.verbose:

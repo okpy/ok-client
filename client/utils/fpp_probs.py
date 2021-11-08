@@ -83,10 +83,8 @@ def submit():
     problem_name = request.form['problem_name']
     submitted_code = request.form['submitted_code']
     problem_config = load_config(problem_name)
-    print("1")
     pre_test_code = problem_config['pre_test_code'] or ''
     test_code = problem_config['test_code'] or ''
-    print(f"Saved code: \n{submitted_code}")
     write_fpp_prob_locally(problem_name, submitted_code)
     #   try:
     #     grader_results = submit_to_grader(
@@ -133,12 +131,7 @@ def write_fpp_prob_locally(prob_name, code):
 def grade_and_backup(problem_name):
     args = gargs[0] # should be class variable later
     args.question = ['all_true']
-    print("before load")
     assign = load_assignment(args.config, args)
-    print(assign.specified_tests)
-    for t in assign.specified_tests:
-        print("t is ", t)
-        print(t.get_code())
 
     msgs = messages.Messages()
     # proto_name = "grading"
@@ -158,7 +151,8 @@ def grade_and_backup(problem_name):
     feedback['passed'] = scores['passed']
     feedback['failed'] = scores['failed']
     with open(FPP_OUTFILE, "r") as f:
-        feedback['doctest_logs'] = "".join(f.readlines())
+        
+        feedback['doctest_logs'] = "".join(f.readlines()[8:])
     return feedback
     
 def open_browser():
