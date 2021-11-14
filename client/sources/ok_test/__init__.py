@@ -6,6 +6,7 @@ from client.sources.ok_test import models
 from client.sources.ok_test import logic
 from client.sources.ok_test import scheme
 from client.sources.ok_test import sqlite
+from client.sources.ok_test import lark
 from client.sources.ok_test import wwpp
 import copy
 import logging
@@ -21,6 +22,7 @@ SUITES = {
     'logic': logic.LogicSuite,
     'scheme': scheme.SchemeSuite,
     'sqlite': sqlite.SqliteSuite,
+    'lark': lark.LarkSuite,
     'wwpp': wwpp.WwppSuite,
 }
 

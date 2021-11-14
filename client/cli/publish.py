@@ -18,7 +18,8 @@ EXTRA_PACKAGES = [
     'pyaes',
     'colorama',
     'display_timedelta',
-    'filelock.py'
+    'filelock.py',
+    "lark",
 ]
 
 def abort(message):

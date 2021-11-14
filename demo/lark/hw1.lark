@@ -1,0 +1,7 @@
+?calc_expr: NUMBER | calc_op
+
+calc_op: "(" OPERATOR calc_expr* ")"
+
+OPERATOR: "+" | "-" | "*" | "/"
+
+%import common.NUMBER
