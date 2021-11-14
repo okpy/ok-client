@@ -45,7 +45,7 @@ def write_tree(zipf, src_directory, dst_directory):
         zipf.write(src_directory, arcname=os.path.basename(src_directory))
     for root, _, files in os.walk(src_directory):
         for filename in files:
-            if not filename.endswith(('.py', '.pem')):
+            if not filename.endswith(('.py', '.pem', '.lark')):
                 continue
             fullname = os.path.join(root, filename)
             arcname = fullname.replace(src_directory, dst_directory)
