@@ -3,11 +3,15 @@
     "endpoint": "ok/test/su16/ex",
     "src": [
         "hw1.py",
-        "fpp/all_true.py"
+        "fpp/all_true.py",
+        "fpp/demo.py",
+        "fpp/alt_apply.py"
     ],
     "tests": {
         "tests/[!_]*.py": "ok_test",
-        "fpp/all_true.py:all_true": "doctest"
+        "fpp/all_true.py:all_true": "doctest",
+        "fpp/return_three.py:return_three": "doctest",
+        "fpp/alt_apply.py:alternate_apply": "doctest"
     },
     "default_tests": [
         "q2",

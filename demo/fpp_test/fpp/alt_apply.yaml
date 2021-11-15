@@ -1,0 +1,72 @@
+problem_name: alternate_apply
+
+problem_description: |
+  Hailstone was an example of creating a sequence by applying
+  continually applying an operation based on the parity (even-ness
+  or odd-ness) of the value.<br><br>
+  Write a function <code>alternate_apply(num, f_even_i, f_odd_i)</code>
+  that continually applies an operation based on the parity <b>of
+  the index</b>. Keep applying the relative function until <code>num
+  </code> is reduced to <code>1</code>, then return the number of
+  steps it took.<br><br>
+  <pre><code>
+  >> alternate_apply(10, sub_two, div_two)
+  # 10 --> 10-2=8 --> 8//2=4 --> 4-2=2 -->2//2=1
+  4
+  </code></pre>
+  <br><i>Reading test results:</i> The test cases below will take in
+  <code>f_even_i</code> and <code>f_odd_i</code> as strings which takes
+  in the function
+  name. There is hidden code that will evaluate that to call
+  your <code>alternate_apply(num, f_even_i, f_odd_i)</code> with function objects.
+initial_code: >
+  def alternate_apply(num, f_even_i, f_odd_i):
+solution: |
+  def alternate_apply(num, f_even_i, f_odd_i):
+      # Keep track of the index to determine
+      # which function to apply, which is also
+      # the number of steps taken.
+      i = 0
+      while num != 1:
+          # Use the index to apply the appropriate function.
+          if i%2 == 0:
+              num = f_even_i(num)
+          else:
+              num = f_odd_i(num)
+          i = i + 1
+      return i
+code_lines: |
+  def alternate_apply(num, f_even_i, f_odd_i):
+  i = 0
+  while !BLANK:
+  if !BLANK:
+  num = !BLANK
+  else:
+  num = !BLANK
+  i = i + 1
+  return i
+test_fn: test_function
+
+test_code: |
+  sub_two = lambda n: n - 2
+  div_two = lambda n: n // 2
+  add_one = lambda n: n + 1
+  def test_function(num, f1, f2):
+    f_even_i = eval(f1)
+    f_odd_i = eval(f2)
+    return alternate_apply(num, f_even_i, f_odd_i)
+test_cases:
+  - fn_args: [10, sub_two, div_two]
+    expected: 4
+  - fn_args: [5, add_one, sub_two]
+    expected: 8
+  - fn_args: [1, sub_two, div_two]
+    expected: 0
+
+hidden_tests:
+  - fn_args: [10, div_two, sub_two]
+    expected: 3
+  - fn_args: [5, sub_two, sub_two]
+    expected: 2
+  - fn_args: [20, div_two, add_one]
+    expected: 9

@@ -7,8 +7,11 @@ Doctests for all_true
 >>> fpp.all_true = reload(fpp.all_true)
 >>> from fpp.all_true import *
 >>> all_true(0, 1, 2)
+0
+>>> all_true(1, 2, 3)
+0
 
 # Error: expected
-#     0
+#     3
 # but got
-
+#     0

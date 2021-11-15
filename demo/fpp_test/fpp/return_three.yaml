@@ -1,0 +1,27 @@
+problem_name: demo
+
+problem_description: |
+  In this demo, complete a function that returns 3.
+initial_code: |
+  def return_three():
+  	# You can insert tabbed lines as well (necessary to Python)
+  	x = 2
+    print('Print statements are shown, and can be used for debugging')
+    print('x = ', x)
+code_lines: |
+  def return_three():#0given
+  # You can insert tabbed lines as well (necessary to Python)#1given
+  # Solve this question by dragging the necessary blocks from the left to here#1given
+  x = 6
+  return x // 2
+  x = x
+solution: |
+  def return_three():
+    x = 6
+    return x // 2
+obscure_code: |
+  def function():
+    return 1 + 2
+test_cases:
+  - fn_args: []
+    expected: 3

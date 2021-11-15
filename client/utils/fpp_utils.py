@@ -10,8 +10,9 @@ import re
 from collections import defaultdict
 from pathlib import PosixPath
 
+FPP_FOLDER_PATH = './fpp'
 # PROBLEM_PATHS = ['problems/', 'app/cs88_parsons/problems/']
-PROBLEM_PATHS = ['fpp/']
+PROBLEM_PATHS = [FPP_FOLDER_PATH]
 def load_config_file(paths):
   """
   Loads a YAML file.
