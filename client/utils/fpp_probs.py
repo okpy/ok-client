@@ -1,4 +1,5 @@
 # from app import db, lock, read_semaphore
+import glob
 from flask import request, Flask, render_template, jsonify
 # from flask_login import current_user, login_required, login_user, logout_user
 from client.utils.fpp_utils import load_config, most_recent_parsons
@@ -31,6 +32,10 @@ def code_skeleton(problem_name):
   # return parsons(problem_name, code_skeleton=True)
   return parsons(problem_name, code_skeleton=False)
 
+@app.route('/')
+def index():
+    return render_template('index.html')
+    
 
 @app.route('/code_arrangement/<path:problem_name>')
 # @login_required
@@ -76,6 +81,13 @@ def parsons(problem_name, code_skeleton=False):
                          code_skeleton=code_skeleton,
                          language=language
                          )
+
+@app.route('/get_problems/', methods=['GET'])
+def get_problems():
+    # remove fpp/ and .py
+    problem_names = [name[4:-3] for name in glob.glob("fpp/*.py")]
+    problem_paths = [f'/code_skeleton/{name}' for name in problem_names]
+    return { 'names': problem_names, 'paths': problem_paths}
 
 
 @app.route('/submit/', methods=['POST'])
@@ -157,7 +169,7 @@ def grade_and_backup(problem_name):
     
 def open_browser():
     demo_question = 'all_true'
-    webbrowser.open_new(f'http://127.0.0.1:3000/code_skeleton/{demo_question}')
+    webbrowser.open_new(f'http://127.0.0.1:3000/')
 
 
 def open_in_browser(args):

@@ -1,0 +1,26 @@
+{% extends 'base.html' %}
+{% block css %}
+    <link rel="stylesheet" href="/static/vendors/parsons/parsons.css"/>
+    <link rel="stylesheet" href="/static/css/prettify.css"/>
+{% endblock %}
+hi! what?
+{% block base_content %}
+        <ul class="list-group" id="problem-list">
+        </ul>
+{% endblock %}
+
+{% block scripts %}
+    <script>
+        fetch('/get_problems')
+            .then(response => response.json())
+            .then(({names, paths}) => {
+                names.map((name, index) => {
+                    const link = document.createElement("a");
+                    link.appendChild(document.createTextNode(name));
+                    link.href = paths[index];
+                    link.classList.add("list-group-item");
+                    document.getElementById('problem-list').appendChild(link);
+                })
+            })
+    </script>
+{% endblock %}

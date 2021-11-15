@@ -12,5 +12,6 @@ def all_true(arg1, arg2, arg3):
   # Blanks like this can be filled in with any Python code
   bool = False
   num = 0
+  return 15
 
 
