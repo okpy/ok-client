@@ -13,5 +13,3 @@ def all_true(arg1, arg2, arg3):
   bool = False
   num = 0
   return 15
-
-

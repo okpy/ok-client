@@ -122,17 +122,20 @@ def write_fpp_prob_locally(prob_name, code):
     cur_line = -1
     fname = f'fpp/{prob_name}.py'
     lines_so_far = []
+    in_docstring = False
     with open(fname, "r") as f:
         for i, line in enumerate(f):
             lines_so_far.append(line)
-            if line.strip() == '# Enter your code here.':
-                cur_line = i
-                break
+            if line.strip() == '"""':
+                if in_docstring:
+                    cur_line = i
+                    break
+                in_docstring = True
 
     assert cur_line >= 0, "Problem not found in file"
 
     code_lines = code.split("\n")
-    code_lines.pop(0)
+    code_lines.pop(0) # remove function def statement
 
     with open(fname, "w") as f:
         for line in lines_so_far:
@@ -166,7 +169,7 @@ def grade_and_backup(problem_name):
         
         feedback['doctest_logs'] = "".join(f.readlines()[8:])
     return feedback
-    
+
 def open_browser():
     demo_question = 'all_true'
     webbrowser.open_new(f'http://127.0.0.1:3000/')
