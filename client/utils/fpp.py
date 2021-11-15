@@ -1,31 +1,29 @@
 # from app import db, lock, read_semaphore
-import glob
-from flask import request, Flask, render_template, jsonify
-# from flask_login import current_user, login_required, login_user, logout_user
-from client.utils.fpp_utils import load_config, most_recent_parsons
+from client.utils.fpp_utils import load_config
 from client.utils.fpp_routes import get_next_problem
-import time
+from flask import request, Flask, render_template, jsonify
 from multiprocessing import Semaphore
 from threading import Timer
 import webbrowser
-import os
-import json
-
+import logging
 from client.api.assignment import load_assignment
 from client.cli.common import messages
 from datetime import datetime
-import importlib
-import logging
+import glob
+import os
+import time
 
 # centralize this rather than writing it in models.py
 FPP_OUTFILE = "./fpp/test_log"
+PORT = 3001
+
+cache = {}
+log = logging.getLogger(__name__)
+
 # done in Nate's init
 read_semaphore = Semaphore(12)
-# db.init_app(app)
-# app = Flask(__name__)
 app = Flask(__name__, template_folder=f'{os.getcwd()}/templates', static_folder=f'{os.getcwd()}/static')
 
-gargs = [None]
 @app.route('/code_skeleton/<path:problem_name>')
 # @login_required
 def code_skeleton(problem_name):
@@ -34,8 +32,7 @@ def code_skeleton(problem_name):
 
 @app.route('/')
 def index():
-    return render_template('index.html')
-    
+    return render_template('index.html')  
 
 @app.route('/code_arrangement/<path:problem_name>')
 # @login_required
@@ -115,8 +112,6 @@ def submit():
     # test_results = '<div class="testcase {}"><span class="msg">{}</span></div>'.format("success", str("demo!"))
     test_results = grade_and_backup(problem_name)
     return jsonify({'test_results': test_results})
-    # return "hi"
-    # return json.dumps({'feedback': feedback, 'test_results': test_results})
 
 def write_fpp_prob_locally(prob_name, code):
     cur_line = -1
@@ -144,18 +139,11 @@ def write_fpp_prob_locally(prob_name, code):
             f.write(line + "\n")
 
 def grade_and_backup(problem_name):
-    args = gargs[0] # should be class variable later
-    args.question = ['all_true']
+    args = cache['args']
+    args.question = [problem_name]
     assign = load_assignment(args.config, args)
 
     msgs = messages.Messages()
-    # proto_name = "grading"
-    # module = importlib.import_module(assign._PROTOCOL_PACKAGE + '.' + proto_name)
-
-    # proto = module.protocol(assign.cmd_args, assign)
-    # log.info('Loaded protocol "{}"'.format(proto_name))
-    # log.info('Execute {}.run()'.format(proto_name))
-    # proto.run(msgs)
     for name, proto in assign.protocol_map.items():
         log.info('Execute {}.run()'.format(name))
         proto.run(msgs)
@@ -166,22 +154,20 @@ def grade_and_backup(problem_name):
     feedback['passed'] = scores['passed']
     feedback['failed'] = scores['failed']
     with open(FPP_OUTFILE, "r") as f:
-        
         feedback['doctest_logs'] = "".join(f.readlines()[8:])
     return feedback
 
 def open_browser():
-    demo_question = 'all_true'
-    webbrowser.open_new(f'http://127.0.0.1:3000/')
-
+    webbrowser.open_new(f'http://127.0.0.1:{PORT}/')
 
 def open_in_browser(args):
-    gargs[0] = args
-    port = 3000
+    cache['args'] = args
     Timer(1, open_browser).start()
-    app.run(port=port)
+    run_server(PORT)
 
-# disable flask logging
-log = logging.getLogger('werkzeug')
-log.setLevel(logging.ERROR)
-os.environ['WERKZEUG_RUN_MAIN'] = 'true'
+def run_server(port):
+    # disable flask logging
+    log = logging.getLogger('werkzeug')
+    log.setLevel(logging.ERROR)
+    os.environ['WERKZEUG_RUN_MAIN'] = 'true'
+    app.run(port=port)

@@ -51,7 +51,7 @@ from client.utils import auth
 from client.utils import output
 from client.utils import software_update
 from client.utils import browser_probs
-from client.utils import fpp_probs
+from client.utils import fpp
 from datetime import datetime
 import argparse
 import client
@@ -232,7 +232,7 @@ def main():
             exit(0)
         
         if args.fpp:
-            fpp_probs.open_in_browser(args)
+            fpp.open_in_browser(args)
             exit(0)
         # Instantiating assignment
         assign = assignment.load_assignment(args.config, args)

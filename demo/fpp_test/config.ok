@@ -3,15 +3,18 @@
     "endpoint": "ok/test/su16/ex",
     "src": [
         "hw1.py",
-        "fpp/all_true.py"
+        "fpp/all_true.py",
+        "fpp/example.py"
     ],
     "tests": {
         "tests/[!_]*.py": "ok_test",
-        "fpp/all_true.py:all_true": "doctest"
+        "fpp/all_true.py:all_true": "doctest",
+        "fpp/example.py:example": "doctest"
     },
     "default_tests": [
         "q2",
-        "all_true"
+        "all_true",
+        "example"
     ],
     "protocols": [
         "file_contents",

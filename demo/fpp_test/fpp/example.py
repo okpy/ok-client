@@ -8,6 +8,8 @@ def example(arg1, arg2, arg3):
   >>> example(True, 2, 3)
   3
   """
-  # BEGIN SOLUTION CODE
-  return arg1 and arg2 and arg3
-  # END SOLUTION CODE
+  # Blanks like this can be filled in with any Python code
+  bool = False
+  num = 0
+
+

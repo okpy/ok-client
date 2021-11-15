@@ -6,6 +6,7 @@ from client.sources.common import models
 from client.sources.common import pyconsole
 from client.utils import format
 from client.utils import output
+from client.utils.fpp import FPP_OUTFILE
 import re
 import textwrap
 
@@ -23,7 +24,6 @@ class Doctest(models.Test):
     SETUP = PS1 + IMPORT_STRING
     prompt_re = re.compile(r'(\s*)({}|{})'.format(PS1, '\.\.\. '))
 
-    FPP_OUTFILE = "./fpp/test_log"
     def __init__(self, file, verbose, interactive, timeout=None, ignore_empty=False, **fields):
         super().__init__(**fields)
         self.file = file
@@ -98,7 +98,7 @@ class Doctest(models.Test):
         output.remove_log(log_id)
 
         if fpp:
-            with open(self.FPP_OUTFILE, "w") as f:
+            with open(FPP_OUTFILE, "w") as f:
                 f.write(''.join(output_log))
         elif not success or self.verbose:
             print(''.join(output_log))
