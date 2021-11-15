@@ -47,7 +47,6 @@ class CodeCase(models.Case):
     def post_instantiation(self):
         self.code = textwrap.dedent(self.code)
         self.setup = textwrap.dedent(self.setup)
-        print("setup is \n", self.setup)
 
         self.teardown = textwrap.dedent(self.teardown)
 

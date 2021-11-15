@@ -18,6 +18,7 @@ import logging
 
 # centralize this rather than writing it in models.py
 FPP_OUTFILE = "./fpp/test_log"
+FPP_FOLDER_PATH = "./fpp"
 # done in Nate's init
 read_semaphore = Semaphore(12)
 # db.init_app(app)
@@ -30,7 +31,6 @@ gargs = [None]
 def code_skeleton(problem_name):
   # return parsons(problem_name, code_skeleton=True)
   return parsons(problem_name, code_skeleton=False)
-
 
 @app.route('/code_arrangement/<path:problem_name>')
 # @login_required
@@ -86,22 +86,10 @@ def submit():
     pre_test_code = problem_config['pre_test_code'] or ''
     test_code = problem_config['test_code'] or ''
     write_fpp_prob_locally(problem_name, submitted_code)
-    #   try:
-    #     grader_results = submit_to_grader(
-    #         pre_test_code + submitted_code + test_code,
-    #         problem_config['test_cases'], problem_config['test_fn'],
-    #         problem_config['language'])
-    #   except Exception as e:
-    #     test_results = '<div class="testcase {}"><span class="msg">{}</span></div>'.format(
-    #         "error", str(e))
-    #     return json.dumps({'correct': 0, 'test_results': test_results})
-    # test_results, correct = parse_results(grader_results)
-    # print('\n')
-    # print(current_user.sid_hash, current_user.consent, correct)
-    # print('\n')
 
     # test_results = '<div class="testcase {}"><span class="msg">{}</span></div>'.format("success", str("demo!"))
     test_results = grade_and_backup(problem_name)
+    # test_results['num_cases'] = len(problem_config['test_cases'])
     return jsonify({'test_results': test_results})
     # return "hi"
     # return json.dumps({'feedback': feedback, 'test_results': test_results})
@@ -130,7 +118,9 @@ def write_fpp_prob_locally(prob_name, code):
 
 def grade_and_backup(problem_name):
     args = gargs[0] # should be class variable later
-    args.question = ['all_true']
+    args.question = [problem_name]
+    # args.question = ['all_true', 'q1']
+
     assign = load_assignment(args.config, args)
 
     msgs = messages.Messages()
@@ -145,6 +135,8 @@ def grade_and_backup(problem_name):
         log.info('Execute {}.run()'.format(name))
         proto.run(msgs)
     msgs['timestamp'] = str(datetime.now())
+    print("messages are")
+    print(msgs)
     feedback = {}
     # print(msgs['grading'], "grading")
     scores = msgs['grading'][problem_name]
@@ -152,11 +144,20 @@ def grade_and_backup(problem_name):
     feedback['failed'] = scores['failed']
     with open(FPP_OUTFILE, "r") as f:
         
-        feedback['doctest_logs'] = "".join(f.readlines()[8:])
+        # feedback['doctest_logs'] = "".join(f.readlines()[8:])
+        all_lines = f.readlines()
+        feedback['doctest_logs'] = "".join([all_lines[1]] + all_lines[8:])
     return feedback
     
 def open_browser():
     demo_question = 'all_true'
+    # instead of passing this around, I could change msgs['history'][prob_name] to include an fpp field 
+    # unsolved_qnames = [fname for fname in os.listdir(FPP_OUTFILE) if not['history']['questions'][fname]]
+
+    # for name of file in fpp folder
+    # if not solved then open in browser
+    # when next button pressed move to problem still unsolved
+    
     webbrowser.open_new(f'http://127.0.0.1:3000/code_skeleton/{demo_question}')
 
 

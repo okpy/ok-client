@@ -29,6 +29,8 @@
                         <div class="col-sm-12">
                             <button id="move-on" type="button" class="btn btn-success"  style="display:none">View Instructor Solution</button>
                             <button id="submit" type="button" class="btn btn-primary">Run Tests</button>
+                            <button id="next" type="button" class="btn btn-primary">Next Problem</button>
+
                         </div>
                     </div>
                 </div>
@@ -159,6 +161,8 @@
                     var success_count = data.test_results.passed;
                     var error_count = data.test_results.failed;
                     var doctest_logs = data.test_results.doctest_logs;
+                    var num_cases = data.test_results.num_cases;
+                    console.log(num_cases);
                     // error_count += (data.test_results.match(/testcase error/g) || []).length;
                     var test_results;
                     if (error_count === 0) {
@@ -166,8 +170,42 @@
                         enableMoveOn();
                         storeQuestionStatus(3);
                     } else {
-                        test_results = '<div class="testcase fail"> Failed ' + (error_count).toString() +  ' Tests </div>';
-                        test_results += '<div class="testcase fail"><span style="white-space: pre-line"> ' + doctest_logs +  '  </span></div>';
+                        // test_results = '<div class="testcase fail"> Passed the first ' + (success_count).toString() + ' of ' + (num_cases).toString() + ' total cases' + ' Tests </div>';
+                        test_results = '<div class="testcase fail"> First Failing Test Case </div>';
+                        // test_results += '<div class="testcase fail"><span style="white-space: pre-line"> ' + doctest_logs +  '  </span></div>';
+                        test_results += '<span style="white-space: pre-line"><pre><code>' + doctest_logs +  '  <pre></code></span></div>';
+                    }
+                    $("#errors_body").html(test_results);
+                }
+            })
+        }
+        // TO BE IMPLEMENTED
+        function nextProblem() {
+            alert("next problem");
+            $.ajax({
+                type: 'post',
+                data: params,
+                url: '/submit/',
+                dataType: 'html',
+                success: function (response, status) {
+                    var data = JSON.parse(response);
+                    $("#errors").show();
+                    var success_count = data.test_results.passed;
+                    var error_count = data.test_results.failed;
+                    var doctest_logs = data.test_results.doctest_logs;
+                    var num_cases = data.test_results.num_cases;
+                    console.log(num_cases);
+                    // error_count += (data.test_results.match(/testcase error/g) || []).length;
+                    var test_results;
+                    if (error_count === 0) {
+                        test_results = '<div class="testcase pass"><span class="msg">All tests passed</span></div>';
+                        enableMoveOn();
+                        storeQuestionStatus(3);
+                    } else {
+                        // test_results = '<div class="testcase fail"> Passed the first ' + (success_count).toString() + ' of ' + (num_cases).toString() + ' total cases' + ' Tests </div>';
+                        test_results = '<div class="testcase fail"> First Failing Test Case </div>';
+                        // test_results += '<div class="testcase fail"><span style="white-space: pre-line"> ' + doctest_logs +  '  </span></div>';
+                        test_results += '<span style="white-space: pre-line"><pre><code>' + doctest_logs +  '  <pre></code></span></div>';
                     }
                     $("#errors_body").html(test_results);
                 }
@@ -175,6 +213,8 @@
         }
 
         $("#submit").click(_.throttle(submitParsons, 500));
+        // go back instead of NEXT and do something similar to go_back url
+        $("#next").click(_.throttle(nextProblem, 500));
 
         $("#move-on").click(function() {
             // Deregisters beforeunload handler to avoid double logging
