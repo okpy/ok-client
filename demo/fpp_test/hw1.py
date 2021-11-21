@@ -10,11 +10,17 @@ def double(x):
 
 def odd_even(x):
     """
-    # Case 1: odd
-    >>> odd_even(11)
+    # SHOW ALL CASES
+    >>> z = 10 # should not count as test case
+    >>> odd_even(11) # Case a: 
     'odd'
-    # Case 2: even 
-    >>> odd_even(12)
+    >>> odd_even(3) # Case 2 : odd
+    'odd'
+    >>> odd_even(120) # Case 3: even 
+    'even'
+    >>> odd_even(1) # Case 4: odd
+    'odd'
+    >>> odd_even(2) # Case 5 : even
     'even'
     """
     if x % 2 == 0:
@@ -23,3 +29,11 @@ def odd_even(x):
     else:
         return 'odd'
 
+def ret4(x):
+    """
+    >>> ret4(4)
+    4
+    >>> ret4(65)
+    4
+    """
+    return 4

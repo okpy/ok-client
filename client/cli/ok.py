@@ -289,7 +289,6 @@ def main():
                 for name, proto in assign.protocol_map.items():
                     log.info('Execute {}.run()'.format(name))
                     proto.run(msgs)
-                print("messages are \n", msgs)
                 msgs['timestamp'] = str(datetime.now())
             except ex.AuthenticationException as e:
                 if not force_authenticate:

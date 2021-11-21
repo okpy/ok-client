@@ -32,7 +32,7 @@ gargs = [None]
 cache = {}
 # removing whitespace makes me look at all lines. i could read one line at a time until MAX_LINES but is this better?
 def get_prob_names():
-    paths_to_names = OrderedDict()
+    names_to_paths = OrderedDict()
     for name in glob.glob("fpp/*.py"):
         with open(name, "r") as f:
             cur_lines = f.readlines()
@@ -40,12 +40,13 @@ def get_prob_names():
                 cur_words = line.split()
                 if cur_words:
                     func_sig = cur_words[1]
-                    paths_to_names[func_sig[:func_sig.index('(')]] = name[4:-3]
+                    names_to_paths[func_sig[:func_sig.index('(')]] = name[4:-3]
+                    # names_to_paths[name[4:-3]] = func_sig[:func_sig.index('(')]
                     break
-    return paths_to_names
+    return names_to_paths
 
 # problem_names = [name[4:-3] for name in glob.glob("fpp/*.py") if name[4:-3] != '__init__']
-paths_to_names = get_prob_names()
+names_to_paths = get_prob_names()
                 
 @app.route('/code_skeleton/<path:problem_name>')
 # @login_required
@@ -67,7 +68,7 @@ def parsons(problem_name, code_skeleton=False):
   # timer_start = get_problem_start('parsons', problem_name)
   timer_start = 0
   # problem_config = load_config(problem_name)
-  problem_config = load_config(paths_to_names[problem_name])
+  problem_config = load_config(names_to_paths[problem_name])
 
   language = problem_config.get('language', 'python')
 
@@ -86,8 +87,8 @@ def parsons(problem_name, code_skeleton=False):
         '\nprint(!BLANK)' * 3 + '\n# !BLANK' * 3
   # if most_recent_code:
   #   code_lines = most_recent_parsons(most_recent_code, code_lines)
-  cur_prob_index = list(paths_to_names.keys()).index(problem_name)
-  not_last_prob = cur_prob_index < len(paths_to_names) - 1
+  cur_prob_index = list(names_to_paths.keys()).index(problem_name)
+  not_last_prob = cur_prob_index < len(names_to_paths) - 1
   not_first_prob = cur_prob_index > 0
   return render_template('parsons.html',
                          problem_name=problem_name,
@@ -109,19 +110,19 @@ def parsons(problem_name, code_skeleton=False):
 
 @app.route('/next_problem/<path:problem_name>', methods=['GET'])
 def next_problem(problem_name):
-    new_prob_name = list(paths_to_names.keys())[list(paths_to_names.keys()).index(problem_name) + 1]
+    new_prob_name = list(names_to_paths.keys())[list(names_to_paths.keys()).index(problem_name) + 1]
     return redirect(url_for('code_skeleton', problem_name=new_prob_name))
 
 
 @app.route('/prev_problem/<path:problem_name>', methods=['GET'])
 def prev_problem(problem_name):
-    new_prob_name = list(paths_to_names.keys())[list(paths_to_names.keys()).index(problem_name) - 1]
+    new_prob_name = list(names_to_paths.keys())[list(names_to_paths.keys()).index(problem_name) - 1]
     return redirect(url_for('code_skeleton', problem_name=new_prob_name))
 
 @app.route('/get_problems/', methods=['GET'])
 def get_problems():
-    problem_paths = [f'/code_skeleton/{key}' for key in paths_to_names]
-    return { 'names': list(paths_to_names.values()), 'paths': problem_paths}
+    problem_paths = [f'/code_skeleton/{key}' for key in names_to_paths]
+    return { 'names': list(names_to_paths.values()), 'paths': problem_paths}
 
 
 @app.route('/submit/', methods=['POST'])
@@ -129,7 +130,7 @@ def submit():
     problem_name = request.form['problem_name']
     submitted_code = request.form['submitted_code']
     # problem_config = load_config(problem_name)
-    problem_config = load_config(paths_to_names[problem_name])
+    problem_config = load_config(names_to_paths[problem_name])
     pre_test_code = problem_config['pre_test_code'] or ''
     test_code = problem_config['test_code'] or ''
     write_fpp_prob_locally(problem_name, submitted_code)
@@ -141,7 +142,7 @@ def submit():
 
 def write_fpp_prob_locally(prob_name, code):
     cur_line = -1
-    fname = f'{FPP_FOLDER_PATH}/{prob_name}.py'
+    fname = f'{FPP_FOLDER_PATH}/{names_to_paths[prob_name]}.py'
     lines_so_far = []
     in_docstring = False
     with open(fname, "r") as f:
@@ -176,12 +177,13 @@ def grade_and_backup(problem_name):
         proto.run(msgs)
     msgs['timestamp'] = str(datetime.now())
     feedback = {}
-    scores = msgs['grading'][problem_name]
-    feedback['passed'] = scores['passed']
-    feedback['failed'] = scores['failed']
+    feedback['passed'] = assign.specified_tests[0].console.cases_passed
+    feedback['failed'] = assign.specified_tests[0].console.cases_total - feedback['passed']
+
 
     with open(FPP_OUTFILE, "r") as f:
         all_lines = f.readlines()
+        # 8 assumes no docstring, this is a little sketch
         feedback['doctest_logs'] = "".join([all_lines[1]] + all_lines[8:])
     return feedback
 

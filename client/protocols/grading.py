@@ -79,7 +79,7 @@ def grade(questions, messages, env=None, verbose=True, fpp=False):
             break
     
     # could add more custom fpp here
-    if not fpp:
+    if not fpp and test and not test.console.show_all_cases:
         format.print_progress_bar('Test summary', passed, failed, locked,
                               verbose=verbose)
         print()

@@ -15,7 +15,8 @@
         "fpp/return_three.py:return_three": "doctest",
         "fpp/alt_apply.py:alternate_apply": "doctest",
         "fpp/example.py:example": "doctest",
-        "hw1.py:odd_even": "doctest"
+        "hw1.py:odd_even": "doctest",
+        "hw1.py:ret4": "doctest"
     },
     "default_tests": [
         "q2",

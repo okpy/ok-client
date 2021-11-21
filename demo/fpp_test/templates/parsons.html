@@ -176,7 +176,7 @@
                         enableMoveOn();
                         storeQuestionStatus(3);
                     } else {
-                        test_results = '<div class="testcase fail"> First Failing Test Case </div>';
+                        test_results = '<div class="testcase fail"> Passing ' + success_count.toString() + ' of ' + (success_count + error_count).toString() + ' total cases' + ' </div>';
                         test_results += '<span style="white-space: pre-line"><pre><code>' + doctest_logs +  '  <pre></code></span></div>';
                     }
                     $("#errors_body").html(test_results);
