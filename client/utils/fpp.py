@@ -10,16 +10,16 @@ import time
 from multiprocessing import Semaphore
 from threading import Timer
 import webbrowser
-import os
-import json
-
+import logging
 from client.api.assignment import load_assignment
 from client.cli.common import messages
 from datetime import datetime
 import importlib
 import logging
 from collections import OrderedDict
+import os
 
+PORT = 3000
 
 FPP_OUTFILE = f"{FPP_FOLDER_PATH}/test_log"
 
@@ -29,7 +29,7 @@ read_semaphore = Semaphore(12)
 app = Flask(__name__, template_folder=f'{os.getcwd()}/templates', static_folder=f'{os.getcwd()}/static')
 
 gargs = [None]
-
+cache = {}
 # removing whitespace makes me look at all lines. i could read one line at a time until MAX_LINES but is this better?
 def get_prob_names():
     paths_to_names = OrderedDict()
@@ -54,8 +54,7 @@ def code_skeleton(problem_name):
 
 @app.route('/')
 def index():
-    return render_template('index.html')
-    
+    return render_template('index.html')  
 
 @app.route('/code_arrangement/<path:problem_name>')
 # @login_required
@@ -144,17 +143,20 @@ def write_fpp_prob_locally(prob_name, code):
     cur_line = -1
     fname = f'{FPP_FOLDER_PATH}/{prob_name}.py'
     lines_so_far = []
+    in_docstring = False
     with open(fname, "r") as f:
         for i, line in enumerate(f):
             lines_so_far.append(line)
-            if line.strip() == '# Enter your code here.':
-                cur_line = i
-                break
+            if line.strip() == '"""':
+                if in_docstring:
+                    cur_line = i
+                    break
+                in_docstring = True
 
     assert cur_line >= 0, "Problem not found in file"
 
     code_lines = code.split("\n")
-    code_lines.pop(0)
+    code_lines.pop(0) # remove function def statement
 
     with open(fname, "w") as f:
         for line in lines_so_far:
@@ -163,14 +165,14 @@ def write_fpp_prob_locally(prob_name, code):
             f.write(line + "\n")
 
 def grade_and_backup(problem_name):
-    args = gargs[0] # should be class variable later
+    args = cache['args']
     args.question = [problem_name]
+    assign = load_assignment(args.config, args)
 
     assign = load_assignment(args.config, args)
     msgs = messages.Messages()
-
     for name, proto in assign.protocol_map.items():
-        log.info('Execute {}.run()'.format(name))
+        # log.info('Execute {}.run()'.format(name))
         proto.run(msgs)
     msgs['timestamp'] = str(datetime.now())
     feedback = {}
@@ -182,18 +184,18 @@ def grade_and_backup(problem_name):
         all_lines = f.readlines()
         feedback['doctest_logs'] = "".join([all_lines[1]] + all_lines[8:])
     return feedback
-    
+
 def open_browser():
-    demo_question = 'all_true'
-    webbrowser.open_new(f'http://127.0.0.1:3000/')
+    webbrowser.open_new(f'http://127.0.0.1:{PORT}/')
 
 def open_in_browser(args):
-    gargs[0] = args
-    port = 3000
+    cache['args'] = args
     Timer(1, open_browser).start()
-    app.run(port=port)
+    run_server(PORT)
 
-# disable flask logging
-log = logging.getLogger('werkzeug')
-log.setLevel(logging.ERROR)
-os.environ['WERKZEUG_RUN_MAIN'] = 'true'
+def run_server(port):
+    # disable flask logging
+    log = logging.getLogger('werkzeug')
+    log.setLevel(logging.ERROR)
+    os.environ['WERKZEUG_RUN_MAIN'] = 'true'
+    app.run(port=port)

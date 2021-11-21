@@ -4,6 +4,7 @@
     "src": [
         "hw1.py",
         "fpp/all_true.py",
+        "fpp/example.py",
         "fpp/demo.py",
         "fpp/alt_apply.py"
     ],
@@ -11,11 +12,13 @@
         "tests/[!_]*.py": "ok_test",
         "fpp/all_true.py:all_true": "doctest",
         "fpp/return_three.py:return_three": "doctest",
-        "fpp/alt_apply.py:alternate_apply": "doctest"
+        "fpp/alt_apply.py:alternate_apply": "doctest",
+        "fpp/example.py:example": "doctest"
     },
     "default_tests": [
         "q2",
-        "all_true"
+        "all_true",
+        "example"
     ],
     "protocols": [
         "file_contents",

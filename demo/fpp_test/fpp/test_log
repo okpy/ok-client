@@ -1,17 +1,15 @@
 ---------------------------------------------------------------------
-Doctests for all_true
+Doctests for example
 
->>> from fpp.all_true import *
->>> import fpp.all_true
+>>> from fpp.example import *
+>>> import fpp.example
 >>> from importlib import reload
->>> fpp.all_true = reload(fpp.all_true)
->>> from fpp.all_true import *
->>> all_true(0, 1, 2)
+>>> fpp.example = reload(fpp.example)
+>>> from fpp.example import *
+>>> example(0, 1, 2)
 0
->>> all_true(1, 2, 3)
-0
-
-# Error: expected
-#     3
-# but got
-#     0
+>>> example(1, 2, 3)
+3
+>>> example(True, 2, 3)
+3
+-- OK! --
