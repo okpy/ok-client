@@ -6,14 +6,16 @@
         "fpp/all_true.py",
         "fpp/example.py",
         "fpp/demo.py",
-        "fpp/alt_apply.py"
+        "fpp/alt_apply.py",
+        "fpp/odd_even.py"
     ],
     "tests": {
         "tests/[!_]*.py": "ok_test",
         "fpp/all_true.py:all_true": "doctest",
         "fpp/return_three.py:return_three": "doctest",
         "fpp/alt_apply.py:alternate_apply": "doctest",
-        "fpp/example.py:example": "doctest"
+        "fpp/example.py:example": "doctest",
+        "hw1.py:odd_even": "doctest"
     },
     "default_tests": [
         "q2",

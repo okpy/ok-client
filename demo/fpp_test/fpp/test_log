@@ -1,15 +1,14 @@
 ---------------------------------------------------------------------
-Doctests for example
+Doctests for return_three
 
->>> from fpp.example import *
->>> import fpp.example
+>>> from fpp.return_three import *
+>>> import fpp.return_three
 >>> from importlib import reload
->>> fpp.example = reload(fpp.example)
->>> from fpp.example import *
->>> example(0, 1, 2)
-0
->>> example(1, 2, 3)
-3
->>> example(True, 2, 3)
-3
--- OK! --
+>>> fpp.return_three = reload(fpp.return_three)
+>>> from fpp.return_three import *
+>>> return_three()
+
+# Error: expected
+#     3
+# but got
+

@@ -31,11 +31,14 @@
                             <button id="submit" type="button" class="btn btn-primary">Run Tests</button>
                             {% if not_first_prob %}
                             <button id="prev" type="button" class="btn btn-primary">Previous Problem</button>
+                            {% else %}
+                            <button id="prev" type="button" class="btn btn-primary" disabled>Previous Problem</button>
                             {% endif %}
                             {% if not_last_prob %}
                             <button id="next" type="button" class="btn btn-primary">Next Problem</button>
+                            {% else %}
+                            <button id="next" type="button" class="btn btn-primary" disabled>Next Problem</button>
                             {% endif %}
-
                         </div>
                     </div>
                 </div>

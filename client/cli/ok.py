@@ -217,7 +217,8 @@ def main():
                 args.server, client.__version__, client.FILE_NAME, timeout=10)
         exit(not did_update)  # exit with error if ok failed to update
 
-    assign = None
+    force_authenticate = args.authenticate
+    retry = True
     try:
         if args.get_token:
             if args.nointeract:
@@ -231,11 +232,15 @@ def main():
             browser_probs.open_in_browser(args)
             exit(0)
         
-        if args.fpp:
-            fpp.open_in_browser(args)
-            exit(0)
         # Instantiating assignment
         assign = assignment.load_assignment(args.config, args)
+
+        if args.fpp:
+            if not assign.authenticate():
+                exit(1)
+            fpp.open_in_browser(args)
+            exit(0)
+
         if assign.decryption_keypage:
             # do not allow running locally if decryption keypage is provided
             args.local = False
@@ -269,8 +274,6 @@ def main():
             assign.autobackup(run_sync=False)
             exit(0)
 
-        force_authenticate = args.authenticate
-        retry = True
         while retry:
             retry = False
             if force_authenticate:
@@ -286,6 +289,7 @@ def main():
                 for name, proto in assign.protocol_map.items():
                     log.info('Execute {}.run()'.format(name))
                     proto.run(msgs)
+                print("messages are \n", msgs)
                 msgs['timestamp'] = str(datetime.now())
             except ex.AuthenticationException as e:
                 if not force_authenticate:

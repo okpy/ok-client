@@ -8,7 +8,6 @@ def all_true(arg1, arg2, arg3):
   >>> all_true(True, 2, 3)
   3
   """
-  # Enter your code here.
   # Blanks like this can be filled in with any Python code
   bool = False
   num = 0
