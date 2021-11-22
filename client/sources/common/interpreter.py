@@ -3,7 +3,7 @@
 from client.sources.common import core
 from client.sources.common import models
 
-from client.utils import locking
+from client.utils import locking, format
 import re
 import textwrap
 
@@ -31,7 +31,8 @@ class CodeCase(models.Case):
         self.console = console
         self.setup = setup
 
-        if self.setup:
+        # must reload for fpp problems
+        if self.setup and self.console.fpp: 
             ass_name = self.setup.split()[2]
             # makes the from  _ import * setup useless but I don't want to break other functionality by rewriting
             # self.setup += f"\n      >>> import {ass_name}"
@@ -201,10 +202,11 @@ class Console(object):
     # Public interface #
     ####################
 
-    def __init__(self, verbose, interactive, timeout=None):
+    def __init__(self, verbose, interactive, timeout=None, fpp=False):
         self.verbose = verbose
         self.interactive = interactive
         self.timeout = timeout
+        self.fpp = fpp
         self.skip_locked_cases = True
         self.load('')   # Initialize empty code.
 
@@ -345,6 +347,8 @@ class Console(object):
                 raise ConsoleException
             else:
                 print(f"Test Case {self.cases_total + 1} failed")
+                format.print_line('-')
+
                 print()
                 if '# Case' in code:
                     self.cases_total += 1

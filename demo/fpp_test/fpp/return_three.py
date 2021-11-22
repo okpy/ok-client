@@ -9,6 +9,5 @@ def return_three():
   # You can insert tabbed lines as well (necessary to Python)
   # Solve this question by dragging the necessary blocks from the left to here
   x = 6
-  return x // 2
 
 

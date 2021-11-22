@@ -339,10 +339,9 @@ class Assignment(core.Serializable):
                     test_name = file
                     if parameter:
                         test_name += ':' + parameter
-
                     self.test_map.update(module.load(file, parameter, self))
-
                     log.info('Loaded {}'.format(test_name))
+
 
     def dump_tests(self):
         """Dumps all tests, as determined by their .dump() method.

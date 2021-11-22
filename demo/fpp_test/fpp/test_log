@@ -1,26 +1,26 @@
 ---------------------------------------------------------------------
-Doctests for alternate_apply
+Doctests for return_three
 
->>> from fpp.alt_apply import *
->>> import fpp.alt_apply
+>>> from fpp.return_three import *
+>>> import fpp.return_three
 >>> from importlib import reload
->>> fpp.alt_apply = reload(fpp.alt_apply)
->>> from fpp.alt_apply import *
->>> sub_two = lambda n: n - 2
->>> div_two = lambda n: n // 2
->>> alternate_apply(10, div_two, sub_two) # Case 1
+>>> fpp.return_three = reload(fpp.return_three)
+>>> from fpp.return_three import *
+>>> return_three() # Case 1
 
 # Error: expected
 #     3
 # but got
 
 Test Case 1 failed
+---------------------------------------------------------------------
 
->>> alternate_apply(5, sub_two, sub_two) # Case 2
+>>> return_three() # Case 2
 
 # Error: expected
-#     2
+#     3
 # but got
 
 Test Case 2 failed
+---------------------------------------------------------------------
 
