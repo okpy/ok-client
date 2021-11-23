@@ -1,3 +1,4 @@
+from ucb import debug
 def return_three():
   """
   # SHOW ALL CASES
@@ -8,6 +9,5 @@ def return_three():
   """
   # You can insert tabbed lines as well (necessary to Python)
   # Solve this question by dragging the necessary blocks from the left to here
-  x = 6
 
 

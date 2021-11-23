@@ -1,5 +1,5 @@
 """Demo assignment with separate test files."""
-
+from ucb import main, trace, interact, debug
 def square(x):
     """Return x squared."""
     return x * x
@@ -24,8 +24,8 @@ def odd_even(x):
     'even'
     """
     if x % 2 == 0:
+        debug(x % 2)
         return 'odd'
-        return 'even'
     else:
         return 'odd'
 

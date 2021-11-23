@@ -7,11 +7,13 @@ from client.utils import locking, format
 import re
 import textwrap
 
+CHECK_MARK = "✅"
+RED_X = "❌"
+
 class CodeCase(models.Case):
     """TestCase for doctest-style Python tests."""
 
     code = core.String()
-
     def __init__(self, console, setup='', teardown='', **fields):
         """Constructor.
 
@@ -32,13 +34,8 @@ class CodeCase(models.Case):
         self.setup = setup
 
         # must reload for fpp problems
-        if self.setup and self.console.fpp: 
+        if self.setup and self.console.fpp:
             ass_name = self.setup.split()[2]
-            # makes the from  _ import * setup useless but I don't want to break other functionality by rewriting
-            # self.setup += f"\n      >>> import {ass_name}"
-            # self.setup += "\n      >>> from importlib import reload"
-            # self.setup += f"\n      >>> {ass_name} = reload({ass_name})"
-            # self.setup += f"\n      >>> from {ass_name} import *"
             self.setup = textwrap.dedent(self.setup)
             self.setup += f"\n>>> import {ass_name}"
             self.setup += "\n>>> from importlib import reload"
@@ -346,7 +343,7 @@ class Console(object):
             if not self.show_all_cases:
                 raise ConsoleException
             else:
-                print(f"Test Case {self.cases_total + 1} failed")
+                print(RED_X, f"Test Case {self.cases_total + 1} failed")
                 format.print_line('-')
 
                 print()
@@ -355,6 +352,8 @@ class Console(object):
         elif correct and '# Case' in code:
             self.cases_passed += 1
             self.cases_total += 1
+            print(CHECK_MARK, f"Test Case {self.cases_total} passed")
+            format.print_line('-')
 
     def _strip_prompt(self, line):
         if line.startswith(self.PS1):

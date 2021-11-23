@@ -53,8 +53,10 @@ ul.output {
 }
 
 ul.incorrect {
-    border: 1px solid red;
-    background-color: #ffefef;
+    /* border: 1px solid red;
+    background-color: #ffefef; */
+    border: 1px solid yellow;
+    background-color:#FFFF66;
 }
 
 ul.correct {
@@ -63,8 +65,10 @@ ul.correct {
 }
 
 li.incorrectIndent {
-    border: 1px solid red;
-    border-left: 10px solid red;
+    /* border: 1px solid red;
+    border-left: 10px solid red; */
+    border: 1px solid yellow;
+    background-color:#FFFF66;
 }
 
 li.correctIndent {
@@ -73,8 +77,11 @@ li.correctIndent {
 }
 
 li.incorrectPosition, .testcase.fail, .testcase.error {
-    background-color: #FFBABA;
+    /* background-color: #FFBABA;
     border:1px solid red;
+    */
+    border: 1px solid yellow;
+    background-color:#FFFF66;
 }
 
 li.correctPosition, .testcase.pass {

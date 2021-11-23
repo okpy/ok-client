@@ -38,7 +38,7 @@ def get_prob_names():
             cur_lines = f.readlines()
             for line in cur_lines:
                 cur_words = line.split()
-                if cur_words:
+                if 'def' in cur_words:
                     func_sig = cur_words[1]
                     names_to_paths[func_sig[:func_sig.index('(')]] = name[4:-3]
                     # names_to_paths[name[4:-3]] = func_sig[:func_sig.index('(')]
@@ -184,7 +184,7 @@ def grade_and_backup(problem_name):
     with open(FPP_OUTFILE, "r") as f:
         all_lines = f.readlines()
         # 8 assumes no docstring, this is a little sketch
-        feedback['doctest_logs'] = "".join([all_lines[1]] + all_lines[8:])
+        feedback['doctest_logs'] = "".join([all_lines[1]] + all_lines[9:])
     return feedback
 
 def open_browser():

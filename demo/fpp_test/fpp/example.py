@@ -1,3 +1,4 @@
+from ucb import debug 
 def example(arg1, arg2, arg3):
   """
   Return True iff all the args are truthy and False otherwise.
