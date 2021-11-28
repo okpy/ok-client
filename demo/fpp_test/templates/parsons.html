@@ -27,7 +27,7 @@
                     </div>
                     <div class="row float-right">
                         <div class="col-sm-12">
-                            <button id="move-on" type="button" class="btn btn-success"  style="display:none">View Instructor Solution</button>
+                            <!-- <button id="move-on" type="button" class="btn btn-success"  style="display:none">View Instructor Solution</button> -->
                             <button id="submit" type="button" class="btn btn-primary">Run Tests</button>
                             {% if not_first_prob %}
                             <button id="prev" type="button" class="btn btn-primary">Previous Problem</button>
@@ -147,6 +147,7 @@
             $("#test_description").hide();
             $("#errors").hide();
             var submittedCode = JSON.parse(getSolutionCode())['code'] + '\n'
+            console.log(getSolutionCode()['code_metadata']);
             var params = {
                 "problem_name": problemName,
                 "submitted_code": submittedCode,

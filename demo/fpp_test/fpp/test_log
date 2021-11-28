@@ -1,24 +1,17 @@
 ---------------------------------------------------------------------
-Doctests for all_true
+Doctests for return_three
 
->>> from fpp.all_true import *
->>> import fpp.all_true
+>>> from fpp.return_three import *
+>>> import fpp.return_three
 >>> from importlib import reload
->>> fpp.all_true = reload(fpp.all_true)
->>> from fpp.all_true import *
->>> all_true(0, 1, 2) # Case 1
-DEBUG: hi
-0
+>>> fpp.return_three = reload(fpp.return_three)
+>>> from fpp.return_three import *
+>>> return_three() # Case 1
+3
 ✅ Test Case 1 passed
 ---------------------------------------------------------------------
->>> all_true(1, 2, 3) # Case 2
-DEBUG: hi
+>>> return_three() # Case 2
 3
 ✅ Test Case 2 passed
----------------------------------------------------------------------
->>> all_true(True, 2, 3) # Case 3
-DEBUG: hi
-3
-✅ Test Case 3 passed
 ---------------------------------------------------------------------
 -- OK! --

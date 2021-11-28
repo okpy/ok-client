@@ -65,7 +65,7 @@
                                          {},
                                          parson.getLineById(student_code[i].id)));
     }
-
+    
     // This maps codeline strings to the index, at which starting from 0, we have last
     // found this codeline. This is used to find the best indices for each
     // codeline in the student's code for the LIS computation and, for example,

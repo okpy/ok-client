@@ -30,19 +30,20 @@ app = Flask(__name__, template_folder=f'{os.getcwd()}/templates', static_folder=
 
 gargs = [None]
 cache = {}
+utility_files = ["fpp/ucb.py"]
 # removing whitespace makes me look at all lines. i could read one line at a time until MAX_LINES but is this better?
 def get_prob_names():
     names_to_paths = OrderedDict()
     for name in glob.glob("fpp/*.py"):
-        with open(name, "r") as f:
-            cur_lines = f.readlines()
-            for line in cur_lines:
-                cur_words = line.split()
-                if 'def' in cur_words:
-                    func_sig = cur_words[1]
-                    names_to_paths[func_sig[:func_sig.index('(')]] = name[4:-3]
-                    # names_to_paths[name[4:-3]] = func_sig[:func_sig.index('(')]
-                    break
+        if name not in utility_files:
+            with open(name, "r") as f:
+                cur_lines = f.readlines()
+                for line in cur_lines:
+                    cur_words = line.split()
+                    if 'def' in cur_words:
+                        func_sig = cur_words[1]
+                        names_to_paths[func_sig[:func_sig.index('(')]] = name[4:-3]
+                        break
     return names_to_paths
 
 # problem_names = [name[4:-3] for name in glob.glob("fpp/*.py") if name[4:-3] != '__init__']
@@ -184,7 +185,7 @@ def grade_and_backup(problem_name):
     with open(FPP_OUTFILE, "r") as f:
         all_lines = f.readlines()
         # 8 assumes no docstring, this is a little sketch
-        feedback['doctest_logs'] = "".join([all_lines[1]] + all_lines[9:])
+        feedback['doctest_logs'] = "".join([all_lines[1]] + all_lines[8:])
     return feedback
 
 def open_browser():
