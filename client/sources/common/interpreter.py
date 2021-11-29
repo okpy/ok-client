@@ -2,7 +2,6 @@
 
 from client.sources.common import core
 from client.sources.common import models
-
 from client.utils import locking, format
 import re
 import textwrap
@@ -46,7 +45,6 @@ class CodeCase(models.Case):
     def post_instantiation(self):
         self.code = textwrap.dedent(self.code)
         self.setup = textwrap.dedent(self.setup)
-
         self.teardown = textwrap.dedent(self.teardown)
 
         self.lines = self.split_code(self.code, self.console.PS1, self.console.PS2)

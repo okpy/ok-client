@@ -189,9 +189,6 @@ def parse_input(command_input=None):
                         help="do not check for ok updates")
     server.add_argument('--update', action='store_true',
                         help="update ok and exit")
-    # option for opening in browser
-    server.add_argument('--browser', action='store_true',
-                        help="update ok and exit")
     server.add_argument('--fpp', action='store_true',
                         help="update ok and exit")                      
 
@@ -226,7 +223,7 @@ def main():
             access_token = auth.authenticate(args, force=True)
             print("Token: {}".format(access_token))
             exit(not access_token)  # exit with error if no access_token
-        
+
         # Instantiating assignment
         assign = assignment.load_assignment(args.config, args)
 

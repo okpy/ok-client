@@ -29,8 +29,6 @@ class PythonConsole(interpreter.Console):
         setup    -- str; raw setup code
         teardown -- str; raw teardown code
         """
-        # print("lines are ", code)
-        # print("setup in load", setup)
         super().load(code, setup, teardown)
         self._frame = self._original_frame.copy()
 
@@ -48,9 +46,8 @@ class PythonConsole(interpreter.Console):
         log_id = output.new_log()
         try:
             try:
-                # code = "with open('./fpp/all_true.py', 'r') as f:\n    print(f.read())" + "\n" + code
                 result = timer.timed(self.timeout, eval, (code, self._frame))
-            except SyntaxError as e:
+            except SyntaxError:
                 timer.timed(self.timeout, exec, (code, self._frame))
                 result = None
         except RuntimeError as e:
