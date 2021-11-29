@@ -14,10 +14,11 @@ import logging
 from client.api.assignment import load_assignment
 from client.cli.common import messages
 from datetime import datetime
-import importlib
 import logging
 from collections import OrderedDict
 import os
+
+from client.utils.output import DisableLog, DisableStdout
 
 PORT = 3000
 
@@ -28,7 +29,6 @@ read_semaphore = Semaphore(12)
 
 app = Flask(__name__, template_folder=f'{os.getcwd()}/templates', static_folder=f'{os.getcwd()}/static')
 
-gargs = [None]
 cache = {}
 # removing whitespace makes me look at all lines. i could read one line at a time until MAX_LINES but is this better?
 def get_prob_names():
@@ -140,6 +140,38 @@ def submit():
     # test_results['num_cases'] = len(problem_config['test_cases'])
     return jsonify({'test_results': test_results})
 
+@app.route('/analytics_event', methods=['POST'])
+def analytics_event():
+    """
+    {
+        problem_name: string,
+        event: 'start' | 'stop'
+    }
+    Triggered when user starts interacting with the problem and when they stop (e.g. switch tabs). 
+    This data can be used to get compute analytics about time spent on fpp.
+    """
+    e, problem_name = request.json['event'], request.json['problem_name']
+    msgs = messages.Messages()
+    args = cache['args']
+    args.question = [problem_name]
+    with DisableStdout():
+        assign = load_assignment(args.config, args)
+    if e == 'start':
+        msgs['action'] = 'start'
+    elif e == 'stop':
+        msgs['action'] = 'stop'
+
+    msgs['problem'] = problem_name
+    analytics_protocol = assign.protocol_map['analytics']
+    backup_protocol = assign.protocol_map['backup']
+    # with DisableStdout():
+    analytics_protocol.run(msgs)
+    backup_protocol.run(msgs)
+
+    msgs['timestamp'] = str(datetime.now())
+
+    return jsonify({})
+
 def write_fpp_prob_locally(prob_name, code):
     cur_line = -1
     fname = f'{FPP_FOLDER_PATH}/{names_to_paths[prob_name]}.py'
@@ -172,7 +204,7 @@ def grade_and_backup(problem_name):
 
     assign = load_assignment(args.config, args)
     msgs = messages.Messages()
-    for name, proto in assign.protocol_map.items():
+    for _, proto in assign.protocol_map.items():
         # log.info('Execute {}.run()'.format(name))
         proto.run(msgs)
     msgs['timestamp'] = str(datetime.now())

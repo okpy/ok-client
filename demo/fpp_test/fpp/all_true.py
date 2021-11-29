@@ -12,8 +12,6 @@ def all_true(arg1, arg2, arg3):
   """
   # Blanks like this can be filled in with any Python code
   bool = False
-  if debug("hi"):
-    num = 0
-  return arg1 and arg2 and arg3
+  num = 0
 
 

@@ -231,11 +231,32 @@
         console.log("blur")
         var end = new Date().getTime();
         millis_so_far += (start - end);
-        // what does blur actually do?
+        const data = {
+            'problem_name': problemName,
+            'event': 'stop'
+        };
+        fetch("/analytics_event", {
+            method: "POST", 
+            body: JSON.stringify(data),
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        });
     })
     $(window).on("focus", function () {
         console.log("focus")
         start = new Date().getTime();
+        const data = {
+            'problem_name': problemName,
+            'event': 'start'
+        };
+        fetch("/analytics_event", {
+            method: "POST", 
+            body: JSON.stringify(data),
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        });
     })
 
     var enableMoveOn = function() {
