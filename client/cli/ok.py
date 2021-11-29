@@ -50,7 +50,6 @@ from client.cli.common import messages
 from client.utils import auth
 from client.utils import output
 from client.utils import software_update
-from client.utils import browser_probs
 from client.utils import fpp
 from datetime import datetime
 import argparse
@@ -227,10 +226,6 @@ def main():
             access_token = auth.authenticate(args, force=True)
             print("Token: {}".format(access_token))
             exit(not access_token)  # exit with error if no access_token
-        
-        if args.browser:
-            browser_probs.open_in_browser(args)
-            exit(0)
         
         # Instantiating assignment
         assign = assignment.load_assignment(args.config, args)
