@@ -1,0 +1,17 @@
+---------------------------------------------------------------------
+Doctests for return_three
+
+>>> from fpp.return_three import *
+>>> import fpp.return_three
+>>> from importlib import reload
+>>> fpp.return_three = reload(fpp.return_three)
+>>> from fpp.return_three import *
+>>> return_three() # Case 1
+3
+✅ Test Case 1 passed
+---------------------------------------------------------------------
+>>> return_three() # Case 2
+3
+✅ Test Case 2 passed
+---------------------------------------------------------------------
+-- OK! --
