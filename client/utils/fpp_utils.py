@@ -98,29 +98,3 @@ def hash_to_problem(problem_hash):
     hash_dict[problem_to_hash(problem_name)] = problem_name
   return hash_dict[problem_hash]
 
-
-def most_recent_parsons(most_recent_code, code_lines):
-  recent_lines = most_recent_code.split('\n')[:-1]
-  og_lines = code_lines.split('\n')
-  given_regex = r'#(\d+)given\s*'
-  blank_regex = r'#blank([^#]*)'
-  original_regex = r'#!ORIGINAL(.*)'
-  # Remove "#_given" and #blank_ in code_lines so we can find
-  # each line from most_recent_code in code_lines
-  for i, og_line in enumerate(og_lines):
-    if re.search(given_regex, og_line):
-      og_lines[i] = re.sub(given_regex, '', og_line).rstrip()
-    if re.search(blank_regex, og_line):
-      og_lines[i] = re.sub(blank_regex, '', og_lines[i]).rstrip()
-  for i, recent_line in enumerate(recent_lines):
-    split_by_tabs = recent_line.split('  ')
-    num_tabs = len(split_by_tabs) - 1
-    if re.search(original_regex, recent_line):
-      original = re.findall(original_regex, recent_line)[0]
-      index_of = og_lines.index(re.sub(blank_regex, '', original).rstrip())
-      og_lines[index_of] = original
-    else:
-      index_of = og_lines.index(recent_line.lstrip())
-    og_lines[index_of] += " #" + str(num_tabs) + "given"
-    og_lines[i], og_lines[index_of] = og_lines[index_of], og_lines[i]
-  return '\n'.join(og_lines)

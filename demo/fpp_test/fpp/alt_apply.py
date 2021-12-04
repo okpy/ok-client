@@ -8,4 +8,5 @@ def alternate_apply(num, f_even_i, f_odd_i):
   >>> alternate_apply(5, sub_two, sub_two) # Case 2
   2
   """
+  print('Syntax Error')
 

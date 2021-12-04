@@ -1,0 +1,10 @@
+def alternate_apply(num, f_even_i, f_odd_i): #0given
+i = 0 #1given
+i = i + 1 #1given
+if !BLANK:             #1given #blank12
+num = !BLANK         #1given #blank
+return i #1given
+while !BLANK:  #1given #blank
+num = !BLANK
+else:
+print(!BLANK)

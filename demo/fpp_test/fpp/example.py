@@ -8,9 +8,5 @@ def example(arg1, arg2, arg3):
   >>> example(True, 2, 3) # Case 3
   3
   """
-  # Blanks like this can be filled in with any Python code
-  bool = False
-  num = 0
-  return arg1 and arg2 and arg3
-
+  print('Syntax Error')
 

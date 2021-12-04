@@ -45,7 +45,7 @@
             'question_type': question_type,
             'question_name': question_name,
             'event_type': event_type,
-            'current_state': current_state,
+            'current_state': current_state, 
             'log_level': log_level,
         }
         var sixty_sec = 1/24/60;
@@ -57,12 +57,12 @@
         {% if config['DEBUG'] %}
             console.log('Attempting to log: ' ,log_data);
         {% endif %}
-        $.ajax({
-            type: 'post',
-            data: log_data,
-            url: '/log_event/',
-            dataType: 'html',
-        })
+        // $.ajax({
+        //     type: 'post',
+        //     data: log_data,
+        //     url: '/log_event/',
+        //     dataType: 'html',
+        // })
     };
     var sleep = function(time) {
         return new Promise((resolve) => setTimeout(resolve, time*1000));

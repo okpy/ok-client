@@ -49,6 +49,8 @@ class GradingProtocol(models.Protocol):
 def grade(questions, messages, env=None, verbose=True, fpp=False):
     format.print_line('~')
     print('Running tests')
+    if fpp:
+        print('Press Ctrl + C to kill this process.')
     print()
     passed = 0
     failed = 0

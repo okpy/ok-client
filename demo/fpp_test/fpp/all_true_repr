@@ -1,0 +1,9 @@
+def all_true(arg1, arg2, arg3): #0given
+# Blanks like !BLANK can be filled in with any Python code                                          #1given #blankbe
+bool = False #1given
+num = 0 #1given
+return num and bool #1given
+return !BLANK
+print(!BLANK)
+if !BLANK:
+return !BLANK

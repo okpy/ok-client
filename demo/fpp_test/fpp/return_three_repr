@@ -1,0 +1,13 @@
+def return_three(): #0given
+# You can insert tabbed lines as well (necessary to Python) #1given
+# Solve this question by dragging the necessary blocks from the left to here #1given
+x = 6 #1given
+return x // 2 #1given
+x = x
+print(!BLANK)
+print(!BLANK)
+# !BLANK
+# !BLANK
+# !BLANK
+print(!BLANK)
+print(!BLANK)

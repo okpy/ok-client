@@ -12,6 +12,7 @@ code_lines: |
   def return_three():#0given
   # You can insert tabbed lines as well (necessary to Python)#1given
   # Solve this question by dragging the necessary blocks from the left to here#1given
+  print(!BLANK)#1given #blank10
   x = 6
   return x // 2
   x = x

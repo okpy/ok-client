@@ -219,6 +219,7 @@ def main():
 
     force_authenticate = args.authenticate
     retry = True
+    assign = None
     try:
         if args.get_token:
             if args.nointeract:
@@ -232,15 +233,13 @@ def main():
             browser_probs.open_in_browser(args)
             exit(0)
         
-        # Instantiating assignment
-        assign = assignment.load_assignment(args.config, args)
-
         if args.fpp:
-            if not assign.authenticate():
+            if not auth.authenticate(args):
                 exit(1)
             fpp.open_in_browser(args)
             exit(0)
-
+        # Instantiating assignment
+        assign = assignment.load_assignment(args.config, args)
         if assign.decryption_keypage:
             # do not allow running locally if decryption keypage is provided
             args.local = False
