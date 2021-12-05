@@ -21,6 +21,8 @@ display-timedelta==1.1
 filelock==3.0.12
 ## Parsons
 pyyaml==6.0
+# Lark (BNF)
+lark==0.12.0
 
 # Tests
 nose==1.3.3

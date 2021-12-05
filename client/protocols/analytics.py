@@ -47,6 +47,9 @@ class AnalyticsProtocol(models.Protocol):
                 statistics['requested-suite'] = self.args.suite
             if self.args.case:
                 statistics['requested-case'] = self.args.case
+        
+        if self.args.fpp:
+            statistics['action'] = messages.get('action', '')
 
         messages['analytics'] = statistics
         self.log_run(messages)

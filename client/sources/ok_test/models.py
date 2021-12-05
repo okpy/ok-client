@@ -46,7 +46,7 @@ class OkTest(models.Test):
             self.suites[i] = self.suite_map[suite['type']](
                     self, self.verbose, self.interactive, self.timeout, **suite)
 
-    def run(self, env):
+    def run(self, env, fpp=False):
         """Runs the suites associated with this OK test.
 
         NOTE: env is intended only for use with the programmatic API to support

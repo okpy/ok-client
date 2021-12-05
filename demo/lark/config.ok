@@ -1,21 +1,17 @@
 {
     "name": "Homework 1",
-    "endpoint": "ok/test/su16/ex",
+    "endpoint": "https://okpy.org/path/to/endpoint",
     "src": [
-        "hw1.py"
+        "hw1.lark"
     ],
     "tests": {
         "tests/[!_]*.py": "ok_test"
     },
-    "default_tests": [
-        "q2"
-    ],
     "protocols": [
         "file_contents",
         "unlock",
         "grading",
         "scoring",
-        "analytics",
-        "backup"
+        "analytics"
     ]
 }

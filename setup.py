@@ -51,5 +51,6 @@ setup(
         'colorama==0.4.3',
         'display-timedelta==1.1',
         'filelock==3.0.12',
+        'lark==0.12.0',
     ],
 )

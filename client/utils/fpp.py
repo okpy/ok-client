@@ -16,21 +16,23 @@ import logging
 from client.api.assignment import load_assignment
 from client.cli.common import messages
 from datetime import datetime
-import importlib
 import logging
 from collections import OrderedDict
 import os
 
+from client.utils.output import DisableLog, DisableStdout
+
 PORT = 3000
 
 FPP_OUTFILE = f"{FPP_FOLDER_PATH}/test_log"
+FRONTEND_PATH = "fpp/faded-parsons-frontend/app"
 utility_files = ["fpp/ucb.py"]
 log = logging.getLogger('client')   # Get top-level logger
 
 # done in Nate's init
 read_semaphore = Semaphore(12)
 
-app = Flask(__name__, template_folder=f'{os.getcwd()}/templates', static_folder=f'{os.getcwd()}/static')
+app = Flask(__name__, template_folder=f'{os.getcwd()}/{FRONTEND_PATH}/templates', static_folder=f'{os.getcwd()}/{FRONTEND_PATH}/static')
 
 cache = {}
 # create map from problem names to file paths
@@ -57,7 +59,7 @@ def code_skeleton(problem_name):
 
 @app.route('/')
 def index():
-    return render_template('index.html')  
+    return render_template('index.html')
 
 @app.route('/code_arrangement/<path:problem_name>')
 def parsons(problem_name, code_skeleton=False):
@@ -116,11 +118,43 @@ def submit():
     problem_name = request.form['problem_name']
     submitted_code = request.form['submitted_code']
     parsons_repr_code = request.form['parsons_repr_code']
-    write_fpp_prob_locally(problem_name, submitted_code, parsons_repr_code)
+    write_fpp_prob_locally(problem_name, submitted_code, parsons_repr_code, True)
     test_results = grade_and_backup(problem_name)
     return jsonify({'test_results': test_results})
 
-def write_fpp_prob_locally(prob_name, code, parsons_repr_code, write_repr_code=True):
+@app.route('/analytics_event', methods=['POST'])
+def analytics_event():
+    """
+    {
+        problem_name: string,
+        event: 'start' | 'stop'
+    }
+    Triggered when user starts interacting with the problem and when they stop (e.g. switch tabs). 
+    This data can be used to get compute analytics about time spent on fpp.
+    """
+    e, problem_name = request.json['event'], request.json['problem_name']
+    msgs = messages.Messages()
+    args = cache['args']
+    args.question = [problem_name]
+    with DisableStdout():
+        assign = load_assignment(args.config, args)
+    if e == 'start':
+        msgs['action'] = 'start'
+    elif e == 'stop':
+        msgs['action'] = 'stop'
+
+    msgs['problem'] = problem_name
+    analytics_protocol = assign.protocol_map['analytics']
+    backup_protocol = assign.protocol_map['backup']
+    # with DisableStdout():
+    analytics_protocol.run(msgs)
+    backup_protocol.run(msgs)
+
+    msgs['timestamp'] = str(datetime.now())
+
+    return jsonify({})
+
+def write_fpp_prob_locally(prob_name, code, parsons_repr_code, write_repr_code):
     cur_line = -1
     in_docstring = False
     fname = f'{FPP_FOLDER_PATH}/{names_to_paths[prob_name]}.py'

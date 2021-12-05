@@ -13,7 +13,6 @@ test = {
             'Domain is strings. Range is strings'
           ],
           'hidden': False,
-          'multiline': False,
           'question': 'What is the domain and range of the square function?'
         }
       ],
@@ -29,8 +28,7 @@ test = {
           >>> square(5)
           25
           """,
-          'hidden': False,
-          'multiline': False
+          'hidden': False
         },
         {
           'code': r"""
@@ -38,8 +36,7 @@ test = {
           16
           None
           """,
-          'hidden': False,
-          'multiline': False
+          'hidden': False
         }
       ],
       'scored': False,
@@ -52,8 +49,7 @@ test = {
           >>> square(3)
           9
           """,
-          'hidden': False,
-          'multiline': False
+          'hidden': False
         },
         {
           'code': r"""
@@ -61,8 +57,7 @@ test = {
           4
           # explanation: Squaring a negative number
           """,
-          'hidden': True,
-          'multiline': False
+          'hidden': True
         },
         {
           'code': r"""
@@ -70,8 +65,7 @@ test = {
           0
           # explanation: Squaring zero
           """,
-          'hidden': True,
-          'multiline': False
+          'hidden': True
         },
         {
           'code': r"""
@@ -82,8 +76,7 @@ test = {
             ...
           ZeroDivisionError: division by zero
           """,
-          'hidden': True,
-          'multiline': False
+          'hidden': True
         }
       ],
       'scored': True,

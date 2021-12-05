@@ -50,7 +50,6 @@ from client.cli.common import messages
 from client.utils import auth
 from client.utils import output
 from client.utils import software_update
-from client.utils import browser_probs
 from client.utils import fpp
 from datetime import datetime
 import argparse
@@ -190,9 +189,6 @@ def parse_input(command_input=None):
                         help="do not check for ok updates")
     server.add_argument('--update', action='store_true',
                         help="update ok and exit")
-    # option for opening in browser
-    server.add_argument('--browser', action='store_true',
-                        help="update ok and exit")
     server.add_argument('--fpp', action='store_true',
                         help="update ok and exit")                      
 
@@ -229,9 +225,9 @@ def main():
             print("Token: {}".format(access_token))
             exit(not access_token)  # exit with error if no access_token
         
-        if args.browser:
-            browser_probs.open_in_browser(args)
-            exit(0)
+        # if args.browser:
+        #     browser_probs.open_in_browser(args)
+        #     exit(0)
         
         if args.fpp:
             if not auth.authenticate(args):

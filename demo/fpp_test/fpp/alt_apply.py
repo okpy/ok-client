@@ -10,3 +10,4 @@ def alternate_apply(num, f_even_i, f_odd_i):
   """
   print('Syntax Error')
 
+
