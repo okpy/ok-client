@@ -19,14 +19,18 @@ from datetime import datetime
 import logging
 from collections import OrderedDict
 import os
-
+import json
 from client.utils.output import DisableLog, DisableStdout
 
 PORT = 3000
 
 FPP_OUTFILE = f"{FPP_FOLDER_PATH}/test_log"
+FPP_CORRECTNESS = f"{FPP_FOLDER_PATH}/correctness"
 FRONTEND_PATH = "fpp/faded-parsons-frontend/app"
 utility_files = ["fpp/ucb.py"]
+
+CHECK_MARK = "✅"
+RED_X = "❌"
 log = logging.getLogger('client')   # Get top-level logger
 
 # done in Nate's init
@@ -35,6 +39,7 @@ read_semaphore = Semaphore(12)
 app = Flask(__name__, template_folder=f'{os.getcwd()}/{FRONTEND_PATH}/templates', static_folder=f'{os.getcwd()}/{FRONTEND_PATH}/static')
 
 cache = {}
+probs_correct = {}
 # create map from problem names to file paths
 # assumes problems are a
 def get_prob_names():
@@ -108,10 +113,18 @@ def prev_problem(problem_name):
     new_prob_name = list(names_to_paths.keys())[list(names_to_paths.keys()).index(problem_name) - 1]
     return redirect(url_for('code_skeleton', problem_name=new_prob_name))
 
+# also runs problems so students can verify correctness
 @app.route('/get_problems/', methods=['GET'])
 def get_problems():
+    try:
+        with open(FPP_CORRECTNESS, "r") as f:
+            probs_correct = json.loads(f.read())
+    except OSError:
+        probs_correct = {pname : False for pname in names_to_paths}
+        with open(FPP_CORRECTNESS, "w") as f:
+            f.write(json.dumps(probs_correct))
     problem_paths = [f'/code_skeleton/{key}' for key in names_to_paths]
-    return { 'names': list(names_to_paths.values()), 'paths': problem_paths}
+    return { 'names': [f'{pname} {CHECK_MARK if probs_correct[pname] else RED_X}' for pname in names_to_paths], 'paths': problem_paths}
 
 @app.route('/submit/', methods=['POST'])
 def submit():
@@ -186,6 +199,17 @@ def write_fpp_prob_locally(prob_name, code, parsons_repr_code, write_repr_code):
         with open(repr_fname, "w") as f:
             f.write(parsons_repr_code)
 
+def store_correctness(prob_name, is_correct):
+    try:
+        with open(FPP_CORRECTNESS, "r") as f:
+            probs_correct = json.loads(f.read())
+    except OSError:
+        probs_correct = {pname : False for pname in names_to_paths}
+    probs_correct[prob_name] = is_correct
+
+    with open(FPP_CORRECTNESS, "w") as f:
+        f.write(json.dumps(probs_correct))
+        
 def grade_and_backup(problem_name):
     args = cache['args']
     args.question = [problem_name]
@@ -209,19 +233,22 @@ def grade_and_backup(problem_name):
             num_retries -= 1
     assert num_retries > 0, "Rewriting '' to fpp files failed"
     
-    if assign:
-        for name, proto in assign.protocol_map.items():
-            log.info('Execute {}.run()'.format(name))
-            proto.run(msgs)
-        msgs['timestamp'] = str(datetime.now())
-        feedback = {}
-        feedback['passed'] = assign.specified_tests[0].console.cases_passed
-        feedback['failed'] = assign.specified_tests[0].console.cases_total - feedback['passed']
+    for name, proto in assign.protocol_map.items():
+        log.info('Execute {}.run()'.format(name))
+        proto.run(msgs)
+    msgs['timestamp'] = str(datetime.now())
+    feedback = {}
+    feedback['passed'] = assign.specified_tests[0].console.cases_passed
+    feedback['failed'] = assign.specified_tests[0].console.cases_total - feedback['passed']
 
+    # get output from doctests
     with open(FPP_OUTFILE, "r") as f:
         all_lines = f.readlines()
         # 8 assumes no docstring, this is a little sketch
         feedback['doctest_logs'] = "".join([all_lines[1]] + all_lines[8:])
+    
+    # store correctness
+    store_correctness(problem_name, feedback['passed'] > 1 and feedback['failed'] == 0)
     return feedback
 
 def path_to_name(path):
