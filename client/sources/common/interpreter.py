@@ -2,15 +2,17 @@
 
 from client.sources.common import core
 from client.sources.common import models
-from client.utils import locking
+from client.utils import locking, format
 import re
 import textwrap
+
+CHECK_MARK = "✅"
+RED_X = "❌"
 
 class CodeCase(models.Case):
     """TestCase for doctest-style Python tests."""
 
     code = core.String()
-
     def __init__(self, console, setup='', teardown='', **fields):
         """Constructor.
 
@@ -180,6 +182,7 @@ class CodeCase(models.Case):
 class Console(object):
     PS1 = '> '
     PS2 = '. '
+    CASE_PREFIX = '# .Case'
 
     _output_fn = repr
 
@@ -194,6 +197,10 @@ class Console(object):
         self.skip_locked_cases = True
         self.load('')   # Initialize empty code.
 
+        self.cases_passed = 0
+        self.cases_total = 0
+        self.show_all_cases = False
+
     def load(self, code, setup='', teardown=''):
         """Prepares a set of setup, test, and teardown code to be
         run in the console.
@@ -207,6 +214,9 @@ class Console(object):
         self._setup = textwrap.dedent(setup).splitlines()
         self._code = code
         self._teardown = textwrap.dedent(teardown).splitlines()
+
+        self.cases_passed = 0
+        self.cases_total = 0
 
     def interpret(self):
         """Interprets the console on the loaded code.
@@ -279,7 +289,10 @@ class Console(object):
                 except ConsoleException:
                     return False
                 current = []
-        return True
+        if self.show_all_cases:
+            return self.cases_passed == self.cases_total
+        else:
+            return True
 
     def _compare(self, expected, code):
         try:
@@ -317,7 +330,18 @@ class Console(object):
             print('# but got')
             print('\n'.join('#     {}'.format(line)
                             for line in actual.output_lines()))
-            raise ConsoleException
+            if not self.show_all_cases:
+                raise ConsoleException
+            elif self.CASE_PREFIX in code:
+                self.cases_total += 1
+                print(RED_X, f"Test Case {self.cases_total} failed")
+                format.print_line('-')
+                print()
+        elif correct and self.CASE_PREFIX in code:
+            self.cases_passed += 1
+            self.cases_total += 1
+            print(CHECK_MARK, f"Test Case {self.cases_total} passed")
+            format.print_line('-')
 
     def _strip_prompt(self, line):
         if line.startswith(self.PS1):

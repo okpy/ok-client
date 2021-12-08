@@ -43,6 +43,8 @@ class Doctest(models.Test):
         leading_space = ''
         for line in self.docstring.split('\n'):
             prompt_match = self.prompt_re.match(line)
+            if interpreter.Console.CASE_PREFIX in line.strip():
+                self.console.show_all_cases = True
             if prompt_match:
                 if prompt_on and not line.startswith(leading_space):
                     raise ex.SerializeException('Inconsistent tabs for doctest')
