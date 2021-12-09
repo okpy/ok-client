@@ -23,7 +23,7 @@ class Doctest(models.Test):
     SETUP = PS1 + IMPORT_STRING
     prompt_re = re.compile(r'(\s*)({}|{})'.format(PS1, '\.\.\. '))
 
-    def __init__(self, file, verbose, interactive, timeout=None, ignore_empty=False, **fields):
+    def __init__(self, file, verbose, interactive, timeout=None, ignore_empty=False, fpp=False, **fields):
         super().__init__(**fields)
         self.file = file
         self.verbose = verbose
@@ -32,7 +32,7 @@ class Doctest(models.Test):
         self.ignore_empty = ignore_empty
 
         self.console = pyconsole.PythonConsole(self.verbose, self.interactive,
-                                                  self.timeout)
+                                                  self.timeout, fpp)
 
     def post_instantiation(self):
         # TODO(albert): rewrite test validation. Inconsistent leading space is

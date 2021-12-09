@@ -91,6 +91,7 @@ def parse_input(command_input=None):
                         help="unlock tests interactively")
     testing.add_argument('-i', '--interactive', action='store_true',
                         help="start the Python interpreter after a failed test")
+    # show all doctests but only up to the first failing line in each doctest
     testing.add_argument('-v', '--verbose', action='store_true',
                         help="show all tests, not just passing tests")
     testing.add_argument('-t', '--testing', nargs='?', type=str, const='mytests.rst',
@@ -188,7 +189,9 @@ def parse_input(command_input=None):
                         help="do not check for ok updates")
     server.add_argument('--update', action='store_true',
                         help="update ok and exit")
-
+    # used in faded-parsons-frontend repo
+    server.add_argument('--fpp', action='store_true',
+                        help="update ok and exit")      
     return parser.parse_args(command_input)
 
 def main():

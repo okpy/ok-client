@@ -33,6 +33,15 @@ class CodeCase(models.Case):
         self.setup = setup
         self.teardown = teardown
 
+        # must reload for fpp problems
+        if self.setup and self.console.fpp:
+            ass_name = self.setup.split()[2]
+            self.setup = textwrap.dedent(self.setup)
+            self.setup += f"\n>>> import {ass_name}"
+            self.setup += "\n>>> from importlib import reload"
+            self.setup += f"\n>>> {ass_name} = reload({ass_name})"
+            self.setup += f"\n>>> from {ass_name} import *"
+
     def post_instantiation(self):
         self.code = textwrap.dedent(self.code)
         self.setup = textwrap.dedent(self.setup)
@@ -190,10 +199,11 @@ class Console(object):
     # Public interface #
     ####################
 
-    def __init__(self, verbose, interactive, timeout=None):
+    def __init__(self, verbose, interactive, timeout=None, fpp=False):
         self.verbose = verbose
         self.interactive = interactive
         self.timeout = timeout
+        self.fpp = fpp
         self.skip_locked_cases = True
         self.load('')   # Initialize empty code.
 
@@ -266,7 +276,7 @@ class Console(object):
         bool; True if successful, False otherwise.
         """
         current = []
-        for line in lines + ['']:
+        for i, line in enumerate(lines + ['']):
             if isinstance(line, str):
                 if current and (line.startswith(self.PS1) or not line):
                     # Previous prompt ends when PS1 or a blank line occurs
@@ -278,7 +288,8 @@ class Console(object):
                     except ConsoleException:
                         return False
                     current = []
-                if line:
+                # avoid printing reload import sequence
+                if line and (compare_all or (self.fpp and i > 4)):
                     print(line)
                 line = self._strip_prompt(line)
                 current.append(line)
