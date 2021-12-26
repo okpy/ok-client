@@ -430,8 +430,6 @@ class Assignment(core.Serializable):
         """
         if not self.parsons:
             return
-        import sys
-        # print("parsons looks like", self.parsons, file=sys.stderr)
         log.info('Loading parsons problems')
         for prob_group_name, v in self.parsons.items():
             if 'required' not in v or 'optional' not in v:
