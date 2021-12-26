@@ -72,6 +72,8 @@ class Assignment(core.Serializable):
     default_tests = core.List(type=str, optional=True)
     # ignored, for backwards-compatibility only
     protocols = core.List(type=str, optional=True)
+    parsons = core.Dict(keys=str, values=dict, optional=True) 
+
 
     ####################
     # Programmatic API #
@@ -282,6 +284,7 @@ class Assignment(core.Serializable):
         self._load_protocols()
         self.specified_tests = self._resolve_specified_tests(
             self.cmd_args.question, self.cmd_args.all)
+        self._load_parsons()
 
     def set_args(self, **kwargs):
         """Set command-line arguments programmatically. For example:
@@ -420,6 +423,27 @@ class Assignment(core.Serializable):
             module = importlib.import_module(self._PROTOCOL_PACKAGE + '.' + proto)
             self.protocol_map[proto] = module.protocol(self.cmd_args, self)
             log.info('Loaded protocol "{}"'.format(proto))
+
+    def _load_parsons(self):
+        """Verifies that all desired parsons problems exist and that the 
+        structure of parsons is proper.
+        """
+        if not self.parsons:
+            return
+        import sys
+        # print("parsons looks like", self.parsons, file=sys.stderr)
+        log.info('Loading parsons problems')
+        for prob_group_name, v in self.parsons.items():
+            if 'required' not in v or 'optional' not in v:
+                error_message = "Required or optional key not found in parsons problem group"
+                raise ex.LoadingException(error_message)
+            if not isinstance(v['required'], list) or not isinstance(v['optional'], list):
+                error_message = "Required or optional value from parsons problem group must be a list" 
+                raise ex.LoadingException(error_message)
+            for req_prob in (v['required'] + v['optional']):
+                if req_prob not in self.test_map:
+                    error_message = f"Problem name '{req_prob}' in parsons group '{prob_group_name}' is invalid" 
+                    raise ex.LoadingException(error_message)
 
     def _print_header(self):
         if getattr(self.cmd_args, 'autobackup_actual_run_sync', False):
