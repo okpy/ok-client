@@ -72,7 +72,7 @@ class Assignment(core.Serializable):
     default_tests = core.List(type=str, optional=True)
     # ignored, for backwards-compatibility only
     protocols = core.List(type=str, optional=True)
-    parsons = core.Dict(keys=str, values=dict, optional=True) 
+    parsons = core.Dict(keys=str, values=dict, optional=True)
 
 
     ####################
@@ -428,7 +428,7 @@ class Assignment(core.Serializable):
         """Verifies that all desired parsons problems exist and that the 
         structure of parsons is proper.
         """
-        if not self.parsons:
+        if self.parsons is core.NoValue:
             return
         log.info('Loading parsons problems')
         for prob_group_name, v in self.parsons.items():
