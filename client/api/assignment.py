@@ -432,15 +432,17 @@ class Assignment(core.Serializable):
             return
         log.info('Loading parsons problems')
         for prob_group_name, v in self.parsons.items():
-            if 'required' not in v or 'optional' not in v:
-                error_message = "Required or optional key not found in parsons problem group"
+            req_probs = v.get('required', []) 
+            opt_probs = v.get('optional', []) 
+            if 'required' not in v and 'optional' not in v:
+                error_message = "At least one of required key or optional key must be in parsons problem group"
                 raise ex.LoadingException(error_message)
-            if not isinstance(v['required'], list) or not isinstance(v['optional'], list):
-                error_message = "Required or optional value from parsons problem group must be a list" 
+            if not isinstance(req_probs, list) or not isinstance(opt_probs, list): 
+                error_message = "Required or Optional value from parsons problem group must be a list" 
                 raise ex.LoadingException(error_message)
-            for req_prob in (v['required'] + v['optional']):
-                if req_prob not in self.test_map:
-                    error_message = f"Problem name '{req_prob}' in parsons group '{prob_group_name}' is invalid" 
+            for prob in (req_probs + opt_probs):
+                if prob not in self.test_map:
+                    error_message = f"Problem name '{prob}' in parsons group '{prob_group_name}' is invalid" 
                     raise ex.LoadingException(error_message)
 
     def _print_header(self):
