@@ -191,7 +191,7 @@ def parse_input(command_input=None):
                         help="update ok and exit")
     # used in faded-parsons-frontend repo
     server.add_argument('--fpp', action='store_true', 
-                        help="run faded parsons style probs in browser")  
+                        help="run faded parsons problems in browser")  
     return parser.parse_args(command_input)
 
 def main():

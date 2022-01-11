@@ -289,7 +289,7 @@ class Console(object):
                         return False
                     current = []
                 # avoid printing reload import sequence
-                if line and (compare_all or (self.fpp and i > 4)):
+                if line and (self.fpp and i > 4):
                     print(line)
                 line = self._strip_prompt(line)
                 current.append(line)
@@ -353,6 +353,7 @@ class Console(object):
             self.cases_total += 1
             print(CHECK_MARK, f"Test Case {self.cases_total} passed")
             format.print_line('-')
+            print()
 
     def _strip_prompt(self, line):
         if line.startswith(self.PS1):

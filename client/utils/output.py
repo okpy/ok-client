@@ -97,6 +97,7 @@ class DisableLog:
         if self.re_enable:
             on()
 
+# used in faded-parsons repo
 class DisableStdout:
     stdout_ref = None
     null_file = None
@@ -110,5 +111,4 @@ class DisableStdout:
         return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):
-        # sys.stdout.close()
         sys.stdout = DisableStdout.stdout_ref
