@@ -235,7 +235,7 @@ class Console(object):
         RETURNS:
         bool; True if the code passes, False otherwise.
         """
-        if not self._interpret_lines(self._setup, should_print=False):
+        if not self._interpret_lines(self._setup, should_print=not self.fpp):
             return False
 
         success = self._interpret_lines(self._code, compare_all=True)
@@ -289,7 +289,7 @@ class Console(object):
                     except ConsoleException:
                         return False
                     current = []
-                if line and (not self.fpp or should_print):
+                if line and should_print:
                     print(line)
                 line = self._strip_prompt(line)
                 current.append(line)
