@@ -13,6 +13,7 @@ class CodeCase(models.Case):
     """TestCase for doctest-style Python tests."""
 
     code = core.String()
+
     def __init__(self, console, setup='', teardown='', **fields):
         """Constructor.
 
@@ -35,12 +36,12 @@ class CodeCase(models.Case):
 
         # must reload for fpp problems
         if self.setup and self.console.fpp:
-            ass_name = self.setup.split()[2]
+            assignment_name = self.setup.split()[2]
             self.setup = textwrap.dedent(self.setup)
-            self.setup += f"\n>>> import {ass_name}"
+            self.setup += f"\n>>> import {assignment_name}"
             self.setup += "\n>>> from importlib import reload"
-            self.setup += f"\n>>> {ass_name} = reload({ass_name})"
-            self.setup += f"\n>>> from {ass_name} import *"
+            self.setup += f"\n>>> {assignment_name} = reload({assignment_name})"
+            self.setup += f"\n>>> from {assignment_name} import *"
 
     def post_instantiation(self):
         self.code = textwrap.dedent(self.code)
@@ -234,7 +235,7 @@ class Console(object):
         RETURNS:
         bool; True if the code passes, False otherwise.
         """
-        if not self._interpret_lines(self._setup):
+        if not self._interpret_lines(self._setup, should_print=False):
             return False
 
         success = self._interpret_lines(self._code, compare_all=True)
@@ -264,7 +265,7 @@ class Console(object):
     # Interpretation utilities #
     ############################
 
-    def _interpret_lines(self, lines, compare_all=False):
+    def _interpret_lines(self, lines, compare_all=False, should_print=True):
         """Interprets the set of lines.
 
         PARAMTERS:
@@ -288,8 +289,7 @@ class Console(object):
                     except ConsoleException:
                         return False
                     current = []
-                # avoid printing reload import sequence
-                if line and (self.fpp and i > 4):
+                if line and should_print:
                     print(line)
                 line = self._strip_prompt(line)
                 current.append(line)

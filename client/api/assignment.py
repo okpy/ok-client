@@ -441,7 +441,7 @@ class Assignment(core.Serializable):
                 raise ex.LoadingException(error_message)
             for prob in (req_probs + opt_probs):
                 if prob not in self.test_map:
-                    error_message = f'Problem name "{prob}" in the parsons group "{prob_group_name}" is invalid' 
+                    error_message = f'Problem name "{prob}" in the fpp problem group "{prob_group_name}" is invalid' 
                     raise ex.LoadingException(error_message)
 
     def _print_header(self):
