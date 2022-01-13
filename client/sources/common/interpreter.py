@@ -289,7 +289,7 @@ class Console(object):
                     except ConsoleException:
                         return False
                     current = []
-                if line and should_print:
+                if line and (not self.fpp or should_print):
                     print(line)
                 line = self._strip_prompt(line)
                 current.append(line)
