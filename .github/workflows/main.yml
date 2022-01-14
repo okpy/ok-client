@@ -19,9 +19,6 @@ jobs:
           Python 3.6 (Windows),
           Python 3.6 (Macintosh),
           Python 3.6 (Ubuntu),
-          Python 3.5 (Windows),
-          Python 3.5 (Macintosh),
-          Python 3.5 (Ubuntu),
         ]
         include:
           - name: Python 3.8 (Windows)
@@ -46,20 +43,11 @@ jobs:
             os: windows-latest
             python-version: 3.6
           - name: Python 3.6 (Macintosh)
-            os: macos-latest
+            os: macOS-10.15
             python-version: 3.6
           - name: Python 3.6 (Ubuntu)
             os: ubuntu-latest
             python-version: 3.6
-          - name: Python 3.5 (Windows)
-            os: windows-latest
-            python-version: 3.5
-          - name: Python 3.5 (Macintosh)
-            os: macos-latest
-            python-version: 3.5
-          - name: Python 3.5 (Ubuntu)
-            os: ubuntu-latest
-            python-version: 3.5
     env:
       VENV_DIR: env
     steps:
