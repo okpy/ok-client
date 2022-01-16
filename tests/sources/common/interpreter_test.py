@@ -10,7 +10,7 @@ class CodeCaseTest(unittest.TestCase):
         self.console.PS1 = '> '
         self.console.PS2 = '. '
         self.console.normalize = lambda x: x
-        self.console.fpp = False
+        self.console.parsons = False
 
     def makeCase(self, code, setup='', teardown=''):
         return interpreter.CodeCase(self.console, setup, teardown, code=code)

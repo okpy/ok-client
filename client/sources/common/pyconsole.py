@@ -15,9 +15,9 @@ class PythonConsole(interpreter.Console):
     PS1 = '>>> '
     PS2 = '... '
 
-    def __init__(self, verbose, interactive, timeout=None, fpp=False):
+    def __init__(self, verbose, interactive, timeout=None, parsons=False):
         self._original_frame = {}
-        super().__init__(verbose, interactive, timeout, fpp)
+        super().__init__(verbose, interactive, timeout, parsons)
 
     def load(self, code, setup='', teardown=''):
         """Prepares a set of setup, test, and teardown code to be

@@ -34,8 +34,8 @@ class CodeCase(models.Case):
         self.setup = setup
         self.teardown = teardown
 
-        # must reload for fpp problems
-        if self.setup and self.console.fpp:
+        # must reload for parsons problems
+        if self.setup and self.console.parsons:
             assignment_name = self.setup.split()[2]
             self.setup = textwrap.dedent(self.setup)
             self.setup += f"\n>>> import {assignment_name}"
@@ -200,11 +200,11 @@ class Console(object):
     # Public interface #
     ####################
 
-    def __init__(self, verbose, interactive, timeout=None, fpp=False):
+    def __init__(self, verbose, interactive, timeout=None, parsons=False):
         self.verbose = verbose
         self.interactive = interactive
         self.timeout = timeout
-        self.fpp = fpp
+        self.parsons = parsons
         self.skip_locked_cases = True
         self.load('')   # Initialize empty code.
 
@@ -235,7 +235,7 @@ class Console(object):
         RETURNS:
         bool; True if the code passes, False otherwise.
         """
-        if not self._interpret_lines(self._setup, should_print=not self.fpp):
+        if not self._interpret_lines(self._setup, should_print=not self.parsons):
             return False
 
         success = self._interpret_lines(self._code, compare_all=True)

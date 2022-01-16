@@ -72,7 +72,7 @@ class Assignment(core.Serializable):
     default_tests = core.List(type=str, optional=True)
     # ignored, for backwards-compatibility only
     protocols = core.List(type=str, optional=True)
-    fpp = core.Dict(keys=str, values=dict, optional=True)
+    parsons = core.Dict(keys=str, values=dict, optional=True)
 
     ####################
     # Programmatic API #
@@ -427,21 +427,21 @@ class Assignment(core.Serializable):
         """Verifies that all desired parsons problems exist and that the 
         structure of parsons is proper.
         """
-        if self.fpp is core.NoValue:
+        if self.parsons is core.NoValue:
             return
         log.info('Loading parsons problems')
-        for prob_group_name, v in self.fpp.items():
+        for prob_group_name, v in self.parsons.items():
             req_probs = v.get('required', []) 
             opt_probs = v.get('optional', []) 
             if 'required' not in v and 'optional' not in v:
-                error_message = 'Need a "required" and/or "optional" key in an fpp config object'
+                error_message = 'Need a "required" and/or "optional" key in a parsons config object'
                 raise ex.LoadingException(error_message)
             if not isinstance(req_probs, list) or not isinstance(opt_probs, list): 
-                error_message = 'The "required" and "optional" keys, if included in an fpp config object, must be lists'
+                error_message = 'The "required" and "optional" keys, if included in a parsons config object, must be lists'
                 raise ex.LoadingException(error_message)
             for prob in (req_probs + opt_probs):
                 if prob not in self.test_map:
-                    error_message = f'Problem name "{prob}" in the fpp problem group "{prob_group_name}" is invalid' 
+                    error_message = f'Problem name "{prob}" in the parsons problem group "{prob_group_name}" is invalid' 
                     raise ex.LoadingException(error_message)
 
     def _print_header(self):

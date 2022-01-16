@@ -74,7 +74,7 @@ def _load_test(file, module, name, assign):
     docstring = func.__doc__ if func.__doc__ else ''
     try:
         return models.Doctest(file, assign.cmd_args.verbose, assign.cmd_args.interactive,
-                              assign.cmd_args.timeout, assign.cmd_args.ignore_empty, assign.cmd_args.fpp,
+                              assign.cmd_args.timeout, assign.cmd_args.ignore_empty, assign.cmd_args.parsons,
                               name=name, points=1, docstring=docstring)
     except ex.SerializeException:
         raise ex.LoadingException('Unable to load doctest for {} '

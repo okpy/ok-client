@@ -32,7 +32,7 @@ def main():
     args.verbose = False
     args.interactive = False
     args.ignore_empty = False
-    args.fpp = False
+    args.parsons = False
 
     try:
         assign = assignment.load_assignment(args.config, args)
