@@ -5,6 +5,7 @@ from client.sources.common import models
 from client.utils import locking, format
 import re
 import textwrap
+import client.exceptions as exceptions
 
 CHECK_MARK = "✅"
 RED_X = "❌"
@@ -341,7 +342,7 @@ class Console(object):
             print('# but got')
             print('\n'.join('#     {}'.format(line)
                             for line in actual.output_lines()))
-            if not self.show_all_cases:
+            if not self.show_all_cases or actual.exception_type == exceptions.Timeout.__name__:
                 raise ConsoleException
             elif self.CASE_PREFIX in code:
                 self.cases_total += 1
