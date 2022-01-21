@@ -5,6 +5,7 @@ from client.sources.common import models
 from client.utils import locking, format
 import re
 import textwrap
+import client.exceptions as exceptions
 
 
 class CodeCase(models.Case):
@@ -339,7 +340,8 @@ class Console(object):
             print('# but got')
             print('\n'.join('#     {}'.format(line)
                             for line in actual.output_lines()))
-            if not self.show_all_cases:
+            # Bail out on first failed test, or if we're showing all test results, bail on infinite loop timeout
+            if not self.show_all_cases or (actual.exception and actual.exception_type == exceptions.Timeout.__name__):
                 raise ConsoleException
             elif self.CASE_PREFIX in code:
                 self.cases_total += 1
