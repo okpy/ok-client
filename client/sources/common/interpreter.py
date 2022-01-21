@@ -342,6 +342,7 @@ class Console(object):
             print('# but got')
             print('\n'.join('#     {}'.format(line)
                             for line in actual.output_lines()))
+            # Bail out on first failed test, or if we're showing all test results, bail on infinite loop timeout
             if not self.show_all_cases or actual.exception_type == exceptions.Timeout.__name__:
                 raise ConsoleException
             elif self.CASE_PREFIX in code:
