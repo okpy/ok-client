@@ -6,8 +6,8 @@ from client.utils import locking, format
 import re
 import textwrap
 
-CHECK_MARK = "✅"
-RED_X = "❌"
+CHECK_MARK = ":D"
+RED_X = ":("
 
 class CodeCase(models.Case):
     """TestCase for doctest-style Python tests."""
