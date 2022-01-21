@@ -6,8 +6,6 @@ from client.utils import locking, format
 import re
 import textwrap
 
-CHECK_MARK = ":D"
-RED_X = ":("
 
 class CodeCase(models.Case):
     """TestCase for doctest-style Python tests."""
@@ -345,13 +343,13 @@ class Console(object):
                 raise ConsoleException
             elif self.CASE_PREFIX in code:
                 self.cases_total += 1
-                print(RED_X, f"Test Case {self.cases_total} failed")
+                print(":(", f"Test Case {self.cases_total} failed")
                 format.print_line('-')
                 print()
         elif correct and self.CASE_PREFIX in code:
             self.cases_passed += 1
             self.cases_total += 1
-            print(CHECK_MARK, f"Test Case {self.cases_total} passed")
+            print(":D", f"Test Case {self.cases_total} passed")
             format.print_line('-')
             print()
 
