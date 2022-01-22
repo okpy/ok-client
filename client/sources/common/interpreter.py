@@ -333,7 +333,6 @@ class Console(object):
             and expected.output_lines() == actual.output_lines())
         correct_legacy_exception = (actual.exception
             and [actual.exception_type] == expected.output_lines())
-
         if not correct and not correct_legacy_exception:
             print()
             print('# Error: expected')
