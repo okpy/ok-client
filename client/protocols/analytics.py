@@ -48,6 +48,9 @@ class AnalyticsProtocol(models.Protocol):
             if self.args.case:
                 statistics['requested-case'] = self.args.case
 
+        if self.args.parsons:
+            statistics['action'] = messages.get('action', '')
+
         messages['analytics'] = statistics
         self.log_run(messages)
 
