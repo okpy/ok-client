@@ -320,6 +320,7 @@ class Console(object):
             output = printed.splitlines()
             actual = CodeAnswer(output=output)
 
+        self.cases_total += 1
         if not self.skip_locked_cases and expected.locked:
             if '\n'.join(expected.output) != locking.lock(self.hash_key, actual.dump()):
                 print()
@@ -344,16 +345,15 @@ class Console(object):
             if not self.show_all_cases or (actual.exception and actual.exception_type == exceptions.Timeout.__name__):
                 raise ConsoleException
             elif self.CASE_PREFIX in code:
-                self.cases_total += 1
                 print(":(", f"Test Case {self.cases_total} failed")
                 format.print_line('-')
                 print()
-        elif correct and self.CASE_PREFIX in code:
+        elif correct:
             self.cases_passed += 1
-            self.cases_total += 1
-            print(":D", f"Test Case {self.cases_total} passed")
-            format.print_line('-')
-            print()
+            if self.CASE_PREFIX in code:
+                print(":D", f"Test Case {self.cases_total} passed")
+                format.print_line('-')
+                print()
 
     def _strip_prompt(self, line):
         if line.startswith(self.PS1):
