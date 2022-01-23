@@ -337,6 +337,7 @@ class PythonConsoleTest(unittest.TestCase):
 
 
     def testPassCount_allPassed(self):
+        # remove newline from the front because otherwise it counts as a separate test case
         code="""
         >>> 2 + 3
         5
