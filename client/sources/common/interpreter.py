@@ -2,9 +2,11 @@
 
 from client.sources.common import core
 from client.sources.common import models
-from client.utils import locking
+from client.utils import locking, format
 import re
 import textwrap
+import client.exceptions as exceptions
+
 
 class CodeCase(models.Case):
     """TestCase for doctest-style Python tests."""
@@ -30,6 +32,15 @@ class CodeCase(models.Case):
         self.console = console
         self.setup = setup
         self.teardown = teardown
+
+        # must reload for parsons problems
+        if self.setup and self.console.parsons:
+            assignment_name = self.setup.split()[2]
+            self.setup = textwrap.dedent(self.setup)
+            self.setup += f"\n>>> import {assignment_name}"
+            self.setup += "\n>>> from importlib import reload"
+            self.setup += f"\n>>> {assignment_name} = reload({assignment_name})"
+            self.setup += f"\n>>> from {assignment_name} import *"
 
     def post_instantiation(self):
         self.code = textwrap.dedent(self.code)
@@ -81,7 +92,10 @@ class CodeCase(models.Case):
                     line.output = interact(unique_id,
                                            case_id + ' >  Prompt {}'.format(prompt_num),
                                            '\n'.join(current_prompt),
-                                           line.output, normalizer=self.console.normalize, choices=line.choices)
+                                           line.output,
+                                           normalizer=self.console.normalize,
+                                           choices=line.choices,
+                                           multiline=self.multiline)
                     line.locked = False
                     current_prompt = []
             self.locked = False
@@ -177,6 +191,7 @@ class CodeCase(models.Case):
 class Console(object):
     PS1 = '> '
     PS2 = '. '
+    CASE_PREFIX = '# .Case'
 
     _output_fn = repr
 
@@ -184,12 +199,17 @@ class Console(object):
     # Public interface #
     ####################
 
-    def __init__(self, verbose, interactive, timeout=None):
+    def __init__(self, verbose, interactive, timeout=None, parsons=False):
         self.verbose = verbose
         self.interactive = interactive
         self.timeout = timeout
+        self.parsons = parsons
         self.skip_locked_cases = True
         self.load('')   # Initialize empty code.
+
+        self.cases_passed = 0
+        self.cases_total = 0
+        self.show_all_cases = False
 
     def load(self, code, setup='', teardown=''):
         """Prepares a set of setup, test, and teardown code to be
@@ -205,13 +225,16 @@ class Console(object):
         self._code = code
         self._teardown = textwrap.dedent(teardown).splitlines()
 
+        self.cases_passed = 0
+        self.cases_total = 0
+
     def interpret(self):
         """Interprets the console on the loaded code.
 
         RETURNS:
         bool; True if the code passes, False otherwise.
         """
-        if not self._interpret_lines(self._setup):
+        if not self._interpret_lines(self._setup, should_print=not self.parsons):
             return False
 
         success = self._interpret_lines(self._code, compare_all=True)
@@ -241,7 +264,7 @@ class Console(object):
     # Interpretation utilities #
     ############################
 
-    def _interpret_lines(self, lines, compare_all=False):
+    def _interpret_lines(self, lines, compare_all=False, should_print=True):
         """Interprets the set of lines.
 
         PARAMTERS:
@@ -253,7 +276,7 @@ class Console(object):
         bool; True if successful, False otherwise.
         """
         current = []
-        for line in lines + ['']:
+        for i, line in enumerate(lines + ['']):
             if isinstance(line, str):
                 if current and (line.startswith(self.PS1) or not line):
                     # Previous prompt ends when PS1 or a blank line occurs
@@ -265,7 +288,7 @@ class Console(object):
                     except ConsoleException:
                         return False
                     current = []
-                if line:
+                if line and should_print:
                     print(line)
                 line = self._strip_prompt(line)
                 current.append(line)
@@ -276,7 +299,10 @@ class Console(object):
                 except ConsoleException:
                     return False
                 current = []
-        return True
+        if self.show_all_cases:
+            return self.cases_passed == self.cases_total
+        else:
+            return True
 
     def _compare(self, expected, code):
         try:
@@ -314,7 +340,20 @@ class Console(object):
             print('# but got')
             print('\n'.join('#     {}'.format(line)
                             for line in actual.output_lines()))
-            raise ConsoleException
+            # Bail out on first failed test, or if we're showing all test results, bail on infinite loop timeout
+            if not self.show_all_cases or (actual.exception and actual.exception_type == exceptions.Timeout.__name__):
+                raise ConsoleException
+            elif self.CASE_PREFIX in code:
+                self.cases_total += 1
+                print(":(", f"Test Case {self.cases_total} failed")
+                format.print_line('-')
+                print()
+        elif correct and self.CASE_PREFIX in code:
+            self.cases_passed += 1
+            self.cases_total += 1
+            print(":D", f"Test Case {self.cases_total} passed")
+            format.print_line('-')
+            print()
 
     def _strip_prompt(self, line):
         if line.startswith(self.PS1):

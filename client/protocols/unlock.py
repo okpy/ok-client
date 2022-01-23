@@ -87,7 +87,8 @@ class UnlockProtocol(models.Protocol):
                 break
         messages['unlock'] = self.analytics
 
-    def interact(self, unique_id, case_id, question_prompt, answer, choices=None, randomize=True, *, normalizer=lambda x: x):
+    def interact(self, unique_id, case_id, question_prompt, answer, choices=None, randomize=True,
+                 *, multiline=False, normalizer=lambda x: x):
         """Reads student input for unlocking tests until the student
         answers correctly.
 
@@ -133,7 +134,7 @@ class UnlockProtocol(models.Protocol):
             input_lines = []
 
             for line_number, line in enumerate(answer):
-                if len(answer) == 1:
+                if len(answer) == 1 and not multiline:
                     prompt = self.PROMPT
                 else:
                     prompt = '(line {}){}'.format(line_number + 1, self.PROMPT)

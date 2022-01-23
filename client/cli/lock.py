@@ -31,6 +31,8 @@ def main():
     args.timeout = 0
     args.verbose = False
     args.interactive = False
+    args.ignore_empty = False
+    args.parsons = False
 
     try:
         assign = assignment.load_assignment(args.config, args)

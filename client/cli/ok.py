@@ -92,7 +92,7 @@ def parse_input(command_input=None):
     testing.add_argument('-i', '--interactive', action='store_true',
                         help="start the Python interpreter after a failed test")
     testing.add_argument('-v', '--verbose', action='store_true',
-                        help="show all tests, not just passing tests")
+                        help="show all tests (not just passing tests) up to failing line (if any)")
     testing.add_argument('-t', '--testing', nargs='?', type=str, const='mytests.rst',
                         help='run tests from rst file (default: mytests.rst)')
     testing.add_argument('--all', action='store_true',
@@ -152,6 +152,8 @@ def parse_input(command_input=None):
                         help="write scores to a file")
     grading.add_argument('--config', type=str,
                         help="use a specific configuration file")
+    grading.add_argument('--ignore-empty', action='store_true',
+                        help="ignore empty doctests")
 
     # Encrypt
     crypt = parser.add_argument_group('encryption')
@@ -186,6 +188,9 @@ def parse_input(command_input=None):
                         help="do not check for ok updates")
     server.add_argument('--update', action='store_true',
                         help="update ok and exit")
+    # used in faded-parsons-frontend repo
+    server.add_argument('--parsons', action='store_true', 
+                        help="run parsons problems in browser")  
 
     return parser.parse_args(command_input)
 
