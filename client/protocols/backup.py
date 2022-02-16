@@ -87,7 +87,7 @@ class BackupProtocol(models.Protocol):
                                   submission_type,
                                   response['data']['key'])
 
-            if self.args.submit or self.args.backup:
+            if self.args.submit or self.args.backup or action == "backup":
                 print_success('URL: {0}'.format(url))
 
             if self.args.backup:
