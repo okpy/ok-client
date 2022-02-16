@@ -18,8 +18,8 @@ class PythonConsoleTest(unittest.TestCase):
         return pyconsole.PythonConsole(
                 verbose, interactive, timeout)
 
-    def calls_interpret(self, success, code, setup='', teardown='', skip_locked_cases=True, hash_key=None):
-        self.console = self.createConsole()
+    def calls_interpret(self, success, code, setup='', teardown='', skip_locked_cases=True, hash_key=None, timeout=None):
+        self.console = self.createConsole(timeout=timeout)
         self.console.skip_locked_cases = skip_locked_cases
         self.console.hash_key = hash_key
         lines = interpreter.CodeCase.split_code(code, self.console.PS1,
@@ -334,3 +334,40 @@ class PythonConsoleTest(unittest.TestCase):
         %s
         # locked
         """ % hashedAnswer)
+
+
+    def testPassCount_allPassed(self):
+        # remove newline from the front because otherwise it counts as a separate test case
+        code="""
+        >>> 2 + 3
+        5
+        >>> 4 + 6
+        10
+        """[1:]
+        self.calls_interpret(success=True, code=code)
+        self.assertEqual(self.console.cases_passed, 2)
+        self.assertEqual(self.console.cases_total, 2)
+    
+    def testPassCount_withFail(self):
+        code="""
+        >>> 2 + 3
+        5
+        >>> 1 + 3
+        10
+        """[1:]
+        self.calls_interpret(success=False, code=code)
+        self.assertEqual(self.console.cases_passed, 1)
+        self.assertEqual(self.console.cases_total, 2)
+    
+    def testPassCount_timeout(self):
+        code="""
+        >>> 2 + 3
+        5
+        >>> while True: pass
+        10
+        >>> 1 + 3
+        4
+        """[1:]
+        self.calls_interpret(success=False, code=code, timeout=0.5)
+        self.assertEqual(self.console.cases_passed, 1)
+        self.assertEqual(self.console.cases_total, 2)
