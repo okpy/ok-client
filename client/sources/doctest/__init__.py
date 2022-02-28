@@ -51,7 +51,11 @@ def _load_tests(file, module, assign):
     def _load_tests_from_obj(obj, attribute_path):
         for attr in dir(obj):
             to_test = getattr(obj, attr)
-            if callable(to_test) and getattr(to_test, '__module__', None) == module.__name__:
+            if (
+                callable(to_test)
+                and getattr(to_test, "__module__", None) == module.__name__
+                and attr not in ["__self__", "im_self"]
+            ):
                 path = attribute_path + [attr]
                 name = '.'.join(path)
                 tests[name] = _load_test(file, module, name, assign)
