@@ -11,6 +11,8 @@ Requires the following attributes from an importable scheme module:
 
     scheme.create_global_frame
     scheme.Buffer
+    scheme.Buffer.end_of_line
+    scheme.Buffer.pop_first
     scheme.read_eval_print_loop
     scheme.tokenize_lines
 """
@@ -93,7 +95,8 @@ class SchemeTest(models.Test):
             reader = TestReader(self.file_contents.split('\n'))
             src = self.scheme.Buffer(self.scheme.tokenize_lines(reader))
             def next_line():
-                src.current()
+                while src.end_of_line():
+                    src.pop_first()
                 if reader.line_number == len(reader.lines):
                     # No more lines in file.
                     raise EOFError
