@@ -16,7 +16,6 @@ jobs:
           Python 3.7 (Windows),
           Python 3.7 (Macintosh),
           Python 3.7 (Ubuntu),
-          Python 3.6 (Windows),
           Python 3.6 (Macintosh),
           Python 3.6 (Ubuntu),
         ]
@@ -39,9 +38,6 @@ jobs:
           - name: Python 3.7 (Ubuntu)
             os: ubuntu-latest
             python-version: 3.7
-          - name: Python 3.6 (Windows)
-            os: windows-latest
-            python-version: 3.6
           - name: Python 3.6 (Macintosh)
             os: macOS-10.15
             python-version: 3.6
