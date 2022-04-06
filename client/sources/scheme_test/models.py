@@ -109,6 +109,7 @@ class SchemeTest(models.Test):
                 print("Tests terminated due to unhandled exception "
                       "after line {}:\n"
                       "{}: {}".format(reader.line_number, e.__class__.__name__, e))
+                raise
         output.on()
 
         if reader:
