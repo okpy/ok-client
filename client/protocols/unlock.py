@@ -35,6 +35,7 @@ class UnlockProtocol(models.Protocol):
         'Error',
         'Infinite Loop',
         'Nothing',
+        'Function'
     )
 
     def __init__(self, cmd_args, assignment):
