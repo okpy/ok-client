@@ -42,7 +42,7 @@ class UnlockProtocol(models.Protocol):
         super().__init__(cmd_args, assignment)
         self.hash_key = assignment.name
         self.analytics = []
-        self.guidance_util = guidance.Guidance("", assignment=assignment, suppress_warning_message=True)
+        self.guidance_util = guidance.Guidance()
 
     def run(self, messages):
         """Responsible for unlocking each test.
@@ -69,9 +69,6 @@ class UnlockProtocol(models.Protocol):
         for test in self.assignment.specified_tests:
             log.info('Unlocking test {}'.format(test.name))
             self.current_test = test.name
-
-            # Reset guidance explanation probability for every question
-            self.guidance_util.prompt_probability = guidance.DEFAULT_PROMPT_PROBABILITY
 
             try:
                 test.unlock(self.interact)
@@ -156,16 +153,11 @@ class UnlockProtocol(models.Protocol):
                     break
             else:
                 correct = True
-            tg_id = -1
-            misU_count_dict = {}
             rationale = "Unknown - Default Value"
 
             if not correct:
-                guidance_data = self.guidance_util.show_guidance_msg(unique_id, input_lines,
-                                                                     self.hash_key)
-                misU_count_dict, tg_id, printed_msg, rationale = guidance_data
+                printed_msg = self.guidance_util.show_guidance_msg(unique_id, input_lines)
             else:
-                rationale = self.guidance_util.prompt_with_prob()
                 print("-- OK! --")
                 printed_msg = ["-- OK! --"]
 
@@ -177,10 +169,8 @@ class UnlockProtocol(models.Protocol):
                 'prompt': question_prompt,
                 'answer': input_lines,
                 'correct': correct,
-                'treatment group id': tg_id,
                 'rationale': rationale,
-                'misU count': misU_count_dict,
-                'printed msg': printed_msg
+                'printed msg': printed_msg,
             })
             print()
         return input_lines

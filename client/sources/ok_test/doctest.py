@@ -48,6 +48,7 @@ class DoctestSuite(models.Suite):
         results = {
             'passed': 0,
             'failed': 0,
+            'failed_outputs': [],
             'locked': 0,
         }
 
@@ -66,7 +67,7 @@ class DoctestSuite(models.Suite):
                 results['locked'] += 1
                 continue
 
-            success = self._run_case(test_name, suite_number,
+            success, output = self._run_case(test_name, suite_number,
                                      case, i + 1)
             if not success and self.interactive:
                 self.console.interact()
@@ -75,6 +76,7 @@ class DoctestSuite(models.Suite):
                 results['passed'] += 1
             else:
                 results['failed'] += 1
+                results['failed_outputs'].append(output)
 
             if not success and not self.verbose:
                 # Stop at the first failed test

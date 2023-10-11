@@ -38,7 +38,7 @@ class WwppSuite(models.Suite):
                 results['locked'] += 1
                 continue
 
-            success = self._run_case(test_name, suite_number,
+            success, output = self._run_case(test_name, suite_number,
                                      case, i + 1)
             assert success, 'Wwpp case should never fail while grading'
             results['passed'] += 1

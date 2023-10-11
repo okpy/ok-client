@@ -150,9 +150,7 @@ def is_correct(grading_results):
     provides the count of tests passed, failed or locked for a single
     question. Return True if all tests have passed.
     """
-    if grading_results['locked'] > 0:
-        return False
-    return sum(grading_results.values()) == grading_results['passed']
+    return grading_results['failed'] == 0 and grading_results['locked'] == 0
 
 def first_failed_test(tests, scores):
     test_names = [t.name for t in tests]

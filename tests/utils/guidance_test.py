@@ -41,8 +41,7 @@ class GuidanceProtocolTest(unittest.TestCase):
         self.cmd_args = mock.Mock()
         self.assignment = mock.Mock(endpoint="cal/cs61a/sp16/test")
         self.proto = unlock.protocol(self.cmd_args, self.assignment)
-        self.proto.guidance_util = guidance.Guidance(self.GUIDANCE_DIRECTORY,
-                                                     self.assignment)
+        self.proto.guidance_util = guidance.Guidance()
         self.proto.guidance_util.set_tg = self.mockSet_TG
         self.proto.current_test = self.TEST
         self.proto._verify = self.mockVerify

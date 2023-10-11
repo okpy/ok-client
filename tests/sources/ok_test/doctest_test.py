@@ -20,11 +20,13 @@ class DoctestSuiteTest(unittest.TestCase):
             self.fail()
 
     def callsRun(self, test, passed, failed, locked):
+        test_results = test.run(self.TEST_NAME, self.SUITE_NUMBER, None)
+        self.assertEqual(len(test_results.pop('failed_outputs')), failed)
         self.assertEqual({
             'passed': passed,
             'locked': locked,
             'failed': failed,
-        }, test.run(self.TEST_NAME, self.SUITE_NUMBER, None))
+        }, test_results)
 
     def testConstructor_basicCases(self):
         try:

@@ -60,7 +60,7 @@ class OkTest(models.Test):
             'locked': int,
         }
         """
-        passed, failed, locked = 0, 0, 0
+        passed, failed, locked, failed_outputs = 0, 0, 0, []
         for i, suite in enumerate(self.suites):
             if self.run_only and self.run_only != i + 1:
                 continue
@@ -72,6 +72,7 @@ class OkTest(models.Test):
             passed += results['passed']
             failed += results['failed']
             locked += results['locked']
+            failed_outputs += results.get('failed_outputs', [])
 
             if not self.verbose and (failed > 0 or locked > 0):
                 # Stop at the first failed test
@@ -90,6 +91,7 @@ class OkTest(models.Test):
             'passed': passed,
             'failed': failed,
             'locked': locked,
+            'failed_outputs': failed_outputs,
         }
 
     def score(self, env=None):
@@ -308,12 +310,14 @@ class Suite(core.Serializable):
         output_log = output.get_log(log_id)
         output.remove_log(log_id)
 
+        output_str = ''.join(output_log)
+
         if not success or self.verbose:
-            print(''.join(output_log))
+            print(output_str)
         if not success:
             short_name = self.test.get_short_name()
             # TODO: Change when in notebook mode
             print('Run only this test case with '
                 '"python3 ok -q {} --suite {} --case {}"'.format(
                     short_name, suite_number, case_number))
-        return success
+        return success, output_str
