@@ -48,7 +48,7 @@ The `tests/` directory mirrors the directory structure of the `client/`
 directory. Every component of the client should have plenty of tests.
 To run all tests, use the following command:
 
-    nosetests tests
+    nose2
 
 ## Releasing an ok-client version
 
