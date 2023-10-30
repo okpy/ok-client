@@ -44,7 +44,7 @@ setup(
         'chardet==3.0.4',
         'idna==2.8',
         'coverage==4.4',
-        'pytutor==1.0.0',
+        # 'pytutor==1.0.0',
         'ast-scope==0.3.1',
         'attrs==19.3.0',
         'pyaes==1.6.1',
