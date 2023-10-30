@@ -28,6 +28,7 @@ def _get_config(config):
             ]))
         elif not configs:
             raise ex.LoadingException('No .ok configuration file found')
+        config = configs[0]
         if config[-3:] != '.ok':
             return {}
     elif not isinstance(config, str):
