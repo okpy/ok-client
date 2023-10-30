@@ -5,8 +5,6 @@ import collections
 
 from client import exceptions as ex
 
-import mock
-
 CONFIG_DIRECTORY = os.path.join(os.path.expanduser('~'), '.config', 'ok')
 REFRESH_FILE = os.path.join(CONFIG_DIRECTORY, "auth_refresh")
 CERT_FILE = os.path.join(CONFIG_DIRECTORY, "cacert.pem")
@@ -19,8 +17,6 @@ def create_config_directory():
     return CONFIG_DIRECTORY
 
 def _get_config(config):
-    if isinstance(config, mock.Mock):
-        return {}
     if config is None:
         configs = glob.glob(CONFIG_EXTENSION)
         if len(configs) > 1:
@@ -35,6 +31,8 @@ def _get_config(config):
         config = configs[0]
         if config[-2:] != '.ok':
             return {}
+    elif not isinstance(config, str):
+        return {}
     elif not os.path.isfile(config):
         raise ex.LoadingException(
                 'Could not find config file: {}'.format(config))

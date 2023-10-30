@@ -20,7 +20,6 @@ EXTRA_PACKAGES = [
     'display_timedelta',
     'filelock.py',
     'lark',
-    'mock'
 ]
 
 def abort(message):
