@@ -8,8 +8,11 @@ are compatible with the GradingProtocol.
 from client.protocols.common import models
 from client.utils import format
 from client.utils import storage
+from client.utils import output
+from client.utils import config as config_utils
 import logging
 import sys
+import re
 
 log = logging.getLogger(__name__)
 
@@ -43,10 +46,10 @@ class GradingProtocol(models.Protocol):
                         'Suite number must be valid.({})'.format(len(test.suites))))
                 if self.args.case:
                     suite.run_only = [int(c) for c in self.args.case]
-        grade(tests, messages, env, verbose=self.args.verbose)
+        grade(tests, messages, env, verbose=self.args.verbose, get_help=self.args.get_help, config=self.args.config)
 
 
-def grade(questions, messages, env=None, verbose=True):
+def grade(questions, messages, env=None, verbose=True, get_help=False, config=None):
     format.print_line('~')
     print('Running tests')
     print()
@@ -57,6 +60,8 @@ def grade(questions, messages, env=None, verbose=True):
     analytics = {}
 
     # The environment in which to run the tests.
+
+    log_id = output.new_log()
     for test in questions:
         log.info('Running tests for {}'.format(test.name))
         results = test.run(env)
@@ -78,6 +83,30 @@ def grade(questions, messages, env=None, verbose=True):
                               verbose=verbose)
     print()
 
+    autograder_output = ''.join(output.get_log(log_id))
+
     messages['grading'] = analytics
+
+    ### Fa23 Helper Bot ###
+    HELP_KEY = 'jfv97pd8ogybhilq3;orfuwyhiulae'
+    config = config_utils._get_config(config)
+    if (failed > 0 or get_help) and (config.get('src', [''])[0][:2] == 'hw'):
+        res = input("Would you like to receive 61A-bot feedback on your code (y/N)? ")
+        print()
+        if res == "y":
+            filename = config['src'][0]
+            code = open(filename, 'r').read()
+            messages['gpt'] = {
+                'email': messages.get('email') or '<unknown from CLI>',
+                'promptLabel': 'Get_help',
+                'hwId': re.findall(r'hw(\d+)\.(py|scm|sql)', filename)[0][0],
+                'activeFunction': questions[0].name,
+                'code': code,
+                'codeError': autograder_output,
+                'version': 'v2',
+                'key': HELP_KEY
+            }
+    else:
+        messages['gpt'] = False
 
 protocol = GradingProtocol
