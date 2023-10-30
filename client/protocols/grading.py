@@ -50,6 +50,7 @@ class GradingProtocol(models.Protocol):
 
 
 def grade(questions, messages, env=None, verbose=True, get_help=False, config=None):
+    print(questions,messages,env,verbose,get_help,config)
     format.print_line('~')
     print('Running tests')
     print()
@@ -90,7 +91,7 @@ def grade(questions, messages, env=None, verbose=True, get_help=False, config=No
     ### Fa23 Helper Bot ###
     HELP_KEY = 'jfv97pd8ogybhilq3;orfuwyhiulae'
     config = config_utils._get_config(config)
-    if (failed > 0 or get_help) and (config['src'][0][:2] == 'hw'):
+    if (failed > 0 or get_help) and (config.get('src', [''])[0][:2] == 'hw'):
         res = input("Would you like to receive 61A-bot feedback on your code (y/N)? ")
         print()
         if res == "y":
