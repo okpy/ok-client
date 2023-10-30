@@ -261,6 +261,7 @@ class Assignment(core.Serializable):
         # "rate_limit", uncomment to turn rate limiting back on!
         "file_contents",
         "grading",
+        "help",
         "analytics",
         "autostyle",
         "collaborate",

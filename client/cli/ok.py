@@ -131,6 +131,8 @@ def parse_input(command_input=None):
                         help="run AutoStyle feedback system")
     experiment.add_argument('--collab', action='store_true',
                         help="launch collaborative programming environment")
+    experiment.add_argument('--get-help', action='store_true',
+                        help="receive 61A-bot feedback on your code")                    
 
     # Debug information
     debug = parser.add_argument_group('ok developer debugging options')
@@ -273,6 +275,7 @@ def main():
 
             try:
                 msgs = messages.Messages()
+                msgs['email'] = assign.get_student_email()
                 for name, proto in assign.protocol_map.items():
                     log.info('Execute {}.run()'.format(name))
                     proto.run(msgs)
