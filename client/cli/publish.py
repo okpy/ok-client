@@ -19,7 +19,8 @@ EXTRA_PACKAGES = [
     'colorama',
     'display_timedelta',
     'filelock.py',
-    "lark",
+    'lark',
+    'mock'
 ]
 
 def abort(message):
