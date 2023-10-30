@@ -3,6 +3,8 @@ import glob
 import json
 import collections
 
+from client import exceptions as ex
+
 CONFIG_DIRECTORY = os.path.join(os.path.expanduser('~'), '.config', 'ok')
 REFRESH_FILE = os.path.join(CONFIG_DIRECTORY, "auth_refresh")
 CERT_FILE = os.path.join(CONFIG_DIRECTORY, "cacert.pem")
@@ -27,9 +29,6 @@ def _get_config(config):
         elif not configs:
             raise ex.LoadingException('No .ok configuration file found')
         config = configs[0]
-    elif not os.path.isfile(config):
-        raise ex.LoadingException(
-                'Could not find config file: {}'.format(config))
 
     try:
         with open(config, 'r') as f:
@@ -40,5 +39,8 @@ def _get_config(config):
         raise ex.LoadingException(
             '{0} is a malformed .ok configuration file. '
             'Please re-download {0}.'.format(config))
+    except FileNotFoundError:
+        raise ex.LoadingException(
+                'Could not find config file: {}'.format(config))
     else:
         return result
