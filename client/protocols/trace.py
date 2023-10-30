@@ -7,8 +7,8 @@ import datetime as dt
 import logging
 import json
 
-# from pytutor import generate_trace
-# from pytutor import server
+from pytutor import generate_trace
+from pytutor import server
 
 from ast_scope import annotate
 

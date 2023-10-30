@@ -33,7 +33,6 @@ class HelpProtocol(models.Protocol):
                     sys.stdout.write("\rLoading " + c + " ")
                     sys.stdout.write('\033[2K\033[1G')
                     time.sleep(0.1)
-                # sys.stdout.write("\033[K")
             t = threading.Thread(target=animate)
             t.daemon = True
             t.start()

@@ -50,7 +50,6 @@ class GradingProtocol(models.Protocol):
 
 
 def grade(questions, messages, env=None, verbose=True, get_help=False, config=None):
-    print(questions,messages,env,verbose,get_help,config)
     format.print_line('~')
     print('Running tests')
     print()
