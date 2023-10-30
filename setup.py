@@ -52,5 +52,6 @@ setup(
         'display-timedelta==1.1',
         'filelock==3.0.12',
         'lark==0.12.0',
+        'mock==1.0.1',
     ],
 )
