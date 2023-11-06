@@ -1,4 +1,10 @@
+"""61A Helper Bot.
+
+Fall 2023 research project with zamfi@, larynqi@, norouzi@, denero@
+"""
+
 from client.protocols.common import models
+from client.utils import config as config_utils
 
 import requests
 import random
@@ -7,6 +13,7 @@ import itertools
 import threading
 import time
 import sys
+import re
 
 import logging
 
@@ -21,9 +28,44 @@ class HelpProtocol(models.Protocol):
     FEEDBACK_PROBABILITY = 0.25
     FEEDBACK_ENDPOINT = SERVER + '/feedback'
     FEEDBACK_KEY = 'jfv97pd8ogybhilq3;orfuwyhiulae'
+    HELP_KEY = 'jfv97pd8ogybhilq3;orfuwyhiulae'
 
     def run(self, messages):
-        help_payload = messages.get('gpt')
+        config = config_utils._get_config(self.args.config)
+        if 'help' not in config.get('protocols', []):
+            return
+        tests = self.assignment.specified_tests
+        grading_analytics = messages.get('grading', {})
+        failed = False
+        active_function = tests[-1].name
+        for test in tests:
+            name = test.name
+            if name in grading_analytics and grading_analytics[name]['failed'] > 0:
+                failed = True
+                active_function = name
+                break
+
+        autograder_output = messages.get('autograder_output', '')
+        get_help = self.args.get_help
+        help_payload = None
+
+        if (failed or get_help) and (config.get('src', [''])[0][:2] == 'hw'):
+            res = input("Would you like to receive 61A-bot feedback on your code (y/N)? ")
+            print()
+            if res == "y":
+                filename = config['src'][0]
+                code = open(filename, 'r').read()
+                help_payload = {
+                    'email': 'laryn@testing' or messages.get('email') or '<unknown from CLI>',
+                    'promptLabel': 'Get_help',
+                    'hwId': re.findall(r'hw(\d+)\.(py|scm|sql)', filename)[0][0],
+                    'activeFunction': active_function,
+                    'code': code,
+                    'codeError': autograder_output,
+                    'version': 'v2',
+                    'key': self.HELP_KEY
+                }
+
         if help_payload:
             help_response = None
             def animate():
