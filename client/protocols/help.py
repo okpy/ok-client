@@ -32,7 +32,7 @@ class HelpProtocol(models.Protocol):
 
     def run(self, messages):
         tests = self.assignment.specified_tests
-        grading_analytics = messages['grading']
+        grading_analytics = messages.get('grading', {})
         failed = False
         active_function = tests[-1].name
         for test in tests:
@@ -41,7 +41,7 @@ class HelpProtocol(models.Protocol):
                 failed = True
                 active_function = name
                 break
-        autograder_output = messages['autograder_output']
+        autograder_output = messages.get('autograder_output', '')
         get_help = self.args.get_help
         config = config_utils._get_config(self.args.config)
 
