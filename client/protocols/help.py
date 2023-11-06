@@ -56,7 +56,7 @@ class HelpProtocol(models.Protocol):
                 filename = config['src'][0]
                 code = open(filename, 'r').read()
                 help_payload = {
-                    'email': 'laryn@testing' or messages.get('email') or '<unknown from CLI>',
+                    'email': messages.get('email') or '<unknown from CLI>',
                     'promptLabel': 'Get_help',
                     'hwId': re.findall(r'hw(\d+)\.(py|scm|sql)', filename)[0][0],
                     'activeFunction': active_function,
