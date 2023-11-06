@@ -31,6 +31,9 @@ class HelpProtocol(models.Protocol):
     HELP_KEY = 'jfv97pd8ogybhilq3;orfuwyhiulae'
 
     def run(self, messages):
+        config = config_utils._get_config(self.args.config)
+        if 'help' not in config.get('protocols', []):
+            return
         tests = self.assignment.specified_tests
         grading_analytics = messages.get('grading', {})
         failed = False
@@ -41,11 +44,11 @@ class HelpProtocol(models.Protocol):
                 failed = True
                 active_function = name
                 break
+
         autograder_output = messages.get('autograder_output', '')
         get_help = self.args.get_help
-        config = config_utils._get_config(self.args.config)
-
         help_payload = None
+
         if (failed or get_help) and (config.get('src', [''])[0][:2] == 'hw'):
             res = input("Would you like to receive 61A-bot feedback on your code (y/N)? ")
             print()

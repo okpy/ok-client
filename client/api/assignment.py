@@ -262,6 +262,7 @@ class Assignment(core.Serializable):
         "file_contents",
         "grading",
         "analytics",
+        "help",
         "autostyle",
         "collaborate",
         "hinting",
