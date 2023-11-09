@@ -309,11 +309,15 @@ class Suite(core.Serializable):
         output.remove_log(log_id)
 
         if not success or self.verbose:
+            output.disable_all_logs()
             print(''.join(output_log))
+            output.enable_all_logs()
         if not success:
             short_name = self.test.get_short_name()
             # TODO: Change when in notebook mode
             print('Run only this test case with '
                 '"python3 ok -q {} --suite {} --case {}"'.format(
                     short_name, suite_number, case_number))
+
+
         return success
