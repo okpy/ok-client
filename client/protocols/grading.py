@@ -76,14 +76,15 @@ def grade(questions, messages, env=None, verbose=True):
         if not verbose and (failed > 0 or locked > 0):
             # Stop at the first failed test
             break
-
+    
     format.print_progress_bar('Test summary', passed, failed, locked,
                               verbose=verbose)
     print()
 
-    autograder_output = ''.join(output.get_log(log_id))
 
     messages['grading'] = analytics
+
+    autograder_output = ''.join(output.get_log(log_id))
     messages['autograder_output'] = autograder_output
 
 protocol = GradingProtocol

@@ -15,11 +15,7 @@ import time
 import sys
 import re
 
-import logging
-
 from client.utils.printer import print_error
-
-log = logging.getLogger(__name__)
 
 class HelpProtocol(models.Protocol):
 

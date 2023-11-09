@@ -13,6 +13,7 @@ class _OutputLogger(object):
         self._devnull = io.open(os.devnull, 'w', encoding=getattr(stdout, 'encoding', 'utf-8'))
         self._logs = {}
         self._num_logs = 0
+        self._disabled_logs = set()
 
     def on(self):
         """Allows print statements to emit to standard output."""
@@ -56,11 +57,27 @@ class _OutputLogger(object):
         msg -- str
         """
         self._current_stream.write(msg)
-        for log in self._logs.values():
-            log.append(msg)
+        for log_id, log in self._logs.items():
+            if log_id not in self._disabled_logs:
+                log.append(msg)
 
     def flush(self):
         self._current_stream.flush()
+
+    def disable_log(self, log_id):
+        self._disabled_logs.add(log_id)
+    
+    def enable_log(self, log_id):
+        self.disable_log(log_id)
+        self._disabled_logs.remove(log_id)
+
+    def disable_all_logs(self):
+        for log_id in self._logs:
+            self.disable_log(log_id)
+
+    def enable_all_logs(self):
+        for log_id in self._logs:
+            self.enable_log(log_id)
 
     # TODO(albert): rewrite this to be cleaner.
     def __getattr__(self, attr):
@@ -85,6 +102,18 @@ def remove_log(log_id):
 
 def remove_all_logs():
     _logger.remove_all_logs()
+
+def disable_log(log_id):
+    _logger.disable_log(log_id)
+
+def enable_log(log_id):
+    _logger.enable_log(log_id)
+
+def disable_all_logs():
+    _logger.disable_all_logs()
+
+def enable_all_logs():
+    _logger.enable_all_logs()
 
 class DisableLog:
     re_enable = False
