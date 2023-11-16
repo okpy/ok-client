@@ -150,16 +150,21 @@ class HelpProtocol(models.Protocol):
                         if not hmac.compare_digest(data.get('mac'), self._mac(email, data.get('consent'))):
                             os.remove(self.CONSENT_CACHE)
                             return self._get_consent(email)
-                    return data.get('consent') in self.CONSENT_OPTIONS
+                    return data.get('consent')
                 except:
                     os.remove(self.CONSENT_CACHE)
                     return self._get_consent(email)
             else:
                 print(self.CONSENT_MESSAGE)
-                consent = input("\n(y/N)? ")
+                res = input("\n(y/N)? ")
+                consent = res in self.CONSENT_OPTIONS
+                if consent:
+                    print("\nYou have consented.\n")
+                else:
+                    print("\nYou have not consented.\n")
                 with open(self.CONSENT_CACHE, 'wb') as f:
                     pickle.dump({'consent': consent, 'mac': self._mac(email, consent)}, f, protocol=pickle.HIGHEST_PROTOCOL)
-                return consent in self.CONSENT_OPTIONS
+                return consent
         else:
             return False
 
