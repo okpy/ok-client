@@ -21,10 +21,12 @@ class HelpProtocol(models.Protocol):
 
     SERVER = 'https://61a-bot-backend.zamfi.net'
     HELP_ENDPOINT = SERVER + '/get-help-cli'
-    FEEDBACK_PROBABILITY = 0.25
+    FEEDBACK_PROBABILITY = 1
+    FEEDBACK_REQUIRED = True
     FEEDBACK_ENDPOINT = SERVER + '/feedback'
     FEEDBACK_KEY = 'jfv97pd8ogybhilq3;orfuwyhiulae'
     HELP_KEY = 'jfv97pd8ogybhilq3;orfuwyhiulae'
+    AG_PREFIX = "————————————————————————\nThe following is an automated report from an autograding tool that may indicate a failed test case or a syntax error. Consider it in your response.\n\n"
 
     def run(self, messages):
         config = config_utils._get_config(self.args.config)
@@ -57,7 +59,7 @@ class HelpProtocol(models.Protocol):
                     'hwId': re.findall(r'hw(\d+)\.(py|scm|sql)', filename)[0][0],
                     'activeFunction': active_function,
                     'code': code,
-                    'codeError': autograder_output,
+                    'codeError': self.AG_PREFIX + autograder_output,
                     'version': 'v2',
                     'key': self.HELP_KEY
                 }
@@ -84,15 +86,22 @@ class HelpProtocol(models.Protocol):
 
             random.seed(int(time.time()))
             if random.random() < self.FEEDBACK_PROBABILITY:
-                print("Please indicate whether the feedback you received was helpful or not.")
+                skip_str = ' Hit Enter to skip.' if not self.FEEDBACK_REQUIRED else ''
+                print(f"Please indicate whether the feedback you received was helpful or not.{skip_str}")
                 print("1) It was helpful.")
                 print("-1) It was not helpful.")
                 feedback = None
-                while feedback not in {"1", "-1"}:
-                    if feedback is None:
-                        feedback = input("? ")
-                    else:
-                        feedback = input("-- Please select a provided option. --\n? ")
+                if self.FEEDBACK_REQUIRED:
+                    while feedback not in {"1", "-1"}:
+                        if feedback is None:
+                            feedback = input("? ")
+                        else:
+                            feedback = input("-- Please select a provided option. --\n? ")
+                else:
+                    feedback = input("? ")
+                    if feedback not in {"1", "-1"}:
+                        print()
+                        return
                 print("\nThank you for your feedback.\n")
                 req_id = help_response.get('requestId')
                 if req_id:
@@ -102,6 +111,7 @@ class HelpProtocol(models.Protocol):
                         'requestId': req_id,
                         'feedback': feedback
                     }
-                    feedback_response = requests.post(self.FEEDBACK_ENDPOINT, json=feedback_payload).json() 
+                    feedback_response = requests.post(self.FEEDBACK_ENDPOINT, json=feedback_payload).json()
+
 
 protocol = HelpProtocol
