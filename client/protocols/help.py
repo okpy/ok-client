@@ -14,6 +14,9 @@ import threading
 import time
 import sys
 import re
+import os
+import pickle
+import hmac
 
 from client.utils.printer import print_error
 
@@ -22,11 +25,17 @@ class HelpProtocol(models.Protocol):
     SERVER = 'https://61a-bot-backend.zamfi.net'
     HELP_ENDPOINT = SERVER + '/get-help-cli'
     FEEDBACK_PROBABILITY = 1
-    FEEDBACK_REQUIRED = True
+    FEEDBACK_REQUIRED = False
     FEEDBACK_ENDPOINT = SERVER + '/feedback'
     FEEDBACK_KEY = 'jfv97pd8ogybhilq3;orfuwyhiulae'
     HELP_KEY = 'jfv97pd8ogybhilq3;orfuwyhiulae'
     AG_PREFIX = "————————————————————————\nThe following is an automated report from an autograding tool that may indicate a failed test case or a syntax error. Consider it in your response.\n\n"
+    GET_CONSENT = True
+    CONSENT_CACHE = '.ok_consent'
+    CONSENT_OPTIONS = {"y", "Y", "1"}
+    CONSENT_MESSAGE = "Allow this tool to securely collect your data for a research study directed by Prof. Narges Norouzi (a UC Berkeley EECS faculty member unaffiliated with this course)? Your consent is voluntary, and does not affect your ability to use this tool, nor your course grade.\n\nIf you consent, any code submitted with a help request will be de-identified from any personal information, like email address, and securely saved in a research data repository. This data will be used to improve the extension and to study how students use automated assistance in learning programming. The data will be stored securely and will not be shared with anyone outside of the research team. You may withdraw (or give) your consent at any time by running `python3 ok --consent`.\n\nFor more information visit https://cs61a.org/articles/61a-bot/"
+    CONTEXT_CACHE = '.ok_context'
+    CONTEXT_LENGTH = 3
 
     def run(self, messages):
         config = config_utils._get_config(self.args.config)
@@ -43,7 +52,6 @@ class HelpProtocol(models.Protocol):
                 active_function = name
                 break
 
-        autograder_output = messages.get('autograder_output', '')
         get_help = self.args.get_help
         help_payload = None
 
@@ -53,15 +61,22 @@ class HelpProtocol(models.Protocol):
             if res == "y":
                 filename = config['src'][0]
                 code = open(filename, 'r').read()
+                autograder_output = messages.get('autograder_output', '')
+                email = messages.get('email') or '<unknown from CLI>'
+                consent = self._get_consent(email)
+                context = self._get_context(email)
+                curr_message = {'role': 'user', 'content': code}
                 help_payload = {
-                    'email': messages.get('email') or '<unknown from CLI>',
+                    'email': email,
                     'promptLabel': 'Get_help',
                     'hwId': re.findall(r'hw(\d+)\.(py|scm|sql)', filename)[0][0],
                     'activeFunction': active_function,
-                    'code': code,
+                    'code': code if len(context) == 0 else '',
                     'codeError': self.AG_PREFIX + autograder_output,
                     'version': 'v2',
-                    'key': self.HELP_KEY
+                    'key': self.HELP_KEY,
+                    'consent': consent,
+                    'messages': context + [curr_message]
                 }
 
         if help_payload:
@@ -81,8 +96,16 @@ class HelpProtocol(models.Protocol):
             except Exception as e:
                 print_error("Error generating hint. Please try again later.")
                 return
-            print(help_response.get('output', "An error occurred. Please try again later."))
+            if 'output' not in help_response:
+                print_error("An error occurred. Please try again later.")
+                return
+
+            hint = help_response.get('output')
+            print(hint)
             print()
+
+            self._append_context(email, curr_message)
+            self._append_context(email, {'role': 'assistant', 'content': hint})
 
             random.seed(int(time.time()))
             if random.random() < self.FEEDBACK_PROBABILITY:
@@ -113,5 +136,55 @@ class HelpProtocol(models.Protocol):
                     }
                     feedback_response = requests.post(self.FEEDBACK_ENDPOINT, json=feedback_payload).json()
 
+    def _mac(self, key, value):
+        mac = hmac.new(key.encode('utf-8'), digestmod='sha512')
+        mac.update(repr(value).encode('utf-8'))
+        return mac.hexdigest()
+        
+    def _get_consent(self, email):
+        if self.GET_CONSENT:
+            if self.CONSENT_CACHE in os.listdir() and not self.args.consent:
+                try:
+                    with open(self.CONSENT_CACHE, 'rb') as f:
+                        data = pickle.load(f)
+                        if not hmac.compare_digest(data.get('mac'), self._mac(email, data.get('consent'))):
+                            os.remove(self.CONSENT_CACHE)
+                            return self._get_consent(email)
+                    return data.get('consent') in self.CONSENT_OPTIONS
+                except:
+                    os.remove(self.CONSENT_CACHE)
+                    return self._get_consent(email)
+            else:
+                print(self.CONSENT_MESSAGE)
+                consent = input("\n(y/N)? ")
+                with open(self.CONSENT_CACHE, 'wb') as f:
+                    pickle.dump({'consent': consent, 'mac': self._mac(email, consent)}, f, protocol=pickle.HIGHEST_PROTOCOL)
+                return consent in self.CONSENT_OPTIONS
+        else:
+            return False
+
+    def _get_context(self, email, full=False):
+        if self.CONTEXT_CACHE in os.listdir():
+            try:
+                with open(self.CONTEXT_CACHE, 'rb') as f:
+                    data = pickle.load(f)
+                    if not hmac.compare_digest(data.get('mac'), self._mac(email, data.get('context', []))):
+                        os.remove(self.CONTEXT_CACHE)
+                        return self._get_context(email)
+                if full:
+                    return data.get('context', [])
+                else:
+                    return data.get('context', [])[-(self.CONTEXT_LENGTH * 2):]
+            except:
+                os.remove(self.CONTEXT_CACHE)
+                return self._get_context(email)
+        else:
+            return []
+    
+    def _append_context(self, email, message):
+        context = self._get_context(email, full=True)
+        context.append(message)
+        with open(self.CONTEXT_CACHE, 'wb') as f:
+            pickle.dump({'context': context, 'mac': self._mac(email, context)}, f, protocol=pickle.HIGHEST_PROTOCOL)
 
 protocol = HelpProtocol
