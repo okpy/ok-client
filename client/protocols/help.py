@@ -28,12 +28,17 @@ class HelpProtocol(models.Protocol):
     FEEDBACK_REQUIRED = False
     FEEDBACK_ENDPOINT = SERVER + '/feedback'
     FEEDBACK_KEY = 'jfv97pd8ogybhilq3;orfuwyhiulae'
+    FEEDBACK_MESSAGE = "The hint was... (Hit Enter to skip)\n1) Helpful, all fixed\n2) Helpful, not all fixed\n3) Not helpful, but made sense\n4) Not helpful, didn't make sense\n5) Misleading/Wrong\n"
+    FEEDBACK_OPTIONS = set([str(i) for i in range(1, 6)])
+    HELP_TYPE_MESSAGE = "\nThe hint could have included...\n1) More debugging\n2) An example\n3) Template code\n4) Conceptual refresher\n5) More info\n"
+    HELP_TYPE_OPTIONS = set([str(i) for i in range(1, 6)])
+    HELP_OPTIONS = {"y", "yes"}
     HELP_KEY = 'jfv97pd8ogybhilq3;orfuwyhiulae'
     AG_PREFIX = "————————————————————————\nThe following is an automated report from an autograding tool that may indicate a failed test case or a syntax error. Consider it in your response.\n\n"
     GET_CONSENT = True
     CONSENT_CACHE = '.ok_consent'
-    CONSENT_OPTIONS = {"y", "Y", "1"}
-    CONSENT_MESSAGE = "Allow this tool to securely collect your data for a research study directed by Prof. Narges Norouzi (a UC Berkeley EECS faculty member unaffiliated with this course)? Your consent is voluntary, and does not affect your ability to use this tool, nor your course grade.\n\nIf you consent, any code submitted with a help request will be de-identified from any personal information, like email address, and securely saved in a research data repository. This data will be used to improve the extension and to study how students use automated assistance in learning programming. The data will be stored securely and will not be shared with anyone outside of the research team. You may withdraw (or give) your consent at any time by running `python3 ok --consent`.\n\nFor more information visit https://cs61a.org/articles/61a-bot/"
+    NO_CONSENT_OPTIONS = {"n", "no", "0", "-1", }
+    CONSENT_MESSAGE = "Can we collect your de-identified data for research directed by Prof. Narges Norouzi (EECS faculty member unaffiliated with this course)? Your consent is voluntary and does not affect your ability to use this tool or your course grade. For more information visit https://cs61a.org/articles/61a-bot\n\nYou can change your response at any time by running `python3 ok --consent`."
     CONTEXT_CACHE = '.ok_context'
     CONTEXT_LENGTH = 3
 
@@ -56,9 +61,9 @@ class HelpProtocol(models.Protocol):
         help_payload = None
 
         if (failed or get_help) and (config.get('src', [''])[0][:2] == 'hw'):
-            res = input("Would you like to receive 61A-bot feedback on your code (y/N)? ")
+            res = input("Would you like to receive 61A-bot feedback on your code (y/N)? ").lower()
             print()
-            if res == "y":
+            if res in self.HELP_OPTIONS:
                 filename = config['src'][0]
                 code = open(filename, 'r').read()
                 autograder_output = messages.get('autograder_output', '')
@@ -109,32 +114,64 @@ class HelpProtocol(models.Protocol):
 
             random.seed(int(time.time()))
             if random.random() < self.FEEDBACK_PROBABILITY:
-                skip_str = ' Hit Enter to skip.' if not self.FEEDBACK_REQUIRED else ''
-                print(f"Please indicate whether the feedback you received was helpful or not.{skip_str}")
-                print("1) It was helpful.")
-                print("-1) It was not helpful.")
-                feedback = None
-                if self.FEEDBACK_REQUIRED:
-                    while feedback not in {"1", "-1"}:
-                        if feedback is None:
-                            feedback = input("? ")
-                        else:
-                            feedback = input("-- Please select a provided option. --\n? ")
-                else:
+                time.sleep(1)
+                self._get_feedback(help_response.get('requestId'))
+
+    def _get_feedback(self, req_id):
+        print(self.FEEDBACK_MESSAGE)
+        feedback = input("? ")
+        if feedback in self.FEEDBACK_OPTIONS:
+            if feedback == "3":
+                print(self.HELP_TYPE_MESSAGE)
+                help_type = None
+                while help_type not in self.HELP_TYPE_OPTIONS:
+                    if help_type is None:
+                        help_type = input("? ")
+                    else:
+                        help_type = input("-- Please select a provided option. --\n? ")
+
+                feedback += ',' + help_type
+
+            print("\nThank you for your feedback.\n")
+
+            if req_id:
+                feedback_payload = {
+                    'version': 'v2',
+                    'key': self.FEEDBACK_KEY,
+                    'requestId': req_id,
+                    'feedback': feedback
+                }
+                feedback_response = requests.post(self.FEEDBACK_ENDPOINT, json=feedback_payload).json()
+                return feedback_response.get('status')
+
+    def _get_binary_feedback(self, req_id):
+        skip_str = ' Hit Enter to skip.' if not self.FEEDBACK_REQUIRED else ''
+        print(f"Please indicate whether the feedback you received was helpful or not.{skip_str}")
+        print("1) It was helpful.")
+        print("-1) It was not helpful.")
+        feedback = None
+        if self.FEEDBACK_REQUIRED:
+            while feedback not in {"1", "-1"}:
+                if feedback is None:
                     feedback = input("? ")
-                    if feedback not in {"1", "-1"}:
-                        print()
-                        return
-                print("\nThank you for your feedback.\n")
-                req_id = help_response.get('requestId')
-                if req_id:
-                    feedback_payload = {
-                        'version': 'v2',
-                        'key': self.FEEDBACK_KEY,
-                        'requestId': req_id,
-                        'feedback': feedback
-                    }
-                    feedback_response = requests.post(self.FEEDBACK_ENDPOINT, json=feedback_payload).json()
+                else:
+                    feedback = input("-- Please select a provided option. --\n? ")
+        else:
+            feedback = input("? ")
+            if feedback not in {"1", "-1"}:
+                print()
+                return
+        print("\nThank you for your feedback.\n")
+        
+        if req_id:
+            feedback_payload = {
+                'version': 'v2',
+                'key': self.FEEDBACK_KEY,
+                'requestId': req_id,
+                'feedback': feedback
+            }
+            feedback_response = requests.post(self.FEEDBACK_ENDPOINT, json=feedback_payload).json()
+            return feedback_response.get('status')
 
     def _mac(self, key, value):
         mac = hmac.new(key.encode('utf-8'), digestmod='sha512')
@@ -156,8 +193,8 @@ class HelpProtocol(models.Protocol):
                     return self._get_consent(email)
             else:
                 print(self.CONSENT_MESSAGE)
-                res = input("\n(y/N)? ")
-                consent = res in self.CONSENT_OPTIONS
+                res = input("\n(Y/n)? ").lower()
+                consent = res not in self.NO_CONSENT_OPTIONS
                 if consent:
                     print("\nYou have consented.\n")
                 else:
