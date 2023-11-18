@@ -136,6 +136,7 @@ class HelpProtocol(models.Protocol):
 
         else:
             feedback = 0
+            print()
 
         if req_id:
             feedback_payload = {
