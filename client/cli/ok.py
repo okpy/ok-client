@@ -132,7 +132,9 @@ def parse_input(command_input=None):
     experiment.add_argument('--collab', action='store_true',
                         help="launch collaborative programming environment")
     experiment.add_argument('--get-help', action='store_true',
-                        help="receive 61A-bot feedback on your code")                    
+                        help="receive 61A-bot feedback on your code")   
+    experiment.add_argument('--consent', action='store_true',
+                        help="get 61A-bot research consent")                 
 
     # Debug information
     debug = parser.add_argument_group('ok developer debugging options')
