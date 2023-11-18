@@ -134,15 +134,18 @@ class HelpProtocol(models.Protocol):
 
             print("\nThank you for your feedback.\n")
 
-            if req_id:
-                feedback_payload = {
-                    'version': 'v2',
-                    'key': self.FEEDBACK_KEY,
-                    'requestId': req_id,
-                    'feedback': feedback
-                }
-                feedback_response = requests.post(self.FEEDBACK_ENDPOINT, json=feedback_payload).json()
-                return feedback_response.get('status')
+        else:
+            feedback = 0
+
+        if req_id:
+            feedback_payload = {
+                'version': 'v2',
+                'key': self.FEEDBACK_KEY,
+                'requestId': req_id,
+                'feedback': feedback
+            }
+            feedback_response = requests.post(self.FEEDBACK_ENDPOINT, json=feedback_payload).json()
+            return feedback_response.get('status')
 
     def _get_binary_feedback(self, req_id):
         skip_str = ' Hit Enter to skip.' if not self.FEEDBACK_REQUIRED else ''
