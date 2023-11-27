@@ -104,7 +104,7 @@ class HelpProtocol(models.Protocol):
             if 'output' not in help_response:
                 print_error("An error occurred. Please try again later.")
                 return
-            if 'requestid' not in help_response:
+            if 'requestId' not in help_response:
                 print_error("61A-bot is not offering help for this assignment yet. Please try again later.")
                 return
 
