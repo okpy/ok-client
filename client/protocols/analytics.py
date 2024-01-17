@@ -57,7 +57,7 @@ class AnalyticsProtocol(models.Protocol):
     def replaced(self, contents):
         """For a question snippet containing some default code, return True if the
         default code is replaced. Default code in a snippet should have
-        '\# Replace with your solution' at the end of each line.
+        '# Replace with your solution' at the end of each line.
         """
         line_num = len(contents.strip(' ').splitlines())
         replace_marks = self.RE_REPLACE_MARK.findall(contents.strip())
