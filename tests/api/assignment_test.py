@@ -53,7 +53,7 @@ class LoadAssignmentTest(unittest.TestCase):
         self.mock_is_file.return_value = False
         with self.assertRaises(ex.LoadingException) as cm:
             assignment.load_assignment('does_not_exist.ok')
-        self.assertEquals(
+        self.assertEqual(
                 'Could not find config file: does_not_exist.ok',
                 str(cm.exception))
 
@@ -61,7 +61,7 @@ class LoadAssignmentTest(unittest.TestCase):
         self.mock_glob.return_value = ['1.ok', '2.ok']
         with self.assertRaises(ex.LoadingException) as cm:
             assignment.load_assignment()
-        self.assertEquals(
+        self.assertEqual(
                 '\n'.join([
                     'Multiple .ok files found:',
                     '    1.ok 2.ok',
@@ -76,7 +76,7 @@ class LoadAssignmentTest(unittest.TestCase):
         with mock.patch('builtins.open', mock_open):
             with self.assertRaises(ex.LoadingException) as cm:
                 assignment.load_assignment('corrupted.ok')
-        self.assertEquals(
+        self.assertEqual(
                 'corrupted.ok is a malformed .ok configuration file. '
                 'Please re-download corrupted.ok.',
                 str(cm.exception))
