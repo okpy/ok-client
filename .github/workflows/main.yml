@@ -102,4 +102,4 @@ jobs:
         esac
         . "${VENV_DIR}/${scripts}/activate"
         echo "Using $(python --version) on ${{ matrix.os }}" 1>&2
-        nose2 -v --traverse-namespace --with-coverage tests
+        nose2 -v --with-coverage tests
