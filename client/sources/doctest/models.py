@@ -21,7 +21,7 @@ class Doctest(models.Test):
 
     IMPORT_STRING = 'from {} import *'
     SETUP = PS1 + IMPORT_STRING
-    prompt_re = re.compile(r'(\s*)({}|{})'.format(PS1, '\.\.\. '))
+    prompt_re = re.compile(r'(\s*)({}|{})'.format(PS1, r'\.\.\. '))
 
     def __init__(self, file, verbose, interactive, timeout=None, ignore_empty=False, parsons=False, **fields):
         super().__init__(**fields)

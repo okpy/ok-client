@@ -1,6 +1,6 @@
 name: CI
 
-on: [push, pull_request]
+on: [push, pull_request, workflow_dispatch]
 
 jobs:
   build:
@@ -10,17 +10,35 @@ jobs:
       fail-fast: false
       matrix:
         name: [
+          Python 3.12 (Windows),
+          Python 3.12 (Macintosh),
+          Python 3.12 (Ubuntu),
+          Python 3.11 (Windows),
+          Python 3.11 (Macintosh),
+          Python 3.11 (Ubuntu),
           Python 3.9 (Windows),
           Python 3.9 (Macintosh),
           Python 3.9 (Ubuntu),
-          Python 3.8 (Windows),
-          Python 3.8 (Macintosh),
-          Python 3.8 (Ubuntu),
-          Python 3.7 (Windows),
-          Python 3.7 (Macintosh),
-          Python 3.7 (Ubuntu),
         ]
         include:
+          - name: Python 3.12 (Windows)
+            os: windows-latest
+            python-version: 3.12
+          - name: Python 3.12 (Macintosh)
+            os: macos-latest
+            python-version: 3.12
+          - name: Python 3.12 (Ubuntu)
+            os: ubuntu-latest
+            python-version: 3.12
+          - name: Python 3.11 (Windows)
+            os: windows-latest
+            python-version: 3.11
+          - name: Python 3.11 (Macintosh)
+            os: macos-latest
+            python-version: 3.11
+          - name: Python 3.11 (Ubuntu)
+            os: ubuntu-latest
+            python-version: 3.11
           - name: Python 3.9 (Windows)
             os: windows-latest
             python-version: 3.9
@@ -30,24 +48,6 @@ jobs:
           - name: Python 3.9 (Ubuntu)
             os: ubuntu-latest
             python-version: 3.9
-          - name: Python 3.8 (Windows)
-            os: windows-latest
-            python-version: 3.8
-          - name: Python 3.8 (Macintosh)
-            os: macos-latest
-            python-version: 3.8
-          - name: Python 3.8 (Ubuntu)
-            os: ubuntu-latest
-            python-version: 3.8
-          - name: Python 3.7 (Windows)
-            os: windows-latest
-            python-version: 3.7
-          - name: Python 3.7 (Macintosh)
-            os: macos-latest
-            python-version: 3.7
-          - name: Python 3.7 (Ubuntu)
-            os: ubuntu-latest
-            python-version: 3.7
     env:
       VENV_DIR: env
     steps:
@@ -102,4 +102,4 @@ jobs:
         esac
         . "${VENV_DIR}/${scripts}/activate"
         echo "Using $(python --version) on ${{ matrix.os }}" 1>&2
-        nosetests --traverse-namespace --with-coverage tests
+        nose2 -v --with-coverage tests

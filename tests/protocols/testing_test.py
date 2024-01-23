@@ -45,7 +45,7 @@ class TestingProtocolTest(unittest.TestCase):
         #can't test for coverage twice, doesn't reset properly
         #{'mytests.rst': {'actual_cov': 7, 'attempted': 24, 'exs_passed': 23, 'total_cov': 7, 'cases_total': 6, 'suites_total': 3, 'exs_failed': 1}}
         #self.run_all(file='sample.rst', expected={'sample.rst': {'exs_failed': 1, 'total_cov': 7, 'attempted': 13, 'suites_total': 4, 'exs_passed': 12, 'actual_cov': 2, 'cases_total': 6}})
-        self.run_all(file=DEFAULT_TST_FILE, expected={'mytests.rst': {'attempted': 25, 'suites_total': 3, 'exs_passed': 24, 'total_cov': 17, 'cases_total': 6, 'actual_cov': 17, 'exs_failed': 1}})
+        self.run_all(file=DEFAULT_TST_FILE, expected={'mytests.rst': {'attempted': 25, 'suites_total': 3, 'exs_passed': 24, 'total_cov': 18, 'cases_total': 6, 'actual_cov': 18, 'exs_failed': 1}})
         self.run_suite_and_case(file=DEFAULT_TST_FILE, suite='algebra',
                                  case='double', expected={'mytests.rst': {'suites_total': 3, 'cases_total': 6, 'actual_cov': 0, 'attempted': 7, 'exs_failed': 0, 'total_cov': 0, 'exs_passed': 7}})
         self.run_suite_and_case(file='sample.rst', suite='algebra', 
