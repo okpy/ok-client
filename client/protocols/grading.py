@@ -8,6 +8,7 @@ are compatible with the GradingProtocol.
 from client.protocols.common import models
 from client.utils import format
 from client.utils import storage
+from client.utils import output
 import logging
 import sys
 
@@ -57,6 +58,8 @@ def grade(questions, messages, env=None, verbose=True):
     analytics = {}
 
     # The environment in which to run the tests.
+
+    log_id = output.new_log()
     for test in questions:
         log.info('Running tests for {}'.format(test.name))
         results = test.run(env)
@@ -73,11 +76,15 @@ def grade(questions, messages, env=None, verbose=True):
         if not verbose and (failed > 0 or locked > 0):
             # Stop at the first failed test
             break
-
+    
     format.print_progress_bar('Test summary', passed, failed, locked,
                               verbose=verbose)
     print()
 
+
     messages['grading'] = analytics
+
+    autograder_output = ''.join(output.get_log(log_id))
+    messages['autograder_output'] = autograder_output
 
 protocol = GradingProtocol

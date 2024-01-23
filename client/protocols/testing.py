@@ -51,8 +51,8 @@ def timeout(seconds_before_timeout):
     return decorate
 
 class TestingProtocol(models.Protocol):
-    """A Protocol that executes doctests as lists of Example objects, supports 
-    suite/case specificity, alternate file testing, and provides users with 
+    """A Protocol that executes doctests as lists of Example objects, supports
+    suite/case specificity, alternate file testing, and provides users with
     details such as cases passed and test coverage.
     """
     def __init__(self, args, assignment):
@@ -78,14 +78,14 @@ class TestingProtocol(models.Protocol):
                 exs = self.get_suite_examples(suite, case)
             elif case:
                 # No support for cases without their suite
-                raise EarlyExit('python3 ok: error: ' 
+                raise EarlyExit('python3 ok: error: '
                     'Please specify suite for given case ({}).'.format(case[0]))
             else:
                 exs = self.get_all_examples()
             # gets analytics to be returned
             test_results[self.tstfile_name] =  self.analyze(suite, case, exs)
         except KeyError as e:
-            raise EarlyExit('python3 ok: error: ' 
+            raise EarlyExit('python3 ok: error: '
                     'Suite/Case label must be valid.'
                     '(Suites: {}, Cases: {})'.format(self.num_suites, self.num_cases))
         return test_results
@@ -94,7 +94,7 @@ class TestingProtocol(models.Protocol):
         failed, attempted = self.run_examples(examples)
         self.cov.stop()
         passed = attempted - failed
-        format.print_test_progress_bar( '{} summary'.format(self.tstfile_name), 
+        format.print_test_progress_bar( '{} summary'.format(self.tstfile_name),
                                         passed, failed, verbose=self.verb)
         # only support test coverage stats when running everything
         if not suite:
@@ -104,7 +104,7 @@ class TestingProtocol(models.Protocol):
                     print("Maximum coverage achieved! Great work!")
                 else:
                     self.give_suggestions()
-        return {'suites_total' : self.num_suites, 'cases_total': self.num_cases, 
+        return {'suites_total' : self.num_suites, 'cases_total': self.num_cases,
                 'exs_failed' : failed, 'exs_passed' : passed, 'attempted' : attempted,
                 'actual_cov' : self.lines_exec, 'total_cov' : self.lines_total}
 
@@ -116,7 +116,7 @@ class TestingProtocol(models.Protocol):
             missing_cov = cov_stats[3]
             if missing_cov:
                 print('   File: {}'.format(file))
-                missing_string = '      Line(s): ' + ','.join(map(str, missing_cov)) 
+                missing_string = '      Line(s): ' + ','.join(map(str, missing_cov))
                 print(missing_string)
 
 
@@ -199,13 +199,13 @@ class TestingProtocol(models.Protocol):
         self.data = collections.OrderedDict()
         self.shared_case_data = collections.OrderedDict()
         # chunk the file into suites
-        data_suites = re.findall("(Suite\s*([\d\w]+))((?:(?!Suite)(.|\n))*)", data_str)
+        data_suites = re.findall(r"(Suite\s*([\d\w]+))((?:(?!Suite)(.|\n))*)", data_str)
         self.num_suites = len(data_suites)
         self.num_cases = 0
         for curr_suite in data_suites:
                 case_data = collections.OrderedDict()
                 # chunk the suite into cases
-                cases = re.findall("(Case\s*([\d\w]+))((?:(?!Case)(.|\n))*)", curr_suite[2])
+                cases = re.findall(r"(Case\s*([\d\w]+))((?:(?!Case)(.|\n))*)", curr_suite[2])
                 self.num_cases += len(cases)
                 self.shared_case_data[str(curr_suite[1])] = re.match("((?:(?!Case)(.|\n))*)", curr_suite[2])
                 for curr_case in cases:
@@ -234,13 +234,13 @@ class TestingProtocol(models.Protocol):
         lines, executed = self.get_coverage(self.cov)
         self.lines_total = lines
         self.lines_exec = executed
-        format.print_coverage_bar( 'Coverage summary', 
+        format.print_coverage_bar( 'Coverage summary',
             self.lines_exec, self.lines_total,verbose=self.verb)
 
     def get_coverage(self, cov):
         # returns executable lines, executed_lines
         lines_run = 0
-        total_lines = 0 
+        total_lines = 0
         for file in self.clean_src:
             file_cov = cov.analysis2(file + '.py')
             lines = len(file_cov[1])
@@ -254,7 +254,7 @@ class TestingProtocol(models.Protocol):
         if self.args.score or self.args.unlock or not self.args.testing:
             return
 
-        # Note: All (and only) .py files given in the src will be tracked and 
+        # Note: All (and only) .py files given in the src will be tracked and
         # contribute to coverage statistics
         self.clean_src = [i[:-3] for i in self.assignment.src if i.endswith('.py')]
         self.cov = coverage(source=[testloc], include=[file + '.py' for file in self.clean_src])

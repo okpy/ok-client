@@ -7,9 +7,6 @@ import datetime as dt
 import logging
 import json
 
-from pytutor import generate_trace
-from pytutor import server
-
 from ast_scope import annotate
 
 from client.protocols.common import models
@@ -25,6 +22,13 @@ class TraceProtocol(models.Protocol):
         """
         if not self.args.trace:
             return
+
+        # pytutor is incompatible with >= 3.12 due to `import imp` removal.
+        # move the import statements down so only assignments with the 'trace'
+        # protocol are affected.
+        from pytutor import generate_trace
+        from pytutor import server
+
         tests = self.assignment.specified_tests
         messages['tracing'] = {
             'begin': get_time(),
