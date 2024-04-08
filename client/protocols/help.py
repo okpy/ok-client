@@ -41,6 +41,8 @@ class HelpProtocol(models.Protocol):
     CONSENT_MESSAGE = "Can we collect your de-identified data for research directed by Prof. Narges Norouzi (EECS faculty member unaffiliated with this course)? Your consent is voluntary and does not affect your ability to use this tool or your course grade. For more information visit https://cs61a.org/articles/61a-bot\n\nYou can change your response at any time by running `python3 ok --consent`."
     CONTEXT_CACHE = '.ok_context'
     CONTEXT_LENGTH = 3
+    DISABLED_CACHE = '.ok_disabled'
+    UNKNOWN_EMAIL = '<unknown from CLI>'
 
     def run(self, messages):
         config = config_utils._get_config(self.args.config)
@@ -59,15 +61,16 @@ class HelpProtocol(models.Protocol):
 
         get_help = self.args.get_help
         help_payload = None
+        email = messages.get('email') or self.UNKNOWN_EMAIL
 
-        if (failed or get_help) and (config.get('src', [''])[0][:2] == 'hw'):
-            res = input("Would you like to receive 61A-bot feedback on your code (y/N)? ").lower()
+        if ((failed and (not self._get_disabled(email))) or get_help) and (config.get('src', [''])[0][:2] == 'hw'):
+            res = input("Would you like to receive 61A-bot feedback on your code (y/N/never)? ").lower().strip()
             print()
             if res in self.HELP_OPTIONS:
+                self._set_disabled(email, disabled=False)
                 filename = config['src'][0]
                 code = open(filename, 'r').read()
                 autograder_output = messages.get('autograder_output', '')
-                email = messages.get('email') or '<unknown from CLI>'
                 consent = self._get_consent(email)
                 context = self._get_context(email)
                 curr_message = {'role': 'user', 'content': code}
@@ -83,6 +86,9 @@ class HelpProtocol(models.Protocol):
                     'consent': consent,
                     'messages': context + [curr_message]
                 }
+            elif res == 'never':
+                self._set_disabled(email, disabled=True)
+                print("61A-bot will be disabled for the remainder of this assignment. Run `python3 ok --get-help` if you want to receive help again.\n")
 
         if help_payload:
             help_response = None
@@ -235,5 +241,24 @@ class HelpProtocol(models.Protocol):
         context.append(message)
         with open(self.CONTEXT_CACHE, 'wb') as f:
             pickle.dump({'context': context, 'mac': self._mac(email, context)}, f, protocol=pickle.HIGHEST_PROTOCOL)
+            
+    def _get_disabled(self, email):
+        if self.DISABLED_CACHE in os.listdir():
+            try:
+                with open(self.DISABLED_CACHE, 'rb') as f:
+                    data = pickle.load(f)
+                    if not hmac.compare_digest(data.get('mac'), self._mac(email, data.get('disabled'))):
+                        os.remove(self.DISABLED_CACHE)
+                        return False
+                return bool(data.get('disabled'))
+            except:
+                os.remove(self.DISABLED_CACHE)
+                return False
+        else:
+            return False
+        
+    def _set_disabled(self, email, disabled=True):
+        with open(self.DISABLED_CACHE, 'wb') as f:
+            pickle.dump({'disabled': disabled, 'mac': self._mac(email, disabled)}, f, protocol=pickle.HIGHEST_PROTOCOL)
 
 protocol = HelpProtocol
