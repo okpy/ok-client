@@ -74,6 +74,8 @@ class HelpProtocol(models.Protocol):
                 consent = self._get_consent(email)
                 context = self._get_context(email)
                 curr_message = {'role': 'user', 'content': code}
+                student_query = input("Have a specific question? Enter it here (or leave blank for general advice): ").lower().strip()
+                print()
                 help_payload = {
                     'email': email,
                     'promptLabel': 'Get_help',
@@ -84,7 +86,8 @@ class HelpProtocol(models.Protocol):
                     'version': 'v2',
                     'key': self.HELP_KEY,
                     'consent': consent,
-                    'messages': context + [curr_message]
+                    'messages': context + [curr_message],
+                    'studentQuery': student_query,
                 }
             elif res == 'never':
                 self._set_disabled(email, disabled=True)

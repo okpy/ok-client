@@ -77,9 +77,10 @@ jobs:
         key: v2-${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
         restore-keys: ${{ runner.os }}-pip-
     - name: Set up Python
-      uses: actions/setup-python@v1
+      uses: actions/setup-python@v5
       with:
         python-version: ${{ matrix.python-version }}
+        allow-prereleases: true
     - name: Initialize environment
       shell: bash
       run: python -m venv "${VENV_DIR}"
