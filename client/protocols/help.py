@@ -28,11 +28,15 @@ class HelpProtocol(models.Protocol):
     FEEDBACK_REQUIRED = False
     FEEDBACK_ENDPOINT = SERVER + '/feedback'
     FEEDBACK_KEY = 'jfv97pd8ogybhilq3;orfuwyhiulae'
-    FEEDBACK_MESSAGE = "The hint was... (Hit Enter to skip)\n1) Helpful, all fixed\n2) Helpful, not all fixed\n3) Not helpful, but made sense\n4) Not helpful, didn't make sense\n5) Misleading/Wrong\n"
+    FEEDBACK_MESSAGE = "The hint was... (Press return/enter to skip)\n1) Helpful, all fixed\n2) Helpful, not all fixed\n3) Not helpful, but made sense\n4) Not helpful, didn't make sense\n5) Misleading/Wrong\n"
     FEEDBACK_OPTIONS = set([str(i) for i in range(1, 6)])
     HELP_TYPE_MESSAGE = "\nThe hint could have included...\n1) More debugging\n2) An example\n3) Template code\n4) Conceptual refresher\n5) More info\n"
     HELP_TYPE_OPTIONS = set([str(i) for i in range(1, 6)])
-    HELP_OPTIONS = {"y", "yes"}
+    HELP_OPTIONS = {
+        "d": "I would like debugging help with my code.",
+        "p": "I would like help understanding the problem."
+    }
+    DISABLE_HELP_OPTIONS = {"never"}
     HELP_KEY = 'jfv97pd8ogybhilq3;orfuwyhiulae'
     AG_PREFIX = "————————————————————————\nThe following is an automated report from an autograding tool that may indicate a failed test case or a syntax error. Consider it in your response.\n\n"
     GET_CONSENT = True
@@ -43,6 +47,8 @@ class HelpProtocol(models.Protocol):
     CONTEXT_LENGTH = 3
     DISABLED_CACHE = '.ok_disabled'
     UNKNOWN_EMAIL = '<unknown from CLI>'
+    BOT_PREFIX = '[61A-bot]: '
+    HELP_PROMPT = BOT_PREFIX + "Would you like to receive debugging help (d) or help understanding the problem (p)? You can also type a specific question.\nPress return/enter to receive no help. Type \"never\" to turn off 61a-bot for this assignment."
 
     def run(self, messages):
         config = config_utils._get_config(self.args.config)
@@ -64,9 +70,10 @@ class HelpProtocol(models.Protocol):
         email = messages.get('email') or self.UNKNOWN_EMAIL
 
         if ((failed and (not self._get_disabled(email))) or get_help) and (config.get('src', [''])[0][:2] == 'hw'):
-            res = input("Would you like to receive 61A-bot feedback on your code (y/N/never)? ").lower().strip()
+            print(self.HELP_PROMPT)
+            res = input("> ").lower().strip()
             print()
-            if res in self.HELP_OPTIONS:
+            if res and res not in self.DISABLE_HELP_OPTIONS:
                 self._set_disabled(email, disabled=False)
                 filename = config['src'][0]
                 code = open(filename, 'r').read()
@@ -74,8 +81,7 @@ class HelpProtocol(models.Protocol):
                 consent = self._get_consent(email)
                 context = self._get_context(email)
                 curr_message = {'role': 'user', 'content': code}
-                student_query = input("Have a specific question? Enter it here (or leave blank for general advice): ").lower().strip()
-                print()
+                student_query = self.HELP_OPTIONS.get(res, res)
                 help_payload = {
                     'email': email,
                     'promptLabel': 'Get_help',
@@ -89,7 +95,7 @@ class HelpProtocol(models.Protocol):
                     'messages': context + [curr_message],
                     'studentQuery': student_query,
                 }
-            elif res == 'never':
+            elif res in self.DISABLE_HELP_OPTIONS:
                 self._set_disabled(email, disabled=True)
                 print("61A-bot will be disabled for the remainder of this assignment. Run `python3 ok --get-help` if you want to receive help again.\n")
 
@@ -118,9 +124,10 @@ class HelpProtocol(models.Protocol):
                 return
 
             hint = help_response.get('output')
-            print(hint)
+            print(self.BOT_PREFIX + hint)
             print()
 
+            curr_message['content'] += '\n' + student_query
             self._append_context(email, curr_message)
             self._append_context(email, {'role': 'assistant', 'content': hint})
 
@@ -131,16 +138,16 @@ class HelpProtocol(models.Protocol):
 
     def _get_feedback(self, req_id):
         print(self.FEEDBACK_MESSAGE)
-        feedback = input("? ")
+        feedback = input("> ")
         if feedback in self.FEEDBACK_OPTIONS:
             if feedback == "3":
                 print(self.HELP_TYPE_MESSAGE)
                 help_type = None
                 while help_type not in self.HELP_TYPE_OPTIONS:
                     if help_type is None:
-                        help_type = input("? ")
+                        help_type = input("> ")
                     else:
-                        help_type = input("-- Please select a provided option. --\n? ")
+                        help_type = input("-- Please select a provided option. --\n> ")
 
                 feedback += ',' + help_type
 
@@ -161,7 +168,7 @@ class HelpProtocol(models.Protocol):
             return feedback_response.get('status')
 
     def _get_binary_feedback(self, req_id):
-        skip_str = ' Hit Enter to skip.' if not self.FEEDBACK_REQUIRED else ''
+        skip_str = ' Press return/enter to skip.' if not self.FEEDBACK_REQUIRED else ''
         print(f"Please indicate whether the feedback you received was helpful or not.{skip_str}")
         print("1) It was helpful.")
         print("-1) It was not helpful.")
@@ -169,11 +176,11 @@ class HelpProtocol(models.Protocol):
         if self.FEEDBACK_REQUIRED:
             while feedback not in {"1", "-1"}:
                 if feedback is None:
-                    feedback = input("? ")
+                    feedback = input("> ")
                 else:
-                    feedback = input("-- Please select a provided option. --\n? ")
+                    feedback = input("-- Please select a provided option. --\n> ")
         else:
-            feedback = input("? ")
+            feedback = input("> ")
             if feedback not in {"1", "-1"}:
                 print()
                 return
