@@ -49,11 +49,25 @@ class HelpProtocol(models.Protocol):
     UNKNOWN_EMAIL = '<unknown from CLI>'
     BOT_PREFIX = '[61A-bot]: '
     HELP_PROMPT = BOT_PREFIX + "Would you like to receive debugging help (d) or help understanding the problem (p)? You can also type a specific question.\nPress return/enter to receive no help. Type \"never\" to turn off 61a-bot for this assignment."
+    CS61A_ENDPOINT = 'cs61a'
+    C88C_ENDPOINT = 'c88c'
+    CS61A_ID = '61a'
+    C88C_ID = '88c'
+    UNKNOWN_COURSE = '<unknown course>'
 
     def run(self, messages):
         config = config_utils._get_config(self.args.config)
         if 'help' not in config.get('protocols', []):
             return
+
+        okpy_endpoint = config.get('endpoint', '')
+        if self.CS61A_ENDPOINT in okpy_endpoint:
+            course_id = self.CS61A_ID
+        elif self.C88C_ENDPOINT in okpy_endpoint:
+            course_id = self.C88C_ID
+        else:
+            course_id = self.UNKNOWN_COURSE
+
         tests = self.assignment.specified_tests
         grading_analytics = messages.get('grading', {})
         failed = False
@@ -94,6 +108,7 @@ class HelpProtocol(models.Protocol):
                     'consent': consent,
                     'messages': context + [curr_message],
                     'studentQuery': student_query,
+                    'courseId': course_id,
                 }
             elif res in self.DISABLE_HELP_OPTIONS:
                 self._set_disabled(email, disabled=True)
