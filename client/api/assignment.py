@@ -270,7 +270,7 @@ class Assignment(core.Serializable):
         "scoring",
         "unlock",
         "trace",
-        "backup",
+        # "backup",
     ]
 
     def __init__(self, args, **fields):
