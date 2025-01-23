@@ -36,6 +36,7 @@ class HelpProtocol(models.Protocol):
         "d": "I would like debugging help with my code.",
         "p": "I would like help understanding the problem."
     }
+    NO_HELP_TYPE_OPTIONS = {'y'}
     DISABLE_HELP_OPTIONS = {"never"}
     HELP_KEY = 'jfv97pd8ogybhilq3;orfuwyhiulae'
     AG_PREFIX = "————————————————————————\nThe following is an automated report from an autograding tool that may indicate a failed test case or a syntax error. Consider it in your response.\n\n"
@@ -48,7 +49,10 @@ class HelpProtocol(models.Protocol):
     DISABLED_CACHE = '.ok_disabled'
     UNKNOWN_EMAIL = '<unknown from CLI>'
     BOT_PREFIX = '[61A-bot]: '
-    HELP_PROMPT = BOT_PREFIX + "Would you like to receive debugging help (d) or help understanding the problem (p)? You can also type a specific question.\nPress return/enter to receive no help. Type \"never\" to turn off 61a-bot for this assignment."
+    HELP_TYPE_PROMPT = BOT_PREFIX + "Would you like to receive debugging help (d) or help understanding the problem (p)? You can also type a specific question.\nPress return/enter to receive no help. Type \"never\" to turn off 61a-bot for this assignment."
+    NO_HELP_TYPE_PROMPT = BOT_PREFIX + "Would you like to receive 61A-bot feedback on your code (y/N/never)? "
+    HELP_TYPE_ENABLED = False
+    HELP_TYPE_DISABLED_MESSAGE = '<help type disabled>'
     CS61A_ENDPOINT = 'cs61a'
     C88C_ENDPOINT = 'c88c'
     CS61A_ID = '61a'
@@ -84,10 +88,13 @@ class HelpProtocol(models.Protocol):
         email = messages.get('email') or self.UNKNOWN_EMAIL
 
         if ((failed and (not self._get_disabled(email))) or get_help) and (config.get('src', [''])[0][:2] == 'hw'):
-            print(self.HELP_PROMPT)
+            if self.HELP_TYPE_ENABLED:
+                print(self.HELP_TYPE_PROMPT)
+            else:
+                print(self.NO_HELP_TYPE_PROMPT)
             res = input("> ").lower().strip()
             print()
-            if res and res not in self.DISABLE_HELP_OPTIONS:
+            if ((res and self.HELP_TYPE_ENABLED) or (res in self.NO_HELP_TYPE_OPTIONS and not self.HELP_TYPE_ENABLED)) and (res not in self.DISABLE_HELP_OPTIONS):
                 self._set_disabled(email, disabled=False)
                 filename = config['src'][0]
                 code = open(filename, 'r').read()
@@ -95,7 +102,7 @@ class HelpProtocol(models.Protocol):
                 consent = self._get_consent(email)
                 context = self._get_context(email)
                 curr_message = {'role': 'user', 'content': code}
-                student_query = self.HELP_OPTIONS.get(res, res)
+                student_query = self.HELP_OPTIONS.get(res, res) if self.HELP_TYPE_ENABLED else self.HELP_TYPE_DISABLED_MESSAGE
                 help_payload = {
                     'email': email,
                     'promptLabel': 'Get_help',
