@@ -54,7 +54,7 @@ class HelpProtocol(models.Protocol):
     HELP_TYPE_ENABLED = False
     HELP_TYPE_DISABLED_MESSAGE = '<help type disabled>'
     CS61A_ENDPOINT = 'cs61a'
-    C88C_ENDPOINT = 'c88c'
+    C88C_ENDPOINT = 'cs88'
     CS61A_ID = '61a'
     C88C_ID = '88c'
     UNKNOWN_COURSE = '<unknown course>'
