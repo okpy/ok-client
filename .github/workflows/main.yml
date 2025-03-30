@@ -56,21 +56,21 @@ jobs:
       with:
         fetch-depth: 1
     - name: "Caching (for Linux)"
-      uses: actions/cache@v1
+      uses: actions/cache@v4
       if: startsWith(runner.os, 'linux')
       with:
         path: ~/.cache/pip
         key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
         restore-keys: ${{ runner.os }}-pip-
     - name: "Caching (for Macintosh)"
-      uses: actions/cache@v1
+      uses: actions/cache@v4
       if: startsWith(runner.os, 'macos')
       with:
         path: ~/Library/Caches/pip
         key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
         restore-keys: ${{ runner.os }}-pip-
     - name: "Caching (for Windows)"
-      uses: actions/cache@v1
+      uses: actions/cache@v4
       if: startsWith(runner.os, 'windows')
       with:
         path: ~\AppData\Local\pip\Cache
