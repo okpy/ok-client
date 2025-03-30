@@ -20,13 +20,12 @@ import hmac
 
 from client.utils.printer import print_error
 
-class HelpProtocol(models.Protocol):
+class HelpProtocol(models.ResearchProtocol):
 
-    SERVER = 'https://61a-bot-backend.zamfi.net'
-    HELP_ENDPOINT = SERVER + '/get-help-cli'
+    HELP_ENDPOINT = models.ResearchProtocol.SERVER + '/get-help-cli'
     FEEDBACK_PROBABILITY = 1
     FEEDBACK_REQUIRED = False
-    FEEDBACK_ENDPOINT = SERVER + '/feedback'
+    FEEDBACK_ENDPOINT = models.ResearchProtocol.SERVER + '/feedback'
     FEEDBACK_KEY = 'jfv97pd8ogybhilq3;orfuwyhiulae'
     FEEDBACK_MESSAGE = "The hint was... (Press return/enter to skip)\n1) Helpful, all fixed\n2) Helpful, not all fixed\n3) Not helpful, but made sense\n4) Not helpful, didn't make sense\n5) Misleading/Wrong\n"
     FEEDBACK_OPTIONS = set([str(i) for i in range(1, 6)])
@@ -38,12 +37,10 @@ class HelpProtocol(models.Protocol):
     }
     NO_HELP_TYPE_OPTIONS = {'y'}
     DISABLE_HELP_OPTIONS = {"never"}
-    HELP_KEY = 'jfv97pd8ogybhilq3;orfuwyhiulae'
     AG_PREFIX = "————————————————————————\nThe following is an automated report from an autograding tool that may indicate a failed test case or a syntax error. Consider it in your response.\n\n"
+
     GET_CONSENT = True
-    CONSENT_CACHE = '.ok_consent'
-    NO_CONSENT_OPTIONS = {"n", "no", "0", "-1", }
-    CONSENT_MESSAGE = "Can we collect your de-identified data for research directed by Prof. Narges Norouzi (EECS faculty member unaffiliated with this course)? Your consent is voluntary and does not affect your ability to use this tool or your course grade. For more information visit https://cs61a.org/articles/61a-bot\n\nYou can change your response at any time by running `python3 ok --consent`."
+
     CONTEXT_CACHE = '.ok_context'
     CONTEXT_LENGTH = 3
     DISABLED_CACHE = '.ok_disabled'
@@ -53,11 +50,6 @@ class HelpProtocol(models.Protocol):
     NO_HELP_TYPE_PROMPT = BOT_PREFIX + "Would you like to receive 61A-bot feedback on your code (y/N/never)? "
     HELP_TYPE_ENABLED = False
     HELP_TYPE_DISABLED_MESSAGE = '<help type disabled>'
-    CS61A_ENDPOINT = 'cs61a'
-    C88C_ENDPOINT = 'c88c'
-    CS61A_ID = '61a'
-    C88C_ID = '88c'
-    UNKNOWN_COURSE = '<unknown course>'
 
     def run(self, messages):
         config = config_utils._get_config(self.args.config)
@@ -72,16 +64,8 @@ class HelpProtocol(models.Protocol):
         else:
             course_id = self.UNKNOWN_COURSE
 
-        tests = self.assignment.specified_tests
-        grading_analytics = messages.get('grading', {})
-        failed = False
-        active_function = tests[-1].name
-        for test in tests:
-            name = test.name
-            if name in grading_analytics and grading_analytics[name]['failed'] > 0:
-                failed = True
-                active_function = name
-                break
+        check_solved = self._check_solved(messages)
+        failed, active_function = check_solved['failed'], check_solved['active_function']
 
         get_help = self.args.get_help
         help_payload = None
@@ -111,7 +95,7 @@ class HelpProtocol(models.Protocol):
                     'code': code if len(context) == 0 else '',
                     'codeError': self.AG_PREFIX + autograder_output,
                     'version': 'v2',
-                    'key': self.HELP_KEY,
+                    'key': self.SERVER_KEY,
                     'consent': consent,
                     'messages': context + [curr_message],
                     'studentQuery': student_query,
@@ -136,6 +120,7 @@ class HelpProtocol(models.Protocol):
             try:
                 help_response = requests.post(self.HELP_ENDPOINT, json=help_payload).json()
             except Exception as e:
+                # print(requests.post(self.HELP_ENDPOINT, json=help_payload))
                 print_error("Error generating hint. Please try again later.")
                 return
             if 'output' not in help_response:
@@ -217,38 +202,6 @@ class HelpProtocol(models.Protocol):
             }
             feedback_response = requests.post(self.FEEDBACK_ENDPOINT, json=feedback_payload).json()
             return feedback_response.get('status')
-
-    def _mac(self, key, value):
-        mac = hmac.new(key.encode('utf-8'), digestmod='sha512')
-        mac.update(repr(value).encode('utf-8'))
-        return mac.hexdigest()
-        
-    def _get_consent(self, email):
-        if self.GET_CONSENT:
-            if self.CONSENT_CACHE in os.listdir() and not self.args.consent:
-                try:
-                    with open(self.CONSENT_CACHE, 'rb') as f:
-                        data = pickle.load(f)
-                        if not hmac.compare_digest(data.get('mac'), self._mac(email, data.get('consent'))):
-                            os.remove(self.CONSENT_CACHE)
-                            return self._get_consent(email)
-                    return data.get('consent')
-                except:
-                    os.remove(self.CONSENT_CACHE)
-                    return self._get_consent(email)
-            else:
-                print(self.CONSENT_MESSAGE)
-                res = input("\n(Y/n)? ").lower()
-                consent = res not in self.NO_CONSENT_OPTIONS
-                if consent:
-                    print("\nYou have consented.\n")
-                else:
-                    print("\nYou have not consented.\n")
-                with open(self.CONSENT_CACHE, 'wb') as f:
-                    pickle.dump({'consent': consent, 'mac': self._mac(email, consent)}, f, protocol=pickle.HIGHEST_PROTOCOL)
-                return consent
-        else:
-            return False
 
     def _get_context(self, email, full=False):
         if self.CONTEXT_CACHE in os.listdir():

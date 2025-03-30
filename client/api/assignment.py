@@ -263,6 +263,7 @@ class Assignment(core.Serializable):
         "grading",
         "analytics",
         "help",
+        "followup",
         "autostyle",
         "collaborate",
         "hinting",
