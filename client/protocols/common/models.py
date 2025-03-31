@@ -33,6 +33,7 @@ class ResearchProtocol(Protocol):
     CS61A_ID = '61a'
     C88C_ID = '88c'
     UNKNOWN_COURSE = '<unknown course>'
+    UNKNOWN_EMAIL = '<unknown email from CLI>'
 
     GET_CONSENT = True
     CONSENT_CACHE = '.ok_consent'
