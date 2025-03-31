@@ -50,19 +50,9 @@ class FollowupProtocol(models.ResearchProtocol, UnlockProtocol):
                 followup_queue.append(question_id)
 
         consent = None
-        if len(followup_queue) > 0:
-            consent = self._get_consent(email)
-            format.print_line('~')
-            print('Follow-up questions')
-            print()
-
-            print('At each "{}", type what you think the best answer is. YOUR ANSWERS WILL NOT BE GRADED'.format(
-                self.PROMPT))
-            print('Type {} to quit'.format(self.EXIT_INPUTS[0]))
-            print()
-        
         filename = config['src'][0]
         hw_id = str(int(re.findall(r'hw(\d+)\.(py|scm|sql)', filename)[0][0]))
+        prologue_displayed = False
         for q_id in followup_queue:
             params = {
                 'hwId': hw_id,
@@ -70,8 +60,19 @@ class FollowupProtocol(models.ResearchProtocol, UnlockProtocol):
             }
             server_response = requests.get(self.FOLLOWUP_ENDPOINT + urlencode(params))
             if server_response.status_code == 200:
+                if not prologue_displayed:
+                    consent = self._get_consent(email)
+                    format.print_line('~')
+                    print('Follow-up questions')
+                    print()
+
+                    print('At each "{}", type what you think the best answer is. YOUR ANSWERS WILL NOT BE GRADED.'.format(
+                        self.PROMPT))
+                    print('Type {} to quit'.format(self.EXIT_INPUTS[0]))
+                    print()
+                    prologue_displayed = True
                 followup = server_response.json()
-                response_data = self._ask_followup(followup)
+                response_data = self._ask_followup(q_id, followup)
                 if response_data:
                     payload = {
                         'email': email,
@@ -95,9 +96,9 @@ class FollowupProtocol(models.ResearchProtocol, UnlockProtocol):
                     print()
                     break
 
-    def _ask_followup(self, followup):
+    def _ask_followup(self, q_id, followup):
         question, choices = followup['question'], followup['choices']
-        print(question)
+        print(f'In {q_id}: {question}')
         print()
         for i, c in enumerate(choices):
             print(f"{chr(ord('A') + i)}. {c}")
