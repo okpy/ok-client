@@ -87,9 +87,12 @@ class FollowupProtocol(models.ResearchProtocol, UnlockProtocol):
                             print_error("Error reaching 61a-bot server. Please inform the course staff on Ed and try again later.")
                         else:
                             self._append_followups(email, q_id)
+                            print("-- Your response has been recorded! --")
+                            print()
                     except Exception as e:
                         print_error("Error reaching 61a-bot server. Please inform the course staff on Ed and try again later.")
                 else:
+                    print()
                     break
 
     def _ask_followup(self, followup):
@@ -107,7 +110,6 @@ class FollowupProtocol(models.ResearchProtocol, UnlockProtocol):
                 print("-- Please select a provided option. --\n")
 
         if response not in self.EXIT_INPUTS:
-            print(f'LOG: received {response.upper()} from student')
             response_index = ord(response.upper()) - ord('A')
             response_text = choices[response_index]
             return {
