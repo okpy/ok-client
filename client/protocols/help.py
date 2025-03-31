@@ -44,7 +44,6 @@ class HelpProtocol(models.ResearchProtocol):
     CONTEXT_CACHE = '.ok_context'
     CONTEXT_LENGTH = 3
     DISABLED_CACHE = '.ok_disabled'
-    UNKNOWN_EMAIL = '<unknown from CLI>'
     BOT_PREFIX = '[61A-bot]: '
     HELP_TYPE_PROMPT = BOT_PREFIX + "Would you like to receive debugging help (d) or help understanding the problem (p)? You can also type a specific question.\nPress return/enter to receive no help. Type \"never\" to turn off 61a-bot for this assignment."
     NO_HELP_TYPE_PROMPT = BOT_PREFIX + "Would you like to receive 61A-bot feedback on your code (y/N/never)? "
@@ -120,7 +119,6 @@ class HelpProtocol(models.ResearchProtocol):
             try:
                 help_response = requests.post(self.HELP_ENDPOINT, json=help_payload).json()
             except Exception as e:
-                # print(requests.post(self.HELP_ENDPOINT, json=help_payload))
                 print_error("Error generating hint. Please try again later.")
                 return
             if 'output' not in help_response:
