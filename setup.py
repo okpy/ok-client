@@ -41,7 +41,6 @@ setup(
         'requests==2.31.0',
         'certifi==2019.11.28',
         'urllib3==1.26.17',
-        'chardet==3.0.4',
         'idna==2.8',
         'coverage==7.3.2',
         'pytutor==1.0.0',
