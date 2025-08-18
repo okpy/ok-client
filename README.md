@@ -1,13 +1,8 @@
-ok client
-=========
+ok
+==
 
-The ok client script (written in Python) supports programming projects
-by running tests, tracking progress, and assisting in debugging.
-
-Visit [http://okpy.org](http://okpy.org) to use our hosted service for
-your course.
-
-The ok client software was developed for CS 61A at UC Berkeley.
+The ok script is a wrapper around pytest (with the pytest-grader extension)
+that provides AI assistance when test cases fail.
 
 [![Build Status](https://travis-ci.org/okpy/ok-client.svg?branch=master)](https://travis-ci.org/okpy/ok-client)
 [![PyPI Version](http://img.shields.io/pypi/v/okpy.svg)](https://pypi.python.org/pypi/okpy)
@@ -17,7 +12,7 @@ The ok client software was developed for CS 61A at UC Berkeley.
 ### Installation
 
 1. Clone this repo
-2. Install [virtualenv](http://docs.python-guide.org/en/latest/dev/virtualenvs/)
+2. Use `uv` to create a virtual env:
 3. Create a virtual environment:
 
         virtualenv -p python3 env

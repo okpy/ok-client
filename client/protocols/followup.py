@@ -4,8 +4,6 @@ Spring 2025 feature with larynqi@, zamfi@, norouzi@, denero@
 """
 
 from client.protocols.common import models
-from client.utils import config as config_utils
-from client.utils import format
 
 import os
 import logging
@@ -19,12 +17,15 @@ from urllib.parse import urlencode
 
 from client.utils.printer import print_error
 
-from client.protocols.unlock import UnlockProtocol
-
 log = logging.getLogger(__name__)
 
-class FollowupProtocol(models.ResearchProtocol, UnlockProtocol):
+class FollowupProtocol(models.ResearchProtocol):
 
+    PROMPT = '? '       # Prompt that is used for user input.
+    EXIT_INPUTS = (     # Valid user inputs for aborting the session.
+        'exit()',
+        'quit()',
+    )
     PROTOCOL_NAME = 'followup'
     FOLLOWUP_ENDPOINT = models.ResearchProtocol.SERVER + '/successQuestions?'
     RESPONSE_ENDPOINT = models.ResearchProtocol.SERVER + '/successQuestionsResponse'
@@ -41,7 +42,7 @@ class FollowupProtocol(models.ResearchProtocol, UnlockProtocol):
         failed, _ = check_solved['failed'], check_solved['active_function']
         if failed:
             return
-        
+
         email = messages.get('email') or self.UNKNOWN_EMAIL
         responded_followups = self._get_followups(email)
         followup_queue = []
@@ -62,7 +63,7 @@ class FollowupProtocol(models.ResearchProtocol, UnlockProtocol):
             if server_response.status_code == 200:
                 if not prologue_displayed:
                     consent = self._get_consent(email)
-                    format.print_line('~')
+                    print('~')
                     print('Follow-up questions')
                     print()
 
@@ -118,7 +119,7 @@ class FollowupProtocol(models.ResearchProtocol, UnlockProtocol):
                 'response_text': response_text
             }
         return {}
-    
+
     def _get_followups(self, email):
         if self.FOLLOWUP_CACHE in os.listdir():
             try:
@@ -126,15 +127,15 @@ class FollowupProtocol(models.ResearchProtocol, UnlockProtocol):
                     data = pickle.load(f)
                     if not hmac.compare_digest(data.get('mac'), self._mac(email, data.get('followups', []))):
                         os.remove(self.FOLLOWUP_CACHE)
-                        return self._get_context(email)
+                        return []
                 return data.get('followups', [])
-              
+
             except:
                 os.remove(self.FOLLOWUP_CACHE)
-                return self._get_context(email)
+                return []
         else:
             return []
-    
+
     def _append_followups(self, email, responded):
         followups = self._get_followups(email)
         followups.append(responded)

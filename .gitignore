@@ -38,5 +38,6 @@ misUcount.json
 *.iml
 .idea/
 
-# demo files
-demo/
+uv.lock
+.python-version
+
