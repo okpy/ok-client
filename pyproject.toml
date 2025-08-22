@@ -1,0 +1,32 @@
+[project]
+name = "ok"
+version = "2.0.0"
+description = "AI help for Python programming test cases."
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+    "certifi==2019.11.28",
+    "chardet==3.0.4",
+    "colorama>=0.4.6",
+    "coverage==7.3.2",
+    "display-timedelta==1.1",
+    "idna==2.8",
+    "pytest>=8.3.5",
+    "pytest-doctestplus>=1.4.0",
+    "pytest-grader>=0.1.0",
+    "pyyaml>=6.0.2",
+    "requests[security]==2.31.0",
+    "setuptools==68.2.2",
+    "urllib3==1.26.17",
+]
+
+[project.scripts]
+ok = "client.cli.ok:main"
+
+[build-system]
+requires = ["setuptools>=68.2.2", "wheel"]  
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["client*"]

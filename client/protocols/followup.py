@@ -32,26 +32,23 @@ class FollowupProtocol(models.ResearchProtocol):
     GET_CONSENT = True
     FOLLOWUP_CACHE = '.ok_followups'
 
-    def run(self, messages):
-        config = config_utils._get_config(self.args.config)
-
-        if self.PROTOCOL_NAME not in config.get('protocols', []):
+    def run(self, assignment, email, test_result):
+        # Check if any test failed - if so, don't show followups
+        if test_result.has_failed_test():
             return
 
-        check_solved = self._check_solved(messages)
-        failed, _ = check_solved['failed'], check_solved['active_function']
-        if failed:
-            return
-
-        email = messages.get('email') or self.UNKNOWN_EMAIL
+        email = email or self.UNKNOWN_EMAIL
         responded_followups = self._get_followups(email)
         followup_queue = []
-        for question_id, analytic in messages.get('grading', {}).items():
-            if analytic['failed'] == 0 and question_id not in responded_followups:
-                followup_queue.append(question_id)
+
+        # Get successful tests from test_result
+        successful_tests = test_result.get_successful_tests()
+        for test_id in successful_tests:
+            if test_id not in responded_followups:
+                followup_queue.append(test_id)
 
         consent = None
-        filename = config['src'][0]
+        filename = '' # TODO Read file from yaml
         hw_id = str(int(re.findall(r'hw(\d+)\.(py|scm|sql)', filename)[0][0]))
         prologue_displayed = False
         for q_id in followup_queue:

@@ -23,13 +23,14 @@ You must authenticate as a Berkeley student to receive AI-generated help.
 from client import exceptions as ex
 from client.utils import auth
 from client.utils.printer import print_error
-from datetime import datetime
+from client.utils.pytest import run_pytest
 from client.protocols.help import HelpProtocol
 from client.protocols.followup import FollowupProtocol
 import argparse
 import client
 import logging
 import os
+import yaml
 
 # TODO: Fix config_utils import in FollowupProtocol when config system is updated
 
@@ -39,6 +40,7 @@ log = logging.getLogger('client')   # Get top-level logger
 
 CLIENT_ROOT = os.path.dirname(client.__file__)
 PROTOCOLS = [HelpProtocol, FollowupProtocol]
+GRADER_YAML = 'grader.yaml'
 
 ##########################
 # Command-line Interface #
@@ -51,6 +53,7 @@ def parse_input(command_input=None):
         description=__doc__,
         usage='%(prog)s [--help] [options]',
         formatter_class=argparse.RawDescriptionHelpFormatter)
+
 
     # Experiments
     experiment = parser.add_argument_group('AI help options')
@@ -78,16 +81,27 @@ def parse_input(command_input=None):
                         help="get ok access token")
     server.add_argument('--insecure', action='store_true',
                         help="use http instead of https")
+    server.add_argument('--server', type=str,
+                        default='okpy.org',
+                        help="set the server address")
 
-    return parser.parse_args(command_input)
+    args, unknown_args = parser.parse_known_args(command_input)
+    return args, unknown_args
 
 def main():
     """Run pytest and provide AI help."""
-    args = parse_input()
+    args, pytest_args = parse_input()
     log.setLevel(logging.DEBUG if args.debug else logging.ERROR)
     log.debug(args)
 
-    assign = None
+    test_result = run_pytest(pytest_args)
+    if test_result.has_failed_test():
+        run_ai_help(args, test_result, log)
+
+
+
+def run_ai_help(args, test_result, log):
+    access_token = None
     try:
         if args.get_token:
             if args.nointeract:
@@ -111,13 +125,13 @@ def main():
                     exit(1)
 
             try:
-                msgs = {}
-                msgs['email'] = auth.display_student_email(args, access_token)
+                with open(GRADER_YAML, 'r') as f:
+                    assignment = yaml.safe_load(f)
+                email = auth.get_student_email(args)  # This uses the access token from authentication
                 for proto_class in PROTOCOLS:
                     log.info('Execute {}.run()'.format(proto_class.__name__))
-                    proto_instance = proto_class(args)
-                    proto_instance.run(msgs)
-                msgs['timestamp'] = str(datetime.now())
+                    proto_instance = proto_class(args, assignment)
+                    proto_instance.run(assignment, email, test_result)
             except ex.AuthenticationException as e:
                 if not force_authenticate:
                     force_authenticate = True

@@ -4,7 +4,6 @@ Fall 2023 research project with zamfi@, larynqi@, norouzi@, denero@
 """
 
 from client.protocols.common import models
-from client.utils import config as config_utils
 
 import requests
 import random
@@ -50,27 +49,20 @@ class HelpProtocol(models.ResearchProtocol):
     HELP_TYPE_ENABLED = False
     HELP_TYPE_DISABLED_MESSAGE = '<help type disabled>'
 
-    def run(self, messages):
-        config = config_utils._get_config(self.args.config)
-        if 'help' not in config.get('protocols', []):
-            return
+    def run(self, assignment, email, test_result):
+        course_id = ''  # TODO Get course from YAML
+        help_enabled = True  # TODO Get bool about help from YAML
+        filename = ''  # TODO Get file name from YAML
 
-        okpy_endpoint = config.get('endpoint', '')
-        if self.CS61A_ENDPOINT in okpy_endpoint:
-            course_id = self.CS61A_ID
-        elif self.C88C_ENDPOINT in okpy_endpoint:
-            course_id = self.C88C_ID
-        else:
-            course_id = self.UNKNOWN_COURSE
-
-        check_solved = self._check_solved(messages)
-        failed, active_function = check_solved['failed'], check_solved['active_function']
+        failed = test_result.has_failed_test()
+        active_function = test_result.failed_test if failed else None
 
         get_help = self.args.get_help
         help_payload = None
-        email = messages.get('email') or self.UNKNOWN_EMAIL
+        email = email or self.UNKNOWN_EMAIL
 
-        if ((failed and (not self._get_disabled(email))) or get_help) and (config.get('src', [''])[0][:2] == 'hw'):
+
+        if ((failed and (not self._get_disabled(email))) or get_help) and help_enabled:
             if self.HELP_TYPE_ENABLED:
                 print(self.HELP_TYPE_PROMPT)
             else:
@@ -79,9 +71,9 @@ class HelpProtocol(models.ResearchProtocol):
             print()
             if ((res and self.HELP_TYPE_ENABLED) or (res in self.NO_HELP_TYPE_OPTIONS and not self.HELP_TYPE_ENABLED)) and (res not in self.DISABLE_HELP_OPTIONS):
                 self._set_disabled(email, disabled=False)
-                filename = config['src'][0]
                 code = open(filename, 'r').read()
-                autograder_output = messages.get('autograder_output', '')
+                # Get autograder output from test result
+                autograder_output = getattr(test_result, 'captured_stdout', '') + getattr(test_result, 'captured_stderr', '')
                 consent = self._get_consent(email)
                 context = self._get_context(email)
                 curr_message = {'role': 'user', 'content': code}
@@ -190,7 +182,7 @@ class HelpProtocol(models.ResearchProtocol):
                 print()
                 return
         print("\nThank you for your feedback.\n")
-        
+
         if req_id:
             feedback_payload = {
                 'version': 'v2',
@@ -218,13 +210,13 @@ class HelpProtocol(models.ResearchProtocol):
                 return self._get_context(email)
         else:
             return []
-    
+
     def _append_context(self, email, message):
         context = self._get_context(email, full=True)
         context.append(message)
         with open(self.CONTEXT_CACHE, 'wb') as f:
             pickle.dump({'context': context, 'mac': self._mac(email, context)}, f, protocol=pickle.HIGHEST_PROTOCOL)
-            
+
     def _get_disabled(self, email):
         if self.DISABLED_CACHE in os.listdir():
             try:
@@ -239,7 +231,7 @@ class HelpProtocol(models.ResearchProtocol):
                 return False
         else:
             return False
-        
+
     def _set_disabled(self, email, disabled=True):
         with open(self.DISABLED_CACHE, 'wb') as f:
             pickle.dump({'disabled': disabled, 'mac': self._mac(email, disabled)}, f, protocol=pickle.HIGHEST_PROTOCOL)

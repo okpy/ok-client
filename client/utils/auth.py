@@ -210,43 +210,6 @@ def authenticate(cmd_args, endpoint='', force=False, nointeract=False):
 
     return access_token
 
-def notebook_authenticate(cmd_args, force=False, silent=True, nointeract=False):
-    """ Similiar to authenticate but prints student emails after
-    all calls and uses a different way to get codes. If SILENT is True,
-    it will suppress the error message and redirect to FORCE=True
-    """
-    server = server_url(cmd_args)
-    network.check_ssl()
-    access_token = None
-    if not force:
-        try:
-            access_token = refresh_local_token(server)
-        except OAuthException as e:
-            # Account for Invalid Grant Error During make_token_post
-            if not silent:
-                raise e
-            return notebook_authenticate(cmd_args, force=True, silent=False)
-
-    if nointeract:
-        return None
-
-    if not access_token:
-        access_token = perform_oauth(
-            get_code_via_terminal,
-            cmd_args,
-            copy_msg=NOTEBOOK_COPY_MESSAGE,
-            paste_msg=NOTEBOOK_PASTE_MESSAGE)
-
-    # Always display email
-    email = display_student_email(cmd_args, access_token)
-    if email is None and not force:
-        return notebook_authenticate(cmd_args, force=True)  # Token has expired
-    elif email is None:
-        # Did not get a valid token even after a fresh login
-        log.warning('Could not get login email. You may have been logged out. '
-                    ' Try logging in again.')
-    return access_token
-
 def get_code(cmd_args, endpoint=''):
     if cmd_args.no_browser:
         return get_code_via_terminal(cmd_args)
@@ -382,7 +345,7 @@ def get_student_email(cmd_args, endpoint=''):
         return None
 
 def get_identifier(cmd_args, endpoint=''):
-    """ Obtain anonmyzied identifier."""
+    """eObtain anonmyzied identifier."""
     student_email = get_student_email(cmd_args, endpoint)
     if not student_email:
         return "Unknown"

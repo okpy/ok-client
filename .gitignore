@@ -40,4 +40,6 @@ misUcount.json
 
 uv.lock
 .python-version
-
+.mypy_cache
+.claude
+.pytest_cache
