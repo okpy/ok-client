@@ -26,7 +26,7 @@ import hmac
 class ResearchProtocol(Protocol):
     """Helper attributes and methods for 61A-bot research project with larynqi@, zamfi@, norouzi@, denero@"""
 
-    SERVER = 'https://61a-bot-backend.zamfi.net'
+    SERVER = 'https://cs61a-bot.eecs.berkeley.edu'
     SERVER_KEY = 'jfv97pd8ogybhilq3;orfuwyhiulae'
     CS61A_ENDPOINT = 'cs61a'
     C88C_ENDPOINT = 'c88c'
@@ -44,7 +44,7 @@ class ResearchProtocol(Protocol):
         mac = hmac.new(key.encode('utf-8'), digestmod='sha512')
         mac.update(repr(value).encode('utf-8'))
         return mac.hexdigest()
-        
+
     def _get_consent(self, email):
         if self.GET_CONSENT:
             if self.CONSENT_CACHE in os.listdir() and not self.args.consent:
@@ -71,7 +71,7 @@ class ResearchProtocol(Protocol):
                 return consent
         else:
             return False
-    
+
     def _check_solved(self, messages):
         tests = self.assignment.specified_tests
         grading_analytics = messages.get('grading', {})

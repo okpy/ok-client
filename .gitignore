@@ -31,6 +31,9 @@ ok
 *.ok_history
 misUcount.json
 
+# OAuth configuration
+client/utils/oauth_config.py
+
 # IPython
 .ipynb_checkpoints/
 
@@ -38,5 +41,8 @@ misUcount.json
 *.iml
 .idea/
 
-# demo files
-demo/
+uv.lock
+.python-version
+.mypy_cache
+.claude
+.pytest_cache

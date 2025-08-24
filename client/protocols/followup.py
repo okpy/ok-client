@@ -4,8 +4,6 @@ Spring 2025 feature with larynqi@, zamfi@, norouzi@, denero@
 """
 
 from client.protocols.common import models
-from client.utils import config as config_utils
-from client.utils import format
 
 import os
 import logging
@@ -19,38 +17,38 @@ from urllib.parse import urlencode
 
 from client.utils.printer import print_error
 
-from client.protocols.unlock import UnlockProtocol
-
 log = logging.getLogger(__name__)
 
-class FollowupProtocol(models.ResearchProtocol, UnlockProtocol):
+class FollowupProtocol(models.ResearchProtocol):
 
+    PROMPT = '? '       # Prompt that is used for user input.
+    EXIT_INPUTS = (     # Valid user inputs for aborting the session.
+        'exit()',
+        'quit()',
+    )
     PROTOCOL_NAME = 'followup'
     FOLLOWUP_ENDPOINT = models.ResearchProtocol.SERVER + '/successQuestions?'
     RESPONSE_ENDPOINT = models.ResearchProtocol.SERVER + '/successQuestionsResponse'
     GET_CONSENT = True
     FOLLOWUP_CACHE = '.ok_followups'
 
-    def run(self, messages):
-        config = config_utils._get_config(self.args.config)
-
-        if self.PROTOCOL_NAME not in config.get('protocols', []):
+    def run(self, assignment, email, test_result):
+        # Check if any test failed - if so, don't show followups
+        if test_result.has_failed_test():
             return
 
-        check_solved = self._check_solved(messages)
-        failed, _ = check_solved['failed'], check_solved['active_function']
-        if failed:
-            return
-        
-        email = messages.get('email') or self.UNKNOWN_EMAIL
+        email = email or self.UNKNOWN_EMAIL
         responded_followups = self._get_followups(email)
         followup_queue = []
-        for question_id, analytic in messages.get('grading', {}).items():
-            if analytic['failed'] == 0 and question_id not in responded_followups:
-                followup_queue.append(question_id)
+
+        # Get successful tests from test_result
+        successful_tests = test_result.get_successful_tests()
+        for test_id in successful_tests:
+            if test_id not in responded_followups:
+                followup_queue.append(test_id)
 
         consent = None
-        filename = config['src'][0]
+        filename = '' # TODO Read file from yaml
         hw_id = str(int(re.findall(r'hw(\d+)\.(py|scm|sql)', filename)[0][0]))
         prologue_displayed = False
         for q_id in followup_queue:
@@ -62,7 +60,7 @@ class FollowupProtocol(models.ResearchProtocol, UnlockProtocol):
             if server_response.status_code == 200:
                 if not prologue_displayed:
                     consent = self._get_consent(email)
-                    format.print_line('~')
+                    print('~')
                     print('Follow-up questions')
                     print()
 
@@ -118,7 +116,7 @@ class FollowupProtocol(models.ResearchProtocol, UnlockProtocol):
                 'response_text': response_text
             }
         return {}
-    
+
     def _get_followups(self, email):
         if self.FOLLOWUP_CACHE in os.listdir():
             try:
@@ -126,15 +124,15 @@ class FollowupProtocol(models.ResearchProtocol, UnlockProtocol):
                     data = pickle.load(f)
                     if not hmac.compare_digest(data.get('mac'), self._mac(email, data.get('followups', []))):
                         os.remove(self.FOLLOWUP_CACHE)
-                        return self._get_context(email)
+                        return []
                 return data.get('followups', [])
-              
+
             except:
                 os.remove(self.FOLLOWUP_CACHE)
-                return self._get_context(email)
+                return []
         else:
             return []
-    
+
     def _append_followups(self, email, responded):
         followups = self._get_followups(email)
         followups.append(responded)
