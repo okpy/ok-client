@@ -39,7 +39,7 @@ logging.basicConfig(format=LOGGING_FORMAT)
 log = logging.getLogger('client')   # Get top-level logger
 
 CLIENT_ROOT = os.path.dirname(client.__file__)
-PROTOCOLS = [HelpProtocol, FollowupProtocol]
+PROTOCOLS = [HelpProtocol] # , FollowupProtocol]
 GRADER_YAML = 'grader.yaml'
 
 ##########################
@@ -77,13 +77,6 @@ def parse_input(command_input=None):
                         help="authenticate, ignoring previous authentication")
     server.add_argument('--no-browser', action='store_true',
                         help="do not use a web browser for authentication")
-    server.add_argument('--get-token', action='store_true',
-                        help="get ok access token")
-    server.add_argument('--insecure', action='store_true',
-                        help="use http instead of https")
-    server.add_argument('--server', type=str,
-                        default='okpy.org',
-                        help="set the server address")
 
     args, unknown_args = parser.parse_known_args(command_input)
     return args, unknown_args
@@ -98,16 +91,11 @@ def main():
     if test_result.has_failed_test():
         run_ai_help(args, test_result, log)
 
-
-
 def run_ai_help(args, test_result, log):
     access_token = None
     try:
-        if args.get_token:
-            if args.nointeract:
-                print_error("Cannot pass in --get-token and --nointeract, the only way to get a token is by interaction")
-                exit(1)
-            access_token = auth.authenticate(args, force=True)
+        if hasattr(args, 'get_token') and args.get_token:
+            access_token = auth.authenticate(endpoint='', force=True, no_browser=args.no_browser)
             print_error("Token: {}".format(access_token))
             exit(not access_token)  # exit with error if no access_token
 
@@ -116,22 +104,18 @@ def run_ai_help(args, test_result, log):
         while retry:
             retry = False
             if force_authenticate:
-                if args.nointeract:
-                    print_error("Cannot pass in --authenticate and --nointeract")
-                    exit(1)
                 # Authenticate and check for success
-                access_token = auth.authenticate(args, endpoint='', force=True)
+                access_token = auth.authenticate(force=True, no_browser=args.no_browser)
                 if not access_token:
                     exit(1)
 
             try:
                 with open(GRADER_YAML, 'r') as f:
                     assignment = yaml.safe_load(f)
-                email = auth.get_student_email(args)  # This uses the access token from authentication
                 for proto_class in PROTOCOLS:
                     log.info('Execute {}.run()'.format(proto_class.__name__))
                     proto_instance = proto_class(args, assignment)
-                    proto_instance.run(assignment, email, test_result)
+                    proto_instance.run(args, assignment, test_result)
             except ex.AuthenticationException as e:
                 if not force_authenticate:
                     force_authenticate = True

@@ -6,9 +6,7 @@ log = logging.getLogger(__name__)
 TIMEOUT = 15
 SSL_ERROR_MESSAGE = """
 ERROR: Your Python installation does not support SSL. You may need to
-install OpenSSL and reinstall Python. In the meantime, you can run OK
-locally, but you will not be able to back up or submit:
-\tpython3 ok --local
+install OpenSSL and reinstall Python.
 """.strip()
 
 def check_ssl():

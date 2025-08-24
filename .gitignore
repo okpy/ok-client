@@ -31,6 +31,9 @@ ok
 *.ok_history
 misUcount.json
 
+# OAuth configuration
+client/utils/oauth_config.py
+
 # IPython
 .ipynb_checkpoints/
 
